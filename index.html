@@ -3802,28 +3802,6 @@
       });
     });
 
-    const budgetForm = document.getElementById("budgetForm");
-
-    budgetForm.addEventListener("submit", (e) => {
-      e.preventDefault();
-
-      const nome = document.getElementById("nome").value.trim();
-      const servico = document.getElementById("servico").value;
-      const descricao = document.getElementById("descricao").value.trim();
-
-      const mensagem =
-`Olá! Meu nome é ${nome}.
-Vi o site da Nova Byte e gostaria de solicitar um orçamento.
-
-Serviço: ${servico}
-
-Projeto:
-${descricao}`;
-
-      abrirWhatsApp(mensagem);
-    });
-
-
     // =========================================
     // =========================================================
     // PROTÓTIPO INTERATIVO DE APLICATIVO
