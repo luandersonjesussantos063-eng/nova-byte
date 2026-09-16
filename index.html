@@ -1030,6 +1030,278 @@
       font-size:.93rem;
     }
 
+
+    .prototype-shell{
+      display:grid;
+      grid-template-columns:320px 1fr;
+      gap:24px;
+      align-items:start;
+    }
+
+    .prototype-controls{
+      border:1px solid rgba(255,255,255,.08);
+      background:rgba(255,255,255,.025);
+      border-radius:24px;
+      padding:24px;
+      position:sticky;
+      top:100px;
+    }
+
+    .prototype-controls h3{
+      font-size:1.15rem;
+      margin-bottom:8px;
+    }
+
+    .prototype-controls p{
+      color:var(--muted);
+      font-size:.9rem;
+      margin-bottom:20px;
+    }
+
+    .prototype-label{
+      display:block;
+      margin:18px 0 10px;
+      font-size:.78rem;
+      font-weight:800;
+      color:#c8d2e3;
+      text-transform:uppercase;
+      letter-spacing:.08em;
+    }
+
+    .prototype-options{
+      display:grid;
+      gap:9px;
+    }
+
+    .prototype-option{
+      width:100%;
+      min-height:44px;
+      border:1px solid #273751;
+      background:#0c1524;
+      color:#dce5f2;
+      border-radius:12px;
+      padding:0 13px;
+      text-align:left;
+      cursor:pointer;
+      font:inherit;
+      font-size:.88rem;
+      transition:.2s ease;
+    }
+
+    .prototype-option:hover,
+    .prototype-option.active{
+      border-color:#7b6dff;
+      background:rgba(109,93,252,.14);
+      color:white;
+    }
+
+    .prototype-preview{
+      min-width:0;
+      border-radius:28px;
+      overflow:hidden;
+      border:1px solid rgba(255,255,255,.1);
+      background:#0b1220;
+      box-shadow:var(--shadow);
+    }
+
+    .prototype-browserbar{
+      height:48px;
+      display:flex;
+      align-items:center;
+      gap:7px;
+      padding:0 16px;
+      background:#09101b;
+      border-bottom:1px solid rgba(255,255,255,.07);
+    }
+
+    .prototype-browserbar i{
+      width:10px;
+      height:10px;
+      border-radius:50%;
+      background:#3a485e;
+    }
+
+    .prototype-address{
+      margin-left:10px;
+      min-width:0;
+      flex:1;
+      height:26px;
+      display:flex;
+      align-items:center;
+      padding:0 11px;
+      border-radius:8px;
+      background:#111b2c;
+      color:#6f7f96;
+      font-size:.72rem;
+      overflow:hidden;
+      white-space:nowrap;
+      text-overflow:ellipsis;
+    }
+
+    .landing-demo{
+      --demo-accent:#6d5dfc;
+      --demo-accent2:#35b8ff;
+      background:#f7f8fc;
+      color:#172033;
+      min-height:520px;
+      overflow:hidden;
+    }
+
+    .demo-nav{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:16px;
+      padding:18px 24px;
+      background:white;
+      border-bottom:1px solid #e8ebf2;
+    }
+
+    .demo-brand{
+      font-weight:900;
+      letter-spacing:-.04em;
+    }
+
+    .demo-navlinks{
+      display:flex;
+      gap:16px;
+      color:#667085;
+      font-size:.74rem;
+    }
+
+    .demo-hero{
+      display:grid;
+      grid-template-columns:1.08fr .92fr;
+      gap:24px;
+      align-items:center;
+      padding:46px 34px;
+      background:
+        radial-gradient(circle at 80% 10%, color-mix(in srgb, var(--demo-accent2) 15%, transparent), transparent 30%),
+        linear-gradient(180deg,#ffffff,#f6f8fc);
+    }
+
+    .demo-kicker{
+      display:inline-flex;
+      padding:6px 9px;
+      border-radius:999px;
+      background:color-mix(in srgb, var(--demo-accent) 10%, white);
+      color:var(--demo-accent);
+      font-size:.68rem;
+      font-weight:900;
+      margin-bottom:14px;
+    }
+
+    .demo-hero h3{
+      font-size:clamp(1.9rem,4vw,3.4rem);
+      line-height:1;
+      letter-spacing:-.05em;
+      margin-bottom:14px;
+      color:#111827;
+    }
+
+    .demo-hero p{
+      color:#667085;
+      font-size:.9rem;
+      max-width:470px;
+      margin-bottom:18px;
+    }
+
+    .demo-actions{
+      display:flex;
+      gap:9px;
+      flex-wrap:wrap;
+    }
+
+    .demo-btn{
+      min-height:42px;
+      border:none;
+      border-radius:10px;
+      padding:0 14px;
+      font-weight:800;
+      cursor:pointer;
+      font-size:.78rem;
+    }
+
+    .demo-btn.primary{
+      color:white;
+      background:linear-gradient(135deg,var(--demo-accent),var(--demo-accent2));
+    }
+
+    .demo-btn.secondary{
+      background:white;
+      color:#273449;
+      border:1px solid #dbe1ea;
+    }
+
+    .demo-art{
+      min-height:250px;
+      border-radius:22px;
+      background:
+        radial-gradient(circle at 30% 25%,rgba(255,255,255,.55),transparent 20%),
+        linear-gradient(135deg,var(--demo-accent),var(--demo-accent2));
+      display:grid;
+      place-items:center;
+      padding:22px;
+      box-shadow:0 22px 48px rgba(25,40,70,.16);
+    }
+
+    .demo-art-card{
+      width:min(84%,280px);
+      background:rgba(255,255,255,.94);
+      border-radius:18px;
+      padding:18px;
+      box-shadow:0 18px 38px rgba(0,0,0,.14);
+    }
+
+    .demo-art-card .demo-mini{
+      height:8px;
+      border-radius:20px;
+      background:#dbe2ed;
+      margin:8px 0;
+    }
+
+    .demo-art-card .demo-mini:first-child{
+      width:44%;
+      background:var(--demo-accent);
+    }
+
+    .demo-features{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:12px;
+      padding:0 34px 34px;
+      background:#f7f8fc;
+    }
+
+    .demo-feature{
+      background:white;
+      border:1px solid #e7ebf1;
+      border-radius:16px;
+      padding:16px;
+    }
+
+    .demo-feature strong{
+      display:block;
+      margin-bottom:4px;
+      font-size:.82rem;
+    }
+
+    .demo-feature span{
+      color:#7b8799;
+      font-size:.68rem;
+    }
+
+    .prototype-note{
+      margin-top:14px;
+      color:#7d8ba0;
+      font-size:.8rem;
+    }
+
+    .prototype-cta{
+      margin-top:18px;
+      width:100%;
+    }
+
     @media(max-width:900px){
       .hero{
         min-height:auto;
@@ -1037,6 +1309,14 @@
 
       .hero-grid{
         grid-template-columns:1fr;
+      }
+
+      .prototype-shell{
+        grid-template-columns:1fr;
+      }
+
+      .prototype-controls{
+        position:static;
       }
 
       .preview-wrap{
@@ -1108,6 +1388,24 @@
         width:100%;
       }
 
+      .demo-navlinks{
+        display:none;
+      }
+
+      .demo-hero{
+        grid-template-columns:1fr;
+        padding:30px 20px;
+      }
+
+      .demo-art{
+        min-height:200px;
+      }
+
+      .demo-features{
+        grid-template-columns:1fr;
+        padding:0 20px 24px;
+      }
+
       .cards,
       .portfolio-grid,
       .process,
@@ -1165,6 +1463,7 @@
 
       <nav class="nav-links" id="navLinks">
         <a href="#servicos">Serviços</a>
+        <a href="#prototipo">Protótipo</a>
         <a href="#portfolio">Portfólio</a>
         <a href="#processo">Como funciona</a>
         <a href="#faq">Dúvidas</a>
@@ -1299,6 +1598,109 @@
             <h3>Integração com WhatsApp</h3>
             <p>Botões, formulários e chamadas que levam o visitante direto para o atendimento.</p>
           </article>
+        </div>
+      </div>
+    </section>
+
+
+    <section id="prototipo">
+      <div class="container">
+        <div class="section-head">
+          <span>Protótipo interativo</span>
+          <h2>Veja como sua landing page pode ficar.</h2>
+          <p>
+            Escolha um estilo e mexa no protótipo. A ideia é mostrar ao cliente,
+            dentro do próprio site da Nova Byte, como um projeto pode ganhar forma.
+          </p>
+        </div>
+
+        <div class="prototype-shell">
+          <aside class="prototype-controls">
+            <h3>Personalize a demonstração</h3>
+            <p>Troque o tipo de negócio e o estilo visual. A prévia muda na hora.</p>
+
+            <span class="prototype-label">Tipo de negócio</span>
+            <div class="prototype-options" id="demoNiches">
+              <button class="prototype-option active" type="button" data-niche="barbearia">Barbearia</button>
+              <button class="prototype-option" type="button" data-niche="restaurante">Restaurante</button>
+              <button class="prototype-option" type="button" data-niche="clinica">Clínica / Consultório</button>
+            </div>
+
+            <span class="prototype-label">Estilo visual</span>
+            <div class="prototype-options" id="demoStyles">
+              <button class="prototype-option active" type="button" data-style="cyber">Moderno</button>
+              <button class="prototype-option" type="button" data-style="elegante">Elegante</button>
+              <button class="prototype-option" type="button" data-style="vibrante">Vibrante</button>
+            </div>
+
+            <button class="btn btn-primary prototype-cta" id="demoQuote" type="button">
+              Quero uma landing page assim
+            </button>
+
+            <div class="prototype-note">
+              Esta é apenas uma demonstração. Cada projeto real pode receber identidade,
+              textos, imagens, botões e funções próprias.
+            </div>
+          </aside>
+
+          <div class="prototype-preview">
+            <div class="prototype-browserbar">
+              <i></i><i></i><i></i>
+              <div class="prototype-address">novabyte.com.br/seu-projeto</div>
+            </div>
+
+            <div class="landing-demo" id="landingDemo">
+              <div class="demo-nav">
+                <div class="demo-brand" id="demoBrand">Moscou Barber</div>
+                <div class="demo-navlinks">
+                  <span>Início</span>
+                  <span>Serviços</span>
+                  <span>Sobre</span>
+                  <span>Contato</span>
+                </div>
+              </div>
+
+              <div class="demo-hero">
+                <div>
+                  <div class="demo-kicker" id="demoKicker">ESTILO • PERSONALIDADE • PRESENÇA</div>
+                  <h3 id="demoTitle">Seu visual começa com uma experiência de verdade.</h3>
+                  <p id="demoText">
+                    Uma landing page profissional apresenta seus serviços, fortalece sua marca
+                    e leva o cliente direto para o agendamento.
+                  </p>
+
+                  <div class="demo-actions">
+                    <button class="demo-btn primary" id="demoPrimary" type="button">Agendar horário</button>
+                    <button class="demo-btn secondary" id="demoSecondary" type="button">Ver serviços</button>
+                  </div>
+                </div>
+
+                <div class="demo-art">
+                  <div class="demo-art-card">
+                    <div class="demo-mini"></div>
+                    <div class="demo-mini"></div>
+                    <div class="demo-mini" style="width:72%"></div>
+                    <div class="demo-mini" style="width:54%"></div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="demo-features">
+                <div class="demo-feature">
+                  <strong id="feature1Title">Agendamento fácil</strong>
+                  <span id="feature1Text">Botão direto para WhatsApp ou agenda.</span>
+                </div>
+                <div class="demo-feature">
+                  <strong id="feature2Title">Serviços em destaque</strong>
+                  <span id="feature2Text">Mostre o que você oferece sem complicação.</span>
+                </div>
+                <div class="demo-feature">
+                  <strong id="feature3Title">Feita para celular</strong>
+                  <span id="feature3Text">Layout responsivo e rápido.</span>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </section>
@@ -1610,6 +2012,151 @@ ${descricao}`;
 
       abrirWhatsApp(mensagem);
     });
+
+
+    // =========================================
+    // SIMULADOR INTERATIVO DE LANDING PAGE
+    // =========================================
+    const demoData = {
+      barbearia: {
+        brand: "Moscou Barber",
+        kicker: "ESTILO • PERSONALIDADE • PRESENÇA",
+        title: "Seu visual começa com uma experiência de verdade.",
+        text: "Uma landing page profissional apresenta seus serviços, fortalece sua marca e leva o cliente direto para o agendamento.",
+        primary: "Agendar horário",
+        secondary: "Ver serviços",
+        f1t: "Agendamento fácil",
+        f1x: "Botão direto para WhatsApp ou agenda.",
+        f2t: "Serviços em destaque",
+        f2x: "Mostre cortes, barba e pacotes.",
+        f3t: "Feita para celular",
+        f3x: "Layout responsivo e rápido."
+      },
+      restaurante: {
+        brand: "Sabor Prime",
+        kicker: "SABOR • EXPERIÊNCIA • PEDIDO RÁPIDO",
+        title: "Transforme visitas em pedidos.",
+        text: "Apresente seu cardápio, seus diferenciais e leve o cliente direto para pedir pelo WhatsApp ou delivery.",
+        primary: "Fazer pedido",
+        secondary: "Ver cardápio",
+        f1t: "Cardápio online",
+        f1x: "Pratos, combos e destaques do dia.",
+        f2t: "Pedido rápido",
+        f2x: "WhatsApp e delivery em poucos cliques.",
+        f3t: "Oferta em destaque",
+        f3x: "Promoções com chamada clara para ação."
+      },
+      clinica: {
+        brand: "Clínica Essenza",
+        kicker: "CUIDADO • CONFIANÇA • ATENDIMENTO",
+        title: "Uma presença digital que transmite confiança.",
+        text: "Explique seus serviços, apresente sua equipe e facilite o contato de novos pacientes com uma página profissional.",
+        primary: "Agendar consulta",
+        secondary: "Conhecer serviços",
+        f1t: "Atendimento organizado",
+        f1x: "Contato rápido para novos pacientes.",
+        f2t: "Serviços claros",
+        f2x: "Especialidades explicadas de forma simples.",
+        f3t: "Imagem profissional",
+        f3x: "Design limpo e confiável."
+      }
+    };
+
+    const demoStyles = {
+      cyber: {
+        accent: "#6d5dfc",
+        accent2: "#35b8ff"
+      },
+      elegante: {
+        accent: "#8b6b3f",
+        accent2: "#c9a56d"
+      },
+      vibrante: {
+        accent: "#ff4f7a",
+        accent2: "#ff9a3d"
+      }
+    };
+
+    let currentNiche = "barbearia";
+    let currentStyle = "cyber";
+
+    const landingDemo = document.getElementById("landingDemo");
+
+    function renderDemo(){
+      const d = demoData[currentNiche];
+      const s = demoStyles[currentStyle];
+
+      landingDemo.style.setProperty("--demo-accent", s.accent);
+      landingDemo.style.setProperty("--demo-accent2", s.accent2);
+
+      document.getElementById("demoBrand").textContent = d.brand;
+      document.getElementById("demoKicker").textContent = d.kicker;
+      document.getElementById("demoTitle").textContent = d.title;
+      document.getElementById("demoText").textContent = d.text;
+      document.getElementById("demoPrimary").textContent = d.primary;
+      document.getElementById("demoSecondary").textContent = d.secondary;
+      document.getElementById("feature1Title").textContent = d.f1t;
+      document.getElementById("feature1Text").textContent = d.f1x;
+      document.getElementById("feature2Title").textContent = d.f2t;
+      document.getElementById("feature2Text").textContent = d.f2x;
+      document.getElementById("feature3Title").textContent = d.f3t;
+      document.getElementById("feature3Text").textContent = d.f3x;
+    }
+
+    document.querySelectorAll("#demoNiches .prototype-option").forEach(btn => {
+      btn.addEventListener("click", () => {
+        currentNiche = btn.dataset.niche;
+
+        document.querySelectorAll("#demoNiches .prototype-option").forEach(b => {
+          b.classList.toggle("active", b === btn);
+        });
+
+        renderDemo();
+      });
+    });
+
+    document.querySelectorAll("#demoStyles .prototype-option").forEach(btn => {
+      btn.addEventListener("click", () => {
+        currentStyle = btn.dataset.style;
+
+        document.querySelectorAll("#demoStyles .prototype-option").forEach(b => {
+          b.classList.toggle("active", b === btn);
+        });
+
+        renderDemo();
+      });
+    });
+
+    document.getElementById("demoQuote").addEventListener("click", () => {
+      const nicheNames = {
+        barbearia: "Barbearia",
+        restaurante: "Restaurante",
+        clinica: "Clínica / Consultório"
+      };
+
+      const styleNames = {
+        cyber: "Moderno",
+        elegante: "Elegante",
+        vibrante: "Vibrante"
+      };
+
+      abrirWhatsApp(
+        `Olá! Vi o protótipo interativo no site da Nova Byte e gostaria de uma landing page.
+
+Tipo de negócio: ${nicheNames[currentNiche]}
+Estilo que gostei: ${styleNames[currentStyle]}`
+      );
+    });
+
+    document.getElementById("demoPrimary").addEventListener("click", () => {
+      alert("Demonstração: em um projeto real, este botão pode abrir WhatsApp, agenda, checkout ou outra ação.");
+    });
+
+    document.getElementById("demoSecondary").addEventListener("click", () => {
+      alert("Demonstração: este botão poderia levar para serviços, cardápio, portfólio ou outra seção.");
+    });
+
+    renderDemo();
 
     document.getElementById("year").textContent = new Date().getFullYear();
 
