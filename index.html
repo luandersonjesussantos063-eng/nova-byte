@@ -252,11 +252,11 @@
       content:"";
       position:absolute;
       inset:0;
-      z-index:-3;
+      z-index:0;
       pointer-events:none;
       background:
-        linear-gradient(rgba(126,226,255,.035) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(126,226,255,.035) 1px, transparent 1px);
+        linear-gradient(rgba(126,226,255,.055) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(126,226,255,.055) 1px, transparent 1px);
       background-size:48px 48px;
       -webkit-mask-image:linear-gradient(to bottom,rgba(0,0,0,.95),rgba(0,0,0,.15));
       mask-image:linear-gradient(to bottom,rgba(0,0,0,.95),rgba(0,0,0,.15));
@@ -266,7 +266,7 @@
       content:"";
       position:absolute;
       inset:-20%;
-      z-index:-4;
+      z-index:0;
       pointer-events:none;
       background:
         radial-gradient(circle at 18% 24%, rgba(109,93,252,.19), transparent 25%),
@@ -277,13 +277,13 @@
 
     .hero-grid{
       position:relative;
-      z-index:2;
+      z-index:3;
     }
 
     .tech-code-bg{
       position:absolute;
       inset:0;
-      z-index:-1;
+      z-index:1;
       pointer-events:none;
       overflow:hidden;
       font-family:"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace;
@@ -293,7 +293,7 @@
     .code-fragment{
       position:absolute;
       color:#98dfff;
-      opacity:.085;
+      opacity:.14;
       font-size:clamp(.72rem,1vw,.92rem);
       line-height:1.65;
       letter-spacing:.02em;
@@ -317,14 +317,14 @@
       left:2%;
       bottom:7%;
       transform:rotate(1.5deg);
-      opacity:.055;
+      opacity:.09;
     }
 
     .code-c{
       top:38%;
       left:45%;
       transform:rotate(-1deg);
-      opacity:.05;
+      opacity:.08;
     }
 
     .tech-node{
@@ -334,7 +334,7 @@
       border-radius:50%;
       background:#74ddff;
       box-shadow:0 0 18px rgba(116,221,255,.55);
-      opacity:.45;
+      opacity:.58;
     }
 
     .tech-node::before,
@@ -1526,7 +1526,7 @@
       .code-a{
         top:7%;
         right:-90px;
-        opacity:.045;
+        opacity:.08;
         transform:scale(.82) rotate(-2deg);
       }
 
