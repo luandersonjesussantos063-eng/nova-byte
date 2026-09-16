@@ -535,6 +535,157 @@
     .project-window .line:nth-child(3){width:82%}
     .project-window .line:nth-child(4){width:60%}
 
+
+    .project-status{
+      display:inline-flex;
+      align-items:center;
+      margin-bottom:10px;
+      padding:6px 9px;
+      border-radius:999px;
+      border:1px solid rgba(80,227,164,.22);
+      background:rgba(80,227,164,.08);
+      color:#79e9b5;
+      font-size:.68rem;
+      font-weight:900;
+      letter-spacing:.12em;
+    }
+
+    .project-status.dev{
+      color:#a8a0ff;
+      border-color:rgba(138,124,255,.25);
+      background:rgba(109,93,252,.10);
+    }
+
+    .project-game{
+      background:
+        radial-gradient(circle at 20% 20%,rgba(109,93,252,.42),transparent 30%),
+        radial-gradient(circle at 82% 72%,rgba(53,184,255,.24),transparent 28%),
+        linear-gradient(145deg,#090d18,#101933);
+    }
+
+    .game-screen{
+      background:#050914;
+      color:#fff;
+      padding:16px;
+      border:1px solid rgba(126,226,255,.18);
+    }
+
+    .game-title{
+      font-weight:1000;
+      letter-spacing:.16em;
+      font-size:.8rem;
+      color:#8be6ff;
+      margin-bottom:12px;
+    }
+
+    .game-space{
+      position:relative;
+      height:155px;
+      overflow:hidden;
+      border-radius:12px;
+      background:
+        radial-gradient(circle at center,rgba(45,79,130,.22),transparent 50%),
+        linear-gradient(#07101f,#02050b);
+    }
+
+    .star{
+      position:absolute;
+      color:#dceeff;
+      opacity:.8;
+      font-size:.65rem;
+    }
+
+    .s1{left:16%;top:18%}
+    .s2{left:72%;top:27%}
+    .s3{left:49%;top:10%}
+
+    .player-ship{
+      position:absolute;
+      left:50%;
+      bottom:20px;
+      transform:translateX(-50%);
+      color:#70ddff;
+      font-size:2rem;
+      text-shadow:0 0 16px rgba(112,221,255,.65);
+    }
+
+    .obstacle{
+      position:absolute;
+      width:24px;
+      height:24px;
+      border:2px solid #887bff;
+      transform:rotate(45deg);
+      box-shadow:0 0 15px rgba(136,123,255,.32);
+    }
+
+    .o1{left:24%;top:47px}
+    .o2{right:22%;top:78px;width:18px;height:18px}
+
+    .game-score{
+      position:absolute;
+      left:12px;
+      top:10px;
+      color:#a7b5cb;
+      font-size:.62rem;
+      letter-spacing:.08em;
+    }
+
+    .project-portaria{
+      background:
+        radial-gradient(circle at 22% 18%,rgba(49,184,130,.22),transparent 31%),
+        radial-gradient(circle at 83% 78%,rgba(109,93,252,.25),transparent 28%),
+        linear-gradient(145deg,#09131a,#101b2d);
+    }
+
+    .portaria-screen{
+      background:#f5f7fb;
+      color:#182336;
+      padding:16px;
+    }
+
+    .portaria-top{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      margin-bottom:14px;
+      font-size:.76rem;
+    }
+
+    .portaria-top strong{
+      letter-spacing:.12em;
+    }
+
+    .portaria-top span{
+      color:#33946c;
+      font-size:.65rem;
+    }
+
+    .portaria-grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:8px;
+    }
+
+    .portaria-card{
+      border-radius:10px;
+      background:white;
+      border:1px solid #dce3ef;
+      padding:12px;
+      min-height:62px;
+    }
+
+    .portaria-card b{
+      display:block;
+      font-size:.73rem;
+      margin-bottom:3px;
+    }
+
+    .portaria-card small{
+      color:#7b8799;
+      font-size:.58rem;
+    }
+
     .project-info{
       padding:24px;
     }
@@ -1055,48 +1206,82 @@
           <span>Portfólio</span>
           <h2>Alguns projetos e conceitos.</h2>
           <p>
-            Esta primeira versão já pode funcionar como portfólio. Depois substituímos
-            os exemplos pelos trabalhos reais conforme forem sendo entregues.
+            Projetos próprios da Nova Byte usados para demonstrar desenvolvimento,
+            interface, experiência do usuário e criação de soluções digitais.
           </p>
         </div>
 
         <div class="portfolio-grid">
           <article class="project">
-            <div class="project-visual">
-              <div class="project-window">
-                <div class="bar"></div>
-                <div class="line"></div>
-                <div class="line"></div>
-                <div class="line"></div>
+            <div class="project-visual project-game">
+              <div class="project-window game-screen">
+                <div class="game-title">LAST SECOND</div>
+                <div class="game-space">
+                  <span class="star s1">✦</span>
+                  <span class="star s2">✦</span>
+                  <span class="star s3">✦</span>
+                  <div class="player-ship">▲</div>
+                  <div class="obstacle o1"></div>
+                  <div class="obstacle o2"></div>
+                  <div class="game-score">SCORE 0240</div>
+                </div>
               </div>
             </div>
             <div class="project-info">
-              <h3>Landing Page Empresarial</h3>
-              <p>Página responsiva com apresentação de serviço, prova social e contato direto.</p>
+              <div class="project-status">PROJETO PUBLICADO</div>
+              <h3>Last Second</h3>
+              <p>
+                Jogo web desenvolvido do zero com mecânicas de movimento, obstáculos,
+                pontuação e evolução contínua da experiência para desktop e celular.
+              </p>
               <div class="tag-row">
                 <span class="tag">HTML</span>
                 <span class="tag">CSS</span>
                 <span class="tag">JavaScript</span>
+                <span class="tag">Game Web</span>
               </div>
             </div>
           </article>
 
           <article class="project">
-            <div class="project-visual">
-              <div class="project-window">
-                <div class="bar" style="width:28%"></div>
-                <div class="line" style="width:92%"></div>
-                <div class="line" style="width:76%"></div>
-                <div class="line" style="width:48%"></div>
+            <div class="project-visual project-portaria">
+              <div class="project-window portaria-screen">
+                <div class="portaria-top">
+                  <strong>PORTARIA</strong>
+                  <span>● online</span>
+                </div>
+                <div class="portaria-grid">
+                  <div class="portaria-card">
+                    <b>Visitantes</b>
+                    <small>Controle de acesso</small>
+                  </div>
+                  <div class="portaria-card">
+                    <b>Moradores</b>
+                    <small>Cadastros e registros</small>
+                  </div>
+                  <div class="portaria-card">
+                    <b>Ocorrências</b>
+                    <small>Acompanhamento</small>
+                  </div>
+                  <div class="portaria-card">
+                    <b>Portaria</b>
+                    <small>Painel operacional</small>
+                  </div>
+                </div>
               </div>
             </div>
             <div class="project-info">
-              <h3>Protótipo de Sistema</h3>
-              <p>Interface para controle operacional, cadastro e acompanhamento de informações.</p>
+              <div class="project-status dev">EM DESENVOLVIMENTO</div>
+              <h3>App de Portaria e Condomínio</h3>
+              <p>
+                Projeto de solução digital para modernizar rotinas de portaria,
+                centralizando informações e facilitando o controle operacional.
+              </p>
               <div class="tag-row">
                 <span class="tag">Web App</span>
                 <span class="tag">Responsivo</span>
                 <span class="tag">UX/UI</span>
+                <span class="tag">Sistema</span>
               </div>
             </div>
           </article>
