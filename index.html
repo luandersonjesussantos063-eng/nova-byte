@@ -242,6 +242,147 @@
       display:flex;
       align-items:center;
       padding:72px 0 54px;
+      position:relative;
+      overflow:hidden;
+      isolation:isolate;
+    }
+
+    /* Fundo tecnológico da primeira tela */
+    .hero::before{
+      content:"";
+      position:absolute;
+      inset:0;
+      z-index:-3;
+      pointer-events:none;
+      background:
+        linear-gradient(rgba(126,226,255,.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(126,226,255,.035) 1px, transparent 1px);
+      background-size:48px 48px;
+      -webkit-mask-image:linear-gradient(to bottom,rgba(0,0,0,.95),rgba(0,0,0,.15));
+      mask-image:linear-gradient(to bottom,rgba(0,0,0,.95),rgba(0,0,0,.15));
+    }
+
+    .hero::after{
+      content:"";
+      position:absolute;
+      inset:-20%;
+      z-index:-4;
+      pointer-events:none;
+      background:
+        radial-gradient(circle at 18% 24%, rgba(109,93,252,.19), transparent 25%),
+        radial-gradient(circle at 82% 34%, rgba(53,184,255,.12), transparent 24%),
+        radial-gradient(circle at 62% 92%, rgba(109,93,252,.08), transparent 26%);
+      filter:blur(10px);
+    }
+
+    .hero-grid{
+      position:relative;
+      z-index:2;
+    }
+
+    .tech-code-bg{
+      position:absolute;
+      inset:0;
+      z-index:-1;
+      pointer-events:none;
+      overflow:hidden;
+      font-family:"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace;
+      user-select:none;
+    }
+
+    .code-fragment{
+      position:absolute;
+      color:#98dfff;
+      opacity:.085;
+      font-size:clamp(.72rem,1vw,.92rem);
+      line-height:1.65;
+      letter-spacing:.02em;
+      white-space:pre;
+      text-shadow:0 0 18px rgba(92,201,255,.22);
+      filter:blur(.05px);
+    }
+
+    .code-fragment .kw{ color:#a695ff; }
+    .code-fragment .fn{ color:#66d7ff; }
+    .code-fragment .str{ color:#7fe9b9; }
+    .code-fragment .num{ color:#ffbf7f; }
+
+    .code-a{
+      top:12%;
+      right:3%;
+      transform:rotate(-2deg);
+    }
+
+    .code-b{
+      left:2%;
+      bottom:7%;
+      transform:rotate(1.5deg);
+      opacity:.055;
+    }
+
+    .code-c{
+      top:38%;
+      left:45%;
+      transform:rotate(-1deg);
+      opacity:.05;
+    }
+
+    .tech-node{
+      position:absolute;
+      width:8px;
+      height:8px;
+      border-radius:50%;
+      background:#74ddff;
+      box-shadow:0 0 18px rgba(116,221,255,.55);
+      opacity:.45;
+    }
+
+    .tech-node::before,
+    .tech-node::after{
+      content:"";
+      position:absolute;
+      top:50%;
+      height:1px;
+      background:linear-gradient(90deg,rgba(116,221,255,.28),transparent);
+      transform-origin:left center;
+    }
+
+    .tech-node::before{
+      width:120px;
+      left:8px;
+      transform:rotate(24deg);
+    }
+
+    .tech-node::after{
+      width:86px;
+      left:8px;
+      transform:rotate(-32deg);
+    }
+
+    .node-1{ top:20%; left:8%; }
+    .node-2{ top:72%; right:12%; }
+    .node-3{ top:48%; right:42%; opacity:.28; }
+
+    .scan-line{
+      position:absolute;
+      left:0;
+      right:0;
+      height:1px;
+      top:16%;
+      background:linear-gradient(90deg,transparent,rgba(126,226,255,.18),transparent);
+      opacity:.35;
+      animation:scanHero 9s ease-in-out infinite;
+    }
+
+    @keyframes scanHero{
+      0%,100%{ transform:translateY(0); opacity:.15; }
+      50%{ transform:translateY(360px); opacity:.38; }
+    }
+
+    @media (prefers-reduced-motion: reduce){
+      .scan-line{
+        animation:none;
+      }
     }
 
     .hero-grid{
@@ -1376,6 +1517,19 @@
         height:54px;
       }
 
+      .code-b,
+      .code-c,
+      .node-3{
+        display:none;
+      }
+
+      .code-a{
+        top:7%;
+        right:-90px;
+        opacity:.045;
+        transform:scale(.82) rotate(-2deg);
+      }
+
       .hero{
         padding-top:46px;
       }
@@ -1480,6 +1634,34 @@
 
   <main id="inicio">
     <section class="hero">
+      <div class="tech-code-bg" aria-hidden="true">
+        <div class="code-fragment code-a"><span class="kw">const</span> project = {
+  name: <span class="str">"Nova Byte"</span>,
+  performance: <span class="num">100</span>,
+  responsive: <span class="kw">true</span>
+};
+
+<span class="kw">function</span> <span class="fn">buildExperience</span>() {
+  <span class="kw">return</span> <span class="str">"digital"</span>;
+}</div>
+
+        <div class="code-fragment code-b">&lt;section class=<span class="str">"future"</span>&gt;
+  &lt;h1&gt;ideas → solutions&lt;/h1&gt;
+  &lt;button&gt;start project&lt;/button&gt;
+&lt;/section&gt;</div>
+
+        <div class="code-fragment code-c"><span class="kw">if</span> (idea) {
+  <span class="fn">design</span>();
+  <span class="fn">develop</span>();
+  <span class="fn">launch</span>();
+}</div>
+
+        <span class="tech-node node-1"></span>
+        <span class="tech-node node-2"></span>
+        <span class="tech-node node-3"></span>
+        <span class="scan-line"></span>
+      </div>
+
       <div class="container hero-grid">
         <div>
           <div class="pill"><span class="dot"></span> Projetos digitais sob medida</div>
