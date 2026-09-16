@@ -2220,6 +2220,41 @@
       text-transform:uppercase;
     }
 
+
+    .price-badge-row{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      margin-bottom:17px;
+    }
+
+    .price-badge-row .price-badge{
+      margin-bottom:0;
+    }
+
+    .price-badge.fast{
+      color:#7fe9b9;
+      background:rgba(80,227,164,.08);
+      border-color:rgba(80,227,164,.20);
+    }
+
+    .price-badge.local{
+      color:#82dfff;
+      background:rgba(53,184,255,.08);
+      border-color:rgba(53,184,255,.20);
+    }
+
+    .price-badge.consult{
+      color:#ffd18a;
+      background:rgba(255,184,92,.08);
+      border-color:rgba(255,184,92,.20);
+    }
+
+    .price-sub-strong{
+      color:#aebbd0;
+      font-weight:700;
+    }
+
     .price-card h3{
       font-size:1.18rem;
       margin-bottom:6px;
@@ -3420,7 +3455,10 @@
 
         <div class="pricing-grid">
           <article class="price-card">
-            <span class="price-badge">Entrada</span>
+            <div class="price-badge-row">
+              <span class="price-badge">Entrada</span>
+              <span class="price-badge fast">Entrega rápida</span>
+            </div>
             <h3>Landing Page</h3>
             <p>Para campanhas, serviços, profissionais e negócios que precisam captar clientes.</p>
 
@@ -3443,7 +3481,10 @@
           </article>
 
           <article class="price-card featured">
-            <span class="price-badge">Mais procurado</span>
+            <div class="price-badge-row">
+              <span class="price-badge">Mais procurado</span>
+              <span class="price-badge local">Ideal para empresas locais</span>
+            </div>
             <h3>Site Profissional</h3>
             <p>Para empresas que querem presença digital mais completa e organizada.</p>
 
@@ -3466,15 +3507,18 @@
           </article>
 
           <article class="price-card">
-            <span class="price-badge">Personalizado</span>
+            <div class="price-badge-row">
+              <span class="price-badge">Personalizado</span>
+              <span class="price-badge consult">Sob consulta</span>
+            </div>
             <h3>App / Sistema</h3>
             <p>Para quem precisa transformar uma ideia em uma experiência digital própria.</p>
 
             <div class="price-value">
-              <small>a partir de</small>
+              <small>projetos a partir de</small>
               R$ 1.490
             </div>
-            <div class="price-sub">Protótipo ou sistema inicial • valor varia por complexidade</div>
+            <div class="price-sub price-sub-strong">Valor final sob consulta conforme complexidade, integrações e recursos</div>
 
             <ul class="price-list">
               <li>Fluxo e telas personalizadas</li>
