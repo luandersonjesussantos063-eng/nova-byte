@@ -1230,275 +1230,909 @@
     }
 
 
-    .prototype-shell{
+    /* =========================================================
+       PROTÓTIPO INTERATIVO — EXPERIÊNCIA DE APP
+       ========================================================= */
+
+    .app-demo-layout{
       display:grid;
-      grid-template-columns:320px 1fr;
-      gap:24px;
+      grid-template-columns:330px minmax(0,1fr);
+      gap:28px;
       align-items:start;
     }
 
-    .prototype-controls{
+    .app-demo-panel{
       border:1px solid rgba(255,255,255,.08);
-      background:rgba(255,255,255,.025);
-      border-radius:24px;
-      padding:24px;
+      background:
+        radial-gradient(circle at 20% 0%,rgba(109,93,252,.10),transparent 32%),
+        rgba(255,255,255,.025);
+      border-radius:26px;
+      padding:26px;
       position:sticky;
       top:100px;
     }
 
-    .prototype-controls h3{
-      font-size:1.15rem;
-      margin-bottom:8px;
+    .app-demo-panel h3{
+      font-size:1.2rem;
+      margin-bottom:9px;
     }
 
-    .prototype-controls p{
+    .app-demo-panel > p{
       color:var(--muted);
-      font-size:.9rem;
-      margin-bottom:20px;
+      font-size:.91rem;
     }
 
-    .prototype-label{
-      display:block;
-      margin:18px 0 10px;
-      font-size:.78rem;
-      font-weight:800;
-      color:#c8d2e3;
-      text-transform:uppercase;
-      letter-spacing:.08em;
-    }
-
-    .prototype-options{
+    .experience-steps{
+      margin-top:24px;
       display:grid;
-      gap:9px;
+      gap:10px;
     }
 
-    .prototype-option{
-      width:100%;
-      min-height:44px;
-      border:1px solid #273751;
-      background:#0c1524;
-      color:#dce5f2;
-      border-radius:12px;
-      padding:0 13px;
-      text-align:left;
-      cursor:pointer;
-      font:inherit;
-      font-size:.88rem;
-      transition:.2s ease;
-    }
-
-    .prototype-option:hover,
-    .prototype-option.active{
-      border-color:#7b6dff;
-      background:rgba(109,93,252,.14);
-      color:white;
-    }
-
-    .prototype-preview{
-      min-width:0;
-      border-radius:28px;
-      overflow:hidden;
-      border:1px solid rgba(255,255,255,.1);
-      background:#0b1220;
-      box-shadow:var(--shadow);
-    }
-
-    .prototype-browserbar{
-      height:48px;
-      display:flex;
+    .experience-step{
+      display:grid;
+      grid-template-columns:34px 1fr;
+      gap:11px;
       align-items:center;
-      gap:7px;
-      padding:0 16px;
-      background:#09101b;
-      border-bottom:1px solid rgba(255,255,255,.07);
+      padding:11px;
+      border-radius:15px;
+      border:1px solid rgba(255,255,255,.06);
+      background:rgba(255,255,255,.025);
     }
 
-    .prototype-browserbar i{
-      width:10px;
-      height:10px;
-      border-radius:50%;
-      background:#3a485e;
+    .experience-step span{
+      width:34px;
+      height:34px;
+      border-radius:11px;
+      display:grid;
+      place-items:center;
+      font-size:.75rem;
+      font-weight:900;
+      color:#b7afff;
+      background:rgba(109,93,252,.12);
+      border:1px solid rgba(138,124,255,.17);
     }
 
-    .prototype-address{
-      margin-left:10px;
-      min-width:0;
-      flex:1;
-      height:26px;
-      display:flex;
-      align-items:center;
-      padding:0 11px;
-      border-radius:8px;
-      background:#111b2c;
-      color:#6f7f96;
+    .experience-step strong{
+      display:block;
+      font-size:.84rem;
+      margin-bottom:2px;
+    }
+
+    .experience-step small{
+      display:block;
+      color:#8190a7;
       font-size:.72rem;
-      overflow:hidden;
-      white-space:nowrap;
-      text-overflow:ellipsis;
+      line-height:1.35;
     }
 
-    .landing-demo{
-      --demo-accent:#6d5dfc;
-      --demo-accent2:#35b8ff;
+    .app-demo-actions{
+      display:grid;
+      gap:10px;
+      margin-top:22px;
+    }
+
+    .app-demo-actions .btn{
+      width:100%;
+    }
+
+    .app-demo-hint{
+      margin-top:15px;
+      color:#78869b;
+      font-size:.78rem;
+      line-height:1.5;
+    }
+
+    .app-demo-stage{
+      min-width:0;
+      min-height:760px;
+      border:1px solid rgba(255,255,255,.08);
+      border-radius:30px;
+      background:
+        radial-gradient(circle at 50% 22%,rgba(109,93,252,.18),transparent 29%),
+        radial-gradient(circle at 72% 74%,rgba(53,184,255,.10),transparent 25%),
+        linear-gradient(145deg,#0a111d,#0d1728);
+      display:grid;
+      place-items:center;
+      padding:42px 24px;
+      position:relative;
+      overflow:hidden;
+    }
+
+    .app-demo-stage::before{
+      content:"";
+      position:absolute;
+      inset:0;
+      pointer-events:none;
+      background:
+        linear-gradient(rgba(126,226,255,.028) 1px,transparent 1px),
+        linear-gradient(90deg,rgba(126,226,255,.028) 1px,transparent 1px);
+      background-size:38px 38px;
+      mask-image:linear-gradient(to bottom,rgba(0,0,0,.75),transparent);
+    }
+
+    .demo-phone{
+      width:min(100%,390px);
+      position:relative;
+      border-radius:46px;
+      background:#030711;
+      padding:11px;
+      border:1px solid rgba(255,255,255,.17);
+      box-shadow:
+        0 35px 80px rgba(0,0,0,.42),
+        0 0 0 5px rgba(255,255,255,.025);
+      z-index:2;
+    }
+
+    .demo-phone::before{
+      content:"";
+      position:absolute;
+      left:50%;
+      top:17px;
+      width:92px;
+      height:24px;
+      border-radius:0 0 16px 16px;
+      transform:translateX(-50%);
+      background:#02050b;
+      z-index:20;
+    }
+
+    .phone-screen{
+      --app-accent:#6d5dfc;
+      --app-accent2:#35b8ff;
+      height:700px;
+      border-radius:36px;
+      overflow:hidden;
       background:#f7f8fc;
       color:#172033;
-      min-height:520px;
-      overflow:hidden;
+      position:relative;
+      display:flex;
+      flex-direction:column;
     }
 
-    .demo-nav{
+    .phone-status{
+      height:42px;
+      flex:0 0 42px;
+      padding:10px 21px 5px;
       display:flex;
       align-items:center;
       justify-content:space-between;
-      gap:16px;
-      padding:18px 24px;
-      background:white;
-      border-bottom:1px solid #e8ebf2;
-    }
-
-    .demo-brand{
-      font-weight:900;
-      letter-spacing:-.04em;
-    }
-
-    .demo-navlinks{
-      display:flex;
-      gap:16px;
-      color:#667085;
-      font-size:.74rem;
-    }
-
-    .demo-hero{
-      display:grid;
-      grid-template-columns:1.08fr .92fr;
-      gap:24px;
-      align-items:center;
-      padding:46px 34px;
-      background:
-        radial-gradient(circle at 80% 10%, color-mix(in srgb, var(--demo-accent2) 15%, transparent), transparent 30%),
-        linear-gradient(180deg,#ffffff,#f6f8fc);
-    }
-
-    .demo-kicker{
-      display:inline-flex;
-      padding:6px 9px;
-      border-radius:999px;
-      background:color-mix(in srgb, var(--demo-accent) 10%, white);
-      color:var(--demo-accent);
+      color:#192236;
       font-size:.68rem;
-      font-weight:900;
-      margin-bottom:14px;
-    }
-
-    .demo-hero h3{
-      font-size:clamp(1.9rem,4vw,3.4rem);
-      line-height:1;
-      letter-spacing:-.05em;
-      margin-bottom:14px;
-      color:#111827;
-    }
-
-    .demo-hero p{
-      color:#667085;
-      font-size:.9rem;
-      max-width:470px;
-      margin-bottom:18px;
-    }
-
-    .demo-actions{
-      display:flex;
-      gap:9px;
-      flex-wrap:wrap;
-    }
-
-    .demo-btn{
-      min-height:42px;
-      border:none;
-      border-radius:10px;
-      padding:0 14px;
       font-weight:800;
-      cursor:pointer;
-      font-size:.78rem;
+      background:#ffffff;
+      z-index:8;
     }
 
-    .demo-btn.primary{
-      color:white;
-      background:linear-gradient(135deg,var(--demo-accent),var(--demo-accent2));
+    .phone-status-icons{
+      display:flex;
+      align-items:center;
+      gap:5px;
+      font-size:.6rem;
     }
 
-    .demo-btn.secondary{
-      background:white;
-      color:#273449;
-      border:1px solid #dbe1ea;
-    }
-
-    .demo-art{
-      min-height:250px;
-      border-radius:22px;
-      background:
-        radial-gradient(circle at 30% 25%,rgba(255,255,255,.55),transparent 20%),
-        linear-gradient(135deg,var(--demo-accent),var(--demo-accent2));
-      display:grid;
-      place-items:center;
-      padding:22px;
-      box-shadow:0 22px 48px rgba(25,40,70,.16);
-    }
-
-    .demo-art-card{
-      width:min(84%,280px);
-      background:rgba(255,255,255,.94);
-      border-radius:18px;
-      padding:18px;
-      box-shadow:0 18px 38px rgba(0,0,0,.14);
-    }
-
-    .demo-art-card .demo-mini{
-      height:8px;
-      border-radius:20px;
-      background:#dbe2ed;
-      margin:8px 0;
-    }
-
-    .demo-art-card .demo-mini:first-child{
-      width:44%;
-      background:var(--demo-accent);
-    }
-
-    .demo-features{
-      display:grid;
-      grid-template-columns:repeat(3,1fr);
-      gap:12px;
-      padding:0 34px 34px;
+    .app-view{
+      min-height:0;
+      flex:1;
+      overflow-y:auto;
+      overflow-x:hidden;
+      scrollbar-width:none;
       background:#f7f8fc;
     }
 
-    .demo-feature{
-      background:white;
-      border:1px solid #e7ebf1;
-      border-radius:16px;
-      padding:16px;
+    .app-view::-webkit-scrollbar{
+      display:none;
     }
 
-    .demo-feature strong{
+    .app-topbar{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      padding:15px 20px 12px;
+      background:#ffffff;
+      border-bottom:1px solid #edf0f5;
+      position:sticky;
+      top:0;
+      z-index:7;
+    }
+
+    .app-topbar-brand{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      min-width:0;
+    }
+
+    .app-mini-logo{
+      width:36px;
+      height:36px;
+      border-radius:12px;
+      display:grid;
+      place-items:center;
+      color:#fff;
+      font-weight:1000;
+      font-size:.72rem;
+      background:linear-gradient(135deg,var(--app-accent),var(--app-accent2));
+      box-shadow:0 8px 20px color-mix(in srgb,var(--app-accent) 22%,transparent);
+      flex:0 0 auto;
+    }
+
+    .app-topbar-brand strong{
       display:block;
-      margin-bottom:4px;
-      font-size:.82rem;
+      font-size:.87rem;
+      line-height:1.05;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
     }
 
-    .demo-feature span{
-      color:#7b8799;
+    .app-topbar-brand small{
+      display:block;
+      margin-top:3px;
+      color:#8792a5;
+      font-size:.59rem;
+    }
+
+    .icon-button{
+      width:38px;
+      height:38px;
+      border-radius:12px;
+      border:1px solid #e5e9f0;
+      background:#fff;
+      color:#263348;
+      display:grid;
+      place-items:center;
+      cursor:pointer;
+      font-size:.94rem;
+    }
+
+    .app-content{
+      padding:18px 18px 92px;
+    }
+
+    .hello-line{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:15px;
+      margin-bottom:16px;
+    }
+
+    .hello-line small{
+      color:#7a8799;
       font-size:.68rem;
     }
 
-    .prototype-note{
-      margin-top:14px;
-      color:#7d8ba0;
-      font-size:.8rem;
+    .hello-line h4{
+      margin-top:2px;
+      font-size:1.25rem;
+      line-height:1.05;
+      letter-spacing:-.035em;
     }
 
-    .prototype-cta{
+    .avatar-dot{
+      width:42px;
+      height:42px;
+      border-radius:50%;
+      display:grid;
+      place-items:center;
+      color:white;
+      font-weight:900;
+      background:linear-gradient(135deg,var(--app-accent),var(--app-accent2));
+    }
+
+    .app-search{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      height:44px;
+      border-radius:14px;
+      border:1px solid #e2e7ef;
+      background:white;
+      padding:0 13px;
+      margin-bottom:17px;
+    }
+
+    .app-search input{
+      min-width:0;
+      flex:1;
+      border:0;
+      outline:0;
+      background:transparent;
+      font:inherit;
+      font-size:.76rem;
+      color:#263348;
+    }
+
+    .promo-card{
+      min-height:145px;
+      padding:20px;
+      border-radius:22px;
+      overflow:hidden;
+      position:relative;
+      color:white;
+      background:
+        radial-gradient(circle at 85% 20%,rgba(255,255,255,.22),transparent 22%),
+        linear-gradient(135deg,var(--app-accent),var(--app-accent2));
+      box-shadow:0 18px 35px color-mix(in srgb,var(--app-accent) 20%,transparent);
+    }
+
+    .promo-card::after{
+      content:"";
+      position:absolute;
+      width:120px;
+      height:120px;
+      right:-24px;
+      bottom:-40px;
+      border:18px solid rgba(255,255,255,.10);
+      border-radius:50%;
+    }
+
+    .promo-card small{
+      display:block;
+      font-size:.64rem;
+      opacity:.82;
+      letter-spacing:.08em;
+      margin-bottom:6px;
+    }
+
+    .promo-card strong{
+      display:block;
+      max-width:220px;
+      font-size:1.25rem;
+      line-height:1.05;
+      margin-bottom:10px;
+    }
+
+    .promo-card button{
+      border:0;
+      min-height:36px;
+      padding:0 12px;
+      border-radius:10px;
+      background:white;
+      color:#252d3e;
+      font-weight:900;
+      font-size:.68rem;
+      cursor:pointer;
+    }
+
+    .app-section-title{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      margin:21px 0 11px;
+    }
+
+    .app-section-title strong{
+      font-size:.87rem;
+    }
+
+    .app-section-title button{
+      border:0;
+      background:none;
+      color:var(--app-accent);
+      font-weight:800;
+      font-size:.65rem;
+      cursor:pointer;
+    }
+
+    .service-cards{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+    }
+
+    .service-card{
+      text-align:left;
+      padding:13px;
+      min-height:112px;
+      border:1px solid #e5e9f0;
+      border-radius:17px;
+      background:white;
+      cursor:pointer;
+      color:#1f2939;
+      transition:.18s ease;
+    }
+
+    .service-card:hover,
+    .service-card.selected{
+      transform:translateY(-2px);
+      border-color:color-mix(in srgb,var(--app-accent) 38%,#e5e9f0);
+      box-shadow:0 10px 24px rgba(21,34,58,.08);
+    }
+
+    .service-icon{
+      width:34px;
+      height:34px;
+      border-radius:11px;
+      display:grid;
+      place-items:center;
+      margin-bottom:10px;
+      background:color-mix(in srgb,var(--app-accent) 10%,white);
+      color:var(--app-accent);
+      font-size:.95rem;
+    }
+
+    .service-card strong{
+      display:block;
+      font-size:.73rem;
+      line-height:1.2;
+    }
+
+    .service-card span{
+      display:block;
+      margin-top:5px;
+      color:#7b8798;
+      font-size:.64rem;
+    }
+
+    .booking-card{
+      display:flex;
+      align-items:center;
+      gap:11px;
+      padding:13px;
+      border-radius:17px;
+      border:1px solid #e4e9f0;
+      background:white;
+    }
+
+    .booking-date{
+      width:48px;
+      height:48px;
+      border-radius:14px;
+      display:grid;
+      place-items:center;
+      flex:0 0 auto;
+      background:color-mix(in srgb,var(--app-accent) 10%,white);
+      color:var(--app-accent);
+      font-weight:900;
+      font-size:.72rem;
+      line-height:1.05;
+      text-align:center;
+    }
+
+    .booking-info{
+      min-width:0;
+      flex:1;
+    }
+
+    .booking-info strong{
+      display:block;
+      font-size:.73rem;
+    }
+
+    .booking-info span{
+      display:block;
+      margin-top:3px;
+      color:#7d899b;
+      font-size:.62rem;
+    }
+
+    .screen-title{
+      display:flex;
+      align-items:center;
+      gap:11px;
+      margin-bottom:18px;
+    }
+
+    .screen-title button{
+      width:38px;
+      height:38px;
+      border:1px solid #e3e8ef;
+      border-radius:12px;
+      background:white;
+      cursor:pointer;
+      color:#273449;
+    }
+
+    .screen-title h4{
+      font-size:1.05rem;
+      letter-spacing:-.025em;
+    }
+
+    .screen-title p{
+      color:#7b8799;
+      font-size:.64rem;
+      margin-top:2px;
+    }
+
+    .service-list{
+      display:grid;
+      gap:10px;
+    }
+
+    .service-row{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      border:1px solid #e3e8ef;
+      background:white;
+      border-radius:17px;
+      padding:13px;
+    }
+
+    .service-row-icon{
+      width:44px;
+      height:44px;
+      border-radius:13px;
+      display:grid;
+      place-items:center;
+      background:color-mix(in srgb,var(--app-accent) 9%,white);
+      color:var(--app-accent);
+      flex:0 0 auto;
+    }
+
+    .service-row-info{
+      min-width:0;
+      flex:1;
+    }
+
+    .service-row-info strong{
+      display:block;
+      font-size:.74rem;
+    }
+
+    .service-row-info span{
+      display:block;
+      color:#7d899b;
+      font-size:.61rem;
+      margin-top:3px;
+    }
+
+    .service-row-price{
+      text-align:right;
+      white-space:nowrap;
+    }
+
+    .service-row-price b{
+      display:block;
+      font-size:.72rem;
+    }
+
+    .service-row-price button{
+      margin-top:6px;
+      border:0;
+      min-height:30px;
+      padding:0 9px;
+      border-radius:9px;
+      color:white;
+      background:var(--app-accent);
+      font-weight:800;
+      cursor:pointer;
+      font-size:.6rem;
+    }
+
+    .booking-progress{
+      display:flex;
+      align-items:center;
+      gap:6px;
+      margin:0 0 19px;
+    }
+
+    .booking-progress i{
+      height:5px;
+      flex:1;
+      border-radius:999px;
+      background:#e4e8ef;
+    }
+
+    .booking-progress i.done{
+      background:linear-gradient(90deg,var(--app-accent),var(--app-accent2));
+    }
+
+    .choice-block{
       margin-top:18px;
+    }
+
+    .choice-block > strong{
+      display:block;
+      font-size:.78rem;
+      margin-bottom:10px;
+    }
+
+    .chip-grid{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+    }
+
+    .choice-chip{
+      min-height:38px;
+      border:1px solid #e0e5ed;
+      background:white;
+      color:#465166;
+      border-radius:11px;
+      padding:0 11px;
+      cursor:pointer;
+      font-size:.67rem;
+      font-weight:800;
+    }
+
+    .choice-chip.active{
+      color:white;
+      border-color:var(--app-accent);
+      background:linear-gradient(135deg,var(--app-accent),var(--app-accent2));
+    }
+
+    .professional-grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:9px;
+    }
+
+    .professional-card{
+      border:1px solid #e3e8ef;
+      background:white;
+      border-radius:16px;
+      padding:12px;
+      text-align:left;
+      cursor:pointer;
+      color:#283449;
+    }
+
+    .professional-card.active{
+      border-color:var(--app-accent);
+      box-shadow:0 0 0 2px color-mix(in srgb,var(--app-accent) 10%,transparent);
+    }
+
+    .professional-avatar{
+      width:40px;
+      height:40px;
+      border-radius:50%;
+      display:grid;
+      place-items:center;
+      margin-bottom:8px;
+      background:linear-gradient(135deg,#edf0f5,#d8deea);
+      color:#58657a;
+      font-weight:900;
+      font-size:.7rem;
+    }
+
+    .professional-card strong{
+      display:block;
+      font-size:.69rem;
+    }
+
+    .professional-card small{
+      color:#8a95a6;
+      font-size:.58rem;
+    }
+
+    .booking-summary{
+      margin-top:18px;
+      border-radius:17px;
+      padding:14px;
+      background:#111827;
+      color:white;
+    }
+
+    .summary-line{
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      font-size:.65rem;
+      margin:7px 0;
+    }
+
+    .summary-line span:first-child{
+      color:#9ba8bb;
+    }
+
+    .app-primary{
       width:100%;
+      min-height:46px;
+      border:0;
+      border-radius:14px;
+      margin-top:15px;
+      background:linear-gradient(135deg,var(--app-accent),var(--app-accent2));
+      color:white;
+      font-weight:900;
+      cursor:pointer;
+      font-size:.74rem;
+    }
+
+    .app-primary:disabled{
+      opacity:.45;
+      cursor:not-allowed;
+    }
+
+    .success-wrap{
+      min-height:470px;
+      display:grid;
+      place-items:center;
+      text-align:center;
+      padding:30px 15px;
+    }
+
+    .success-icon{
+      width:78px;
+      height:78px;
+      border-radius:50%;
+      display:grid;
+      place-items:center;
+      margin:0 auto 18px;
+      color:white;
+      font-size:2rem;
+      background:linear-gradient(135deg,#32c987,#20a86d);
+      box-shadow:0 20px 40px rgba(32,168,109,.22);
+    }
+
+    .success-wrap h4{
+      font-size:1.22rem;
+      margin-bottom:7px;
+    }
+
+    .success-wrap p{
+      color:#7b8799;
+      font-size:.7rem;
+      max-width:240px;
+      margin:auto;
+    }
+
+    .profile-card{
+      text-align:center;
+      border-radius:21px;
+      padding:22px 15px;
+      background:white;
+      border:1px solid #e4e9f0;
+    }
+
+    .profile-avatar{
+      width:70px;
+      height:70px;
+      border-radius:50%;
+      display:grid;
+      place-items:center;
+      margin:0 auto 10px;
+      color:white;
+      font-size:1.15rem;
+      font-weight:900;
+      background:linear-gradient(135deg,var(--app-accent),var(--app-accent2));
+    }
+
+    .profile-card h4{
+      font-size:.92rem;
+    }
+
+    .profile-card p{
+      color:#8591a3;
+      font-size:.64rem;
+      margin-top:3px;
+    }
+
+    .profile-menu{
+      display:grid;
+      gap:8px;
+      margin-top:14px;
+    }
+
+    .profile-menu button{
+      min-height:46px;
+      border:1px solid #e4e9f0;
+      background:white;
+      border-radius:13px;
+      text-align:left;
+      padding:0 13px;
+      color:#344055;
+      cursor:pointer;
+      font-weight:700;
+      font-size:.69rem;
+    }
+
+    .app-bottom-nav{
+      position:absolute;
+      left:0;
+      right:0;
+      bottom:0;
+      min-height:70px;
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      align-items:center;
+      gap:2px;
+      padding:7px 8px 8px;
+      border-top:1px solid #e5e9ef;
+      background:rgba(255,255,255,.96);
+      backdrop-filter:blur(14px);
+      z-index:12;
+    }
+
+    .app-nav-btn{
+      min-height:54px;
+      border:0;
+      border-radius:13px;
+      background:transparent;
+      color:#8994a5;
+      display:grid;
+      place-items:center;
+      align-content:center;
+      gap:3px;
+      cursor:pointer;
+      font-size:.95rem;
+    }
+
+    .app-nav-btn span{
+      font-size:.56rem;
+      font-weight:800;
+    }
+
+    .app-nav-btn.active{
+      color:var(--app-accent);
+      background:color-mix(in srgb,var(--app-accent) 8%,white);
+    }
+
+    .app-toast{
+      position:absolute;
+      left:18px;
+      right:18px;
+      bottom:82px;
+      z-index:30;
+      display:flex;
+      align-items:center;
+      gap:9px;
+      padding:12px 13px;
+      border-radius:14px;
+      background:#172033;
+      color:white;
+      box-shadow:0 16px 35px rgba(0,0,0,.22);
+      transform:translateY(18px);
+      opacity:0;
+      pointer-events:none;
+      transition:.22s ease;
+      font-size:.66rem;
+    }
+
+    .app-toast.show{
+      transform:translateY(0);
+      opacity:1;
+    }
+
+    .app-toast b{
+      width:27px;
+      height:27px;
+      border-radius:9px;
+      display:grid;
+      place-items:center;
+      background:rgba(80,227,164,.14);
+      color:#64e4ac;
+      flex:0 0 auto;
+    }
+
+    @media(max-width:900px){
+      .app-demo-layout{
+        grid-template-columns:1fr;
+      }
+
+      .app-demo-panel{
+        position:static;
+      }
+
+      .app-demo-stage{
+        min-height:auto;
+        padding:34px 16px;
+      }
+    }
+
+    @media(max-width:480px){
+      .app-demo-stage{
+        padding:20px 7px;
+        border-radius:22px;
+      }
+
+      .demo-phone{
+        width:100%;
+        border-radius:38px;
+        padding:8px;
+      }
+
+      .phone-screen{
+        height:650px;
+        border-radius:31px;
+      }
+
+      .service-cards{
+        grid-template-columns:1fr 1fr;
+      }
     }
 
     @media(max-width:900px){
@@ -1681,7 +2315,7 @@
 
       <nav class="nav-links" id="navLinks">
         <a href="#servicos">Serviços</a>
-        <a href="#prototipo">Protótipo</a>
+        <a href="#prototipo">Teste o app</a>
         <a href="#portfolio">Portfólio</a>
         <a href="#processo">Como funciona</a>
         <a href="#faq">Dúvidas</a>
@@ -1852,97 +2486,104 @@
     <section id="prototipo">
       <div class="container">
         <div class="section-head">
-          <span>Protótipo interativo</span>
-          <h2>Veja como sua landing page pode ficar.</h2>
+          <span>Experiência interativa</span>
+          <h2>Não imagine o aplicativo. Teste.</h2>
           <p>
-            Escolha um estilo e mexa no protótipo. A ideia é mostrar ao cliente,
-            dentro do próprio site da Nova Byte, como um projeto pode ganhar forma.
+            Esse protótipo funciona como um mini aplicativo dentro do site.
+            Clique nas telas, escolha um serviço, selecione profissional, data e horário
+            e finalize um agendamento de demonstração.
           </p>
         </div>
 
-        <div class="prototype-shell">
-          <aside class="prototype-controls">
-            <h3>Personalize a demonstração</h3>
-            <p>Troque o tipo de negócio e o estilo visual. A prévia muda na hora.</p>
+        <div class="app-demo-layout">
+          <aside class="app-demo-panel">
+            <h3>Experimente como um cliente</h3>
+            <p>
+              Em vez de mostrar apenas uma imagem, deixamos o visitante navegar por uma
+              experiência realista antes de pedir um orçamento.
+            </p>
 
-            <span class="prototype-label">Tipo de negócio</span>
-            <div class="prototype-options" id="demoNiches">
-              <button class="prototype-option active" type="button" data-niche="barbearia">Barbearia</button>
-              <button class="prototype-option" type="button" data-niche="restaurante">Restaurante</button>
-              <button class="prototype-option" type="button" data-niche="clinica">Clínica / Consultório</button>
+            <div class="experience-steps">
+              <div class="experience-step">
+                <span>01</span>
+                <div>
+                  <strong>Explore o aplicativo</strong>
+                  <small>Navegue pelo início, serviços e perfil.</small>
+                </div>
+              </div>
+
+              <div class="experience-step">
+                <span>02</span>
+                <div>
+                  <strong>Escolha um serviço</strong>
+                  <small>Selecione uma opção como faria num app real.</small>
+                </div>
+              </div>
+
+              <div class="experience-step">
+                <span>03</span>
+                <div>
+                  <strong>Monte o agendamento</strong>
+                  <small>Escolha profissional, dia e horário.</small>
+                </div>
+              </div>
+
+              <div class="experience-step">
+                <span>04</span>
+                <div>
+                  <strong>Confirme</strong>
+                  <small>Veja a experiência completa até a confirmação.</small>
+                </div>
+              </div>
             </div>
 
-            <span class="prototype-label">Estilo visual</span>
-            <div class="prototype-options" id="demoStyles">
-              <button class="prototype-option active" type="button" data-style="cyber">Moderno</button>
-              <button class="prototype-option" type="button" data-style="elegante">Elegante</button>
-              <button class="prototype-option" type="button" data-style="vibrante">Vibrante</button>
+            <div class="app-demo-actions">
+              <button class="btn btn-outline" id="resetAppDemo" type="button">
+                Reiniciar demonstração
+              </button>
+              <button class="btn btn-primary" id="requestAppDemo" type="button">
+                Quero um app assim
+              </button>
             </div>
 
-            <button class="btn btn-primary prototype-cta" id="demoQuote" type="button">
-              Quero uma landing page assim
-            </button>
-
-            <div class="prototype-note">
-              Esta é apenas uma demonstração. Cada projeto real pode receber identidade,
-              textos, imagens, botões e funções próprias.
+            <div class="app-demo-hint">
+              Protótipo demonstrativo. Um projeto real pode ter login, banco de dados,
+              pagamentos, notificações, painel administrativo e outras funções.
             </div>
           </aside>
 
-          <div class="prototype-preview">
-            <div class="prototype-browserbar">
-              <i></i><i></i><i></i>
-              <div class="prototype-address">novabyte.com.br/seu-projeto</div>
-            </div>
-
-            <div class="landing-demo" id="landingDemo">
-              <div class="demo-nav">
-                <div class="demo-brand" id="demoBrand">Moscou Barber</div>
-                <div class="demo-navlinks">
-                  <span>Início</span>
-                  <span>Serviços</span>
-                  <span>Sobre</span>
-                  <span>Contato</span>
-                </div>
-              </div>
-
-              <div class="demo-hero">
-                <div>
-                  <div class="demo-kicker" id="demoKicker">ESTILO • PERSONALIDADE • PRESENÇA</div>
-                  <h3 id="demoTitle">Seu visual começa com uma experiência de verdade.</h3>
-                  <p id="demoText">
-                    Uma landing page profissional apresenta seus serviços, fortalece sua marca
-                    e leva o cliente direto para o agendamento.
-                  </p>
-
-                  <div class="demo-actions">
-                    <button class="demo-btn primary" id="demoPrimary" type="button">Agendar horário</button>
-                    <button class="demo-btn secondary" id="demoSecondary" type="button">Ver serviços</button>
+          <div class="app-demo-stage">
+            <div class="demo-phone" aria-label="Protótipo interativo de aplicativo">
+              <div class="phone-screen" id="demoApp">
+                <div class="phone-status">
+                  <span>09:41</span>
+                  <div class="phone-status-icons">
+                    <span>▮▮▮</span>
+                    <span>⌁</span>
+                    <span>▰</span>
                   </div>
                 </div>
 
-                <div class="demo-art">
-                  <div class="demo-art-card">
-                    <div class="demo-mini"></div>
-                    <div class="demo-mini"></div>
-                    <div class="demo-mini" style="width:72%"></div>
-                    <div class="demo-mini" style="width:54%"></div>
-                  </div>
-                </div>
-              </div>
+                <div class="app-view" id="demoAppView" aria-live="polite"></div>
 
-              <div class="demo-features">
-                <div class="demo-feature">
-                  <strong id="feature1Title">Agendamento fácil</strong>
-                  <span id="feature1Text">Botão direto para WhatsApp ou agenda.</span>
-                </div>
-                <div class="demo-feature">
-                  <strong id="feature2Title">Serviços em destaque</strong>
-                  <span id="feature2Text">Mostre o que você oferece sem complicação.</span>
-                </div>
-                <div class="demo-feature">
-                  <strong id="feature3Title">Feita para celular</strong>
-                  <span id="feature3Text">Layout responsivo e rápido.</span>
+                <nav class="app-bottom-nav" id="demoBottomNav" aria-label="Navegação do aplicativo">
+                  <button class="app-nav-btn active" type="button" data-screen="home">
+                    <b>⌂</b><span>Início</span>
+                  </button>
+                  <button class="app-nav-btn" type="button" data-screen="services">
+                    <b>✦</b><span>Serviços</span>
+                  </button>
+                  <button class="app-nav-btn" type="button" data-screen="booking">
+                    <b>＋</b><span>Agendar</span>
+                  </button>
+                  <button class="app-nav-btn" type="button" data-screen="profile">
+                    <b>●</b><span>Perfil</span>
+                  </button>
+                </nav>
+
+                <div class="app-toast" id="demoToast">
+                  <b>✓</b>
+                  <span id="demoToastText">Ação concluída.</span>
                 </div>
               </div>
             </div>
@@ -2261,148 +2902,551 @@ ${descricao}`;
 
 
     // =========================================
-    // SIMULADOR INTERATIVO DE LANDING PAGE
-    // =========================================
-    const demoData = {
-      barbearia: {
-        brand: "Moscou Barber",
-        kicker: "ESTILO • PERSONALIDADE • PRESENÇA",
-        title: "Seu visual começa com uma experiência de verdade.",
-        text: "Uma landing page profissional apresenta seus serviços, fortalece sua marca e leva o cliente direto para o agendamento.",
-        primary: "Agendar horário",
-        secondary: "Ver serviços",
-        f1t: "Agendamento fácil",
-        f1x: "Botão direto para WhatsApp ou agenda.",
-        f2t: "Serviços em destaque",
-        f2x: "Mostre cortes, barba e pacotes.",
-        f3t: "Feita para celular",
-        f3x: "Layout responsivo e rápido."
-      },
-      restaurante: {
-        brand: "Sabor Prime",
-        kicker: "SABOR • EXPERIÊNCIA • PEDIDO RÁPIDO",
-        title: "Transforme visitas em pedidos.",
-        text: "Apresente seu cardápio, seus diferenciais e leve o cliente direto para pedir pelo WhatsApp ou delivery.",
-        primary: "Fazer pedido",
-        secondary: "Ver cardápio",
-        f1t: "Cardápio online",
-        f1x: "Pratos, combos e destaques do dia.",
-        f2t: "Pedido rápido",
-        f2x: "WhatsApp e delivery em poucos cliques.",
-        f3t: "Oferta em destaque",
-        f3x: "Promoções com chamada clara para ação."
-      },
-      clinica: {
-        brand: "Clínica Essenza",
-        kicker: "CUIDADO • CONFIANÇA • ATENDIMENTO",
-        title: "Uma presença digital que transmite confiança.",
-        text: "Explique seus serviços, apresente sua equipe e facilite o contato de novos pacientes com uma página profissional.",
-        primary: "Agendar consulta",
-        secondary: "Conhecer serviços",
-        f1t: "Atendimento organizado",
-        f1x: "Contato rápido para novos pacientes.",
-        f2t: "Serviços claros",
-        f2x: "Especialidades explicadas de forma simples.",
-        f3t: "Imagem profissional",
-        f3x: "Design limpo e confiável."
-      }
+    // =========================================================
+    // PROTÓTIPO INTERATIVO DE APLICATIVO
+    // =========================================================
+    const demoAppView = document.getElementById("demoAppView");
+    const demoBottomNav = document.getElementById("demoBottomNav");
+    const demoToast = document.getElementById("demoToast");
+    const demoToastText = document.getElementById("demoToastText");
+
+    const demoServices = [
+      { id:"corte", icon:"✂", name:"Corte Premium", desc:"Corte personalizado + acabamento", price:45, duration:"45 min" },
+      { id:"barba", icon:"◒", name:"Barba Completa", desc:"Modelagem, toalha quente e finalização", price:35, duration:"35 min" },
+      { id:"combo", icon:"★", name:"Corte + Barba", desc:"Experiência completa", price:70, duration:"1h 10 min" },
+      { id:"pezinho", icon:"⌁", name:"Acabamento", desc:"Pezinho e acabamento rápido", price:20, duration:"20 min" }
+    ];
+
+    const demoProfessionals = [
+      { id:"lucas", initials:"LM", name:"Lucas Martins", role:"Barbeiro especialista" },
+      { id:"andre", initials:"AS", name:"André Silva", role:"Barbeiro senior" }
+    ];
+
+    const demoDays = ["Hoje", "Amanhã", "Sex 18", "Sáb 19"];
+    const demoTimes = ["09:00","10:30","13:00","14:30","16:00","18:30"];
+
+    const appState = {
+      screen:"home",
+      selectedService:"combo",
+      selectedProfessional:"",
+      selectedDay:"",
+      selectedTime:"",
+      confirmed:false,
+      search:""
     };
 
-    const demoStyles = {
-      cyber: {
-        accent: "#6d5dfc",
-        accent2: "#35b8ff"
-      },
-      elegante: {
-        accent: "#8b6b3f",
-        accent2: "#c9a56d"
-      },
-      vibrante: {
-        accent: "#ff4f7a",
-        accent2: "#ff9a3d"
-      }
-    };
-
-    let currentNiche = "barbearia";
-    let currentStyle = "cyber";
-
-    const landingDemo = document.getElementById("landingDemo");
-
-    function renderDemo(){
-      const d = demoData[currentNiche];
-      const s = demoStyles[currentStyle];
-
-      landingDemo.style.setProperty("--demo-accent", s.accent);
-      landingDemo.style.setProperty("--demo-accent2", s.accent2);
-
-      document.getElementById("demoBrand").textContent = d.brand;
-      document.getElementById("demoKicker").textContent = d.kicker;
-      document.getElementById("demoTitle").textContent = d.title;
-      document.getElementById("demoText").textContent = d.text;
-      document.getElementById("demoPrimary").textContent = d.primary;
-      document.getElementById("demoSecondary").textContent = d.secondary;
-      document.getElementById("feature1Title").textContent = d.f1t;
-      document.getElementById("feature1Text").textContent = d.f1x;
-      document.getElementById("feature2Title").textContent = d.f2t;
-      document.getElementById("feature2Text").textContent = d.f2x;
-      document.getElementById("feature3Title").textContent = d.f3t;
-      document.getElementById("feature3Text").textContent = d.f3x;
+    function moneyBR(value){
+      return value.toLocaleString("pt-BR", {
+        style:"currency",
+        currency:"BRL",
+        minimumFractionDigits:2
+      });
     }
 
-    document.querySelectorAll("#demoNiches .prototype-option").forEach(btn => {
-      btn.addEventListener("click", () => {
-        currentNiche = btn.dataset.niche;
+    function selectedService(){
+      return demoServices.find(item => item.id === appState.selectedService) || demoServices[0];
+    }
 
-        document.querySelectorAll("#demoNiches .prototype-option").forEach(b => {
-          b.classList.toggle("active", b === btn);
-        });
+    let toastTimer = null;
 
-        renderDemo();
+    function showDemoToast(message){
+      demoToastText.textContent = message;
+      demoToast.classList.add("show");
+
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        demoToast.classList.remove("show");
+      }, 2300);
+    }
+
+    function updateBottomNav(){
+      document.querySelectorAll("#demoBottomNav .app-nav-btn").forEach(btn => {
+        const isBookingArea =
+          appState.screen === "booking" ||
+          appState.screen === "success";
+
+        const active =
+          btn.dataset.screen === appState.screen ||
+          (btn.dataset.screen === "booking" && isBookingArea);
+
+        btn.classList.toggle("active", active);
       });
+    }
+
+    function appHeader(){
+      return `
+        <div class="app-topbar">
+          <div class="app-topbar-brand">
+            <div class="app-mini-logo">NB</div>
+            <div>
+              <strong>Moscou Barber App</strong>
+              <small>Protótipo Nova Byte</small>
+            </div>
+          </div>
+          <button class="icon-button" type="button" data-demo-action="notify" aria-label="Notificações">♢</button>
+        </div>
+      `;
+    }
+
+    function renderHome(){
+      const services = demoServices.slice(0,4).map(service => `
+        <button class="service-card" type="button" data-service="${service.id}">
+          <span class="service-icon">${service.icon}</span>
+          <strong>${service.name}</strong>
+          <span>${moneyBR(service.price)} • ${service.duration}</span>
+        </button>
+      `).join("");
+
+      return `
+        ${appHeader()}
+        <div class="app-content">
+          <div class="hello-line">
+            <div>
+              <small>Bom dia 👋</small>
+              <h4>Olá, visitante</h4>
+            </div>
+            <div class="avatar-dot">V</div>
+          </div>
+
+          <label class="app-search">
+            <span>⌕</span>
+            <input
+              id="demoSearch"
+              type="search"
+              autocomplete="off"
+              placeholder="Buscar serviço..."
+              value="${appState.search.replace(/"/g, "&quot;")}"
+              aria-label="Buscar serviço">
+          </label>
+
+          <div class="promo-card">
+            <small>EXPERIÊNCIA PREMIUM</small>
+            <strong>Seu próximo horário está a poucos toques.</strong>
+            <button type="button" data-demo-action="promo-book">Agendar agora</button>
+          </div>
+
+          <div class="app-section-title">
+            <strong>Serviços populares</strong>
+            <button type="button" data-demo-screen="services">Ver todos</button>
+          </div>
+
+          <div class="service-cards" id="demoHomeServices">
+            ${services}
+          </div>
+
+          <div class="app-section-title">
+            <strong>Próximo agendamento</strong>
+            <button type="button" data-demo-action="booking-info">Detalhes</button>
+          </div>
+
+          <div class="booking-card">
+            <div class="booking-date">21<br>SET</div>
+            <div class="booking-info">
+              <strong>Corte + Barba</strong>
+              <span>14:30 • Lucas Martins</span>
+            </div>
+            <span>›</span>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderServices(){
+      const query = appState.search.trim().toLowerCase();
+
+      const filtered = demoServices.filter(service => {
+        if(!query) return true;
+        return (
+          service.name.toLowerCase().includes(query) ||
+          service.desc.toLowerCase().includes(query)
+        );
+      });
+
+      const rows = filtered.length
+        ? filtered.map(service => `
+          <div class="service-row">
+            <div class="service-row-icon">${service.icon}</div>
+            <div class="service-row-info">
+              <strong>${service.name}</strong>
+              <span>${service.desc} • ${service.duration}</span>
+            </div>
+            <div class="service-row-price">
+              <b>${moneyBR(service.price)}</b>
+              <button type="button" data-service="${service.id}">Escolher</button>
+            </div>
+          </div>
+        `).join("")
+        : `<div class="service-row"><div class="service-row-info"><strong>Nenhum serviço encontrado.</strong><span>Tente outro termo.</span></div></div>`;
+
+      return `
+        ${appHeader()}
+        <div class="app-content">
+          <div class="screen-title">
+            <button type="button" data-demo-screen="home">←</button>
+            <div>
+              <h4>Serviços</h4>
+              <p>Escolha o que deseja agendar</p>
+            </div>
+          </div>
+
+          <label class="app-search">
+            <span>⌕</span>
+            <input
+              id="demoSearch"
+              type="search"
+              autocomplete="off"
+              placeholder="Buscar serviço..."
+              value="${appState.search.replace(/"/g, "&quot;")}"
+              aria-label="Buscar serviço">
+          </label>
+
+          <div class="service-list">
+            ${rows}
+          </div>
+        </div>
+      `;
+    }
+
+    function renderBooking(){
+      const service = selectedService();
+
+      const professionals = demoProfessionals.map(pro => `
+        <button
+          class="professional-card ${appState.selectedProfessional === pro.id ? "active" : ""}"
+          type="button"
+          data-professional="${pro.id}">
+          <div class="professional-avatar">${pro.initials}</div>
+          <strong>${pro.name}</strong>
+          <small>${pro.role}</small>
+        </button>
+      `).join("");
+
+      const days = demoDays.map(day => `
+        <button
+          class="choice-chip ${appState.selectedDay === day ? "active" : ""}"
+          type="button"
+          data-day="${day}">
+          ${day}
+        </button>
+      `).join("");
+
+      const times = demoTimes.map(time => `
+        <button
+          class="choice-chip ${appState.selectedTime === time ? "active" : ""}"
+          type="button"
+          data-time="${time}">
+          ${time}
+        </button>
+      `).join("");
+
+      const professional = demoProfessionals.find(p => p.id === appState.selectedProfessional);
+
+      const canConfirm =
+        appState.selectedService &&
+        appState.selectedProfessional &&
+        appState.selectedDay &&
+        appState.selectedTime;
+
+      return `
+        ${appHeader()}
+        <div class="app-content">
+          <div class="screen-title">
+            <button type="button" data-demo-screen="services">←</button>
+            <div>
+              <h4>Novo agendamento</h4>
+              <p>Monte seu horário em poucos passos</p>
+            </div>
+          </div>
+
+          <div class="booking-progress" aria-hidden="true">
+            <i class="done"></i>
+            <i class="${appState.selectedProfessional ? "done" : ""}"></i>
+            <i class="${appState.selectedDay ? "done" : ""}"></i>
+            <i class="${appState.selectedTime ? "done" : ""}"></i>
+          </div>
+
+          <div class="service-row">
+            <div class="service-row-icon">${service.icon}</div>
+            <div class="service-row-info">
+              <strong>${service.name}</strong>
+              <span>${service.duration}</span>
+            </div>
+            <div class="service-row-price">
+              <b>${moneyBR(service.price)}</b>
+            </div>
+          </div>
+
+          <div class="choice-block">
+            <strong>1. Escolha o profissional</strong>
+            <div class="professional-grid">
+              ${professionals}
+            </div>
+          </div>
+
+          <div class="choice-block">
+            <strong>2. Escolha o dia</strong>
+            <div class="chip-grid">
+              ${days}
+            </div>
+          </div>
+
+          <div class="choice-block">
+            <strong>3. Escolha o horário</strong>
+            <div class="chip-grid">
+              ${times}
+            </div>
+          </div>
+
+          <div class="booking-summary">
+            <div class="summary-line">
+              <span>Serviço</span>
+              <b>${service.name}</b>
+            </div>
+            <div class="summary-line">
+              <span>Profissional</span>
+              <b>${professional ? professional.name : "Escolha acima"}</b>
+            </div>
+            <div class="summary-line">
+              <span>Data e hora</span>
+              <b>${appState.selectedDay && appState.selectedTime ? `${appState.selectedDay} • ${appState.selectedTime}` : "Escolha acima"}</b>
+            </div>
+            <div class="summary-line">
+              <span>Total</span>
+              <b>${moneyBR(service.price)}</b>
+            </div>
+          </div>
+
+          <button
+            class="app-primary"
+            id="demoConfirmBooking"
+            type="button"
+            ${canConfirm ? "" : "disabled"}>
+            Confirmar agendamento
+          </button>
+        </div>
+      `;
+    }
+
+    function renderSuccess(){
+      const service = selectedService();
+      const professional =
+        demoProfessionals.find(p => p.id === appState.selectedProfessional);
+
+      return `
+        ${appHeader()}
+        <div class="app-content">
+          <div class="success-wrap">
+            <div>
+              <div class="success-icon">✓</div>
+              <h4>Agendamento confirmado!</h4>
+              <p>
+                ${service.name} com ${professional ? professional.name : "profissional"}
+                em ${appState.selectedDay}, às ${appState.selectedTime}.
+              </p>
+
+              <div class="booking-summary" style="margin-top:20px;text-align:left;">
+                <div class="summary-line">
+                  <span>Serviço</span>
+                  <b>${service.name}</b>
+                </div>
+                <div class="summary-line">
+                  <span>Horário</span>
+                  <b>${appState.selectedDay} • ${appState.selectedTime}</b>
+                </div>
+                <div class="summary-line">
+                  <span>Valor</span>
+                  <b>${moneyBR(service.price)}</b>
+                </div>
+              </div>
+
+              <button class="app-primary" type="button" data-demo-screen="home">
+                Voltar ao início
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderProfile(){
+      return `
+        ${appHeader()}
+        <div class="app-content">
+          <div class="screen-title">
+            <div>
+              <h4>Meu perfil</h4>
+              <p>Exemplo de área do cliente</p>
+            </div>
+          </div>
+
+          <div class="profile-card">
+            <div class="profile-avatar">V</div>
+            <h4>Visitante Nova Byte</h4>
+            <p>cliente@exemplo.com</p>
+          </div>
+
+          <div class="profile-menu">
+            <button type="button" data-demo-action="appointments">◫ &nbsp; Meus agendamentos</button>
+            <button type="button" data-demo-action="favorites">♡ &nbsp; Serviços favoritos</button>
+            <button type="button" data-demo-action="notifications">♢ &nbsp; Notificações</button>
+            <button type="button" data-demo-action="settings">⚙ &nbsp; Configurações</button>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderApp(){
+      if(appState.screen === "services"){
+        demoAppView.innerHTML = renderServices();
+      }else if(appState.screen === "booking"){
+        demoAppView.innerHTML = renderBooking();
+      }else if(appState.screen === "success"){
+        demoAppView.innerHTML = renderSuccess();
+      }else if(appState.screen === "profile"){
+        demoAppView.innerHTML = renderProfile();
+      }else{
+        demoAppView.innerHTML = renderHome();
+      }
+
+      demoAppView.scrollTop = 0;
+      updateBottomNav();
+    }
+
+    function goToDemoScreen(screen){
+      appState.screen = screen;
+
+      if(screen === "booking"){
+        appState.confirmed = false;
+      }
+
+      renderApp();
+    }
+
+    demoBottomNav.addEventListener("click", event => {
+      const btn = event.target.closest("[data-screen]");
+      if(!btn) return;
+      goToDemoScreen(btn.dataset.screen);
     });
 
-    document.querySelectorAll("#demoStyles .prototype-option").forEach(btn => {
-      btn.addEventListener("click", () => {
-        currentStyle = btn.dataset.style;
+    demoAppView.addEventListener("click", event => {
+      const screenBtn = event.target.closest("[data-demo-screen]");
+      if(screenBtn){
+        goToDemoScreen(screenBtn.dataset.demoScreen);
+        return;
+      }
 
-        document.querySelectorAll("#demoStyles .prototype-option").forEach(b => {
-          b.classList.toggle("active", b === btn);
-        });
+      const serviceBtn = event.target.closest("[data-service]");
+      if(serviceBtn){
+        appState.selectedService = serviceBtn.dataset.service;
+        appState.selectedProfessional = "";
+        appState.selectedDay = "";
+        appState.selectedTime = "";
+        appState.screen = "booking";
+        renderApp();
+        showDemoToast("Serviço selecionado. Agora escolha seu horário.");
+        return;
+      }
 
-        renderDemo();
-      });
+      const professionalBtn = event.target.closest("[data-professional]");
+      if(professionalBtn){
+        appState.selectedProfessional = professionalBtn.dataset.professional;
+        renderApp();
+        return;
+      }
+
+      const dayBtn = event.target.closest("[data-day]");
+      if(dayBtn){
+        appState.selectedDay = dayBtn.dataset.day;
+        renderApp();
+        return;
+      }
+
+      const timeBtn = event.target.closest("[data-time]");
+      if(timeBtn){
+        appState.selectedTime = timeBtn.dataset.time;
+        renderApp();
+        return;
+      }
+
+      const actionBtn = event.target.closest("[data-demo-action]");
+      if(actionBtn){
+        const action = actionBtn.dataset.demoAction;
+
+        if(action === "promo-book"){
+          appState.screen = "booking";
+          renderApp();
+          return;
+        }
+
+        const messages = {
+          notify:"Você não tem novas notificações nesta demonstração.",
+          "booking-info":"Esse card pode abrir os detalhes de um agendamento real.",
+          appointments:"Aqui apareceriam os agendamentos do cliente.",
+          favorites:"Aqui o cliente poderia salvar serviços favoritos.",
+          notifications:"Notificações podem avisar confirmação e lembretes.",
+          settings:"O app pode ter preferências, senha e dados pessoais."
+        };
+
+        showDemoToast(messages[action] || "Função demonstrativa.");
+        return;
+      }
+
+      if(event.target.id === "demoConfirmBooking"){
+        appState.confirmed = true;
+        appState.screen = "success";
+        renderApp();
+        showDemoToast("Agendamento confirmado com sucesso.");
+      }
     });
 
-    document.getElementById("demoQuote").addEventListener("click", () => {
-      const nicheNames = {
-        barbearia: "Barbearia",
-        restaurante: "Restaurante",
-        clinica: "Clínica / Consultório"
-      };
+    demoAppView.addEventListener("input", event => {
+      if(event.target.id !== "demoSearch") return;
 
-      const styleNames = {
-        cyber: "Moderno",
-        elegante: "Elegante",
-        vibrante: "Vibrante"
-      };
+      appState.search = event.target.value;
 
+      const query = appState.search.trim().toLowerCase();
+      const container = document.getElementById("demoHomeServices");
+
+      if(container && appState.screen === "home"){
+        const filtered = demoServices.filter(service => {
+          if(!query) return true;
+          return (
+            service.name.toLowerCase().includes(query) ||
+            service.desc.toLowerCase().includes(query)
+          );
+        });
+
+        container.innerHTML = filtered.length
+          ? filtered.map(service => `
+            <button class="service-card" type="button" data-service="${service.id}">
+              <span class="service-icon">${service.icon}</span>
+              <strong>${service.name}</strong>
+              <span>${moneyBR(service.price)} • ${service.duration}</span>
+            </button>
+          `).join("")
+          : `<div class="service-row" style="grid-column:1/-1;"><div class="service-row-info"><strong>Nenhum serviço encontrado.</strong></div></div>`;
+      }
+    });
+
+    document.getElementById("resetAppDemo").addEventListener("click", () => {
+      appState.screen = "home";
+      appState.selectedService = "combo";
+      appState.selectedProfessional = "";
+      appState.selectedDay = "";
+      appState.selectedTime = "";
+      appState.confirmed = false;
+      appState.search = "";
+      renderApp();
+      showDemoToast("Demonstração reiniciada.");
+    });
+
+    document.getElementById("requestAppDemo").addEventListener("click", () => {
       abrirWhatsApp(
-        `Olá! Vi o protótipo interativo no site da Nova Byte e gostaria de uma landing page.
-
-Tipo de negócio: ${nicheNames[currentNiche]}
-Estilo que gostei: ${styleNames[currentStyle]}`
+        "Olá! Testei o protótipo interativo no site da Nova Byte e gostaria de conversar sobre o desenvolvimento de um aplicativo parecido."
       );
     });
 
-    document.getElementById("demoPrimary").addEventListener("click", () => {
-      alert("Demonstração: em um projeto real, este botão pode abrir WhatsApp, agenda, checkout ou outra ação.");
-    });
-
-    document.getElementById("demoSecondary").addEventListener("click", () => {
-      alert("Demonstração: este botão poderia levar para serviços, cardápio, portfólio ou outra seção.");
-    });
-
-    renderDemo();
+    renderApp();
 
     document.getElementById("year").textContent = new Date().getFullYear();
 
