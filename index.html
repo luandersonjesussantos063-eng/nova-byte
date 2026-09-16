@@ -2098,6 +2098,299 @@
       flex:0 0 auto;
     }
 
+
+    /* =========================================================
+       SOLUÇÕES / O QUE PODEMOS CRIAR
+       ========================================================= */
+    .solution-grid{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:18px;
+    }
+
+    .solution-card{
+      position:relative;
+      overflow:hidden;
+      min-height:230px;
+      padding:26px;
+      border-radius:24px;
+      border:1px solid rgba(255,255,255,.08);
+      background:
+        radial-gradient(circle at 90% 10%,rgba(109,93,252,.11),transparent 28%),
+        linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.018));
+      transition:.24s ease;
+    }
+
+    .solution-card:hover{
+      transform:translateY(-5px);
+      border-color:rgba(126,226,255,.24);
+      background:
+        radial-gradient(circle at 90% 10%,rgba(53,184,255,.12),transparent 30%),
+        linear-gradient(180deg,rgba(109,93,252,.07),rgba(255,255,255,.022));
+    }
+
+    .solution-number{
+      position:absolute;
+      top:18px;
+      right:20px;
+      color:rgba(255,255,255,.12);
+      font-size:2.4rem;
+      font-weight:1000;
+      letter-spacing:-.08em;
+    }
+
+    .solution-icon{
+      width:50px;
+      height:50px;
+      display:grid;
+      place-items:center;
+      border-radius:16px;
+      margin-bottom:19px;
+      background:rgba(109,93,252,.12);
+      border:1px solid rgba(138,124,255,.18);
+      font-size:1.25rem;
+    }
+
+    .solution-card h3{
+      margin-bottom:8px;
+      font-size:1.08rem;
+    }
+
+    .solution-card p{
+      color:var(--muted);
+      font-size:.9rem;
+      margin-bottom:17px;
+    }
+
+    .solution-tags{
+      display:flex;
+      flex-wrap:wrap;
+      gap:7px;
+    }
+
+    .solution-tags span{
+      padding:5px 8px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.07);
+      background:rgba(255,255,255,.03);
+      color:#8fa0b7;
+      font-size:.7rem;
+    }
+
+    /* =========================================================
+       PLANOS / PREÇOS
+       ========================================================= */
+    .pricing-grid{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:18px;
+      align-items:stretch;
+    }
+
+    .price-card{
+      position:relative;
+      display:flex;
+      flex-direction:column;
+      padding:28px;
+      border-radius:26px;
+      border:1px solid rgba(255,255,255,.08);
+      background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.018));
+    }
+
+    .price-card.featured{
+      border-color:rgba(138,124,255,.35);
+      background:
+        radial-gradient(circle at 50% 0%,rgba(109,93,252,.18),transparent 34%),
+        linear-gradient(180deg,rgba(109,93,252,.09),rgba(255,255,255,.02));
+      box-shadow:0 22px 60px rgba(21,18,61,.22);
+    }
+
+    .price-badge{
+      display:inline-flex;
+      align-self:flex-start;
+      margin-bottom:17px;
+      padding:6px 9px;
+      border-radius:999px;
+      background:rgba(109,93,252,.12);
+      border:1px solid rgba(138,124,255,.20);
+      color:#bdb6ff;
+      font-size:.68rem;
+      font-weight:900;
+      letter-spacing:.09em;
+      text-transform:uppercase;
+    }
+
+    .price-card h3{
+      font-size:1.18rem;
+      margin-bottom:6px;
+    }
+
+    .price-card > p{
+      min-height:48px;
+      color:var(--muted);
+      font-size:.88rem;
+    }
+
+    .price-value{
+      margin:22px 0 4px;
+      font-size:2.25rem;
+      line-height:1;
+      font-weight:1000;
+      letter-spacing:-.055em;
+    }
+
+    .price-value small{
+      display:block;
+      margin-bottom:6px;
+      color:#8492a8;
+      font-size:.68rem;
+      font-weight:700;
+      letter-spacing:0;
+    }
+
+    .price-sub{
+      color:#77869d;
+      font-size:.74rem;
+      margin-bottom:18px;
+    }
+
+    .price-list{
+      display:grid;
+      gap:10px;
+      margin:18px 0 24px;
+      list-style:none;
+    }
+
+    .price-list li{
+      display:flex;
+      gap:9px;
+      color:#b5c0d1;
+      font-size:.84rem;
+    }
+
+    .price-list li::before{
+      content:"✓";
+      color:#62e2aa;
+      font-weight:900;
+    }
+
+    .price-card .btn{
+      width:100%;
+      margin-top:auto;
+    }
+
+    .pricing-note{
+      margin-top:18px;
+      color:#7e8ca0;
+      font-size:.8rem;
+      text-align:center;
+    }
+
+    /* =========================================================
+       BRIEFING / ORÇAMENTO
+       ========================================================= */
+    .briefing-wrap{
+      display:grid;
+      grid-template-columns:.82fr 1.18fr;
+      gap:24px;
+      align-items:start;
+    }
+
+    .briefing-info{
+      border-radius:26px;
+      border:1px solid rgba(255,255,255,.08);
+      background:
+        radial-gradient(circle at 20% 0%,rgba(109,93,252,.13),transparent 35%),
+        rgba(255,255,255,.025);
+      padding:28px;
+    }
+
+    .briefing-info h3{
+      font-size:1.25rem;
+      margin-bottom:10px;
+    }
+
+    .briefing-info p{
+      color:var(--muted);
+      font-size:.9rem;
+    }
+
+    .briefing-points{
+      display:grid;
+      gap:12px;
+      margin-top:22px;
+    }
+
+    .briefing-point{
+      display:grid;
+      grid-template-columns:38px 1fr;
+      gap:11px;
+      align-items:start;
+    }
+
+    .briefing-point span{
+      width:38px;
+      height:38px;
+      display:grid;
+      place-items:center;
+      border-radius:12px;
+      background:rgba(109,93,252,.12);
+      color:#b7afff;
+      font-weight:900;
+      font-size:.76rem;
+    }
+
+    .briefing-point strong{
+      display:block;
+      margin-bottom:2px;
+      font-size:.83rem;
+    }
+
+    .briefing-point small{
+      color:#8190a7;
+      font-size:.72rem;
+      line-height:1.4;
+    }
+
+    .briefing-form{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:15px;
+      padding:28px;
+      border-radius:26px;
+      border:1px solid rgba(255,255,255,.08);
+      background:rgba(255,255,255,.025);
+    }
+
+    .briefing-form .field{
+      margin:0;
+    }
+
+    .briefing-form .field.full{
+      grid-column:1/-1;
+    }
+
+    .briefing-form .btn{
+      grid-column:1/-1;
+      width:100%;
+      min-height:52px;
+      margin-top:4px;
+    }
+
+    .briefing-security{
+      grid-column:1/-1;
+      display:flex;
+      align-items:flex-start;
+      gap:9px;
+      color:#77869a;
+      font-size:.72rem;
+      line-height:1.45;
+    }
+
+    .briefing-security b{
+      color:#62e2aa;
+    }
+
     @media(max-width:900px){
       .app-demo-layout{
         grid-template-columns:1fr;
@@ -2135,6 +2428,299 @@
       }
     }
 
+
+    /* =========================================================
+       SOLUÇÕES / O QUE PODEMOS CRIAR
+       ========================================================= */
+    .solution-grid{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:18px;
+    }
+
+    .solution-card{
+      position:relative;
+      overflow:hidden;
+      min-height:230px;
+      padding:26px;
+      border-radius:24px;
+      border:1px solid rgba(255,255,255,.08);
+      background:
+        radial-gradient(circle at 90% 10%,rgba(109,93,252,.11),transparent 28%),
+        linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.018));
+      transition:.24s ease;
+    }
+
+    .solution-card:hover{
+      transform:translateY(-5px);
+      border-color:rgba(126,226,255,.24);
+      background:
+        radial-gradient(circle at 90% 10%,rgba(53,184,255,.12),transparent 30%),
+        linear-gradient(180deg,rgba(109,93,252,.07),rgba(255,255,255,.022));
+    }
+
+    .solution-number{
+      position:absolute;
+      top:18px;
+      right:20px;
+      color:rgba(255,255,255,.12);
+      font-size:2.4rem;
+      font-weight:1000;
+      letter-spacing:-.08em;
+    }
+
+    .solution-icon{
+      width:50px;
+      height:50px;
+      display:grid;
+      place-items:center;
+      border-radius:16px;
+      margin-bottom:19px;
+      background:rgba(109,93,252,.12);
+      border:1px solid rgba(138,124,255,.18);
+      font-size:1.25rem;
+    }
+
+    .solution-card h3{
+      margin-bottom:8px;
+      font-size:1.08rem;
+    }
+
+    .solution-card p{
+      color:var(--muted);
+      font-size:.9rem;
+      margin-bottom:17px;
+    }
+
+    .solution-tags{
+      display:flex;
+      flex-wrap:wrap;
+      gap:7px;
+    }
+
+    .solution-tags span{
+      padding:5px 8px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.07);
+      background:rgba(255,255,255,.03);
+      color:#8fa0b7;
+      font-size:.7rem;
+    }
+
+    /* =========================================================
+       PLANOS / PREÇOS
+       ========================================================= */
+    .pricing-grid{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:18px;
+      align-items:stretch;
+    }
+
+    .price-card{
+      position:relative;
+      display:flex;
+      flex-direction:column;
+      padding:28px;
+      border-radius:26px;
+      border:1px solid rgba(255,255,255,.08);
+      background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.018));
+    }
+
+    .price-card.featured{
+      border-color:rgba(138,124,255,.35);
+      background:
+        radial-gradient(circle at 50% 0%,rgba(109,93,252,.18),transparent 34%),
+        linear-gradient(180deg,rgba(109,93,252,.09),rgba(255,255,255,.02));
+      box-shadow:0 22px 60px rgba(21,18,61,.22);
+    }
+
+    .price-badge{
+      display:inline-flex;
+      align-self:flex-start;
+      margin-bottom:17px;
+      padding:6px 9px;
+      border-radius:999px;
+      background:rgba(109,93,252,.12);
+      border:1px solid rgba(138,124,255,.20);
+      color:#bdb6ff;
+      font-size:.68rem;
+      font-weight:900;
+      letter-spacing:.09em;
+      text-transform:uppercase;
+    }
+
+    .price-card h3{
+      font-size:1.18rem;
+      margin-bottom:6px;
+    }
+
+    .price-card > p{
+      min-height:48px;
+      color:var(--muted);
+      font-size:.88rem;
+    }
+
+    .price-value{
+      margin:22px 0 4px;
+      font-size:2.25rem;
+      line-height:1;
+      font-weight:1000;
+      letter-spacing:-.055em;
+    }
+
+    .price-value small{
+      display:block;
+      margin-bottom:6px;
+      color:#8492a8;
+      font-size:.68rem;
+      font-weight:700;
+      letter-spacing:0;
+    }
+
+    .price-sub{
+      color:#77869d;
+      font-size:.74rem;
+      margin-bottom:18px;
+    }
+
+    .price-list{
+      display:grid;
+      gap:10px;
+      margin:18px 0 24px;
+      list-style:none;
+    }
+
+    .price-list li{
+      display:flex;
+      gap:9px;
+      color:#b5c0d1;
+      font-size:.84rem;
+    }
+
+    .price-list li::before{
+      content:"✓";
+      color:#62e2aa;
+      font-weight:900;
+    }
+
+    .price-card .btn{
+      width:100%;
+      margin-top:auto;
+    }
+
+    .pricing-note{
+      margin-top:18px;
+      color:#7e8ca0;
+      font-size:.8rem;
+      text-align:center;
+    }
+
+    /* =========================================================
+       BRIEFING / ORÇAMENTO
+       ========================================================= */
+    .briefing-wrap{
+      display:grid;
+      grid-template-columns:.82fr 1.18fr;
+      gap:24px;
+      align-items:start;
+    }
+
+    .briefing-info{
+      border-radius:26px;
+      border:1px solid rgba(255,255,255,.08);
+      background:
+        radial-gradient(circle at 20% 0%,rgba(109,93,252,.13),transparent 35%),
+        rgba(255,255,255,.025);
+      padding:28px;
+    }
+
+    .briefing-info h3{
+      font-size:1.25rem;
+      margin-bottom:10px;
+    }
+
+    .briefing-info p{
+      color:var(--muted);
+      font-size:.9rem;
+    }
+
+    .briefing-points{
+      display:grid;
+      gap:12px;
+      margin-top:22px;
+    }
+
+    .briefing-point{
+      display:grid;
+      grid-template-columns:38px 1fr;
+      gap:11px;
+      align-items:start;
+    }
+
+    .briefing-point span{
+      width:38px;
+      height:38px;
+      display:grid;
+      place-items:center;
+      border-radius:12px;
+      background:rgba(109,93,252,.12);
+      color:#b7afff;
+      font-weight:900;
+      font-size:.76rem;
+    }
+
+    .briefing-point strong{
+      display:block;
+      margin-bottom:2px;
+      font-size:.83rem;
+    }
+
+    .briefing-point small{
+      color:#8190a7;
+      font-size:.72rem;
+      line-height:1.4;
+    }
+
+    .briefing-form{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:15px;
+      padding:28px;
+      border-radius:26px;
+      border:1px solid rgba(255,255,255,.08);
+      background:rgba(255,255,255,.025);
+    }
+
+    .briefing-form .field{
+      margin:0;
+    }
+
+    .briefing-form .field.full{
+      grid-column:1/-1;
+    }
+
+    .briefing-form .btn{
+      grid-column:1/-1;
+      width:100%;
+      min-height:52px;
+      margin-top:4px;
+    }
+
+    .briefing-security{
+      grid-column:1/-1;
+      display:flex;
+      align-items:flex-start;
+      gap:9px;
+      color:#77869a;
+      font-size:.72rem;
+      line-height:1.45;
+    }
+
+    .briefing-security b{
+      color:#62e2aa;
+    }
+
     @media(max-width:900px){
       .hero{
         min-height:auto;
@@ -2158,6 +2744,15 @@
 
       .cards{
         grid-template-columns:1fr 1fr;
+      }
+
+      .solution-grid,
+      .pricing-grid{
+        grid-template-columns:1fr 1fr;
+      }
+
+      .briefing-wrap{
+        grid-template-columns:1fr;
       }
 
       .trust-grid{
@@ -2263,12 +2858,18 @@
       .process,
       .trust-grid,
       .faq-grid,
-      .budget-box{
+      .budget-box,
+      .solution-grid,
+      .pricing-grid,
+      .briefing-form{
         grid-template-columns:1fr;
       }
 
       .field.full,
-      .budget-action{
+      .budget-action,
+      .briefing-form .field.full,
+      .briefing-form .btn,
+      .briefing-security{
         grid-column:auto;
       }
 
@@ -2315,10 +2916,10 @@
 
       <nav class="nav-links" id="navLinks">
         <a href="#servicos">Serviços</a>
+        <a href="#solucoes">Soluções</a>
         <a href="#prototipo">Teste o app</a>
         <a href="#portfolio">Portfólio</a>
-        <a href="#processo">Como funciona</a>
-        <a href="#faq">Dúvidas</a>
+        <a href="#planos">Planos</a>
         <a href="#orcamento">Orçamento</a>
       </nav>
 
@@ -2482,6 +3083,93 @@
       </div>
     </section>
 
+
+    <section id="solucoes">
+      <div class="container">
+        <div class="section-head">
+          <span>O que podemos criar</span>
+          <h2>Da ideia ao produto digital.</h2>
+          <p>
+            Nem todo cliente precisa da mesma coisa. Por isso a Nova Byte trabalha
+            com soluções diferentes, desde uma página simples até experiências mais completas.
+          </p>
+        </div>
+
+        <div class="solution-grid">
+          <article class="solution-card">
+            <span class="solution-number">01</span>
+            <div class="solution-icon">🚀</div>
+            <h3>Landing pages</h3>
+            <p>Páginas diretas para vender, captar contatos, divulgar serviços ou campanhas.</p>
+            <div class="solution-tags">
+              <span>Conversão</span>
+              <span>WhatsApp</span>
+              <span>Responsivo</span>
+            </div>
+          </article>
+
+          <article class="solution-card">
+            <span class="solution-number">02</span>
+            <div class="solution-icon">🌐</div>
+            <h3>Sites empresariais</h3>
+            <p>Presença digital profissional para empresas, profissionais e pequenos negócios.</p>
+            <div class="solution-tags">
+              <span>Institucional</span>
+              <span>SEO</span>
+              <span>Contato</span>
+            </div>
+          </article>
+
+          <article class="solution-card">
+            <span class="solution-number">03</span>
+            <div class="solution-icon">📱</div>
+            <h3>Protótipos de aplicativos</h3>
+            <p>Uma versão navegável da ideia para visualizar fluxos, telas e experiência do usuário.</p>
+            <div class="solution-tags">
+              <span>UX/UI</span>
+              <span>Interativo</span>
+              <span>Validação</span>
+            </div>
+          </article>
+
+          <article class="solution-card">
+            <span class="solution-number">04</span>
+            <div class="solution-icon">⚙️</div>
+            <h3>Sistemas internos</h3>
+            <p>Cadastros, controles, painéis e fluxos para organizar rotinas de empresas.</p>
+            <div class="solution-tags">
+              <span>Painel</span>
+              <span>Cadastros</span>
+              <span>Gestão</span>
+            </div>
+          </article>
+
+          <article class="solution-card">
+            <span class="solution-number">05</span>
+            <div class="solution-icon">📅</div>
+            <h3>Agendamento online</h3>
+            <p>Experiências para barbearias, clínicas, salões, consultórios e serviços por horário.</p>
+            <div class="solution-tags">
+              <span>Agenda</span>
+              <span>Serviços</span>
+              <span>Clientes</span>
+            </div>
+          </article>
+
+          <article class="solution-card">
+            <span class="solution-number">06</span>
+            <div class="solution-icon">🛍️</div>
+            <h3>Catálogos e cardápios</h3>
+            <p>Apresente produtos, serviços ou cardápios e leve o cliente direto para o pedido.</p>
+            <div class="solution-tags">
+              <span>Produtos</span>
+              <span>Delivery</span>
+              <span>WhatsApp</span>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
 
     <section id="prototipo">
       <div class="container">
@@ -2719,6 +3407,94 @@
       </div>
     </section>
 
+    <section id="planos">
+      <div class="container">
+        <div class="section-head">
+          <span>Valores iniciais</span>
+          <h2>Uma referência antes do orçamento.</h2>
+          <p>
+            Cada projeto é diferente, mas estas faixas ajudam o cliente a entender
+            por onde começamos. O valor final depende do escopo e das funções necessárias.
+          </p>
+        </div>
+
+        <div class="pricing-grid">
+          <article class="price-card">
+            <span class="price-badge">Entrada</span>
+            <h3>Landing Page</h3>
+            <p>Para campanhas, serviços, profissionais e negócios que precisam captar clientes.</p>
+
+            <div class="price-value">
+              <small>a partir de</small>
+              R$ 390
+            </div>
+            <div class="price-sub">Projeto único • orçamento conforme escopo</div>
+
+            <ul class="price-list">
+              <li>Layout responsivo</li>
+              <li>Botão para WhatsApp</li>
+              <li>Seções personalizadas</li>
+              <li>SEO básico</li>
+            </ul>
+
+            <button class="btn btn-outline price-quote" type="button" data-project="Landing Page">
+              Pedir orçamento
+            </button>
+          </article>
+
+          <article class="price-card featured">
+            <span class="price-badge">Mais procurado</span>
+            <h3>Site Profissional</h3>
+            <p>Para empresas que querem presença digital mais completa e organizada.</p>
+
+            <div class="price-value">
+              <small>a partir de</small>
+              R$ 790
+            </div>
+            <div class="price-sub">Projeto único • orçamento conforme páginas e recursos</div>
+
+            <ul class="price-list">
+              <li>Site responsivo</li>
+              <li>Portfólio ou serviços</li>
+              <li>Formulários e WhatsApp</li>
+              <li>Estrutura para Google</li>
+            </ul>
+
+            <button class="btn btn-primary price-quote" type="button" data-project="Site Profissional">
+              Pedir orçamento
+            </button>
+          </article>
+
+          <article class="price-card">
+            <span class="price-badge">Personalizado</span>
+            <h3>App / Sistema</h3>
+            <p>Para quem precisa transformar uma ideia em uma experiência digital própria.</p>
+
+            <div class="price-value">
+              <small>a partir de</small>
+              R$ 1.490
+            </div>
+            <div class="price-sub">Protótipo ou sistema inicial • valor varia por complexidade</div>
+
+            <ul class="price-list">
+              <li>Fluxo e telas personalizadas</li>
+              <li>Protótipo interativo</li>
+              <li>Experiência responsiva</li>
+              <li>Evolução por etapas</li>
+            </ul>
+
+            <button class="btn btn-outline price-quote" type="button" data-project="Aplicativo ou Sistema">
+              Pedir orçamento
+            </button>
+          </article>
+        </div>
+
+        <div class="pricing-note">
+          Os valores acima são referências iniciais e não representam orçamento fechado.
+        </div>
+      </div>
+    </section>
+
     <section id="processo">
       <div class="container">
         <div class="section-head">
@@ -2790,39 +3566,142 @@
     <section id="orcamento">
       <div class="container">
         <div class="section-head">
-          <span>Orçamento rápido</span>
-          <h2>Conte sua ideia em poucos segundos.</h2>
-          <p>Preencha os campos e o site monta automaticamente uma mensagem pronta para enviar no WhatsApp.</p>
+          <span>Briefing rápido</span>
+          <h2>Conte sua ideia e receba um orçamento.</h2>
+          <p>
+            Em vez de mandar só “quanto custa?”, o cliente já envia as informações
+            principais do projeto direto para o WhatsApp.
+          </p>
         </div>
 
-        <form class="budget-box" id="budgetForm">
-          <div class="field">
-            <label for="nome">Seu nome</label>
-            <input id="nome" name="nome" type="text" placeholder="Ex.: João" required>
-          </div>
+        <div class="briefing-wrap">
+          <aside class="briefing-info">
+            <h3>Quanto mais contexto, melhor a proposta.</h3>
+            <p>
+              O formulário organiza as informações antes do primeiro contato,
+              deixando a conversa mais rápida e profissional.
+            </p>
 
-          <div class="field">
-            <label for="servico">Serviço</label>
-            <select id="servico" name="servico" required>
-              <option value="">Selecione</option>
-              <option>Site profissional</option>
-              <option>Landing page</option>
-              <option>Sistema personalizado</option>
-              <option>Protótipo de aplicativo</option>
-              <option>Manutenção / melhorias</option>
-              <option>Outro projeto digital</option>
-            </select>
-          </div>
+            <div class="briefing-points">
+              <div class="briefing-point">
+                <span>01</span>
+                <div>
+                  <strong>Tipo de projeto</strong>
+                  <small>Site, landing page, aplicativo, sistema ou outra solução.</small>
+                </div>
+              </div>
 
-          <div class="field full">
-            <label for="descricao">O que você precisa?</label>
-            <textarea id="descricao" name="descricao" placeholder="Conte rapidamente sua ideia, objetivo e o que gostaria no projeto." required></textarea>
-          </div>
+              <div class="briefing-point">
+                <span>02</span>
+                <div>
+                  <strong>Objetivo</strong>
+                  <small>Vender, captar contatos, organizar processos ou validar uma ideia.</small>
+                </div>
+              </div>
 
-          <div class="budget-action">
-            <button class="btn btn-primary" type="submit">Enviar pedido de orçamento</button>
-          </div>
-        </form>
+              <div class="briefing-point">
+                <span>03</span>
+                <div>
+                  <strong>Prazo e investimento</strong>
+                  <small>Ajuda a entender qual solução faz sentido para o momento.</small>
+                </div>
+              </div>
+
+              <div class="briefing-point">
+                <span>04</span>
+                <div>
+                  <strong>WhatsApp pronto</strong>
+                  <small>Ao enviar, a mensagem é montada automaticamente.</small>
+                </div>
+              </div>
+            </div>
+          </aside>
+
+          <form class="briefing-form" id="briefingForm">
+            <div class="field">
+              <label for="briefName">Seu nome</label>
+              <input id="briefName" type="text" placeholder="Ex.: João Silva" required>
+            </div>
+
+            <div class="field">
+              <label for="briefBusiness">Negócio / segmento</label>
+              <input id="briefBusiness" type="text" placeholder="Ex.: Barbearia, clínica, loja..." required>
+            </div>
+
+            <div class="field">
+              <label for="briefProject">O que você quer criar?</label>
+              <select id="briefProject" required>
+                <option value="">Selecione</option>
+                <option>Landing Page</option>
+                <option>Site Profissional</option>
+                <option>Protótipo de Aplicativo</option>
+                <option>Sistema Personalizado</option>
+                <option>Agendamento Online</option>
+                <option>Catálogo / Cardápio</option>
+                <option>Outro projeto</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="briefGoal">Principal objetivo</label>
+              <select id="briefGoal" required>
+                <option value="">Selecione</option>
+                <option>Conseguir mais clientes</option>
+                <option>Vender pela internet</option>
+                <option>Apresentar minha empresa</option>
+                <option>Organizar processos internos</option>
+                <option>Validar uma ideia</option>
+                <option>Modernizar um sistema atual</option>
+                <option>Outro objetivo</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="briefDeadline">Prazo desejado</label>
+              <select id="briefDeadline" required>
+                <option value="">Selecione</option>
+                <option>O quanto antes</option>
+                <option>Até 7 dias</option>
+                <option>Até 15 dias</option>
+                <option>Até 30 dias</option>
+                <option>Sem prazo definido</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="briefBudget">Faixa de investimento</label>
+              <select id="briefBudget" required>
+                <option value="">Selecione</option>
+                <option>Até R$ 500</option>
+                <option>R$ 500 a R$ 1.000</option>
+                <option>R$ 1.000 a R$ 2.000</option>
+                <option>R$ 2.000 a R$ 5.000</option>
+                <option>Acima de R$ 5.000</option>
+                <option>Quero entender o valor primeiro</option>
+              </select>
+            </div>
+
+            <div class="field full">
+              <label for="briefDetails">Conte um pouco mais sobre a ideia</label>
+              <textarea
+                id="briefDetails"
+                placeholder="Ex.: preciso de um site para minha barbearia com serviços, localização, WhatsApp e agendamento..."
+                required></textarea>
+            </div>
+
+            <button class="btn btn-primary" type="submit">
+              Enviar briefing pelo WhatsApp
+            </button>
+
+            <div class="briefing-security">
+              <b>✓</b>
+              <span>
+                O formulário não envia dados para servidor. Ele apenas prepara a mensagem
+                para você conferir antes de enviar no WhatsApp.
+              </span>
+            </div>
+          </form>
+        </div>
       </div>
     </section>
 
@@ -3447,6 +4326,62 @@ ${descricao}`;
     });
 
     renderApp();
+
+
+    // =========================================================
+    // PLANOS / ORÇAMENTO RÁPIDO
+    // =========================================================
+    document.querySelectorAll(".price-quote").forEach(button => {
+      button.addEventListener("click", () => {
+        const project = button.dataset.project || "projeto digital";
+
+        abrirWhatsApp(
+          `Olá! Vi os valores iniciais no site da Nova Byte e gostaria de um orçamento para: ${project}.`
+        );
+      });
+    });
+
+    // =========================================================
+    // BRIEFING COMPLETO PELO WHATSAPP
+    // =========================================================
+    const briefingForm = document.getElementById("briefingForm");
+
+    briefingForm.addEventListener("submit", event => {
+      event.preventDefault();
+
+      const name = document.getElementById("briefName").value.trim();
+      const business = document.getElementById("briefBusiness").value.trim();
+      const project = document.getElementById("briefProject").value;
+      const goal = document.getElementById("briefGoal").value;
+      const deadline = document.getElementById("briefDeadline").value;
+      const budget = document.getElementById("briefBudget").value;
+      const details = document.getElementById("briefDetails").value.trim();
+
+      const message =
+`Olá! Meu nome é ${name} e vi o site da Nova Byte.
+
+Gostaria de solicitar um orçamento.
+
+🏢 Negócio / segmento:
+${business}
+
+💻 Projeto:
+${project}
+
+🎯 Objetivo:
+${goal}
+
+⏱ Prazo desejado:
+${deadline}
+
+💰 Faixa de investimento:
+${budget}
+
+📝 Detalhes:
+${details}`;
+
+      abrirWhatsApp(message);
+    });
 
     document.getElementById("year").textContent = new Date().getFullYear();
 
