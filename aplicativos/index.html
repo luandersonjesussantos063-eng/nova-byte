@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <meta name="theme-color" content="#050914">
+  <title>Protótipos e Aplicativos | Nova Byte</title>
+  <meta name="description" content="Criação de protótipos navegáveis e desenvolvimento de interfaces para aplicativos. Valide a ideia antes de investir em uma solução completa.">
+  <meta name="robots" content="index,follow">
+  <link rel="canonical" href="https://novabytesolucoes.com.br/aplicativos/">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Protótipos e Aplicativos | Nova Byte">
+  <meta property="og:description" content="Criação de protótipos navegáveis e desenvolvimento de interfaces para aplicativos. Valide a ideia antes de investir em uma solução completa.">
+  <meta property="og:url" content="https://novabytesolucoes.com.br/aplicativos/">
+  <meta property="og:image" content="https://novabytesolucoes.com.br/og-image.png">
+  <meta property="og:locale" content="pt_BR">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Protótipos e Aplicativos | Nova Byte">
+  <meta name="twitter:description" content="Criação de protótipos navegáveis e desenvolvimento de interfaces para aplicativos. Valide a ideia antes de investir em uma solução completa.">
+  <meta name="twitter:image" content="https://novabytesolucoes.com.br/og-image.png">
+  <style>
+:root{
+  --bg:#050914;--bg2:#081328;--card:#0b1730;--text:#f6fbff;--muted:#9db0c9;
+  --cyan:#59e8ff;--cyan2:#00bfe9;--purple:#8d5cff;--line:rgba(124,226,255,.16);
+  --max:1120px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  color:var(--text);line-height:1.65;overflow-x:hidden;
+  background:
+    radial-gradient(circle at 75% 5%,rgba(0,217,255,.12),transparent 27%),
+    radial-gradient(circle at 15% 28%,rgba(141,92,255,.12),transparent 25%),
+    linear-gradient(180deg,var(--bg),var(--bg2));
+}
+a{color:inherit;text-decoration:none}
+.container{width:min(92%,var(--max));margin:auto}
+header{
+  position:sticky;top:0;z-index:50;backdrop-filter:blur(16px);
+  background:rgba(5,9,20,.84);border-bottom:1px solid rgba(255,255,255,.06)
+}
+.nav{min-height:74px;display:flex;align-items:center;justify-content:space-between;gap:20px}
+.brand{display:flex;align-items:center;gap:11px;font-weight:950;letter-spacing:-.03em}
+.logo{
+  width:42px;height:42px;border-radius:50%;position:relative;
+  border:1px solid rgba(89,232,255,.5);
+  background:radial-gradient(circle at 34% 30%,#83f0ff,transparent 14%),#09234a;
+  box-shadow:0 0 25px rgba(0,217,255,.18)
+}
+.logo:after{content:"";position:absolute;left:-6px;right:-6px;top:16px;height:8px;border:1px solid #8d5cff;border-radius:50%;transform:rotate(-18deg)}
+.brand small{display:block;color:#79deff;font-size:.58rem;letter-spacing:.18em;text-transform:uppercase;margin-top:2px}
+.navlinks{display:flex;align-items:center;gap:22px;color:#c5d0df;font-size:.92rem}
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;
+  padding:0 19px;border-radius:13px;font-weight:850;border:1px solid transparent;transition:.2s ease
+}
+.btn:hover{transform:translateY(-2px)}
+.btn-primary{background:linear-gradient(135deg,#00cdeb,#765cff);box-shadow:0 14px 35px rgba(0,193,235,.18)}
+.btn-outline{border-color:var(--line);background:rgba(255,255,255,.025)}
+.hero{position:relative;overflow:hidden;padding:92px 0 72px}
+.hero:before{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:
+    linear-gradient(rgba(96,223,255,.04) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(96,223,255,.04) 1px,transparent 1px);
+  background-size:46px 46px;
+  mask-image:linear-gradient(to bottom,#000,transparent 85%)
+}
+.hero-grid{position:relative;display:grid;grid-template-columns:1.1fr .9fr;gap:54px;align-items:center}
+.eyebrow{display:inline-flex;padding:7px 11px;border:1px solid var(--line);border-radius:999px;color:#8cecff;background:rgba(0,217,255,.06);font-size:.8rem;font-weight:900;letter-spacing:.08em;text-transform:uppercase}
+h1{font-size:clamp(2.7rem,7vw,5.2rem);line-height:.98;letter-spacing:-.06em;margin:20px 0}
+.grad{background:linear-gradient(90deg,#fff,#5ce7ff 52%,#9e70ff);background-clip:text;-webkit-background-clip:text;color:transparent}
+.hero p{color:var(--muted);font-size:clamp(1rem,2vw,1.14rem);max-width:680px}
+.actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:28px}
+.hero-card{
+  border:1px solid var(--line);border-radius:28px;padding:28px;
+  background:linear-gradient(180deg,rgba(9,30,62,.78),rgba(7,16,34,.88));
+  box-shadow:0 28px 70px rgba(0,0,0,.3)
+}
+.hero-card .metric{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:18px}
+.metric div{border:1px solid rgba(255,255,255,.07);background:rgba(255,255,255,.03);border-radius:16px;padding:16px}
+.metric strong{display:block;color:#63e9ff;font-size:1.08rem}.metric span{color:#8ea3bf;font-size:.78rem}
+section{padding:82px 0}
+.section-head{max-width:760px;margin-bottom:34px}
+.section-head span{color:#66e6ff;font-weight:900;text-transform:uppercase;letter-spacing:.11em;font-size:.76rem}
+.section-head h2{font-size:clamp(2rem,5vw,3.3rem);line-height:1.05;letter-spacing:-.045em;margin:8px 0 12px}
+.section-head p{color:var(--muted)}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.card{padding:25px;border:1px solid rgba(255,255,255,.075);border-radius:22px;background:rgba(255,255,255,.028)}
+.card b{display:block;font-size:1.03rem;margin:10px 0 7px}.card p{color:var(--muted);font-size:.92rem}
+.icon{width:46px;height:46px;display:grid;place-items:center;border-radius:14px;background:rgba(0,217,255,.08);border:1px solid rgba(89,232,255,.16)}
+.split{display:grid;grid-template-columns:1fr 1fr;gap:26px;align-items:start}
+.panel{border:1px solid var(--line);border-radius:24px;padding:28px;background:rgba(6,18,39,.72)}
+.checks{display:grid;gap:12px;margin-top:18px}
+.check{display:grid;grid-template-columns:28px 1fr;gap:10px;color:#c7d5e6}
+.check i{font-style:normal;color:#63e9ff}
+.steps{counter-reset:step;display:grid;gap:14px}
+.step{position:relative;padding:19px 19px 19px 58px;border:1px solid rgba(255,255,255,.07);border-radius:18px;background:rgba(255,255,255,.025)}
+.step:before{counter-increment:step;content:counter(step);position:absolute;left:17px;top:17px;width:28px;height:28px;border-radius:9px;display:grid;place-items:center;background:linear-gradient(135deg,#00cdeb,#765cff);font-weight:900}
+.faq{display:grid;gap:12px}
+details{border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:17px 19px;background:rgba(255,255,255,.025)}
+summary{cursor:pointer;font-weight:800}details p{color:var(--muted);margin-top:10px}
+.cta{padding:34px;border-radius:28px;border:1px solid rgba(89,232,255,.20);background:radial-gradient(circle at 10% 0,rgba(0,217,255,.13),transparent 34%),radial-gradient(circle at 90% 100%,rgba(141,92,255,.14),transparent 34%),#07152c;display:flex;align-items:center;justify-content:space-between;gap:24px}
+.cta h2{font-size:clamp(1.8rem,4vw,3rem);line-height:1.06;letter-spacing:-.04em}.cta p{color:var(--muted);max-width:650px;margin-top:8px}
+footer{padding:35px 0 45px;border-top:1px solid rgba(255,255,255,.06);color:#7f93ad;font-size:.86rem}
+.footer-row{display:flex;justify-content:space-between;gap:18px;flex-wrap:wrap}
+.breadcrumbs{color:#7891af;font-size:.8rem;margin-bottom:18px}.breadcrumbs a{color:#9fbedc}
+@media(max-width:850px){
+  .navlinks a:not(.btn){display:none}.hero{padding-top:64px}
+  .hero-grid,.split{grid-template-columns:1fr}.grid3{grid-template-columns:1fr}
+  .hero-card{order:-1}.cta{align-items:flex-start;flex-direction:column}
+}
+@media(max-width:520px){
+  .nav{min-height:66px}.brand small{display:none}.nav .btn{min-height:42px;padding:0 13px;font-size:.82rem}
+  .hero{padding:52px 0 55px}.hero-card{padding:20px}.hero-card .metric{grid-template-columns:1fr 1fr}
+  section{padding:62px 0}.panel{padding:21px}.cta{padding:24px}
+}
+</style>
+  <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Service","@id":"https://novabytesolucoes.com.br/aplicativos/#service","name":"Protótipos e Aplicativos","url":"https://novabytesolucoes.com.br/aplicativos/","description":"Criação de protótipos navegáveis e desenvolvimento de interfaces para aplicativos. Valide a ideia antes de investir em uma solução completa.","provider":{"@type":"Organization","name":"Nova Byte","url":"https://novabytesolucoes.com.br/"},"areaServed":{"@type":"Country","name":"Brasil"}},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Início","item":"https://novabytesolucoes.com.br/"},{"@type":"ListItem","position":2,"name":"Protótipos e Aplicativos","item":"https://novabytesolucoes.com.br/aplicativos/"}]},{"@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Protótipo já é o aplicativo final?","acceptedAnswer":{"@type":"Answer","text":"Não necessariamente. O protótipo serve para testar visual, navegação e ideia. Depois ele pode virar base para um MVP ou aplicativo completo."}},{"@type":"Question","name":"Consigo mostrar o protótipo para outras pessoas?","acceptedAnswer":{"@type":"Answer","text":"Sim. Dependendo da solução escolhida, ele pode ser apresentado e testado antes do desenvolvimento completo."}},{"@type":"Question","name":"Vocês também fazem o aplicativo funcional?","acceptedAnswer":{"@type":"Answer","text":"O desenvolvimento é avaliado de acordo com as funções, integrações e plataformas necessárias para cada projeto."}}]}]}</script>
+</head>
+<body>
+<header>
+  <div class="container nav">
+    <a class="brand" href="/" aria-label="Nova Byte - Início">
+      <span class="logo" aria-hidden="true"></span>
+      <span>NOVA BYTE<small>Soluções digitais</small></span>
+    </a>
+    <nav class="navlinks" aria-label="Navegação principal">
+      <a href="/#servicos">Serviços</a>
+      <a href="/#portfolio">Portfólio</a>
+      <a href="/#planos">Planos</a>
+      <a class="btn btn-primary" href="https://wa.me/5531983771576?text=Ol%C3%A1%21%20Vi%20a%20p%C3%A1gina%20de%20Aplicativos%20da%20Nova%20Byte%20e%20quero%20conversar%20sobre%20um%20prot%C3%B3tipo%20ou%20aplicativo." target="_blank" rel="noopener">Pedir orçamento</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+<section class="hero">
+  <div class="container">
+    <div class="breadcrumbs"><a href="/">Início</a> / Protótipos e Aplicativos</div>
+    <div class="hero-grid">
+      <div>
+        <span class="eyebrow">Aplicativos</span>
+        <h1>Transforme a ideia do aplicativo em algo que dá para testar.</h1>
+        <p>Antes de investir em um aplicativo completo, criamos uma versão visual e interativa para você testar a ideia, apresentar para clientes e ajustar o fluxo.</p>
+        <div class="actions">
+          <a class="btn btn-primary" href="https://wa.me/5531983771576?text=Ol%C3%A1%21%20Vi%20a%20p%C3%A1gina%20de%20Aplicativos%20da%20Nova%20Byte%20e%20quero%20conversar%20sobre%20um%20prot%C3%B3tipo%20ou%20aplicativo." target="_blank" rel="noopener">Solicitar orçamento →</a>
+          <a class="btn btn-outline" href="/#portfolio">Ver portfólio</a>
+        </div>
+      </div>
+      <aside class="hero-card">
+        <span class="eyebrow">Da ideia para a tela</span>
+        <h2 style="font-size:1.55rem;line-height:1.15;margin-top:15px">Protótipos navegáveis para validar telas, fluxo e experiência.</h2>
+        <div class="metric"><div><strong>UX</strong><span>Fluxo</span></div><div><strong>UI</strong><span>Interface</span></div><div><strong>Teste</strong><span>Navegável</span></div><div><strong>MVP</strong><span>Evolução</span></div></div>
+      </aside>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="container">
+    <div class="section-head"><span>Benefícios</span><h2>Projeto pensado para funcionar de verdade.</h2><p>Visual é importante, mas clareza, experiência e resultado também entram no desenvolvimento.</p></div>
+    <div class="grid3"><article class="card"><div class="icon">📱</div><b>Protótipo navegável</b><p>Simule telas e interações para sentir como o aplicativo deverá funcionar.</p></article><article class="card"><div class="icon">🧠</div><b>Validação antes do código pesado</b><p>Identifique mudanças de fluxo e interface antes de investir em uma construção maior.</p></article><article class="card"><div class="icon">🚀</div><b>Base para um MVP</b><p>O protótipo ajuda a organizar requisitos para uma primeira versão funcional do produto.</p></article></div>
+  </div>
+</section>
+
+<section>
+  <div class="container split">
+    <div class="panel">
+      <div class="section-head" style="margin-bottom:0"><span>Escopo</span><h2>O que podemos construir.</h2></div>
+      <div class="checks"><div class="check"><i>✓</i><span>Mapa de telas e fluxo do usuário</span></div><div class="check"><i>✓</i><span>Interface visual personalizada</span></div><div class="check"><i>✓</i><span>Protótipo clicável</span></div><div class="check"><i>✓</i><span>Versão para demonstração</span></div><div class="check"><i>✓</i><span>Planejamento para evolução do projeto</span></div></div>
+    </div>
+    <div class="panel">
+      <div class="section-head" style="margin-bottom:18px"><span>Processo</span><h2>Como o projeto acontece.</h2></div>
+      <div class="steps"><div class="step">Organizamos a ideia e as funções essenciais.</div><div class="step">Desenhamos o fluxo entre as telas.</div><div class="step">Criamos a interface e as interações.</div><div class="step">Testamos e refinamos antes da próxima etapa.</div></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="container">
+    <div class="section-head"><span>Dúvidas</span><h2>Perguntas frequentes.</h2></div>
+    <div class="faq"><details><summary>Protótipo já é o aplicativo final?</summary><p>Não necessariamente. O protótipo serve para testar visual, navegação e ideia. Depois ele pode virar base para um MVP ou aplicativo completo.</p></details><details><summary>Consigo mostrar o protótipo para outras pessoas?</summary><p>Sim. Dependendo da solução escolhida, ele pode ser apresentado e testado antes do desenvolvimento completo.</p></details><details><summary>Vocês também fazem o aplicativo funcional?</summary><p>O desenvolvimento é avaliado de acordo com as funções, integrações e plataformas necessárias para cada projeto.</p></details></div>
+  </div>
+</section>
+
+<section>
+  <div class="container">
+    <div class="cta">
+      <div><h2>Tem uma ideia? Vamos colocar no papel.</h2><p>Conte o que você precisa e a Nova Byte prepara uma proposta de acordo com o escopo do projeto.</p></div>
+      <a class="btn btn-primary" href="https://wa.me/5531983771576?text=Ol%C3%A1%21%20Vi%20a%20p%C3%A1gina%20de%20Aplicativos%20da%20Nova%20Byte%20e%20quero%20conversar%20sobre%20um%20prot%C3%B3tipo%20ou%20aplicativo." target="_blank" rel="noopener">Falar no WhatsApp →</a>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer>
+  <div class="container footer-row">
+    <span>© 2026 Nova Byte. Soluções digitais sob medida.</span>
+    <span><a href="/">Início</a> · <a href="/#servicos">Serviços</a> · <a href="/#contato">Contato</a></span>
+  </div>
+</footer>
+</body>
+</html>
