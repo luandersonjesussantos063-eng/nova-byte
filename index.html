@@ -702,17 +702,6 @@
       font-size:.95rem;
     }
 
-
-    .seo-link{display:inline-flex;align-items:center;gap:7px;margin-top:16px;color:#8fe9ff;font-size:.86rem;font-weight:800}
-    .seo-link:hover{color:#fff}
-    .local-seo-box{display:grid;grid-template-columns:1.05fr .95fr;gap:22px;align-items:stretch;padding:30px;border-radius:28px;border:1px solid rgba(126,226,255,.12);background:radial-gradient(circle at 10% 10%,rgba(0,217,255,.10),transparent 34%),radial-gradient(circle at 90% 85%,rgba(163,43,255,.12),transparent 30%),rgba(255,255,255,.025)}
-    .local-seo-box h3{font-size:clamp(1.5rem,3vw,2.2rem);line-height:1.08;margin-bottom:12px}
-    .local-seo-box p{color:var(--muted)}
-    .local-seo-links{display:grid;gap:10px;align-content:center}
-    .local-seo-links a{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:54px;padding:0 16px;border-radius:14px;border:1px solid rgba(126,226,255,.14);background:rgba(4,18,42,.72);color:#eaf8ff;font-weight:800;transition:.2s ease}
-    .local-seo-links a:hover{border-color:rgba(126,226,255,.40);transform:translateY(-1px)}
-    @media(max-width:760px){.local-seo-box{grid-template-columns:1fr;padding:22px}}
-
     .portfolio-grid{
       display:grid;
       grid-template-columns:repeat(2,1fr);
@@ -3588,6 +3577,174 @@
       .orbit-one{width:240px}.orbit-two{width:225px}
     }
 
+
+
+    /* =========================================================
+       V4.2 — CONVERSÃO / LEADS
+       ========================================================= */
+    .lead-progress{
+      grid-column:1/-1;
+      display:flex;
+      align-items:center;
+      gap:12px;
+      margin:-2px 0 4px;
+      color:#8fa1ba;
+      font-size:.76rem;
+    }
+
+    .lead-progress-track{
+      flex:1;
+      height:6px;
+      overflow:hidden;
+      border-radius:999px;
+      background:rgba(255,255,255,.055);
+      border:1px solid rgba(255,255,255,.05);
+    }
+
+    .lead-progress-bar{
+      width:0%;
+      height:100%;
+      border-radius:inherit;
+      background:linear-gradient(90deg,#6d5dfc,#00d9ff);
+      box-shadow:0 0 16px rgba(0,217,255,.25);
+      transition:width .25s ease;
+    }
+
+    .lead-progress strong{
+      color:#c8d5e7;
+      white-space:nowrap;
+      font-size:.72rem;
+    }
+
+    .briefing-form .field.invalid input,
+    .briefing-form .field.invalid select,
+    .briefing-form .field.invalid textarea{
+      border-color:rgba(255,104,118,.72)!important;
+      box-shadow:0 0 0 3px rgba(255,104,118,.08);
+    }
+
+    .briefing-form .field.valid input,
+    .briefing-form .field.valid select,
+    .briefing-form .field.valid textarea{
+      border-color:rgba(80,227,164,.38);
+    }
+
+    .briefing-feedback{
+      grid-column:1/-1;
+      min-height:20px;
+      margin-top:-4px;
+      color:#91a3bc;
+      font-size:.74rem;
+      line-height:1.45;
+    }
+
+    .briefing-feedback.error{color:#ff8794}
+    .briefing-feedback.ok{color:#69e6ad}
+
+    .briefing-submit.is-ready{
+      box-shadow:0 14px 34px rgba(109,93,252,.30),0 0 24px rgba(0,217,255,.10);
+    }
+
+    .site-toast{
+      position:fixed;
+      left:50%;
+      bottom:26px;
+      z-index:9999;
+      width:min(92vw,460px);
+      padding:14px 16px;
+      border:1px solid rgba(126,226,255,.18);
+      border-radius:16px;
+      background:rgba(7,14,28,.94);
+      color:#eaf7ff;
+      box-shadow:0 18px 50px rgba(0,0,0,.42),0 0 28px rgba(0,217,255,.08);
+      backdrop-filter:blur(16px);
+      transform:translate(-50%,24px);
+      opacity:0;
+      pointer-events:none;
+      transition:.25s ease;
+      font-size:.84rem;
+    }
+
+    .site-toast.show{
+      transform:translate(-50%,0);
+      opacity:1;
+    }
+
+    .mobile-conversion-bar{
+      display:none;
+      position:fixed;
+      left:10px;
+      right:10px;
+      bottom:10px;
+      z-index:950;
+      gap:8px;
+      padding:8px;
+      border-radius:18px;
+      border:1px solid rgba(255,255,255,.09);
+      background:rgba(7,12,23,.90);
+      box-shadow:0 16px 42px rgba(0,0,0,.38);
+      backdrop-filter:blur(15px);
+    }
+
+    .mobile-conversion-bar a{
+      flex:1;
+      min-height:46px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+      border-radius:12px;
+      font-size:.82rem;
+      font-weight:850;
+    }
+
+    .mobile-conversion-bar .mobile-budget{
+      color:#fff;
+      border:1px solid rgba(138,124,255,.34);
+      background:linear-gradient(135deg,rgba(109,93,252,.92),rgba(126,83,255,.92));
+    }
+
+    .mobile-conversion-bar .mobile-wa{
+      color:#eafff3;
+      border:1px solid rgba(37,211,102,.28);
+      background:rgba(37,211,102,.12);
+    }
+
+    .whatsapp-float{
+      position:fixed;
+    }
+
+    .whatsapp-float::after{
+      content:"Orçamento";
+      position:absolute;
+      right:66px;
+      top:50%;
+      transform:translateY(-50%);
+      padding:8px 11px;
+      border-radius:10px;
+      background:rgba(7,14,28,.92);
+      color:#eafff3;
+      border:1px solid rgba(37,211,102,.20);
+      font-size:.72rem;
+      font-weight:800;
+      white-space:nowrap;
+      opacity:0;
+      pointer-events:none;
+      transition:.2s ease;
+      box-shadow:0 10px 26px rgba(0,0,0,.28);
+    }
+
+    .whatsapp-float:hover::after{opacity:1}
+
+    @media(max-width:700px){
+      body{padding-bottom:76px}
+      .mobile-conversion-bar{display:flex}
+      .whatsapp-float{display:none!important}
+      .site-toast{bottom:82px}
+      .lead-progress{gap:8px}
+      .lead-progress strong{font-size:.66rem}
+    }
+
   </style>
 
   <script type="application/ld+json">
@@ -3605,10 +3762,10 @@
       "image": "https://novabytesolucoes.com.br/og-image.png",
       "telephone": "+55 31 98377-1576",
       "description": "Criação de sites profissionais, landing pages, sistemas web e protótipos de aplicativos sob medida.",
-      "areaServed": [
-        {"@type":"City","name":"Lucas do Rio Verde","containedInPlace":{"@type":"State","name":"Mato Grosso"}},
-        {"@type":"Country","name":"Brasil"}
-      ],
+      "areaServed": {
+        "@type": "Country",
+        "name": "Brasil"
+      },
       "serviceType": [
         "Criação de sites profissionais",
         "Landing pages",
@@ -3708,7 +3865,7 @@
         <a href="#orcamento">Orçamento</a>
       </nav>
 
-      <a class="btn btn-primary desktop-cta js-whatsapp" href="#">
+      <a class="btn btn-primary desktop-cta js-whatsapp" href="#" data-wa-message="Olá! Vi o site da Nova Byte e quero entender qual solução faz mais sentido para meu projeto.">
         Solicitar orçamento
       </a>
 
@@ -3758,7 +3915,7 @@
           </p>
 
           <div class="hero-actions">
-            <a class="btn btn-primary js-whatsapp" href="#">Pedir orçamento <span aria-hidden="true">→</span></a>
+            <a class="btn btn-primary js-whatsapp" href="#" data-wa-message="Olá! Vim pelo site da Nova Byte e gostaria de solicitar um orçamento para um projeto digital.">Pedir orçamento <span aria-hidden="true">→</span></a>
             <a class="btn btn-outline" href="#portfolio">Ver projetos</a>
           </div>
 
@@ -3847,21 +4004,18 @@
             <div class="icon">🌐</div>
             <h3>Sites profissionais</h3>
             <p>Sites institucionais modernos para empresas, profissionais e pequenos negócios.</p>
-            <a class="seo-link" href="criacao-de-sites-lucas-do-rio-verde.html">Ver criação de sites →</a>
           </article>
 
           <article class="card">
             <div class="icon">🚀</div>
             <h3>Landing pages</h3>
             <p>Páginas de alta conversão para serviços, produtos, anúncios e captação de clientes.</p>
-            <a class="seo-link" href="landing-page-profissional.html">Ver landing pages →</a>
           </article>
 
           <article class="card">
             <div class="icon">⚙️</div>
             <h3>Sistemas personalizados</h3>
             <p>Painéis, cadastros, controles internos e soluções web feitas conforme sua necessidade.</p>
-            <a class="seo-link" href="sistemas-personalizados.html">Ver sistemas personalizados →</a>
           </article>
 
           <article class="card">
@@ -4342,27 +4496,6 @@
       </div>
     </section>
 
-    <section id="atendimento">
-      <div class="container">
-        <div class="section-head">
-          <span>Atendimento local e nacional</span>
-          <h2>Criação de sites em Lucas do Rio Verde e projetos para todo o Brasil.</h2>
-          <p>A Nova Byte atende empresas e profissionais de Lucas do Rio Verde, Mato Grosso, e também desenvolve projetos 100% online para clientes de outras regiões do Brasil.</p>
-        </div>
-        <div class="local-seo-box">
-          <div>
-            <h3>Seu negócio precisa ser encontrado e passar confiança.</h3>
-            <p>Além do visual, os projetos recebem estrutura responsiva, organização técnica para buscadores e integração com canais de contato. O objetivo é transformar o site em uma presença digital útil, não apenas em uma página bonita.</p>
-          </div>
-          <div class="local-seo-links">
-            <a href="criacao-de-sites-lucas-do-rio-verde.html"><span>Sites em Lucas do Rio Verde</span><b>→</b></a>
-            <a href="landing-page-profissional.html"><span>Landing Page Profissional</span><b>→</b></a>
-            <a href="sistemas-personalizados.html"><span>Sistemas Personalizados</span><b>→</b></a>
-          </div>
-        </div>
-      </div>
-    </section>
-
     <section id="faq">
       <div class="container">
         <div class="section-head">
@@ -4449,20 +4582,26 @@
             </div>
           </aside>
 
-          <form class="briefing-form" id="briefingForm">
+          <form class="briefing-form" id="briefingForm" novalidate>
+            <div class="lead-progress" aria-live="polite">
+              <div class="lead-progress-track" aria-hidden="true">
+                <div class="lead-progress-bar" id="leadProgressBar"></div>
+              </div>
+              <strong id="leadProgressText">0 de 7 preenchidos</strong>
+            </div>
             <div class="field">
               <label for="briefName">Seu nome</label>
-              <input id="briefName" type="text" placeholder="Ex.: João Silva" required>
+              <input id="briefName" name="name" type="text" autocomplete="name" minlength="2" placeholder="Ex.: João Silva" required>
             </div>
 
             <div class="field">
               <label for="briefBusiness">Negócio / segmento</label>
-              <input id="briefBusiness" type="text" placeholder="Ex.: Barbearia, clínica, loja..." required>
+              <input id="briefBusiness" name="business" type="text" autocomplete="organization" minlength="2" placeholder="Ex.: Barbearia, clínica, loja..." required>
             </div>
 
             <div class="field">
               <label for="briefProject">O que você quer criar?</label>
-              <select id="briefProject" required>
+              <select id="briefProject" name="project" required>
                 <option value="">Selecione</option>
                 <option>Landing Page</option>
                 <option>Site Profissional</option>
@@ -4476,7 +4615,7 @@
 
             <div class="field">
               <label for="briefGoal">Principal objetivo</label>
-              <select id="briefGoal" required>
+              <select id="briefGoal" name="goal" required>
                 <option value="">Selecione</option>
                 <option>Conseguir mais clientes</option>
                 <option>Vender pela internet</option>
@@ -4490,7 +4629,7 @@
 
             <div class="field">
               <label for="briefDeadline">Prazo desejado</label>
-              <select id="briefDeadline" required>
+              <select id="briefDeadline" name="deadline" required>
                 <option value="">Selecione</option>
                 <option>O quanto antes</option>
                 <option>Até 7 dias</option>
@@ -4502,7 +4641,7 @@
 
             <div class="field">
               <label for="briefBudget">Faixa de investimento</label>
-              <select id="briefBudget" required>
+              <select id="briefBudget" name="budget" required>
                 <option value="">Selecione</option>
                 <option>Até R$ 500</option>
                 <option>R$ 500 a R$ 1.000</option>
@@ -4516,14 +4655,16 @@
             <div class="field full">
               <label for="briefDetails">Conte um pouco mais sobre a ideia</label>
               <textarea
-                id="briefDetails"
+                id="briefDetails" name="details" minlength="10" maxlength="1200"
                 placeholder="Ex.: preciso de um site para minha barbearia com serviços, localização, WhatsApp e agendamento..."
                 required></textarea>
             </div>
 
-            <button class="btn btn-primary" type="submit">
+            <button class="btn btn-primary briefing-submit" id="briefSubmit" type="submit">
               Enviar briefing pelo WhatsApp
             </button>
+
+            <div class="briefing-feedback" id="briefingFeedback" aria-live="polite"></div>
 
             <div class="briefing-security">
               <b>✓</b>
@@ -4548,7 +4689,7 @@
             </p>
           </div>
 
-          <a class="btn btn-primary js-whatsapp" href="#">Falar no WhatsApp</a>
+          <a class="btn btn-primary js-whatsapp" href="#" data-wa-message="Olá! Vi o site da Nova Byte e gostaria de conversar sobre uma ideia de projeto.">Falar no WhatsApp</a>
         </div>
       </div>
     </section>
@@ -4561,32 +4702,101 @@
     </div>
   </footer>
 
-  <a class="whatsapp-float js-whatsapp" href="#" aria-label="WhatsApp">✆</a>
+  <div class="mobile-conversion-bar" aria-label="Atalhos de contato">
+    <a class="mobile-budget" href="#orcamento">✦ Pedir orçamento</a>
+    <a class="mobile-wa js-whatsapp" href="#" data-wa-message="Olá! Vi o site da Nova Byte pelo celular e gostaria de solicitar um orçamento.">✆ WhatsApp</a>
+  </div>
+
+  <div class="site-toast" id="siteToast" role="status" aria-live="polite"></div>
+
+  <a class="whatsapp-float js-whatsapp" href="#" data-wa-message="Olá! Vi o site da Nova Byte e gostaria de solicitar um orçamento." aria-label="Solicitar orçamento pelo WhatsApp">✆</a>
 
   <script>
     // =========================================
-    // CONFIGURAÇÃO PRINCIPAL
-    // Coloque seu WhatsApp com DDI + DDD + número.
-    // Exemplo: 5565999999999
+    // CONFIGURAÇÃO PRINCIPAL / CONVERSÃO V4.2
     // =========================================
     const WHATSAPP = "5531983771576";
+    const numeroConfigurado = /^\d{12,13}$/.test(WHATSAPP);
 
-    const numeroConfigurado = !WHATSAPP.includes("SEUNUMERO");
+    // Camada de eventos pronta para futura integração com Google Tag Manager / Analytics.
+    window.dataLayer = window.dataLayer || [];
 
-    function abrirWhatsApp(mensagem){
+    function trackEvent(eventName, params = {}){
+      const payload = {
+        event:eventName,
+        ...params,
+        page_path:location.pathname,
+        timestamp:new Date().toISOString()
+      };
+      window.dataLayer.push(payload);
+    }
+
+    let siteToastTimer = null;
+    function showSiteToast(message){
+      const toast = document.getElementById("siteToast");
+      if(!toast) return;
+      toast.textContent = message;
+      toast.classList.add("show");
+      clearTimeout(siteToastTimer);
+      siteToastTimer = setTimeout(() => toast.classList.remove("show"), 2600);
+    }
+
+    function origemDoContato(){
+      const params = new URLSearchParams(location.search);
+      const source = params.get("utm_source");
+      const campaign = params.get("utm_campaign");
+      const medium = params.get("utm_medium");
+
+      if(source || campaign || medium){
+        return [source, medium, campaign].filter(Boolean).join(" / ");
+      }
+
+      try{
+        if(document.referrer){
+          const ref = new URL(document.referrer);
+          if(ref.hostname && ref.hostname !== location.hostname){
+            return ref.hostname.replace(/^www\./, "");
+          }
+        }
+      }catch(_){ }
+
+      return "Acesso direto ao site";
+    }
+
+    function abrirWhatsApp(mensagem, origem="cta_site"){
       if(!numeroConfigurado){
-        alert("Falta configurar o número do WhatsApp no código do site.");
+        showSiteToast("O número do WhatsApp precisa ser configurado.");
         return;
       }
 
-      const url = `https://wa.me/${WHATSAPP}?text=${encodeURIComponent(mensagem)}`;
+      const origemLead = origemDoContato();
+      const complemento = origemLead && origemLead !== "Acesso direto ao site"
+        ? `\n\nOrigem do contato: ${origemLead}`
+        : "";
+
+      trackEvent("whatsapp_click", { source:origem, lead_origin:origemLead });
+
+      const url = `https://wa.me/${WHATSAPP}?text=${encodeURIComponent(mensagem + complemento)}`;
       window.open(url, "_blank", "noopener,noreferrer");
     }
 
     document.querySelectorAll(".js-whatsapp").forEach(link => {
       link.addEventListener("click", (e) => {
         e.preventDefault();
-        abrirWhatsApp("Olá! Vi o site da Nova Byte e gostaria de solicitar um orçamento.");
+        const message = link.dataset.waMessage || "Olá! Vi o site da Nova Byte e gostaria de solicitar um orçamento.";
+        const source = link.classList.contains("mobile-wa") ? "mobile_bar" :
+          link.classList.contains("whatsapp-float") ? "floating_button" : "cta_button";
+        abrirWhatsApp(message, source);
+      });
+    });
+
+    // Rastreia navegação e CTAs sem enviar dados pessoais.
+    document.querySelectorAll('a[href^="#"]').forEach(link => {
+      link.addEventListener("click", () => {
+        const target = link.getAttribute("href");
+        if(target && target.length > 1){
+          trackEvent("internal_navigation", { target });
+        }
       });
     });
 
@@ -5152,12 +5362,96 @@
     });
 
     // =========================================================
-    // BRIEFING COMPLETO PELO WHATSAPP
+    // BRIEFING COMPLETO PELO WHATSAPP — V4.2
     // =========================================================
     const briefingForm = document.getElementById("briefingForm");
+    const briefingFields = [...briefingForm.querySelectorAll("input, select, textarea")];
+    const briefingFeedback = document.getElementById("briefingFeedback");
+    const leadProgressBar = document.getElementById("leadProgressBar");
+    const leadProgressText = document.getElementById("leadProgressText");
+    const briefSubmit = document.getElementById("briefSubmit");
+    const BRIEFING_DRAFT_KEY = "novaByteBriefingDraftV42";
+
+    function fieldHasValue(field){
+      return field.value.trim().length > 0;
+    }
+
+    function updateBriefingProgress(){
+      const total = briefingFields.length;
+      const filled = briefingFields.filter(fieldHasValue).length;
+      const pct = Math.round((filled / total) * 100);
+
+      leadProgressBar.style.width = `${pct}%`;
+      leadProgressText.textContent = `${filled} de ${total} preenchidos`;
+      briefSubmit.classList.toggle("is-ready", filled === total);
+
+      briefingFields.forEach(field => {
+        const wrap = field.closest(".field");
+        if(!wrap) return;
+        wrap.classList.toggle("valid", fieldHasValue(field) && field.checkValidity());
+        if(!fieldHasValue(field)) wrap.classList.remove("invalid");
+      });
+    }
+
+    function saveBriefingDraft(){
+      const draft = {};
+      briefingFields.forEach(field => draft[field.id] = field.value);
+      try{ localStorage.setItem(BRIEFING_DRAFT_KEY, JSON.stringify(draft)); }catch(_){ }
+    }
+
+    function restoreBriefingDraft(){
+      try{
+        const raw = localStorage.getItem(BRIEFING_DRAFT_KEY);
+        if(!raw) return;
+        const draft = JSON.parse(raw);
+        briefingFields.forEach(field => {
+          if(typeof draft[field.id] === "string") field.value = draft[field.id];
+        });
+      }catch(_){ }
+    }
+
+    function validateBriefing(){
+      let firstInvalid = null;
+      briefingFields.forEach(field => {
+        const wrap = field.closest(".field");
+        const valid = field.checkValidity();
+        if(wrap) wrap.classList.toggle("invalid", !valid);
+        if(!valid && !firstInvalid) firstInvalid = field;
+      });
+
+      if(firstInvalid){
+        briefingFeedback.textContent = "Confira os campos destacados antes de continuar.";
+        briefingFeedback.className = "briefing-feedback error";
+        firstInvalid.focus({ preventScroll:true });
+        firstInvalid.scrollIntoView({ behavior:"smooth", block:"center" });
+        trackEvent("briefing_validation_error", { field:firstInvalid.id });
+        return false;
+      }
+      return true;
+    }
+
+    restoreBriefingDraft();
+    updateBriefingProgress();
+
+    briefingFields.forEach(field => {
+      field.addEventListener("input", () => {
+        const wrap = field.closest(".field");
+        if(wrap) wrap.classList.remove("invalid");
+        briefingFeedback.textContent = "Seu preenchimento fica salvo neste dispositivo até você enviar.";
+        briefingFeedback.className = "briefing-feedback";
+        saveBriefingDraft();
+        updateBriefingProgress();
+      });
+
+      field.addEventListener("change", () => {
+        saveBriefingDraft();
+        updateBriefingProgress();
+      });
+    });
 
     briefingForm.addEventListener("submit", event => {
       event.preventDefault();
+      if(!validateBriefing()) return;
 
       const name = document.getElementById("briefName").value.trim();
       const business = document.getElementById("briefBusiness").value.trim();
@@ -5190,7 +5484,25 @@ ${budget}
 📝 Detalhes:
 ${details}`;
 
-      abrirWhatsApp(message);
+      trackEvent("briefing_completed", {
+        project,
+        goal,
+        deadline,
+        budget
+      });
+
+      briefingFeedback.textContent = "Briefing pronto. Abrindo o WhatsApp para você conferir e enviar.";
+      briefingFeedback.className = "briefing-feedback ok";
+      showSiteToast("Briefing pronto — abrindo o WhatsApp.");
+
+      try{ localStorage.removeItem(BRIEFING_DRAFT_KEY); }catch(_){ }
+      abrirWhatsApp(message, "briefing_form");
+    });
+
+    document.querySelectorAll(".project-link").forEach(link => {
+      link.addEventListener("click", () => {
+        trackEvent("portfolio_project_click", { project:link.textContent.trim() });
+      });
     });
 
     document.getElementById("year").textContent = new Date().getFullYear();
