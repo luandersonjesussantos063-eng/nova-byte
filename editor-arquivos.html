@@ -173,7 +173,7 @@ body{overflow:hidden;background:radial-gradient(circle at 50% -20%,rgba(88,199,2
 
 <script>
 pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-const { PDFDocument } = PDFLib;
+const { PDFDocument, degrees } = PDFLib;
 let pdfDoc=null, originalBytes=null, currentPageIndex=0, pageOrder=[], pageData={}, renderScale=1, zoom=1;
 let exportedPdfUrl=null, exportedPdfBlob=null, exportedPdfFile=null;
 let selectedId=null, mode=null, isDrawing=false, activeStroke=null, signatureDrawing=false, currentRotation={};
@@ -703,13 +703,48 @@ function loadImageForExport(src){
   });
 }
 
-function canvasToJpegBytes(canvas,quality=.92){
+function canvasToJpegBytes(canvas,quality=.96){
   return new Promise((resolve,reject)=>{
     canvas.toBlob(async blob=>{
       if(!blob)return reject(new Error('Falha ao converter a página para imagem.'));
       try{resolve(new Uint8Array(await blob.arrayBuffer()))}catch(e){reject(e)}
     },'image/jpeg',quality);
   });
+}
+
+function canvasToPngBytes(canvas){
+  return new Promise((resolve,reject)=>{
+    canvas.toBlob(async blob=>{
+      if(!blob)return reject(new Error('Falha ao converter a página para PNG.'));
+      try{resolve(new Uint8Array(await blob.arrayBuffer()))}catch(e){reject(e)}
+    },'image/png');
+  });
+}
+
+function pageHasExportEdits(pnum){
+  const d=dataFor(pnum);
+  if((d.strokes||[]).length)return true;
+  return (d.items||[]).some(it=>{
+    if(it.type==='ocr')return !!it.modified || it.source==='added';
+    return true;
+  });
+}
+
+async function buildTransparentOverlay(page,pnum,rot){
+  if(!pageHasExportEdits(pnum))return null;
+  const base=page.getViewport({scale:1,rotation:rot});
+  // Aproximadamente 2200 px de largura para os elementos adicionados.
+  // A página original continua vetorial e não passa por esta rasterização.
+  const targetWidth=Math.min(2600,Math.max(1800,base.width*3));
+  const scale=targetWidth/Math.max(1,base.width);
+  const vp=page.getViewport({scale,rotation:rot});
+  const cv=document.createElement('canvas');
+  cv.width=Math.max(1,Math.round(vp.width));
+  cv.height=Math.max(1,Math.round(vp.height));
+  const ctx=cv.getContext('2d');
+  ctx.clearRect(0,0,cv.width,cv.height);
+  await paintEditsOnExportCanvas(ctx,cv,pnum,scale);
+  return {canvas:cv,bytes:await canvasToPngBytes(cv),base};
 }
 
 function drawWrappedText(ctx,text,x,y,maxWidth,fontPx,color='#111111'){
@@ -804,45 +839,64 @@ async function exportPDF(){
   if(!pdfDoc||!pageOrder.length)return toast('Abra um arquivo primeiro.');
   activeInlineEditId=null; inlineBlurGuardUntil=0;
   document.activeElement?.blur?.();
-  toast('Gerando PDF...');
+  toast('Gerando PDF em alta qualidade...');
 
   try{
     const out=await PDFDocument.create();
+    let sourceDoc=null;
+    try{
+      sourceDoc=await PDFDocument.load(originalBytes,{ignoreEncryption:true});
+    }catch(e){
+      console.warn('Não foi possível preservar o PDF original; usando renderização de alta resolução.',e);
+    }
 
     for(let i=0;i<pageOrder.length;i++){
       const pnum=pageOrder[i];
       const page=await pdfDoc.getPage(pnum);
       const rot=currentRotation[pnum]||0;
-      const base=page.getViewport({scale:1,rotation:rot});
 
-      // Mantém qualidade boa sem estourar memória do celular.
-      const targetWidth=Math.min(1600,Math.max(900,base.width*1.65));
-      const exportScale=Math.max(.8,targetWidth/Math.max(1,base.width));
-      const vp=page.getViewport({scale:exportScale,rotation:rot});
+      // Caminho principal: copia a página original sem recomprimir.
+      // Isso preserva texto vetorial, imagens e gráficos na qualidade original.
+      if(sourceDoc && rot===0){
+        const [copiedPage]=await out.copyPages(sourceDoc,[pnum-1]);
+        out.addPage(copiedPage);
 
-      const cv=document.createElement('canvas');
-      cv.width=Math.max(1,Math.round(vp.width));
-      cv.height=Math.max(1,Math.round(vp.height));
-      const ctx=cv.getContext('2d',{alpha:false});
-      ctx.fillStyle='#ffffff';ctx.fillRect(0,0,cv.width,cv.height);
+        if(pageHasExportEdits(pnum)){
+          const overlay=await buildTransparentOverlay(page,pnum,0);
+          if(overlay){
+            const png=await out.embedPng(overlay.bytes);
+            const size=copiedPage.getSize();
+            copiedPage.drawImage(png,{x:0,y:0,width:size.width,height:size.height});
+            overlay.canvas.width=1;overlay.canvas.height=1;
+          }
+        }
+      }else{
+        // Fallback para páginas giradas ou PDFs que o PDF-Lib não consegue copiar.
+        // Usa PNG lossless e resolução alta em vez de JPG comprimido.
+        const base=page.getViewport({scale:1,rotation:rot});
+        const targetWidth=Math.min(3000,Math.max(2200,base.width*3.2));
+        const exportScale=targetWidth/Math.max(1,base.width);
+        const vp=page.getViewport({scale:exportScale,rotation:rot});
+        const cv=document.createElement('canvas');
+        cv.width=Math.max(1,Math.round(vp.width));
+        cv.height=Math.max(1,Math.round(vp.height));
+        const ctx=cv.getContext('2d',{alpha:false});
+        ctx.fillStyle='#ffffff';ctx.fillRect(0,0,cv.width,cv.height);
+        await page.render({canvasContext:ctx,viewport:vp,background:'#ffffff'}).promise;
+        await paintEditsOnExportCanvas(ctx,cv,pnum,exportScale);
 
-      await page.render({canvasContext:ctx,viewport:vp,background:'#ffffff'}).promise;
-      await paintEditsOnExportCanvas(ctx,cv,pnum,exportScale);
+        const pngBytes=await canvasToPngBytes(cv);
+        const img=await out.embedPng(pngBytes);
+        const outPage=out.addPage([base.width,base.height]);
+        outPage.drawImage(img,{x:0,y:0,width:base.width,height:base.height});
+        cv.width=1;cv.height=1;
+      }
 
-      const jpgBytes=await canvasToJpegBytes(cv,.93);
-      const img=await out.embedJpg(jpgBytes);
-
-      // Usa proporção da página renderizada; PDF final fica consistente em qualquer leitor.
-      const outPage=out.addPage([cv.width,cv.height]);
-      outPage.drawImage(img,{x:0,y:0,width:cv.width,height:cv.height});
-
-      // Libera memória antes da próxima página.
-      cv.width=1;cv.height=1;
       toast(`Gerando PDF... ${i+1}/${pageOrder.length}`);
       await new Promise(r=>setTimeout(r,0));
     }
 
-    const pdfBytes=await out.save({useObjectStreams:false});
+    const pdfBytes=await out.save({useObjectStreams:true});
     exportedPdfBlob=new Blob([pdfBytes],{type:'application/pdf'});
     if(exportedPdfUrl)URL.revokeObjectURL(exportedPdfUrl);
     exportedPdfUrl=URL.createObjectURL(exportedPdfBlob);
@@ -862,7 +916,7 @@ async function exportPDF(){
     }
 
     $('exportModal').classList.add('show');
-    toast('PDF pronto.');
+    toast('PDF pronto em alta qualidade.');
   }catch(err){
     console.error('Erro ao exportar PDF:',err);
     alert('Não consegui gerar o PDF.\n\nDetalhe: '+(err?.message||String(err)));
