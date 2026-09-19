@@ -1,0 +1,7 @@
+PACOTE NOVABYTE - PAGINAS SEO
+
+1. Substitua o index.html da raiz pelo index.html deste pacote.
+2. Envie as pastas calculadora-rescisao, escala-12x36, escala-24x48, escala-24x72, escala-6x1, adicional-noturno e periculosidade para a raiz do repositorio.
+3. Substitua o sitemap.xml pelo arquivo deste pacote.
+4. O robots.txt pode substituir o atual.
+5. No Search Console, envie novamente sitemap.xml e solicite indexacao das novas URLs.
