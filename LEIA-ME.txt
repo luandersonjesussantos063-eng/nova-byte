@@ -1,1 +1,25 @@
-Envie todos estes arquivos diretamente para a raiz do repositorio GitHub. Nao precisa criar pastas. Nao apague CNAME, ads.txt, og-image.png nem suas paginas antigas.
+PACOTE NOVABYTE ATUALIZADO
+
+O que mudou:
+- Conteúdo SEO ampliado nas páginas de rescisão, escalas, adicional noturno e periculosidade.
+- FAQ e exemplos práticos nas páginas.
+- Links internos entre ferramentas.
+- Bloco comercial com Criação de Sites e Landing Pages.
+- Botão de WhatsApp em todas as páginas.
+- WhatsApp configurado para +55 31 98377-1576.
+
+COMO ATUALIZAR NO GITHUB:
+1. Abra o repositório.
+2. Faça upload destes arquivos e substitua os arquivos com o mesmo nome:
+   index.html
+   calculadora-rescisao.html
+   escala-12x36.html
+   escala-24x48.html
+   escala-24x72.html
+   escala-6x1.html
+   adicional-noturno.html
+   periculosidade.html
+   sitemap.xml
+   robots.txt
+3. Não apague CNAME, ads.txt, og-image.png nem as pastas antigas.
+4. Faça o commit.

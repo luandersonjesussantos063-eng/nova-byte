@@ -912,7 +912,66 @@
       .scale-summary{grid-template-columns:1fr}
     }
 
-  </style>
+  
+/* CTA comercial e conteúdo SEO */
+.cta-commercial{
+  margin-top:26px;
+  padding:28px;
+  border-radius:22px;
+  border:1px solid rgba(88,199,255,.18);
+  background:
+    radial-gradient(circle at 85% 15%,rgba(122,108,255,.14),transparent 34%),
+    linear-gradient(135deg,rgba(88,199,255,.08),rgba(122,108,255,.06));
+}
+.cta-commercial h2{margin:10px 0 10px;font-size:clamp(25px,4vw,38px);letter-spacing:-.8px}
+.cta-commercial p{max-width:760px;margin:0;color:#a9bbcf;line-height:1.7}
+.cta-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:20px}
+.cta-actions .btn{display:inline-flex;align-items:center;justify-content:center;min-height:46px}
+.whatsapp-btn{background:#25d366;color:#062b16!important;border:0!important}
+.whatsapp-btn:hover{filter:brightness(1.06);transform:translateY(-1px)}
+.whatsapp-float{
+  position:fixed;right:18px;bottom:18px;z-index:80;
+  display:flex;align-items:center;gap:8px;
+  padding:12px 15px;border-radius:999px;
+  background:#25d366;color:#062b16!important;
+  font-weight:900;box-shadow:0 16px 42px rgba(0,0,0,.32);
+}
+.whatsapp-float:hover{filter:brightness(1.05);transform:translateY(-1px)}
+.seo-block{margin-top:28px}
+.seo-block h2{margin-top:0}
+.seo-block h3{margin-top:24px}
+.seo-example{
+  margin:18px 0;padding:16px;border-radius:14px;
+  background:rgba(88,199,255,.055);
+  border:1px solid rgba(88,199,255,.15)
+}
+.seo-example strong{color:#dff6ff}
+.faq{margin-top:26px}
+.faq details{
+  border:1px solid var(--line);
+  background:rgba(255,255,255,.025);
+  border-radius:13px;padding:14px 16px;margin:9px 0
+}
+.faq summary{cursor:pointer;font-weight:850;color:#e8f2fb}
+.faq details p{margin:10px 0 0}
+.quick-links{
+  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:10px;margin-top:18px
+}
+.quick-links a{
+  border:1px solid var(--line);border-radius:14px;
+  padding:14px;background:rgba(255,255,255,.025)
+}
+.quick-links a:hover{border-color:rgba(88,199,255,.35)}
+@media(max-width:800px){
+  .cta-commercial{padding:21px}
+  .cta-actions{flex-direction:column}
+  .cta-actions .btn{width:100%}
+  .quick-links{grid-template-columns:1fr}
+  .whatsapp-float{right:12px;bottom:12px;padding:11px 13px}
+}
+
+</style>
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2466231259507657"
      crossorigin="anonymous"></script>
 </head>
@@ -1009,16 +1068,16 @@
       </p>
 
       <div class="service-grid">
-        <div class="service">
+        <a class="service" href="/criacao-de-sites/">
           <div class="icon">🌐</div>
-          <b>Sites e landing pages</b>
-          <p>Páginas responsivas para apresentar empresas, serviços, campanhas e captar clientes.</p>
-        </div>
-        <div class="service">
-          <div class="icon">📱</div>
-          <b>Sistemas e protótipos</b>
-          <p>Interfaces interativas e soluções personalizadas para validar ideias e processos.</p>
-        </div>
+          <b>Criação de sites</b>
+          <p>Sites responsivos para apresentar sua empresa, seus serviços e transformar visitas em contatos.</p>
+        </a>
+        <a class="service" href="/landing-pages/">
+          <div class="icon">📄</div>
+          <b>Landing pages</b>
+          <p>Páginas focadas em campanhas, apresentação de ofertas e captação de clientes.</p>
+        </a>
         <div class="service">
           <div class="icon">🍔</div>
           <b>Cardápios digitais</b>
@@ -1032,8 +1091,9 @@
       </div>
 
       <div class="business-actions">
-        <button class="primary" onclick="document.getElementById('tools').scrollIntoView({behavior:'smooth'})">Usar ferramentas grátis</button>
-        <button class="ghost" onclick="alert('Depois vamos ligar este botão ao seu WhatsApp comercial da NovaByte.')">Quero um projeto personalizado</button>
+        <a class="primary" style="display:inline-flex;align-items:center;justify-content:center" href="/criacao-de-sites/">🌐 Criação de sites</a>
+        <a class="ghost" style="display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--line)" href="/landing-pages/">📄 Landing pages</a>
+        <a class="whatsapp-btn" style="display:inline-flex;align-items:center;justify-content:center;min-height:42px;padding:0 15px;border-radius:11px;font-weight:850" href="https://wa.me/5531983771576?text=Ol%C3%A1%2C%20conheci%20a%20NovaByte%20pelas%20ferramentas%20do%20site%20e%20gostaria%20de%20solicitar%20um%20or%C3%A7amento." target="_blank" rel="noopener">💬 Falar no WhatsApp</a>
       </div>
 
       <div class="notice">
@@ -1042,6 +1102,23 @@
       </div>
     </div>
   </section>
+
+
+<section class="wrap content" id="projeto-digital">
+  <article class="cta-commercial">
+    <span class="badge">🚀 NovaByte Soluções</span>
+    <h2>Precisa de um site ou página para sua empresa?</h2>
+    <p>
+      A NovaByte também desenvolve sites, landing pages e soluções digitais para apresentar seu negócio,
+      captar contatos e facilitar o atendimento. Veja os serviços ou fale direto pelo WhatsApp.
+    </p>
+    <div class="cta-actions">
+      <a class="btn primary" href="/criacao-de-sites/">🌐 Criação de sites</a>
+      <a class="btn secondary" href="/landing-pages/">📄 Landing pages</a>
+      <a class="btn whatsapp-btn" href="https://wa.me/5531983771576?text=Ol%C3%A1%2C%20conheci%20a%20NovaByte%20pelas%20ferramentas%20do%20site%20e%20gostaria%20de%20solicitar%20um%20or%C3%A7amento." target="_blank" rel="noopener">💬 Falar comigo no WhatsApp</a>
+    </div>
+  </article>
+</section>
 
 </main>
 
@@ -2342,5 +2419,6 @@ function calcAcertos(){
 
 renderTools();
 </script>
+<a class="whatsapp-float" href="https://wa.me/5531983771576?text=Ol%C3%A1%2C%20conheci%20a%20NovaByte%20pelas%20ferramentas%20do%20site%20e%20gostaria%20de%20solicitar%20um%20or%C3%A7amento." target="_blank" rel="noopener" aria-label="Falar com a NovaByte no WhatsApp">💬 WhatsApp</a>
 </body>
 </html>
