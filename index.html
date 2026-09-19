@@ -1170,7 +1170,7 @@
       <span>💼 Trabalho</span><span>📚 Estudos</span><span>🚗 Veículos</span><span>💰 Dinheiro</span><span>🧰 Utilidades</span>
     </div>
     <div class="hero-stats">
-      <div class="hero-stat">🧰 <strong>12</strong> ferramentas disponíveis</div>
+      <div class="hero-stat">🧰 <strong>13</strong> ferramentas disponíveis</div>
       <div class="hero-stat">⚡ Resultado instantâneo</div>
       <div class="hero-stat">🔒 Sem login ou cadastro</div>
     </div>
@@ -1422,6 +1422,15 @@ const tools = [
     open: openSenha
   },
   {
+    id:'editor-arquivos',
+    title:'Editor de arquivos',
+    icon:'📄',
+    cat:'Utilidades',
+    desc:'Edite PDF, imagens e documentos digitalizados direto pelo celular.',
+    tag:'Novo',
+    open: openEditorArquivos
+  },
+  {
     id:'qrcode',
     title:'QR Code',
     icon:'▦',
@@ -1519,6 +1528,10 @@ function openTool(id){
   const t = tools.find(x => x.id === id);
   if(window.innerWidth < 900) toggleToolsMenu(false);
   if(t) t.open();
+}
+
+function openEditorArquivos(){
+  window.location.href='editor-arquivos.html';
 }
 
 function showModal(title,html){
