@@ -813,6 +813,43 @@
       .res-summary{grid-template-columns:1fr}
     }
 
+  
+    .scale-presets{
+      display:flex;gap:7px;flex-wrap:wrap;margin:10px 0 0
+    }
+    .scale-preset{
+      border:1px solid var(--line);background:rgba(255,255,255,.025);
+      color:#9eb1c6;border-radius:9px;padding:7px 10px;cursor:pointer;font-size:12px
+    }
+    .scale-preset:hover{background:rgba(255,255,255,.05);color:white}
+    .scale-legend{
+      display:flex;gap:12px;flex-wrap:wrap;margin-top:12px;color:#7f93aa;font-size:11.5px
+    }
+    .scale-dot{
+      width:9px;height:9px;border-radius:50%;display:inline-block;margin-right:5px
+    }
+    .scale-dot.work{background:#58c7ff}
+    .scale-dot.off{background:#3b4a5e}
+    .day.off{
+      background:rgba(255,255,255,.018);
+      color:#64788e
+    }
+    .day .mini{
+      display:block;margin-top:3px;font-size:9px;opacity:.8
+    }
+    .scale-summary{
+      display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px
+    }
+    .scale-summary > div{
+      padding:11px;border:1px solid var(--line);border-radius:10px;
+      background:rgba(255,255,255,.025)
+    }
+    .scale-summary small{display:block;color:#6f8298;font-size:10px;margin-bottom:4px}
+    .scale-summary b{font-size:14px}
+    @media(max-width:620px){
+      .scale-summary{grid-template-columns:1fr}
+    }
+
   </style>
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1975354620975361"
      crossorigin="anonymous"></script>
@@ -839,7 +876,7 @@
     <p>Calcule, organize e resolva tarefas comuns de trabalho, estudos, veículos e finanças em poucos segundos.</p>
 
     <div class="searchbox">
-      <input id="search" type="search" placeholder="Ex.: salário líquido, férias, QR Code, escala..." oninput="renderTools()" />
+      <input id="search" type="search" placeholder="Ex.: salário líquido, férias, QR Code, escala 12x36..." oninput="renderTools()" />
       <button class="primary" onclick="renderTools()">Pesquisar</button>
     </div>
     <div class="quick">
@@ -864,7 +901,7 @@
     <div class="popular-bar">
       <span class="popular-label">🔥 Mais acessadas:</span>
       <button class="popular-chip" onclick="openTool('rescisao')">📄 Rescisão</button>
-      <button class="popular-chip" onclick="openTool('escala')">📅 Escala 12x36</button>
+      <button class="popular-chip" onclick="openTool('escala')">📅 Escalas</button>
       <button class="popular-chip" onclick="openTool('noturno')">🌙 Adicional noturno</button>
       <button class="popular-chip" onclick="openTool('combustivel')">⛽ Custo de viagem</button>
       <button class="popular-chip" onclick="openTool('salario-liquido')">💵 Salário líquido</button>
@@ -964,11 +1001,11 @@ const tools = [
   },
   {
     id:'escala',
-    title:'Escala 12x36',
+    title:'Escalas de trabalho',
     icon:'📅',
     cat:'Trabalho',
-    desc:'Informe um plantão e veja todos os próximos dias de trabalho do mês.',
-    tag:'Mais útil',
+    desc:'Monte calendários de 12x36, 24x48, 6x1, 5x2 e outras escalas.',
+    tag:'Trabalho',
     open: openEscala
   },
   {
@@ -1940,52 +1977,199 @@ function calcRescisao(){
   r.classList.add('show');
 }
 
+
+const scalePresets = {
+  '12x36': {name:'12x36', workDays:1, offDays:1, note:'Plantões iniciando em dias alternados'},
+  '24x48': {name:'24x48', workDays:1, offDays:2, note:'1 dia de plantão e 2 dias de folga'},
+  '24x72': {name:'24x72', workDays:1, offDays:3, note:'1 dia de plantão e 3 dias de folga'},
+  '6x1': {name:'6x1', workDays:6, offDays:1, note:'6 dias de trabalho e 1 de folga'},
+  '5x2': {name:'5x2', workDays:5, offDays:2, note:'5 dias de trabalho e 2 de folga'},
+  '4x2': {name:'4x2', workDays:4, offDays:2, note:'4 dias de trabalho e 2 de folga'},
+  '2x2': {name:'2x2', workDays:2, offDays:2, note:'2 dias de trabalho e 2 de folga'},
+  '4x1': {name:'4x1', workDays:4, offDays:1, note:'4 dias de trabalho e 1 de folga'}
+};
+
+function selectScalePreset(key){
+  const sel=document.getElementById('escalaTipo');
+  if(!sel) return;
+  sel.value=key;
+  updateScalePreset();
+}
+
+function updateScalePreset(){
+  const tipo=document.getElementById('escalaTipo').value;
+  const custom=document.getElementById('escalaCustom');
+  const info=document.getElementById('escalaInfo');
+
+  if(tipo==='custom'){
+    custom.style.display='grid';
+    if(info) info.textContent='Defina quantos dias consecutivos trabalha e quantos dias folga.';
+    return;
+  }
+
+  custom.style.display='none';
+  const p=scalePresets[tipo];
+  if(p && info){
+    info.textContent=p.note;
+  }
+}
+
+function getScaleConfig(){
+  const tipo=document.getElementById('escalaTipo').value;
+  if(tipo==='custom'){
+    const w=Math.max(1,+document.getElementById('escalaWorkDays').value||1);
+    const o=Math.max(1,+document.getElementById('escalaOffDays').value||1);
+    return {name:`${w}x${o} dias`,workDays:w,offDays:o,note:`${w} dia(s) trabalhando e ${o} de folga`};
+  }
+  return scalePresets[tipo];
+}
+
+function mod(n,m){
+  return ((n % m) + m) % m;
+}
+
+function isWorkDayForScale(date,base,workDays,offDays){
+  const cycle=workDays+offDays;
+  const diff=Math.round((date-base)/86400000);
+  const pos=mod(diff,cycle);
+  return pos<workDays;
+}
+
 function openEscala(){
-  showModal('Escala 12x36', `
-    <div class="form-grid">
-      <div>
-        <label>Data de um plantão conhecido</label>
-        <input type="date" id="escalaData">
+  showModal('📅 Escalas de trabalho', `
+    <div class="res-section">
+      <div class="res-section-title">Escolha sua escala <span>Presets prontos</span></div>
+
+      <div class="form-grid">
+        <div>
+          <label>Tipo de escala</label>
+          <select id="escalaTipo" onchange="updateScalePreset()">
+            <option value="12x36">12x36</option>
+            <option value="24x48">24x48</option>
+            <option value="24x72">24x72</option>
+            <option value="6x1">6x1</option>
+            <option value="5x2">5x2</option>
+            <option value="4x2">4x2</option>
+            <option value="2x2">2x2</option>
+            <option value="4x1">4x1</option>
+            <option value="custom">Personalizada</option>
+          </select>
+        </div>
+
+        <div>
+          <label>Data de início de um ciclo de trabalho</label>
+          <input type="date" id="escalaData">
+        </div>
+
+        <div>
+          <label>Mês que deseja visualizar</label>
+          <input type="month" id="escalaMes">
+        </div>
       </div>
-      <div>
-        <label>Mês que deseja visualizar</label>
-        <input type="month" id="escalaMes">
+
+      <div class="form-grid" id="escalaCustom" style="display:none;margin-top:12px">
+        <div>
+          <label>Dias consecutivos trabalhando</label>
+          <input type="number" min="1" max="30" id="escalaWorkDays" value="3">
+        </div>
+        <div>
+          <label>Dias consecutivos de folga</label>
+          <input type="number" min="1" max="30" id="escalaOffDays" value="2">
+        </div>
       </div>
+
+      <div class="scale-presets">
+        <button class="scale-preset" onclick="selectScalePreset('12x36')">12x36</button>
+        <button class="scale-preset" onclick="selectScalePreset('24x48')">24x48</button>
+        <button class="scale-preset" onclick="selectScalePreset('24x72')">24x72</button>
+        <button class="scale-preset" onclick="selectScalePreset('6x1')">6x1</button>
+        <button class="scale-preset" onclick="selectScalePreset('5x2')">5x2</button>
+        <button class="scale-preset" onclick="selectScalePreset('4x2')">4x2</button>
+        <button class="scale-preset" onclick="selectScalePreset('2x2')">2x2</button>
+      </div>
+
+      <div class="res-alert" id="escalaInfo">Plantões iniciando em dias alternados.</div>
     </div>
-    <button class="calc-btn" onclick="calcEscala()">Gerar calendário</button>
+
+    <button class="calc-btn" onclick="calcEscala()">Gerar calendário da escala</button>
+
     <div class="result" id="escalaResult"></div>
-    <p class="muted">A lógica considera um ciclo simples de 12 horas de trabalho seguido por 36 horas de descanso, resultando em plantões a cada 2 dias. Trocas de escala e ajustes feitos pela empresa não entram no cálculo.</p>
+
+    <p class="muted">
+      Para escalas por plantão, a data informada deve ser um dia em que começa seu plantão.
+      O calendário considera o ciclo informado e não inclui trocas de plantão, folgas extras,
+      banco de horas ou alterações feitas pela empresa.
+    </p>
   `);
+
   const today=new Date();
-  document.getElementById('escalaMes').value=`${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}`;
+  document.getElementById('escalaMes').value=
+    `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}`;
+  document.getElementById('escalaData').value=
+    `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+  updateScalePreset();
 }
 
 function calcEscala(){
   const baseVal=document.getElementById('escalaData').value;
   const monthVal=document.getElementById('escalaMes').value;
-  if(!baseVal||!monthVal) return alert('Preencha as duas datas.');
+  if(!baseVal || !monthVal) return alert('Preencha a data-base e o mês.');
+
+  const cfg=getScaleConfig();
   const base=new Date(baseVal+'T12:00:00');
   const [y,m]=monthVal.split('-').map(Number);
   const first=new Date(y,m-1,1,12);
   const last=new Date(y,m,0,12);
   const startWeek=first.getDay();
   const week=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+
   let html='<div class="calendar">'+week.map(w=>`<div class="weekday">${w}</div>`).join('');
   for(let i=0;i<startWeek;i++) html+='<div class="day empty"></div>';
 
-  let workDays=[];
+  let workCount=0, offCount=0;
+  let workDates=[];
+
   for(let d=1;d<=last.getDate();d++){
     const dt=new Date(y,m-1,d,12);
-    const diff=Math.round((dt-base)/86400000);
-    const work=Math.abs(diff)%2===0;
-    if(work) workDays.push(d);
-    html+=`<div class="day ${work?'work':''}">${d}${work?'<br><small>Plantão</small>':''}</div>`;
+    const work=isWorkDayForScale(dt,base,cfg.workDays,cfg.offDays);
+
+    if(work){
+      workCount++;
+      workDates.push(d);
+    }else{
+      offCount++;
+    }
+
+    html+=`
+      <div class="day ${work?'work':'off'}">
+        ${d}
+        <span class="mini">${work?'Trabalho':'Folga'}</span>
+      </div>`;
   }
   html+='</div>';
+
+  const cycle=cfg.workDays+cfg.offDays;
+  const pct=((cfg.workDays/cycle)*100).toFixed(1).replace('.',',');
+
   const result=document.getElementById('escalaResult');
-  result.innerHTML=`<strong>${workDays.length} plantões no mês</strong>${html}`;
+  result.innerHTML=`
+    <div class="scale-summary">
+      <div><small>Escala</small><b>${cfg.name}</b></div>
+      <div><small>Dias de trabalho no mês</small><b>${workCount}</b></div>
+      <div><small>Dias de folga no mês</small><b>${offCount}</b></div>
+    </div>
+
+    ${html}
+
+    <div class="scale-legend">
+      <span><span class="scale-dot work"></span>Trabalho</span>
+      <span><span class="scale-dot off"></span>Folga</span>
+      <span>${pct}% dos dias do ciclo em trabalho</span>
+    </div>
+  `;
   result.classList.add('show');
 }
+
 
 function openNoturno(){
   showModal('Adicional noturno', `
