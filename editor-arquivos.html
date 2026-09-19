@@ -27,9 +27,9 @@ body{overflow:hidden;background:radial-gradient(circle at 50% -20%,rgba(88,199,2
 .thumb-list{display:flex;flex-direction:column;gap:10px}.thumb{position:relative;border:1px solid var(--line);border-radius:12px;background:rgba(255,255,255,.025);padding:7px;cursor:pointer}.thumb.active{border-color:var(--blue);box-shadow:0 0 0 1px rgba(88,199,255,.22)}.thumb canvas{width:100%;height:auto;background:white;border-radius:5px;display:block}.thumb-label{display:flex;justify-content:space-between;align-items:center;margin-top:6px;font-size:10px;color:#9fb1c3}.thumb-actions{display:flex;gap:4px}.thumb-actions button{border:0;background:transparent;color:#8da2b5;padding:2px 4px;cursor:pointer}
 .stage-wrap{position:relative;overflow:auto;display:flex;align-items:flex-start;justify-content:center;padding:24px;background:linear-gradient(45deg,rgba(255,255,255,.012) 25%,transparent 25%,transparent 75%,rgba(255,255,255,.012) 75%),linear-gradient(45deg,rgba(255,255,255,.012) 25%,transparent 25%,transparent 75%,rgba(255,255,255,.012) 75%);background-size:24px 24px;background-position:0 0,12px 12px}
 .stage-empty{margin:auto;max-width:500px;text-align:center;padding:26px}.stage-empty .big-icon{font-size:52px}.stage-empty h1{font-size:24px;margin:10px 0}.stage-empty p{color:var(--muted);line-height:1.6;font-size:13px}.dropzone{border:1px dashed rgba(88,199,255,.35);border-radius:16px;padding:28px 18px;margin-top:18px;background:rgba(88,199,255,.04)}
-.page-shell{position:relative;box-shadow:0 22px 65px rgba(0,0,0,.45);background:#fff;touch-action:none;user-select:none;transform-origin:top center}.page-shell canvas.base{display:block;width:100%;height:100%}.overlay-layer{position:absolute;inset:0;overflow:hidden}.draw-canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}.draw-canvas.active{pointer-events:auto;cursor:crosshair}
+.page-shell{position:relative;box-shadow:0 22px 65px rgba(0,0,0,.45);background:#fff;touch-action:manipulation;user-select:none;transform-origin:top center}.page-shell canvas.base{display:block;width:100%;height:100%}.overlay-layer{position:absolute;inset:0;overflow:hidden;cursor:text}.draw-canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}.draw-canvas.active{pointer-events:auto;cursor:crosshair;touch-action:none}
 .overlay-item{position:absolute;min-width:30px;min-height:22px;touch-action:none;cursor:move}.overlay-item.selected{outline:2px solid #58c7ff;outline-offset:2px}.text-item{color:#111;background:transparent;white-space:pre-wrap;line-height:1.2;padding:2px;min-width:80px;max-width:85%;word-break:break-word}.image-item img{width:100%;height:100%;display:block;object-fit:contain;pointer-events:none}.shape-item{border:3px solid #111;background:transparent}.cover-item{background:#fff}.resize-handle{display:none;position:absolute;right:-7px;bottom:-7px;width:16px;height:16px;border:2px solid white;border-radius:50%;background:#58c7ff;cursor:nwse-resize}.overlay-item.selected .resize-handle{display:block}
-.ocr-item{background:transparent;border:1px solid transparent;cursor:text;min-width:12px;min-height:12px;pointer-events:auto}.ocr-item.selected{border-color:#58c7ff;background:rgba(88,199,255,.06);outline:none}.ocr-item::after{content:"";position:absolute;inset:-4px}.ocr-item.selected::before{content:"✎ editar";position:absolute;left:0;top:-22px;background:#0b192b;color:#bfeeff;border:1px solid rgba(88,199,255,.25);border-radius:6px;padding:2px 5px;font-size:8px;white-space:nowrap;z-index:5}
+.ocr-item{background:transparent;border:0;outline:0;cursor:text;min-width:1px;min-height:1em;pointer-events:auto;user-select:text;-webkit-user-select:text;touch-action:manipulation;white-space:nowrap;overflow:visible;color:transparent;caret-color:transparent;padding:0 1px;line-height:1.05;font-family:Arial,Helvetica,sans-serif}.ocr-item::after{content:"";position:absolute;inset:-5px}.ocr-item:focus{z-index:20;color:#111!important;caret-color:#111;background:#fff;outline:1px solid rgba(88,199,255,.65);box-shadow:0 0 0 2px rgba(88,199,255,.12);border-radius:1px}.ocr-item.modified{z-index:15;color:#111!important;caret-color:#111;background:#fff}.ocr-item.modified:focus{outline:1px solid #58c7ff}.ocr-item[data-empty="1"]:focus::before{content:"Digite aqui";color:#999;position:absolute;pointer-events:none;left:2px;top:0}.ocr-item[data-empty="1"]:focus{min-width:90px}
 .inspector-block{border:1px solid var(--line);border-radius:12px;padding:11px;margin-bottom:10px;background:rgba(255,255,255,.02)}.inspector-block h3{font-size:11px;margin:0 0 9px;color:#9db1c5;text-transform:uppercase;letter-spacing:.7px}.field{margin-top:8px}.field label{display:block;color:#8095a9;font-size:10px;margin-bottom:5px}.field input,.field select,.field textarea{width:100%;border:1px solid var(--line);border-radius:8px;background:#081525;color:#e8f1fa;padding:9px;outline:none}.row{display:flex;gap:7px}.row>*{flex:1}.muted{color:var(--muted);font-size:11px;line-height:1.5}
 .bottom-tools{z-index:35;background:rgba(7,16,28,.97);border-top:1px solid var(--line);padding:8px 10px calc(8px + var(--safe));display:flex;justify-content:center;gap:5px;overflow-x:auto}.tool-btn{flex:0 0 auto;min-width:70px;border:1px solid transparent;background:transparent;border-radius:10px;padding:7px 8px;cursor:pointer;color:#9db0c2}.tool-btn b{display:block;font-size:18px;line-height:18px}.tool-btn span{display:block;font-size:9px;margin-top:4px;font-weight:800}.tool-btn.active{color:#dff5ff;background:rgba(88,199,255,.09);border-color:rgba(88,199,255,.18)}
 .menu-pop{position:fixed;z-index:60;right:10px;bottom:78px;width:min(320px,calc(100vw - 20px));padding:10px;border:1px solid var(--line);border-radius:14px;background:#0b192b;box-shadow:0 22px 60px rgba(0,0,0,.5);display:none}.menu-pop.show{display:block}.menu-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:7px}.menu-grid button{min-height:52px;text-align:left;border:1px solid var(--line);border-radius:10px;background:rgba(255,255,255,.025);padding:9px;cursor:pointer;font-size:11px}.menu-grid button b{display:block;font-size:15px;margin-bottom:3px}
@@ -63,7 +63,7 @@ body{overflow:hidden;background:radial-gradient(circle at 50% -20%,rgba(88,199,2
       <div class="stage-empty" id="emptyState">
         <div class="big-icon">📄</div>
         <h1>Edite documentos direto pelo celular</h1>
-        <p>Abra um PDF, JPG ou PNG. Fotos e documentos escaneados são convertidos para PDF e o texto é reconhecido para você editar antes de salvar novamente em PDF.</p>
+        <p>Abra um PDF, JPG ou PNG. Abra PDF, JPG ou PNG. O editor reconhece o texto e você toca diretamente na palavra para posicionar o cursor e digitar na própria folha.</p>
         <div class="dropzone" id="dropzone">
           <button class="primary-btn" onclick="document.getElementById('fileInput').click()">Selecionar arquivo</button>
           <div class="muted" style="margin-top:10px">PDF • JPG • JPEG • PNG</div>
@@ -88,7 +88,7 @@ body{overflow:hidden;background:radial-gradient(circle at 50% -20%,rgba(88,199,2
       </div>
       <div class="inspector-block" id="elementInspector">
         <h3>Elemento selecionado</h3>
-        <div class="muted" id="selectionInfo">Toque em um texto, imagem ou forma para editar.</div>
+        <div class="muted" id="selectionInfo">Toque diretamente em qualquer palavra da folha e digite. Toque numa área vazia para inserir texto.</div>
         <div id="selectionControls" style="display:none">
           <div class="field text-only"><label>Texto</label><textarea id="selectedText" rows="4" oninput="updateSelectedText()"></textarea></div>
           <div class="field text-only"><label>Tamanho</label><input type="range" min="10" max="72" value="24" id="fontSizeRange" oninput="updateSelectedFont()"></div>
@@ -115,7 +115,7 @@ body{overflow:hidden;background:radial-gradient(circle at 50% -20%,rgba(88,199,2
   <div class="menu-grid">
     <button onclick="addCover();toggleMore(false)"><b>⬜</b>Cobrir / apagar área</button>
     <button onclick="addShape();toggleMore(false)"><b>▭</b>Adicionar forma</button>
-    <button onclick="runOCR();toggleMore(false)"><b>🔎</b>Ler texto / editar scan</button>
+    <button onclick="runOCR();toggleMore(false)"><b>🔎</b>Reconhecer texto da página</button>
     <button onclick="clearDrawing();toggleMore(false)"><b>🧽</b>Limpar desenhos da página</button>
     <button onclick="rotateCurrent();toggleMore(false)"><b>↻</b>Girar página</button>
     <button onclick="openPagesModal();toggleMore(false)"><b>▦</b>Organizar páginas</button>
@@ -140,17 +140,6 @@ body{overflow:hidden;background:radial-gradient(circle at 50% -20%,rgba(88,199,2
       <div class="progress"><div id="ocrProgress"></div></div>
       <textarea class="ocr-output" id="ocrOutput" placeholder="O texto reconhecido aparecerá aqui..."></textarea>
       <div class="row" style="margin-top:10px"><button class="soft-btn" onclick="copyOCR()">Copiar texto</button><button class="primary-btn" onclick="closeModal('ocrModal')">Continuar editando</button></div>
-    </div>
-  </div>
-</div>
-
-<div class="modal" id="ocrEditModal">
-  <div class="modal-card">
-    <div class="modal-head"><h2>Editar texto reconhecido</h2><button class="icon-btn" onclick="cancelOCREdit()">×</button></div>
-    <div class="modal-body">
-      <div class="muted" style="margin-bottom:9px">Altere somente este trecho. O texto original será coberto e o novo ficará no mesmo lugar.</div>
-      <textarea class="ocr-output" id="ocrEditInput" style="min-height:110px"></textarea>
-      <div class="row" style="margin-top:10px"><button class="soft-btn" onclick="cancelOCREdit()">Cancelar</button><button class="primary-btn" onclick="saveOCREdit()">Salvar alteração</button></div>
     </div>
   </div>
 </div>
@@ -205,6 +194,7 @@ async function handleFiles(files){
     await loadPDF(bytes);
     if(!autoOCR) autoOCR=await isLikelyScannedPDF();
     if(autoOCR) await scanDocumentToEditable();
+    else await prepareNativeTextLayers();
   }catch(err){console.error(err);toast('Não consegui abrir esse arquivo.')}
 }
 async function imagesToPDF(files){
@@ -226,229 +216,4 @@ async function loadPDF(bytes){
 }
 
 async function renderCurrentPage(){
-  if(!pdfDoc||!pageOrder.length)return;
-  const pageNum=currentPageNumber(), page=await pdfDoc.getPage(pageNum), rot=currentRotation[pageNum]||0;
-  const base=page.getViewport({scale:1,rotation:rot});
-  const available=Math.min(850,Math.max(280,$('stageWrap').clientWidth-32));
-  renderScale=Math.min(1.65,available/base.width);
-  const vp=page.getViewport({scale:renderScale,rotation:rot});
-  const c=$('pdfCanvas'),ctx=c.getContext('2d');c.width=Math.ceil(vp.width);c.height=Math.ceil(vp.height);
-  $('pageShell').style.width=vp.width+'px';$('pageShell').style.height=vp.height+'px';$('pageShell').style.transform=`scale(${zoom})`;$('pageShell').style.marginBottom=((zoom-1)*vp.height)+'px';
-  await page.render({canvasContext:ctx,viewport:vp}).promise;
-  setupDrawCanvas();renderItems();renderStrokes();updateSelectionUI();highlightThumbs();
-}
-function setZoom(v){zoom=Number(v)/100;$('pageShell').style.transform=`scale(${zoom})`;const h=$('pageShell').getBoundingClientRect().height;$('pageShell').style.marginBottom=((zoom-1)*($('pdfCanvas').height))+'px'}
-
-async function renderThumbs(){
-  const host=$('thumbList'), mobile=$('mobileThumbList');host.innerHTML='';mobile.innerHTML='';
-  for(let idx=0;idx<pageOrder.length;idx++){
-    const pnum=pageOrder[idx], page=await pdfDoc.getPage(pnum), rot=currentRotation[pnum]||0, vp=page.getViewport({scale:.2,rotation:rot});
-    const wrap=document.createElement('div');wrap.className='thumb'+(idx===currentPageIndex?' active':'');wrap.dataset.idx=idx;
-    const cv=document.createElement('canvas');cv.width=vp.width;cv.height=vp.height;await page.render({canvasContext:cv.getContext('2d'),viewport:vp}).promise;
-    wrap.appendChild(cv);const lab=document.createElement('div');lab.className='thumb-label';lab.innerHTML=`<span>Página ${idx+1}</span><span class="thumb-actions"><button title="Subir">↑</button><button title="Descer">↓</button><button title="Excluir">×</button></span>`;wrap.appendChild(lab);
-    wrap.onclick=e=>{if(e.target.tagName==='BUTTON')return;currentPageIndex=idx;renderCurrentPage();closeModal('pagesModal')};
-    const bs=lab.querySelectorAll('button');bs[0].onclick=()=>movePage(idx,-1);bs[1].onclick=()=>movePage(idx,1);bs[2].onclick=()=>deletePage(idx);
-    host.appendChild(wrap);mobile.appendChild(wrap.cloneNode(true));
-  }
-  wireMobileThumbs();
-}
-function wireMobileThumbs(){[...$('mobileThumbList').children].forEach((el,idx)=>{el.onclick=e=>{if(e.target.tagName==='BUTTON')return;currentPageIndex=idx;renderCurrentPage();closeModal('pagesModal')};const b=el.querySelectorAll('button');b[0].onclick=()=>movePage(idx,-1);b[1].onclick=()=>movePage(idx,1);b[2].onclick=()=>deletePage(idx)})}
-function highlightThumbs(){[...$('thumbList').children].forEach((x,i)=>x.classList.toggle('active',i===currentPageIndex));[...$('mobileThumbList').children].forEach((x,i)=>x.classList.toggle('active',i===currentPageIndex))}
-async function movePage(idx,dir){const n=idx+dir;if(n<0||n>=pageOrder.length)return;[pageOrder[idx],pageOrder[n]]=[pageOrder[n],pageOrder[idx]];currentPageIndex=n;await renderThumbs();await renderCurrentPage()}
-async function deletePage(idx){if(pageOrder.length===1)return toast('O documento precisa ter pelo menos uma página.');pageOrder.splice(idx,1);if(currentPageIndex>=pageOrder.length)currentPageIndex=pageOrder.length-1;await renderThumbs();await renderCurrentPage()}
-function changePage(d){if(!pageOrder.length)return;currentPageIndex=Math.max(0,Math.min(pageOrder.length-1,currentPageIndex+d));renderCurrentPage()}
-function rotateCurrent(){if(!pdfDoc)return;const p=currentPageNumber();currentRotation[p]=((currentRotation[p]||0)+90)%360;renderCurrentPage();renderThumbs()}
-function openPagesModal(){if(!pdfDoc)return toast('Abra um arquivo primeiro.');$('pagesModal').classList.add('show')}
-
-function addText(text=null){if(!pdfDoc)return toast('Abra um arquivo primeiro.');if(text===null){text=prompt('Digite o texto que deseja adicionar:','');if(text===null||!text.trim())return;}const it={id:uid(),type:'text',x:.12,y:.12,w:.45,h:.09,text:text.trim(),font:24,color:'#111111'};dataFor(currentPageNumber()).items.push(it);selectedId=it.id;renderItems();updateSelectionUI()}
-function addCover(){if(!pdfDoc)return toast('Abra um arquivo primeiro.');const it={id:uid(),type:'cover',x:.2,y:.2,w:.35,h:.08};dataFor(currentPageNumber()).items.push(it);selectedId=it.id;renderItems();updateSelectionUI()}
-function addShape(){if(!pdfDoc)return toast('Abra um arquivo primeiro.');const it={id:uid(),type:'shape',x:.2,y:.2,w:.3,h:.15,color:'#111111'};dataFor(currentPageNumber()).items.push(it);selectedId=it.id;renderItems();updateSelectionUI()}
-function pickImage(){if(!pdfDoc)return toast('Abra um arquivo primeiro.');$('imageInput').click()}
-function addImageFile(file){const r=new FileReader();r.onload=()=>{const it={id:uid(),type:'image',x:.18,y:.18,w:.35,h:.22,src:r.result};dataFor(currentPageNumber()).items.push(it);selectedId=it.id;renderItems();updateSelectionUI()};r.readAsDataURL(file)}
-function addImageData(src,w=.36,h=.16){const it={id:uid(),type:'image',x:.2,y:.2,w,h,src};dataFor(currentPageNumber()).items.push(it);selectedId=it.id;renderItems();updateSelectionUI()}
-
-function renderItems(){
-  const layer=$('overlayLayer');layer.innerHTML='';if(!pdfDoc)return;const d=dataFor(currentPageNumber()),W=$('pdfCanvas').width,H=$('pdfCanvas').height;
-  d.items.forEach(it=>{
-    const el=document.createElement('div');el.className='overlay-item '+it.type+'-item'+(it.id===selectedId?' selected':'');el.dataset.id=it.id;
-    Object.assign(el.style,{left:(it.x*W)+'px',top:(it.y*H)+'px',width:(it.w*W)+'px',height:(it.h*H)+'px'});
-    if(it.type==='text'){el.textContent=it.text;el.style.fontSize=(it.font*renderScale)+'px';el.style.color=it.color;el.style.height='auto';el.ondblclick=()=>editTextInline(it.id)}
-    if(it.type==='ocr'){
-      el.classList.add('ocr-item');
-      el.title='Toque para editar: '+it.text;
-      el.addEventListener('click',e=>{e.stopPropagation();selectedId=it.id;renderItems();updateSelectionUI();openOCREdit(it.id)});
-    }
-    if(it.type==='image'){el.innerHTML=`<img src="${it.src}" alt="Imagem inserida"><span class="resize-handle"></span>`}
-    if(it.type==='shape'){el.style.borderColor=it.color||'#111';el.innerHTML='<span class="resize-handle"></span>'}
-    if(it.type==='cover'){el.innerHTML='<span class="resize-handle"></span>'}
-    if(it.type!=='ocr'){
-      el.addEventListener('pointerdown',startDragItem);
-      el.addEventListener('click',e=>{e.stopPropagation();selectedId=it.id;renderItems();updateSelectionUI()});
-    }
-    layer.appendChild(el)
-  });
-  layer.onclick=()=>{selectedId=null;renderItems();updateSelectionUI()}
-}
-function findItem(id){return dataFor(currentPageNumber()).items.find(x=>x.id===id)}
-function startDragItem(e){
-  e.stopPropagation();const id=e.currentTarget.dataset.id,it=findItem(id);if(!it)return;selectedId=id;renderItems();updateSelectionUI();
-  const el=[...$('overlayLayer').children].find(x=>x.dataset.id===id);if(!el)return;
-  const resizing=e.target.classList.contains('resize-handle'),rect=$('pageShell').getBoundingClientRect(),startX=e.clientX,startY=e.clientY,ox=it.x,oy=it.y,ow=it.w,oh=it.h;
-  el.setPointerCapture?.(e.pointerId);
-  const move=ev=>{const dx=(ev.clientX-startX)/rect.width,dy=(ev.clientY-startY)/rect.height;if(resizing){it.w=Math.max(.06,Math.min(.95-it.x,ow+dx));it.h=Math.max(.04,Math.min(.95-it.y,oh+dy))}else{it.x=Math.max(0,Math.min(1-it.w,ox+dx));it.y=Math.max(0,Math.min(1-it.h,oy+dy))}renderItems()};
-  const up=()=>{window.removeEventListener('pointermove',move);window.removeEventListener('pointerup',up)};window.addEventListener('pointermove',move);window.addEventListener('pointerup',up)
-}
-function editTextInline(id){const it=findItem(id);if(!it||it.type!=='text')return;const val=prompt('Editar texto:',it.text);if(val!==null){it.text=val;renderItems();updateSelectionUI()}}
-function openOCREdit(id){
-  const it=findItem(id);
-  if(!it||it.type!=='ocr')return;
-  ocrEditingId=id;
-  $('ocrEditInput').value=it.text||'';
-  $('ocrEditModal').classList.add('show');
-  setTimeout(()=>{$('ocrEditInput').focus();$('ocrEditInput').select()},40);
-}
-function cancelOCREdit(){
-  ocrEditingId=null;
-  $('ocrEditModal').classList.remove('show');
-  selectedId=null;
-  renderItems();
-  updateSelectionUI();
-}
-function saveOCREdit(){
-  if(!ocrEditingId)return cancelOCREdit();
-  const d=dataFor(currentPageNumber()),idx=d.items.findIndex(x=>x.id===ocrEditingId),it=d.items[idx];
-  if(!it||it.type!=='ocr')return cancelOCREdit();
-  const val=$('ocrEditInput').value.trim();
-  if(!val)return toast('Digite o novo texto.');
-  const pad=.0025;
-  const x=Math.max(0,it.x-pad),y=Math.max(0,it.y-pad);
-  const cover={id:uid(),type:'cover',x,y,w:Math.min(1-x,it.w+pad*2),h:Math.min(1-y,it.h+pad*2)};
-  const txt={id:it.id,type:'text',x:it.x,y:it.y,w:Math.max(it.w,.035),h:it.h,text:val,font:it.font||16,color:'#111111'};
-  d.items.splice(idx,1,cover,txt);
-  selectedId=txt.id;ocrEditingId=null;$('ocrEditModal').classList.remove('show');
-  renderItems();updateSelectionUI();toast('Texto alterado.');
-}
-function updateSelectionUI(){
-  const it=selectedId?findItem(selectedId):null;$('selectionInfo').style.display=it?'none':'block';$('selectionControls').style.display=it?'block':'none';document.querySelectorAll('.text-only').forEach(x=>x.style.display=it?.type==='text'?'block':'none');
-  if(it?.type==='text'){$('selectedText').value=it.text;$('fontSizeRange').value=it.font;$('textColor').value=it.color||'#111111'}
-}
-function updateSelectedText(){const it=findItem(selectedId);if(it?.type==='text'){it.text=$('selectedText').value;renderItems()}}
-function updateSelectedFont(){const it=findItem(selectedId);if(it?.type==='text'){it.font=+$('fontSizeRange').value;renderItems()}}
-function updateSelectedColor(){const it=findItem(selectedId);if(it?.type==='text'){it.color=$('textColor').value;renderItems()}}
-function deleteSelected(){if(!selectedId)return;const d=dataFor(currentPageNumber());d.items=d.items.filter(x=>x.id!==selectedId);selectedId=null;renderItems();updateSelectionUI()}
-
-function setupDrawCanvas(){const dc=$('drawCanvas');dc.width=$('pdfCanvas').width;dc.height=$('pdfCanvas').height;dc.onpointerdown=drawStart;dc.onpointermove=drawMove;dc.onpointerup=drawEnd;dc.onpointercancel=drawEnd;dc.classList.toggle('active',!!mode)}
-function toggleDraw(which){if(!pdfDoc)return toast('Abra um arquivo primeiro.');mode=mode===which?null:which;document.querySelectorAll('.tool-btn').forEach(x=>x.classList.remove('active'));if(mode==='draw')$('drawTool').classList.add('active');if(mode==='highlight')$('highlightTool').classList.add('active');$('drawCanvas').classList.toggle('active',!!mode);toast(mode?(mode==='draw'?'Modo desenho':'Modo marca-texto'):'Desenho desligado')}
-function pointerNorm(e){const r=$('drawCanvas').getBoundingClientRect();return{x:(e.clientX-r.left)/r.width,y:(e.clientY-r.top)/r.height}}
-function drawStart(e){if(!mode)return;isDrawing=true;const p=pointerNorm(e);activeStroke={mode,points:[p],width:mode==='highlight'?.018:.006,color:mode==='highlight'?'#ffe84d':'#0a0a0a'};e.currentTarget.setPointerCapture?.(e.pointerId)}
-function drawMove(e){if(!isDrawing||!activeStroke)return;activeStroke.points.push(pointerNorm(e));renderStrokes(activeStroke)}
-function drawEnd(){if(!isDrawing||!activeStroke)return;dataFor(currentPageNumber()).strokes.push(activeStroke);isDrawing=false;activeStroke=null;renderStrokes()}
-function renderStrokes(temp=null){const c=$('drawCanvas'),ctx=c.getContext('2d');ctx.clearRect(0,0,c.width,c.height);const strokes=[...dataFor(currentPageNumber()).strokes,...(temp?[temp]:[])];for(const s of strokes){if(s.points.length<2)continue;ctx.save();ctx.globalAlpha=s.mode==='highlight'?.35:1;ctx.strokeStyle=s.color;ctx.lineWidth=Math.max(2,s.width*c.width);ctx.lineCap='round';ctx.lineJoin='round';ctx.beginPath();ctx.moveTo(s.points[0].x*c.width,s.points[0].y*c.height);for(const p of s.points.slice(1))ctx.lineTo(p.x*c.width,p.y*c.height);ctx.stroke();ctx.restore()}}
-function clearDrawing(){if(!pdfDoc)return;dataFor(currentPageNumber()).strokes=[];renderStrokes();toast('Desenhos removidos desta página.')}
-
-let sigCtx,lastSig=null;
-function openSignature(){if(!pdfDoc)return toast('Abra um arquivo primeiro.');$('signatureModal').classList.add('show');setTimeout(initSignature,30)}
-function initSignature(){const c=$('signaturePad'),r=c.getBoundingClientRect();c.width=Math.max(500,r.width*2);c.height=420;sigCtx=c.getContext('2d');sigCtx.setTransform(2,0,0,2,0,0);sigCtx.lineWidth=2;sigCtx.lineCap='round';sigCtx.strokeStyle='#111';lastSig=null;c.onpointerdown=e=>{signatureDrawing=true;lastSig=sigPoint(e,c);c.setPointerCapture?.(e.pointerId)};c.onpointermove=e=>{if(!signatureDrawing)return;const p=sigPoint(e,c);sigCtx.beginPath();sigCtx.moveTo(lastSig.x,lastSig.y);sigCtx.lineTo(p.x,p.y);sigCtx.stroke();lastSig=p};c.onpointerup=()=>signatureDrawing=false;c.onpointercancel=()=>signatureDrawing=false}
-function sigPoint(e,c){const r=c.getBoundingClientRect();return{x:(e.clientX-r.left),y:(e.clientY-r.top)}}
-function clearSignature(){if(sigCtx){const c=$('signaturePad');sigCtx.clearRect(0,0,c.width,c.height)}}
-function insertSignature(){const src=$('signaturePad').toDataURL('image/png');addImageData(src,.36,.14);closeModal('signatureModal')}
-
-async function isLikelyScannedPDF(){
-  try{
-    if(!pdfDoc||!pdfDoc.numPages)return false;
-    const p=await pdfDoc.getPage(1),tc=await p.getTextContent();
-    const text=tc.items.map(x=>x.str||'').join(' ').trim();
-    return text.length<12;
-  }catch{return false}
-}
-
-async function getOCRWorker(){
-  if(!window.Tesseract) await loadScript('https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js');
-  if(!ocrWorker){
-    ocrWorker=await Tesseract.createWorker('por',1,{logger:m=>{if(ocrLogger)ocrLogger(m)}});
-  }
-  return ocrWorker;
-}
-
-function parseTSVWords(tsv,canvasW,canvasH,ocrScale){
-  if(!tsv)return[];
-  const rows=tsv.trim().split(/\r?\n/);if(rows.length<2)return[];
-  const head=rows[0].split('\t'),ix=n=>head.indexOf(n),out=[];
-  const needed=['level','text','conf','left','top','width','height'];
-  if(needed.some(n=>ix(n)<0))return[];
-  for(const row of rows.slice(1)){
-    const c=row.split('\t');if(c.length<head.length)continue;
-    const level=+c[ix('level')],text=(c[ix('text')]||'').replace(/\s+/g,' ').trim(),conf=+(c[ix('conf')]||0);
-    if(level!==5||!text||conf<42)continue;
-    if(text.length>45)continue;
-    if(!/[0-9A-Za-zÀ-ÖØ-öø-ÿ]/.test(text))continue;
-    const left=+c[ix('left')],top=+c[ix('top')],w=+c[ix('width')],h=+c[ix('height')];
-    if(!(w>2&&h>4)||left<0||top<0)continue;
-    const nw=w/canvasW,nh=h/canvasH;
-    if(nw>.32||nh>.10)continue;
-    const font=Math.max(8,Math.min(54,(h/ocrScale)*.78));
-    out.push({id:uid(),type:'ocr',x:left/canvasW,y:top/canvasH,w:Math.max(.012,nw),h:Math.max(.012,nh),text,font,color:'#111111',conf});
-  }
-  return out;
-}
-
-async function recognizePageIndex(idx,worker,total){
-  const pnum=pageOrder[idx],page=await pdfDoc.getPage(pnum),rot=currentRotation[pnum]||0,base=page.getViewport({scale:1,rotation:rot});
-  const ocrScale=Math.min(2.4,Math.max(1.35,1800/Math.max(1,base.width)));
-  const vp=page.getViewport({scale:ocrScale,rotation:rot}),cv=document.createElement('canvas');cv.width=Math.ceil(vp.width);cv.height=Math.ceil(vp.height);
-  await page.render({canvasContext:cv.getContext('2d'),viewport:vp}).promise;
-  ocrLogger=m=>{
-    if(m.status==='recognizing text'){
-      const pct=Math.round(((idx+(m.progress||0))/total)*100);$('ocrProgress').style.width=pct+'%';$('ocrStatus').textContent=`Lendo página ${idx+1} de ${total}... ${pct}%`;
-    }else if(m.status){$('ocrStatus').textContent=`Página ${idx+1}: ${m.status}`}
-  };
-  const {data}=await worker.recognize(cv,{}, {text:true,tsv:true});
-  const d=dataFor(pnum);d.items=d.items.filter(x=>x.type!=='ocr');
-  const words=parseTSVWords(data.tsv||'',cv.width,cv.height,ocrScale);d.items.push(...words);
-  return {text:(data.text||'').trim(),count:words.length};
-}
-
-async function scanDocumentToEditable(){
-  if(!pdfDoc||ocrBusy)return;ocrBusy=true;$('ocrModal').classList.add('show');$('ocrStatus').textContent='Preparando leitura do documento...';$('ocrProgress').style.width='2%';$('ocrOutput').value='';
-  try{
-    const worker=await getOCRWorker(),total=pageOrder.length,parts=[];let found=0;
-    for(let i=0;i<total;i++){
-      const r=await recognizePageIndex(i,worker,total);found+=r.count;if(r.text)parts.push(`--- Página ${i+1} ---\n${r.text}`);
-    }
-    $('ocrOutput').value=parts.join('\n\n');$('ocrProgress').style.width='100%';$('ocrStatus').textContent=found?`Pronto: ${found} palavras detectadas. Toque diretamente na palavra que deseja editar.`:'Não encontrei texto legível. Você ainda pode adicionar texto, cobrir áreas e desenhar.';
-    await renderCurrentPage();await renderThumbs();toast('PDF pronto para edição.');
-  }catch(err){console.error(err);$('ocrStatus').textContent='Não consegui reconhecer o texto automaticamente. O PDF ainda pode ser editado manualmente.'}
-  finally{ocrBusy=false;ocrLogger=null}
-}
-
-async function runOCR(){
-  if(!pdfDoc)return toast('Abra um arquivo primeiro.');
-  if(ocrBusy)return;
-  ocrBusy=true;$('ocrModal').classList.add('show');$('ocrStatus').textContent='Lendo esta página...';$('ocrProgress').style.width='3%';$('ocrOutput').value='';
-  try{
-    const worker=await getOCRWorker(),idx=currentPageIndex,r=await recognizePageIndex(idx,worker,1);$('ocrOutput').value=r.text;$('ocrProgress').style.width='100%';$('ocrStatus').textContent=r.count?`Pronto: ${r.count} palavras detectadas. Feche esta janela e toque diretamente na palavra que deseja editar.`:'Não encontrei texto legível nesta página.';await renderCurrentPage();toast('Texto reconhecido.');
-  }catch(err){console.error(err);$('ocrStatus').textContent='Não consegui executar o OCR nesta página.'}
-  finally{ocrBusy=false;ocrLogger=null}
-}
-function loadScript(src){return new Promise((res,rej)=>{if([...document.scripts].some(x=>x.src===src))return res();const s=document.createElement('script');s.src=src;s.onload=res;s.onerror=rej;document.head.appendChild(s)})}
-function copyOCR(){navigator.clipboard?.writeText($('ocrOutput').value);toast('Texto copiado.')}
-
-async function exportPDF(){
-  if(!pdfDoc||!pageOrder.length)return toast('Abra um arquivo primeiro.');toast('Preparando PDF...');
-  try{const out=await PDFDocument.create();const oldIdx=currentPageIndex,oldZoom=zoom;zoom=1;
-    for(let i=0;i<pageOrder.length;i++){
-      currentPageIndex=i;await renderCurrentPage();selectedId=null;renderItems();await new Promise(r=>setTimeout(r,60));
-      const shot=await html2canvas($('pageShell'),{backgroundColor:'#ffffff',scale:1.45,useCORS:true,logging:false});
-      const jpg=shot.toDataURL('image/jpeg',.92),bytes=await fetch(jpg).then(r=>r.arrayBuffer()),img=await out.embedJpg(bytes);const p=out.addPage([img.width,img.height]);p.drawImage(img,{x:0,y:0,width:img.width,height:img.height});
-    }
-    const bytes=await out.save(),blob=new Blob([bytes],{type:'application/pdf'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='novabyte-documento-editado.pdf';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),4000);currentPageIndex=oldIdx;zoom=oldZoom;await renderCurrentPage();await renderThumbs();toast('PDF exportado.');
-  }catch(err){console.error(err);toast('Erro ao exportar o PDF.')}
-}
-
-function toggleMore(force){const m=$('moreMenu');const open=typeof force==='boolean'?force:!m.classList.contains('show');m.classList.toggle('show',open)}
-function closeModal(id){$(id).classList.remove('show')}
-document.querySelectorAll('.modal').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('show')}));
-document.addEventListener('keydown',e=>{if(e.key==='Delete'||e.key==='Backspace'){if(selectedId&&!['INPUT','TEXTAREA'].includes(document.activeElement.tagName))deleteSelected()}if(e.key==='Escape'){toggleMore(false);document.querySelectorAll('.modal.show').forEach(x=>x.classList.remove('show'))}});
-</script>
-</body>
-</html>
+  if(!pdfDoc||!pageOrder.len
