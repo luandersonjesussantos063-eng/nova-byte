@@ -178,7 +178,7 @@ let pdfDoc=null, originalBytes=null, currentPageIndex=0, pageOrder=[], pageData=
 let exportedPdfUrl=null, exportedPdfBlob=null, exportedPdfFile=null;
 let selectedId=null, mode=null, isDrawing=false, activeStroke=null, signatureDrawing=false, currentRotation={};
 let ocrWorker=null, ocrLogger=null, ocrBusy=false, ocrEditingId=null;
-let activeInlineEditId=null, inlineBlurGuardUntil=0;
+let activeInlineEditId=null, inlineBlurGuardUntil=0, inlineIntentionalBlur=false, inlineRefocusTimer=null;
 const $=id=>document.getElementById(id);
 
 $('fileInput').addEventListener('change',e=>handleFiles([...e.target.files]));
@@ -306,49 +306,41 @@ function renderItems(){
       el.addEventListener('pointerdown',e=>{
         e.stopPropagation();
         activeInlineEditId=it.id;
-        inlineBlurGuardUntil=performance.now()+1200;
+        inlineIntentionalBlur=false;
+        inlineBlurGuardUntil=performance.now()+5000;
       });
       el.addEventListener('pointerup',e=>{
         e.stopPropagation();
         selectedId=it.id;
         activeInlineEditId=it.id;
-        inlineBlurGuardUntil=performance.now()+1200;
+        inlineIntentionalBlur=false;
+        inlineBlurGuardUntil=performance.now()+5000;
         applyInlineEditColors(it,el);
         el.focus({preventScroll:true});
         requestAnimationFrame(()=>placeCaretFromPoint(el,e.clientX,e.clientY));
         updateSelectionUI();
       });
-      el.addEventListener('click',e=>{e.stopPropagation();selectedId=it.id;activeInlineEditId=it.id;inlineBlurGuardUntil=performance.now()+900;applyInlineEditColors(it,el);updateSelectionUI()});
+      el.addEventListener('click',e=>{e.stopPropagation();selectedId=it.id;activeInlineEditId=it.id;inlineIntentionalBlur=false;inlineBlurGuardUntil=performance.now()+5000;applyInlineEditColors(it,el);updateSelectionUI()});
       el.addEventListener('focus',e=>{
         e.stopPropagation();
+        inlineIntentionalBlur=false;
         selectedId=it.id;
         activeInlineEditId=it.id;
-        inlineBlurGuardUntil=performance.now()+900;
+        // Mantém o modo de edição vivo enquanto o teclado do Android abre/fecha.
+        inlineBlurGuardUntil=performance.now()+5000;
         applyInlineEditColors(it,el);
         updateSelectionUI();
         el.dataset.empty=el.textContent?'0':'1';
-        // Ao entrar em um texto original, a primeira digitação substitui o texto inteiro.
-        // Assim o usuário não precisa apagar manualmente palavra por palavra no celular.
-        if(it.source!=='added' && !it.modified && String(it.originalText||'').length){
-          el.dataset.replaceOnType='1';
-        }else{
-          el.dataset.replaceOnType='0';
-        }
+        // IMPORTANTE: não alteramos o conteúdo no beforeinput.
+        // Backspace/Delete ficam totalmente sob controle nativo do teclado.
+        el.dataset.replaceOnType='0';
       });
       el.addEventListener('beforeinput',e=>{
-        if(el.dataset.replaceOnType!=='1')return;
-        const t=String(e.inputType||'');
-        const editingInput=t.startsWith('insert')||t.startsWith('delete');
-        if(!editingInput)return;
-        el.dataset.replaceOnType='0';
-        // Remove a cópia visual do texto original. O fundo da caixa cobre o texto
-        // que está desenhado no PDF e o novo caractere entra no mesmo lugar.
-        el.textContent='';
-        it.text='';
-        it.modified=true;
-        el.classList.add('modified');
-        el.dataset.empty='1';
-        placeCaretAtEnd(el);
+        // Não limpar, recriar nem substituir o DOM aqui.
+        // No Chrome/Android mexer no contentEditable durante deleteContentBackward
+        // derruba o foco e fecha o teclado. Deixamos o navegador editar normalmente.
+        activeInlineEditId=it.id;
+        inlineBlurGuardUntil=performance.now()+5000;
       });
       el.addEventListener('input',()=>{
         const value=(el.innerText||'').replace(/\n/g,' ');
@@ -363,31 +355,52 @@ function renderItems(){
         it.w=Math.max(.006,px/W);
       });
       el.addEventListener('keydown',e=>{
-        // Enquanto o texto estiver sendo editado, nenhuma tecla deve chegar
-        // aos atalhos globais do editor. Isso evita que Backspace/Delete
-        // excluam o elemento inteiro no Android.
+        // Nenhuma tecla do teclado pode chegar aos atalhos globais do editor.
         e.stopPropagation();
-        if(e.key==='Enter'){e.preventDefault();el.blur()}
-        if(e.key==='Escape'){e.preventDefault();el.blur()}
+        if(e.stopImmediatePropagation)e.stopImmediatePropagation();
+        activeInlineEditId=it.id;
+        inlineBlurGuardUntil=performance.now()+5000;
+        // Enter encerra somente porque cada trecho OCR é de uma linha.
+        if(e.key==='Enter'){
+          e.preventDefault();
+          inlineIntentionalBlur=true;
+          activeInlineEditId=null;
+          el.blur();
+        }
+        if(e.key==='Escape'){
+          e.preventDefault();
+          inlineIntentionalBlur=true;
+          activeInlineEditId=null;
+          el.blur();
+        }
       });
       el.addEventListener('blur',()=>{
         it.text=(el.innerText||'').replace(/\n/g,' ');
         it.modified=it.text!==(it.originalText??'');
+        el.classList.toggle('modified',it.modified);
+        el.dataset.empty=it.text?'0':'1';
 
-        // No Android, abrir o teclado pode causar um blur/resize transitório.
-        // Enquanto o usuário acabou de tocar no texto, recupera o foco em vez de fechar.
-        if(activeInlineEditId===it.id && performance.now()<inlineBlurGuardUntil){
-          setTimeout(()=>{
+        // Só aceitamos perder o foco quando o usuário tocou fora (ou Enter/Escape).
+        // Qualquer blur espontâneo do Chrome/Android é revertido imediatamente.
+        if(!inlineIntentionalBlur && activeInlineEditId===it.id){
+          clearTimeout(inlineRefocusTimer);
+          inlineRefocusTimer=setTimeout(()=>{
             if(activeInlineEditId===it.id && document.activeElement!==el){
-              try{el.focus({preventScroll:true});placeCaretAtEnd(el)}catch{}
+              try{
+                el.focus({preventScroll:true});
+                placeCaretAtEnd(el);
+              }catch{}
             }
-          },60);
+          },30);
           return;
         }
 
         if(activeInlineEditId===it.id) activeInlineEditId=null;
         selectedId=null;
-        setTimeout(()=>{if(document.activeElement!==el){renderItems();updateSelectionUI()}},40);
+        inlineIntentionalBlur=false;
+        // Não rerenderiza a página no blur: isso preserva o contentEditable e evita
+        // o teclado piscando no Android. A renderização seguinte ocorrerá quando necessário.
+        updateSelectionUI();
       });
     }
     if(it.type==='image'){el.innerHTML=`<img src="${it.src}" alt="Imagem inserida"><span class="resize-handle"></span>`}
@@ -475,11 +488,14 @@ function placeCaretAtEnd(el){
 document.addEventListener('pointerdown',e=>{
   if(!activeInlineEditId) return;
   if(e.target && e.target.closest && e.target.closest('.ocr-item')) return;
-  const id=activeInlineEditId;
+  // Este é o único blur considerado intencional durante a edição inline.
+  inlineIntentionalBlur=true;
   activeInlineEditId=null;
   inlineBlurGuardUntil=0;
+  clearTimeout(inlineRefocusTimer);
   const ae=document.activeElement;
   if(ae && ae.classList && ae.classList.contains('ocr-item')) ae.blur();
+  setTimeout(()=>{inlineIntentionalBlur=false},80);
 },true);
 
 function placeCaretFromPoint(el,x,y){
