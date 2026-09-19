@@ -83,7 +83,15 @@
       border:none;background:linear-gradient(135deg,var(--accent),var(--accent2));font-weight:700;
     }
 
-    .hero{padding:72px 0 36px;text-align:center}
+    .hero{
+      padding:54px 0 26px;text-align:center;position:relative;
+    }
+    .hero:before{
+      content:"";position:absolute;left:50%;top:24px;transform:translateX(-50%);
+      width:min(850px,90vw);height:310px;border-radius:50%;
+      background:radial-gradient(circle,rgba(67,199,255,.08),transparent 66%);
+      pointer-events:none;filter:blur(10px)
+    }
     .badge{
       display:inline-flex;gap:8px;align-items:center;
       border:1px solid rgba(67,199,255,.25);
@@ -95,7 +103,26 @@
       background:linear-gradient(90deg,#7ce4ff,#8a7cff);
       -webkit-background-clip:text;background-clip:text;color:transparent
     }
-    .hero p{max-width:720px;margin:0 auto;color:var(--muted);font-size:18px;line-height:1.6}
+    .hero p{max-width:720px;margin:0 auto;color:var(--muted);font-size:18px;line-height:1.6;position:relative}
+    .hero-stats{
+      display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin:18px auto 0;position:relative
+    }
+    .hero-stat{
+      display:flex;align-items:center;gap:7px;padding:8px 12px;border-radius:12px;
+      border:1px solid var(--line);background:rgba(255,255,255,.035);
+      color:#c7d6e8;font-size:13px
+    }
+    .popular-bar{
+      display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin:0 0 20px;
+      padding:14px 15px;border-radius:18px;border:1px solid var(--line);
+      background:linear-gradient(90deg,rgba(67,199,255,.05),rgba(123,97,255,.05))
+    }
+    .popular-label{font-size:13px;color:var(--muted);margin-right:2px}
+    .popular-chip{
+      border:1px solid var(--line);background:rgba(255,255,255,.05);color:#dce9f8;
+      border-radius:999px;padding:8px 11px;cursor:pointer;transition:.2s
+    }
+    .popular-chip:hover{transform:translateY(-1px);border-color:rgba(67,199,255,.35);background:rgba(67,199,255,.09)}
     .searchbox{
       margin:30px auto 0;max-width:760px;
       display:flex;gap:10px;align-items:center;padding:10px;
@@ -125,12 +152,32 @@
     .tab.active{background:rgba(67,199,255,.12);color:#d6f6ff;border-color:rgba(67,199,255,.3)}
     .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
     .tool-card{
-      position:relative;padding:20px;border-radius:var(--radius);
-      background:linear-gradient(180deg,rgba(255,255,255,.055),rgba(255,255,255,.03));
+      position:relative;padding:21px;border-radius:var(--radius);min-height:224px;overflow:hidden;
+      background:
+        radial-gradient(circle at 100% 0%,rgba(67,199,255,.065),transparent 38%),
+        linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.028));
       border:1px solid var(--line);box-shadow:0 12px 30px rgba(0,0,0,.14);
-      transition:.2s transform,.2s border-color,.2s background;
+      transition:.22s transform,.22s border-color,.22s background,.22s box-shadow;
+      display:flex;flex-direction:column
     }
-    .tool-card:hover{transform:translateY(-3px);border-color:rgba(67,199,255,.3);background:rgba(255,255,255,.06)}
+    .tool-card:after{
+      content:"";position:absolute;inset:auto -70px -90px auto;width:170px;height:170px;
+      border-radius:50%;background:rgba(123,97,255,.05);pointer-events:none
+    }
+    .tool-card:hover{
+      transform:translateY(-5px);border-color:rgba(67,199,255,.34);
+      background:
+        radial-gradient(circle at 100% 0%,rgba(67,199,255,.10),transparent 42%),
+        rgba(255,255,255,.055);
+      box-shadow:0 20px 42px rgba(0,0,0,.22)
+    }
+    .tool-card.featured{border-color:rgba(67,199,255,.28)}
+    .tool-card.featured:before{
+      content:"NOVO";position:absolute;right:16px;top:16px;
+      font-size:10px;font-weight:900;letter-spacing:.8px;color:#06121f;
+      background:linear-gradient(90deg,#6ee6ff,#8c7cff);
+      padding:5px 7px;border-radius:999px
+    }
     .tool-top{display:flex;align-items:center;justify-content:space-between;gap:10px}
     .icon{
       width:48px;height:48px;border-radius:15px;display:grid;place-items:center;font-size:24px;
@@ -141,13 +188,26 @@
     }
     .fav.on{color:#ffd166}
     .tool-card h3{margin:16px 0 7px}
-    .tool-card p{margin:0;color:var(--muted);line-height:1.5;font-size:14px}
+    .tool-card p{margin:0;color:var(--muted);line-height:1.5;font-size:14px;flex:1}
     .card-actions{display:flex;justify-content:space-between;align-items:center;margin-top:18px}
     .tag{font-size:12px;color:#b7c7da;background:rgba(255,255,255,.05);padding:6px 8px;border-radius:9px}
     .open-tool{
-      border:none;border-radius:12px;padding:9px 12px;cursor:pointer;color:white;font-weight:700;
-      background:linear-gradient(135deg,#1daee8,#735bf4)
+      border:none;border-radius:12px;padding:10px 14px;cursor:pointer;color:white;font-weight:800;
+      background:linear-gradient(135deg,#1daee8,#735bf4);
+      box-shadow:0 8px 20px rgba(67,199,255,.13);transition:.2s
     }
+    .open-tool:hover{transform:translateY(-1px);filter:brightness(1.08)}
+    .result-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:9px;margin-top:12px}
+    .result-item{padding:12px;border-radius:13px;background:rgba(255,255,255,.04);border:1px solid var(--line)}
+    .result-item small{display:block;color:var(--muted);margin-bottom:4px}
+    .result-item b{font-size:16px}
+    .total-box{
+      margin-top:12px;padding:15px;border-radius:15px;
+      background:linear-gradient(135deg,rgba(67,199,255,.10),rgba(123,97,255,.10));
+      border:1px solid rgba(67,199,255,.20)
+    }
+    .source-links{margin-top:13px;font-size:12px;color:var(--muted)}
+    .source-links a{color:#79ddff;text-decoration:underline}
 
     .ad{
       margin:26px 0;padding:22px;border-radius:20px;border:1px dashed rgba(255,255,255,.18);
@@ -237,6 +297,7 @@
       .grid{grid-template-columns:1fr}
       .service-grid{grid-template-columns:1fr}
       .form-grid{grid-template-columns:1fr}
+      .result-grid{grid-template-columns:1fr}
       .nav-actions .ghost{display:none}
       .searchbox{flex-direction:column;align-items:stretch}
       .searchbox button{width:100%}
@@ -274,6 +335,11 @@
     <div class="quick">
       <span>💼 Trabalho</span><span>📚 Estudos</span><span>🚗 Veículos</span><span>💰 Dinheiro</span><span>🧰 Utilidades</span>
     </div>
+    <div class="hero-stats">
+      <div class="hero-stat">🧰 <strong>6</strong> ferramentas funcionando</div>
+      <div class="hero-stat">⚡ resultado instantâneo</div>
+      <div class="hero-stat">🔒 sem login e sem cadastro</div>
+    </div>
   </section>
 
   <section class="section wrap" id="tools">
@@ -283,6 +349,14 @@
         <p>As primeiras já funcionam de verdade.</p>
       </div>
       <div id="countTools" class="muted"></div>
+    </div>
+
+    <div class="popular-bar">
+      <span class="popular-label">🔥 Acesso rápido:</span>
+      <button class="popular-chip" onclick="openTool('rescisao')">📄 Rescisão</button>
+      <button class="popular-chip" onclick="openTool('escala')">📅 Escala 12x36</button>
+      <button class="popular-chip" onclick="openTool('noturno')">🌙 Adicional noturno</button>
+      <button class="popular-chip" onclick="openTool('combustivel')">⛽ Viagem</button>
     </div>
 
     <div class="tabs" id="tabs">
@@ -311,7 +385,7 @@
     </div>
     <div class="grid">
       <article class="tool-card coming"><div class="icon">🏖️</div><h3>Férias</h3><p>Simulação simples de férias.</p></article>
-      <article class="tool-card coming"><div class="icon">📄</div><h3>Rescisão</h3><p>Organização dos principais valores da rescisão.</p></article>
+      <article class="tool-card coming"><div class="icon">💵</div><h3>Salário líquido</h3><p>Estimativa de descontos e valor líquido mensal.</p></article>
       <article class="tool-card coming"><div class="icon">📆</div><h3>13º salário</h3><p>Estimativa do décimo terceiro.</p></article>
       <article class="tool-card coming"><div class="icon">🔐</div><h3>Gerador de senha</h3><p>Senhas fortes em um clique.</p></article>
       <article class="tool-card coming"><div class="icon">▦</div><h3>QR Code</h3><p>Gerador rápido de QR Code.</p></article>
@@ -385,6 +459,16 @@
 <script>
 const tools = [
   {
+    id:'rescisao',
+    title:'Rescisão trabalhista',
+    icon:'📄',
+    cat:'Trabalho',
+    desc:'Faça uma estimativa rápida das principais verbas da rescisão.',
+    tag:'Novo',
+    featured:true,
+    open: openRescisao
+  },
+  {
     id:'escala',
     title:'Escala 12x36',
     icon:'📅',
@@ -457,7 +541,7 @@ function renderTools(){
   }
 
   grid.innerHTML = filtered.map(t => `
-    <article class="tool-card">
+    <article class="tool-card ${t.featured ? 'featured' : ''}">
       <div class="tool-top">
         <div class="icon">${t.icon}</div>
         <button class="fav ${favorites.includes(t.id)?'on':''}" onclick="toggleFav('${t.id}',event)" aria-label="Favoritar">${favorites.includes(t.id)?'★':'☆'}</button>
@@ -506,6 +590,163 @@ function modalOutside(e){ if(e.target.id==='modal') closeModal(); }
 function focusSearch(){ document.getElementById('search').focus(); }
 function scrollToTools(){ document.getElementById('tools').scrollIntoView({behavior:'smooth'}); }
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
+
+
+function setRescisaoPreset(){
+  const tipo=document.getElementById('resTipo').value;
+  const multa=document.getElementById('resMulta');
+  const aviso=document.getElementById('resAviso');
+  const avisoDias=document.getElementById('resAvisoDias');
+
+  if(tipo==='semjusta'){
+    multa.value='40';
+    aviso.value='receber';
+    avisoDias.value='30';
+  }else if(tipo==='acordo'){
+    multa.value='20';
+    aviso.value='receber_metade';
+    avisoDias.value='30';
+  }else if(tipo==='pedido'){
+    multa.value='0';
+    aviso.value='descontar';
+    avisoDias.value='30';
+  }else{
+    multa.value='0';
+    aviso.value='nao';
+    avisoDias.value='30';
+  }
+}
+
+function openRescisao(){
+  showModal('📄 Rescisão trabalhista — estimativa', `
+    <div class="form-grid">
+      <div>
+        <label>Tipo de desligamento</label>
+        <select id="resTipo" onchange="setRescisaoPreset()">
+          <option value="semjusta">Dispensa sem justa causa</option>
+          <option value="pedido">Pedido de demissão</option>
+          <option value="acordo">Acordo entre empregado e empregador</option>
+          <option value="manual">Personalizar cálculo</option>
+        </select>
+      </div>
+      <div>
+        <label>Salário-base mensal (R$)</label>
+        <input type="number" step="0.01" id="resSalario" placeholder="Ex.: 2500">
+      </div>
+
+      <div>
+        <label>Dias trabalhados no mês da saída</label>
+        <input type="number" min="0" max="30" id="resDias" value="15">
+      </div>
+      <div>
+        <label>Meses para 13º proporcional</label>
+        <input type="number" min="0" max="12" id="resMeses13" value="6">
+      </div>
+
+      <div>
+        <label>Meses para férias proporcionais</label>
+        <input type="number" min="0" max="12" id="resMesesFerias" value="6">
+      </div>
+      <div>
+        <label>Férias vencidas completas</label>
+        <input type="number" min="0" max="5" id="resFeriasVenc" value="0">
+      </div>
+
+      <div>
+        <label>Aviso prévio</label>
+        <select id="resAviso">
+          <option value="receber">Adicionar aviso ao cálculo</option>
+          <option value="receber_metade">Adicionar metade do aviso</option>
+          <option value="descontar">Descontar aviso</option>
+          <option value="nao">Não incluir</option>
+        </select>
+      </div>
+      <div>
+        <label>Dias de aviso usados na simulação</label>
+        <input type="number" min="0" max="120" id="resAvisoDias" value="30">
+      </div>
+
+      <div>
+        <label>Base do FGTS para multa (R$)</label>
+        <input type="number" min="0" step="0.01" id="resFgtsBase" value="0" placeholder="Ex.: 12000">
+      </div>
+      <div>
+        <label>Multa do FGTS (%)</label>
+        <input type="number" min="0" max="100" step="0.01" id="resMulta" value="40">
+      </div>
+    </div>
+
+    <button class="calc-btn" onclick="calcRescisao()">Calcular estimativa</button>
+    <div class="result" id="resResult"></div>
+
+    <p class="muted">
+      Simulação informativa. O valor real pode mudar por convenção coletiva, médias de adicionais,
+      horas extras, comissões, projeção do aviso, faltas, descontos, férias em dobro, FGTS efetivamente
+      depositado e outras particularidades do contrato.
+    </p>
+    <div class="source-links">
+      Referências gerais:
+      <a href="https://www.fgts.gov.br/Paginas/trabalhador/perguntas-frequentes.aspx" target="_blank" rel="noopener">FGTS</a>
+      ·
+      <a href="https://www.gov.br/trabalho-e-emprego/pt-br/acesso-a-informacao/acoes-e-programas/programas-projetos-acoes-obras-e-atividades/proteja/duvidas-frequentes" target="_blank" rel="noopener">Ministério do Trabalho e Emprego</a>
+    </div>
+  `);
+  setRescisaoPreset();
+}
+
+function calcRescisao(){
+  const salario=+document.getElementById('resSalario').value;
+  const dias=Math.min(30,Math.max(0,+document.getElementById('resDias').value||0));
+  const meses13=Math.min(12,Math.max(0,+document.getElementById('resMeses13').value||0));
+  const mesesFerias=Math.min(12,Math.max(0,+document.getElementById('resMesesFerias').value||0));
+  const venc=Math.max(0,+document.getElementById('resFeriasVenc').value||0);
+  const aviso=document.getElementById('resAviso').value;
+  const avisoDias=Math.max(0,+document.getElementById('resAvisoDias').value||0);
+  const fgtsBase=Math.max(0,+document.getElementById('resFgtsBase').value||0);
+  const multaPct=Math.max(0,+document.getElementById('resMulta').value||0);
+
+  if(salario<=0) return alert('Informe o salário-base.');
+
+  const saldoSalario=(salario/30)*dias;
+  const decimo=(salario/12)*meses13;
+  const feriasProp=(salario/12)*mesesFerias;
+  const feriasPropTerco=feriasProp/3;
+  const feriasVencidas=salario*venc;
+  const feriasVencTerco=feriasVencidas/3;
+
+  let avisoValor=(salario/30)*avisoDias;
+  let avisoLiquido=0;
+  if(aviso==='receber') avisoLiquido=avisoValor;
+  if(aviso==='receber_metade') avisoLiquido=avisoValor/2;
+  if(aviso==='descontar') avisoLiquido=-avisoValor;
+
+  const multaFgts=fgtsBase*(multaPct/100);
+
+  const total =
+    saldoSalario +
+    decimo +
+    feriasProp + feriasPropTerco +
+    feriasVencidas + feriasVencTerco +
+    avisoLiquido +
+    multaFgts;
+
+  const r=document.getElementById('resResult');
+  r.innerHTML=`
+    <div class="result-grid">
+      <div class="result-item"><small>Saldo de salário</small><b>${money(saldoSalario)}</b></div>
+      <div class="result-item"><small>13º proporcional</small><b>${money(decimo)}</b></div>
+      <div class="result-item"><small>Férias proporcionais + 1/3</small><b>${money(feriasProp+feriasPropTerco)}</b></div>
+      <div class="result-item"><small>Férias vencidas + 1/3</small><b>${money(feriasVencidas+feriasVencTerco)}</b></div>
+      <div class="result-item"><small>Aviso na simulação</small><b>${money(avisoLiquido)}</b></div>
+      <div class="result-item"><small>Multa do FGTS</small><b>${money(multaFgts)}</b></div>
+    </div>
+    <div class="total-box">
+      <div class="muted">Estimativa bruta das parcelas incluídas</div>
+      <div class="big">${money(total)}</div>
+      <div class="muted">Não inclui automaticamente INSS, IRRF, empréstimos, faltas ou outros descontos.</div>
+    </div>`;
+  r.classList.add('show');
+}
 
 function openEscala(){
   showModal('📅 Escala 12x36', `
