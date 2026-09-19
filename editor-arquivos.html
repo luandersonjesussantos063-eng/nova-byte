@@ -29,6 +29,7 @@ body{overflow:hidden;background:radial-gradient(circle at 50% -20%,rgba(88,199,2
 .stage-empty{margin:auto;max-width:500px;text-align:center;padding:26px}.stage-empty .big-icon{font-size:52px}.stage-empty h1{font-size:24px;margin:10px 0}.stage-empty p{color:var(--muted);line-height:1.6;font-size:13px}.dropzone{border:1px dashed rgba(88,199,255,.35);border-radius:16px;padding:28px 18px;margin-top:18px;background:rgba(88,199,255,.04)}
 .page-shell{position:relative;box-shadow:0 22px 65px rgba(0,0,0,.45);background:#fff;touch-action:none;user-select:none;transform-origin:top center}.page-shell canvas.base{display:block;width:100%;height:100%}.overlay-layer{position:absolute;inset:0;overflow:hidden}.draw-canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}.draw-canvas.active{pointer-events:auto;cursor:crosshair}
 .overlay-item{position:absolute;min-width:30px;min-height:22px;touch-action:none;cursor:move}.overlay-item.selected{outline:2px solid #58c7ff;outline-offset:2px}.text-item{color:#111;background:transparent;white-space:pre-wrap;line-height:1.2;padding:2px;min-width:80px;max-width:85%;word-break:break-word}.image-item img{width:100%;height:100%;display:block;object-fit:contain;pointer-events:none}.shape-item{border:3px solid #111;background:transparent}.cover-item{background:#fff}.resize-handle{display:none;position:absolute;right:-7px;bottom:-7px;width:16px;height:16px;border:2px solid white;border-radius:50%;background:#58c7ff;cursor:nwse-resize}.overlay-item.selected .resize-handle{display:block}
+.ocr-item{background:transparent;border:1px dashed transparent;cursor:text;min-width:10px;min-height:10px}.ocr-item.selected{border-color:#58c7ff;background:rgba(88,199,255,.08);outline:none}.ocr-item::after{content:"";position:absolute;inset:-3px}.ocr-item.selected::before{content:"✎ editar";position:absolute;left:0;top:-21px;background:#0b192b;color:#bfeeff;border:1px solid rgba(88,199,255,.25);border-radius:6px;padding:2px 5px;font-size:8px;white-space:nowrap;z-index:5}
 .inspector-block{border:1px solid var(--line);border-radius:12px;padding:11px;margin-bottom:10px;background:rgba(255,255,255,.02)}.inspector-block h3{font-size:11px;margin:0 0 9px;color:#9db1c5;text-transform:uppercase;letter-spacing:.7px}.field{margin-top:8px}.field label{display:block;color:#8095a9;font-size:10px;margin-bottom:5px}.field input,.field select,.field textarea{width:100%;border:1px solid var(--line);border-radius:8px;background:#081525;color:#e8f1fa;padding:9px;outline:none}.row{display:flex;gap:7px}.row>*{flex:1}.muted{color:var(--muted);font-size:11px;line-height:1.5}
 .bottom-tools{z-index:35;background:rgba(7,16,28,.97);border-top:1px solid var(--line);padding:8px 10px calc(8px + var(--safe));display:flex;justify-content:center;gap:5px;overflow-x:auto}.tool-btn{flex:0 0 auto;min-width:70px;border:1px solid transparent;background:transparent;border-radius:10px;padding:7px 8px;cursor:pointer;color:#9db0c2}.tool-btn b{display:block;font-size:18px;line-height:18px}.tool-btn span{display:block;font-size:9px;margin-top:4px;font-weight:800}.tool-btn.active{color:#dff5ff;background:rgba(88,199,255,.09);border-color:rgba(88,199,255,.18)}
 .menu-pop{position:fixed;z-index:60;right:10px;bottom:78px;width:min(320px,calc(100vw - 20px));padding:10px;border:1px solid var(--line);border-radius:14px;background:#0b192b;box-shadow:0 22px 60px rgba(0,0,0,.5);display:none}.menu-pop.show{display:block}.menu-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:7px}.menu-grid button{min-height:52px;text-align:left;border:1px solid var(--line);border-radius:10px;background:rgba(255,255,255,.025);padding:9px;cursor:pointer;font-size:11px}.menu-grid button b{display:block;font-size:15px;margin-bottom:3px}
@@ -62,7 +63,7 @@ body{overflow:hidden;background:radial-gradient(circle at 50% -20%,rgba(88,199,2
       <div class="stage-empty" id="emptyState">
         <div class="big-icon">📄</div>
         <h1>Edite documentos direto pelo celular</h1>
-        <p>Abra um PDF, JPG ou PNG. Depois adicione texto, assinatura, imagens, desenho, marca-texto, cubra informações e exporte novamente em PDF.</p>
+        <p>Abra um PDF, JPG ou PNG. Fotos e documentos escaneados são convertidos para PDF e o texto é reconhecido para você editar antes de salvar novamente em PDF.</p>
         <div class="dropzone" id="dropzone">
           <button class="primary-btn" onclick="document.getElementById('fileInput').click()">Selecionar arquivo</button>
           <div class="muted" style="margin-top:10px">PDF • JPG • JPEG • PNG</div>
@@ -114,7 +115,7 @@ body{overflow:hidden;background:radial-gradient(circle at 50% -20%,rgba(88,199,2
   <div class="menu-grid">
     <button onclick="addCover();toggleMore(false)"><b>⬜</b>Cobrir / apagar área</button>
     <button onclick="addShape();toggleMore(false)"><b>▭</b>Adicionar forma</button>
-    <button onclick="runOCR();toggleMore(false)"><b>🔎</b>Reconhecer texto (OCR)</button>
+    <button onclick="runOCR();toggleMore(false)"><b>🔎</b>Ler texto / editar scan</button>
     <button onclick="clearDrawing();toggleMore(false)"><b>🧽</b>Limpar desenhos da página</button>
     <button onclick="rotateCurrent();toggleMore(false)"><b>↻</b>Girar página</button>
     <button onclick="openPagesModal();toggleMore(false)"><b>▦</b>Organizar páginas</button>
@@ -138,7 +139,7 @@ body{overflow:hidden;background:radial-gradient(circle at 50% -20%,rgba(88,199,2
       <div class="muted" id="ocrStatus">Preparando OCR...</div>
       <div class="progress"><div id="ocrProgress"></div></div>
       <textarea class="ocr-output" id="ocrOutput" placeholder="O texto reconhecido aparecerá aqui..."></textarea>
-      <div class="row" style="margin-top:10px"><button class="soft-btn" onclick="copyOCR()">Copiar</button><button class="primary-btn" onclick="insertOCRText()">Adicionar como texto editável</button></div>
+      <div class="row" style="margin-top:10px"><button class="soft-btn" onclick="copyOCR()">Copiar texto</button><button class="primary-btn" onclick="closeModal('ocrModal')">Continuar editando</button></div>
     </div>
   </div>
 </div>
@@ -159,6 +160,7 @@ pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/p
 const { PDFDocument } = PDFLib;
 let pdfDoc=null, originalBytes=null, currentPageIndex=0, pageOrder=[], pageData={}, renderScale=1, zoom=1;
 let selectedId=null, mode=null, isDrawing=false, activeStroke=null, signatureDrawing=false, currentRotation={};
+let ocrWorker=null, ocrLogger=null, ocrBusy=false;
 const $=id=>document.getElementById(id);
 
 $('fileInput').addEventListener('change',e=>handleFiles([...e.target.files]));
@@ -177,13 +179,21 @@ function currentPageNumber(){return pageOrder[currentPageIndex]}
 async function handleFiles(files){
   if(!files.length)return;
   try{
-    let bytes;
+    let bytes, autoOCR=false;
     const pdfs=files.filter(f=>f.type==='application/pdf');
     const imgs=files.filter(f=>f.type.startsWith('image/'));
-    if(pdfs.length){bytes=new Uint8Array(await pdfs[0].arrayBuffer());$('fileNameLabel').textContent=pdfs[0].name}
-    else if(imgs.length){bytes=await imagesToPDF(imgs);$('fileNameLabel').textContent=imgs.length===1?imgs[0].name:`${imgs.length} imagens`}
-    else return toast('Formato não suportado ainda.');
+    if(pdfs.length){
+      bytes=new Uint8Array(await pdfs[0].arrayBuffer());
+      $('fileNameLabel').textContent=pdfs[0].name;
+    }else if(imgs.length){
+      toast('Convertendo imagem para PDF...');
+      bytes=await imagesToPDF(imgs);
+      autoOCR=true;
+      $('fileNameLabel').textContent=(imgs.length===1?imgs[0].name:`${imgs.length} imagens`)+' • PDF';
+    }else return toast('Formato não suportado ainda.');
     await loadPDF(bytes);
+    if(!autoOCR) autoOCR=await isLikelyScannedPDF();
+    if(autoOCR) await scanDocumentToEditable();
   }catch(err){console.error(err);toast('Não consegui abrir esse arquivo.')}
 }
 async function imagesToPDF(files){
@@ -252,10 +262,19 @@ function renderItems(){
     const el=document.createElement('div');el.className='overlay-item '+it.type+'-item'+(it.id===selectedId?' selected':'');el.dataset.id=it.id;
     Object.assign(el.style,{left:(it.x*W)+'px',top:(it.y*H)+'px',width:(it.w*W)+'px',height:(it.h*H)+'px'});
     if(it.type==='text'){el.textContent=it.text;el.style.fontSize=(it.font*renderScale)+'px';el.style.color=it.color;el.style.height='auto';el.ondblclick=()=>editTextInline(it.id)}
+    if(it.type==='ocr'){
+      el.classList.add('ocr-item');
+      el.title='Toque para editar: '+it.text;
+      el.addEventListener('click',e=>{e.stopPropagation();selectedId=it.id;renderItems();updateSelectionUI();setTimeout(()=>editOCRInline(it.id),30)});
+    }
     if(it.type==='image'){el.innerHTML=`<img src="${it.src}" alt="Imagem inserida"><span class="resize-handle"></span>`}
     if(it.type==='shape'){el.style.borderColor=it.color||'#111';el.innerHTML='<span class="resize-handle"></span>'}
     if(it.type==='cover'){el.innerHTML='<span class="resize-handle"></span>'}
-    el.addEventListener('pointerdown',startDragItem);el.addEventListener('click',e=>{e.stopPropagation();selectedId=it.id;renderItems();updateSelectionUI()});layer.appendChild(el)
+    if(it.type!=='ocr'){
+      el.addEventListener('pointerdown',startDragItem);
+      el.addEventListener('click',e=>{e.stopPropagation();selectedId=it.id;renderItems();updateSelectionUI()});
+    }
+    layer.appendChild(el)
   });
   layer.onclick=()=>{selectedId=null;renderItems();updateSelectionUI()}
 }
@@ -269,6 +288,16 @@ function startDragItem(e){
   const up=()=>{window.removeEventListener('pointermove',move);window.removeEventListener('pointerup',up)};window.addEventListener('pointermove',move);window.addEventListener('pointerup',up)
 }
 function editTextInline(id){const it=findItem(id);if(!it||it.type!=='text')return;const val=prompt('Editar texto:',it.text);if(val!==null){it.text=val;renderItems();updateSelectionUI()}}
+function editOCRInline(id){
+  const d=dataFor(currentPageNumber()),idx=d.items.findIndex(x=>x.id===id),it=d.items[idx];
+  if(!it||it.type!=='ocr')return;
+  const val=prompt('Editar texto reconhecido:',it.text);
+  if(val===null){selectedId=null;renderItems();updateSelectionUI();return}
+  const pad=.003;
+  const cover={id:uid(),type:'cover',x:Math.max(0,it.x-pad),y:Math.max(0,it.y-pad),w:Math.min(1-it.x+pad,it.w+pad*2),h:Math.min(1-it.y+pad,it.h+pad*2)};
+  const txt={id:it.id,type:'text',x:it.x,y:it.y,w:it.w,h:it.h,text:val,font:it.font||18,color:'#111111'};
+  d.items.splice(idx,1,cover,txt);selectedId=txt.id;renderItems();updateSelectionUI();toast('Texto alterado.');
+}
 function updateSelectionUI(){
   const it=selectedId?findItem(selectedId):null;$('selectionInfo').style.display=it?'none':'block';$('selectionControls').style.display=it?'block':'none';document.querySelectorAll('.text-only').forEach(x=>x.style.display=it?.type==='text'?'block':'none');
   if(it?.type==='text'){$('selectedText').value=it.text;$('fontSizeRange').value=it.font;$('textColor').value=it.color||'#111111'}
@@ -294,15 +323,81 @@ function sigPoint(e,c){const r=c.getBoundingClientRect();return{x:(e.clientX-r.l
 function clearSignature(){if(sigCtx){const c=$('signaturePad');sigCtx.clearRect(0,0,c.width,c.height)}}
 function insertSignature(){const src=$('signaturePad').toDataURL('image/png');addImageData(src,.36,.14);closeModal('signatureModal')}
 
-async function runOCR(){
-  if(!pdfDoc)return toast('Abra um arquivo primeiro.');$('ocrModal').classList.add('show');$('ocrStatus').textContent='Carregando reconhecimento de texto...';$('ocrProgress').style.width='3%';$('ocrOutput').value='';
-  try{if(!window.Tesseract){await loadScript('https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js')}
-    const shell=$('pageShell');const prev=selectedId;selectedId=null;renderItems();const shot=await html2canvas(shell,{backgroundColor:'#ffffff',scale:1.5,useCORS:true});selectedId=prev;renderItems();
-    const result=await Tesseract.recognize(shot.toDataURL('image/jpeg',.92),'por',{logger:m=>{if(m.status==='recognizing text'){$('ocrProgress').style.width=Math.round((m.progress||0)*100)+'%';$('ocrStatus').textContent=`Reconhecendo texto... ${Math.round((m.progress||0)*100)}%`}else $('ocrStatus').textContent=m.status}});
-    $('ocrOutput').value=result.data.text.trim();$('ocrProgress').style.width='100%';$('ocrStatus').textContent='Pronto. Revise o texto reconhecido antes de usar.';
-  }catch(err){console.error(err);$('ocrStatus').textContent='Não consegui executar o OCR neste arquivo.'}
+async function isLikelyScannedPDF(){
+  try{
+    if(!pdfDoc||!pdfDoc.numPages)return false;
+    const p=await pdfDoc.getPage(1),tc=await p.getTextContent();
+    const text=tc.items.map(x=>x.str||'').join(' ').trim();
+    return text.length<12;
+  }catch{return false}
 }
-function loadScript(src){return new Promise((res,rej)=>{const s=document.createElement('script');s.src=src;s.onload=res;s.onerror=rej;document.head.appendChild(s)})}
+
+async function getOCRWorker(){
+  if(!window.Tesseract) await loadScript('https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js');
+  if(!ocrWorker){
+    ocrWorker=await Tesseract.createWorker('por',1,{logger:m=>{if(ocrLogger)ocrLogger(m)}});
+  }
+  return ocrWorker;
+}
+
+function parseTSVLines(tsv,canvasW,canvasH,ocrScale){
+  if(!tsv)return[];
+  const rows=tsv.trim().split(/\r?\n/);if(rows.length<2)return[];
+  const head=rows[0].split('\t'),ix=n=>head.indexOf(n);const groups=new Map();
+  for(const row of rows.slice(1)){
+    const c=row.split('\t');if(c.length<head.length)continue;
+    const level=+c[ix('level')],text=(c[ix('text')]||'').trim(),conf=+(c[ix('conf')]||0);
+    if(level!==5||!text||conf<25)continue;
+    const key=[c[ix('block_num')],c[ix('par_num')],c[ix('line_num')]].join('-');
+    const left=+c[ix('left')],top=+c[ix('top')],w=+c[ix('width')],h=+c[ix('height')];
+    if(!groups.has(key))groups.set(key,{text:[],x0:left,y0:top,x1:left+w,y1:top+h});
+    const g=groups.get(key);g.text.push(text);g.x0=Math.min(g.x0,left);g.y0=Math.min(g.y0,top);g.x1=Math.max(g.x1,left+w);g.y1=Math.max(g.y1,top+h);
+  }
+  return [...groups.values()].map(g=>{
+    const bh=Math.max(8,g.y1-g.y0);
+    return {id:uid(),type:'ocr',x:g.x0/canvasW,y:g.y0/canvasH,w:Math.max(.025,(g.x1-g.x0)/canvasW),h:Math.max(.018,bh/canvasH),text:g.text.join(' '),font:Math.max(9,Math.min(68,(bh/ocrScale)*.82)),color:'#111111'};
+  });
+}
+
+async function recognizePageIndex(idx,worker,total){
+  const pnum=pageOrder[idx],page=await pdfDoc.getPage(pnum),rot=currentRotation[pnum]||0,base=page.getViewport({scale:1,rotation:rot});
+  const ocrScale=Math.min(2.4,Math.max(1.35,1800/Math.max(1,base.width)));
+  const vp=page.getViewport({scale:ocrScale,rotation:rot}),cv=document.createElement('canvas');cv.width=Math.ceil(vp.width);cv.height=Math.ceil(vp.height);
+  await page.render({canvasContext:cv.getContext('2d'),viewport:vp}).promise;
+  ocrLogger=m=>{
+    if(m.status==='recognizing text'){
+      const pct=Math.round(((idx+(m.progress||0))/total)*100);$('ocrProgress').style.width=pct+'%';$('ocrStatus').textContent=`Lendo página ${idx+1} de ${total}... ${pct}%`;
+    }else if(m.status){$('ocrStatus').textContent=`Página ${idx+1}: ${m.status}`}
+  };
+  const {data}=await worker.recognize(cv,{}, {text:true,tsv:true});
+  const d=dataFor(pnum);d.items=d.items.filter(x=>x.type!=='ocr');
+  const lines=parseTSVLines(data.tsv||'',cv.width,cv.height,ocrScale);d.items.push(...lines);
+  return {text:(data.text||'').trim(),count:lines.length};
+}
+
+async function scanDocumentToEditable(){
+  if(!pdfDoc||ocrBusy)return;ocrBusy=true;$('ocrModal').classList.add('show');$('ocrStatus').textContent='Preparando leitura do documento...';$('ocrProgress').style.width='2%';$('ocrOutput').value='';
+  try{
+    const worker=await getOCRWorker(),total=pageOrder.length,parts=[];let found=0;
+    for(let i=0;i<total;i++){
+      const r=await recognizePageIndex(i,worker,total);found+=r.count;if(r.text)parts.push(`--- Página ${i+1} ---\n${r.text}`);
+    }
+    $('ocrOutput').value=parts.join('\n\n');$('ocrProgress').style.width='100%';$('ocrStatus').textContent=found?`Pronto: ${found} trechos de texto detectados. Toque no texto da página para editar.`:'Não encontrei texto legível. Você ainda pode adicionar texto, cobrir áreas e desenhar.';
+    await renderCurrentPage();await renderThumbs();toast('PDF pronto para edição.');
+  }catch(err){console.error(err);$('ocrStatus').textContent='Não consegui reconhecer o texto automaticamente. O PDF ainda pode ser editado manualmente.'}
+  finally{ocrBusy=false;ocrLogger=null}
+}
+
+async function runOCR(){
+  if(!pdfDoc)return toast('Abra um arquivo primeiro.');
+  if(ocrBusy)return;
+  ocrBusy=true;$('ocrModal').classList.add('show');$('ocrStatus').textContent='Lendo esta página...';$('ocrProgress').style.width='3%';$('ocrOutput').value='';
+  try{
+    const worker=await getOCRWorker(),idx=currentPageIndex,r=await recognizePageIndex(idx,worker,1);$('ocrOutput').value=r.text;$('ocrProgress').style.width='100%';$('ocrStatus').textContent=r.count?`Pronto: ${r.count} trechos detectados. Feche esta janela e toque no texto para editar.`:'Não encontrei texto legível nesta página.';await renderCurrentPage();toast('Texto reconhecido.');
+  }catch(err){console.error(err);$('ocrStatus').textContent='Não consegui executar o OCR nesta página.'}
+  finally{ocrBusy=false;ocrLogger=null}
+}
+function loadScript(src){return new Promise((res,rej)=>{if([...document.scripts].some(x=>x.src===src))return res();const s=document.createElement('script');s.src=src;s.onload=res;s.onerror=rej;document.head.appendChild(s)})}
 function copyOCR(){navigator.clipboard?.writeText($('ocrOutput').value);toast('Texto copiado.')}
 function insertOCRText(){const t=$('ocrOutput').value.trim();if(!t)return;addText(t);closeModal('ocrModal')}
 
