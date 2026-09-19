@@ -771,7 +771,51 @@
     .range-line input[type="range"]{padding:0;background:transparent;border:none}
     @media(max-width:620px){.check-row{grid-template-columns:1fr}}
 
+  
+    .res-section{
+      margin-top:16px;padding:15px;border:1px solid var(--line);border-radius:13px;
+      background:rgba(255,255,255,.018)
+    }
+    .res-section:first-child{margin-top:0}
+    .res-section-title{
+      display:flex;align-items:center;justify-content:space-between;gap:10px;
+      margin:0 0 13px;font-size:13px;font-weight:800;color:#dce8f5
+    }
+    .res-section-title span{
+      font-size:10px;font-weight:700;color:#6f849a;text-transform:uppercase;letter-spacing:.7px
+    }
+    .res-summary{
+      margin-top:14px;display:grid;grid-template-columns:repeat(3,1fr);gap:8px
+    }
+    .res-summary-item{
+      padding:11px;border:1px solid var(--line);border-radius:10px;background:rgba(255,255,255,.025)
+    }
+    .res-summary-item small{display:block;color:#6e8298;font-size:10.5px;margin-bottom:4px}
+    .res-summary-item b{font-size:14px}
+    .memory-title{
+      margin:18px 0 8px;font-size:13px;font-weight:850;color:#dce8f5
+    }
+    .memory-row{
+      display:flex;justify-content:space-between;gap:14px;padding:8px 0;
+      border-bottom:1px solid rgba(255,255,255,.055);font-size:12.5px
+    }
+    .memory-row:last-child{border-bottom:0}
+    .memory-row span:first-child{color:#8296ad}
+    .memory-row b{text-align:right;color:#e7eef7}
+    .memory-row.discount b{color:#ffb4b4}
+    .memory-row.credit b{color:#b9f4d8}
+    .res-alert{
+      padding:11px 12px;margin-top:12px;border-radius:10px;
+      border:1px solid rgba(88,199,255,.14);background:rgba(88,199,255,.045);
+      color:#8fa7bd;font-size:11.5px;line-height:1.5
+    }
+    @media(max-width:620px){
+      .res-summary{grid-template-columns:1fr}
+    }
+
   </style>
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1975354620975361"
+     crossorigin="anonymous"></script>
 </head>
 <body>
 <header>
@@ -1440,159 +1484,459 @@ function converterValor(){
 }
 
 
+
+function parseLocalDate(v){
+  if(!v) return null;
+  const [y,m,d]=v.split('-').map(Number);
+  return new Date(y,m-1,d,12,0,0,0);
+}
+function addDaysDate(d,n){
+  const x=new Date(d);
+  x.setDate(x.getDate()+n);
+  return x;
+}
+function daysInclusive(a,b){
+  return Math.max(0,Math.floor((b-a)/86400000)+1);
+}
+function completedYearsBetween(a,b){
+  let y=b.getFullYear()-a.getFullYear();
+  const ann=new Date(b.getFullYear(),a.getMonth(),a.getDate(),12);
+  if(b<ann) y--;
+  return Math.max(0,y);
+}
+function avisoProporcionalDias(adm,desl){
+  if(!adm||!desl) return 30;
+  const anos=completedYearsBetween(adm,desl);
+  return Math.min(90,30+(anos*3));
+}
+function addMonthsSafe(date,months){
+  const d=new Date(date);
+  const originalDay=d.getDate();
+  d.setDate(1);
+  d.setMonth(d.getMonth()+months);
+  const last=new Date(d.getFullYear(),d.getMonth()+1,0,12).getDate();
+  d.setDate(Math.min(originalDay,last));
+  d.setHours(12,0,0,0);
+  return d;
+}
+function count13Avos(adm,end){
+  if(!adm||!end||end<adm) return 0;
+  const year=end.getFullYear();
+  let count=0;
+  for(let m=0;m<12;m++){
+    const ms=new Date(year,m,1,12);
+    const me=new Date(year,m+1,0,12);
+    const s=adm>ms?adm:ms;
+    const e=end<me?end:me;
+    if(e>=s && daysInclusive(s,e)>=15) count++;
+  }
+  return Math.min(12,count);
+}
+function currentVacationPeriodStart(adm,end){
+  let start=new Date(adm);
+  while(true){
+    const next=addMonthsSafe(start,12);
+    if(next<=end) start=next;
+    else break;
+  }
+  return start;
+}
+function countVacationAvos(adm,end){
+  if(!adm||!end||end<adm) return 0;
+  const start=currentVacationPeriodStart(adm,end);
+  let count=0;
+  for(let i=0;i<12;i++){
+    const a=addMonthsSafe(start,i);
+    const next=addMonthsSafe(start,i+1);
+    const b=addDaysDate(next,-1);
+    const e=end<b?end:b;
+    if(e>=a && daysInclusive(a,e)>=15) count++;
+    if(a>end) break;
+  }
+  return Math.min(12,count);
+}
+function fmtDateBR(d){
+  if(!d) return '—';
+  return d.toLocaleDateString('pt-BR');
+}
+function getResDates(){
+  const adm=parseLocalDate(document.getElementById('resAdmissao')?.value);
+  const desl=parseLocalDate(document.getElementById('resDesligamento')?.value);
+  return {adm,desl};
+}
+function resProjectEnd(){
+  const {adm,desl}=getResDates();
+  if(!desl) return null;
+  const aviso=document.getElementById('resAviso')?.value || 'nao';
+  const proj=document.getElementById('resProjetarAviso')?.checked;
+  const dias=Math.max(0,+document.getElementById('resAvisoDias')?.value||0);
+  if(proj && (aviso==='receber' || aviso==='receber_metade')){
+    return addDaysDate(desl,dias);
+  }
+  return desl;
+}
+function updateRescisaoAuto(){
+  const {adm,desl}=getResDates();
+  if(!desl) return;
+
+  const diasMes=Math.min(30,desl.getDate());
+  const campoDias=document.getElementById('resDias');
+  if(campoDias) campoDias.value=diasMes;
+
+  const tipo=document.getElementById('resTipo')?.value;
+  const avisoDias=document.getElementById('resAvisoDias');
+  if(avisoDias && adm){
+    avisoDias.value=(tipo==='pedido') ? 30 : avisoProporcionalDias(adm,desl);
+  }
+
+  const end=resProjectEnd();
+  if(end && adm){
+    const av13=count13Avos(adm,end);
+    const avFer=countVacationAvos(adm,end);
+    const c13=document.getElementById('resMeses13');
+    const cf=document.getElementById('resMesesFerias');
+    if(c13) c13.value=av13;
+    if(cf) cf.value=avFer;
+
+    const info=document.getElementById('resAutoInfo');
+    if(info){
+      info.innerHTML=`Tempo considerado até <b>${fmtDateBR(end)}</b> • 13º: <b>${av13}/12</b> • férias proporcionais: <b>${avFer}/12</b>`;
+    }
+  }
+}
+
 function setRescisaoPreset(){
   const tipo=document.getElementById('resTipo').value;
   const multa=document.getElementById('resMulta');
   const aviso=document.getElementById('resAviso');
+  const proj=document.getElementById('resProjetarAviso');
   const avisoDias=document.getElementById('resAvisoDias');
 
-  if(tipo==='semjusta'){
+  if(tipo==='semjusta' || tipo==='indireta'){
     multa.value='40';
     aviso.value='receber';
-    avisoDias.value='30';
+    proj.checked=true;
   }else if(tipo==='acordo'){
     multa.value='20';
     aviso.value='receber_metade';
-    avisoDias.value='30';
+    proj.checked=false;
   }else if(tipo==='pedido'){
     multa.value='0';
     aviso.value='descontar';
+    proj.checked=false;
     avisoDias.value='30';
+  }else if(tipo==='justa' || tipo==='termino'){
+    multa.value='0';
+    aviso.value='nao';
+    proj.checked=false;
   }else{
     multa.value='0';
     aviso.value='nao';
-    avisoDias.value='30';
+    proj.checked=false;
   }
+  updateRescisaoAuto();
 }
 
 function openRescisao(){
-  showModal('Rescisão trabalhista — estimativa', `
-    <div class="form-grid">
-      <div>
-        <label>Tipo de desligamento</label>
-        <select id="resTipo" onchange="setRescisaoPreset()">
-          <option value="semjusta">Dispensa sem justa causa</option>
-          <option value="pedido">Pedido de demissão</option>
-          <option value="acordo">Acordo entre empregado e empregador</option>
-          <option value="manual">Personalizar cálculo</option>
-        </select>
+  showModal('📄 Rescisão trabalhista detalhada', `
+    <div class="res-section">
+      <div class="res-section-title">Contrato <span>Dados principais</span></div>
+      <div class="form-grid">
+        <div>
+          <label>Data de admissão</label>
+          <input type="date" id="resAdmissao" onchange="updateRescisaoAuto()">
+        </div>
+        <div>
+          <label>Data do desligamento / último dia trabalhado</label>
+          <input type="date" id="resDesligamento" onchange="updateRescisaoAuto()">
+        </div>
+        <div>
+          <label>Motivo da rescisão</label>
+          <select id="resTipo" onchange="setRescisaoPreset()">
+            <option value="semjusta">Dispensa sem justa causa</option>
+            <option value="pedido">Pedido de demissão</option>
+            <option value="acordo">Extinção por acordo</option>
+            <option value="justa">Dispensa por justa causa</option>
+            <option value="indireta">Rescisão indireta</option>
+            <option value="termino">Término normal de contrato por prazo determinado</option>
+            <option value="manual">Personalizar</option>
+          </select>
+        </div>
+        <div>
+          <label>Salário-base mensal (R$)</label>
+          <input type="number" step="0.01" id="resSalario" placeholder="Ex.: 3000">
+        </div>
+        <div>
+          <label>Média mensal de adicionais, HE e comissões (R$)</label>
+          <input type="number" min="0" step="0.01" id="resMedias" value="0" placeholder="Ex.: 650">
+        </div>
+        <div>
+          <label>Dependentes para IRRF</label>
+          <input type="number" min="0" id="resDependentes" value="0">
+        </div>
       </div>
-      <div>
-        <label>Salário-base mensal (R$)</label>
-        <input type="number" step="0.01" id="resSalario" placeholder="Ex.: 2500">
-      </div>
+      <div class="res-alert" id="resAutoInfo">Informe admissão e desligamento para calcular automaticamente os avos.</div>
+    </div>
 
-      <div>
-        <label>Dias trabalhados no mês da saída</label>
-        <input type="number" min="0" max="30" id="resDias" value="15">
-      </div>
-      <div>
-        <label>Meses para 13º proporcional</label>
-        <input type="number" min="0" max="12" id="resMeses13" value="6">
-      </div>
-
-      <div>
-        <label>Meses para férias proporcionais</label>
-        <input type="number" min="0" max="12" id="resMesesFerias" value="6">
-      </div>
-      <div>
-        <label>Férias vencidas completas</label>
-        <input type="number" min="0" max="5" id="resFeriasVenc" value="0">
-      </div>
-
-      <div>
-        <label>Aviso prévio</label>
-        <select id="resAviso">
-          <option value="receber">Adicionar aviso ao cálculo</option>
-          <option value="receber_metade">Adicionar metade do aviso</option>
-          <option value="descontar">Descontar aviso</option>
-          <option value="nao">Não incluir</option>
-        </select>
-      </div>
-      <div>
-        <label>Dias de aviso usados na simulação</label>
-        <input type="number" min="0" max="120" id="resAvisoDias" value="30">
-      </div>
-
-      <div>
-        <label>Base do FGTS para multa (R$)</label>
-        <input type="number" min="0" step="0.01" id="resFgtsBase" value="0" placeholder="Ex.: 12000">
-      </div>
-      <div>
-        <label>Multa do FGTS (%)</label>
-        <input type="number" min="0" max="100" step="0.01" id="resMulta" value="40">
+    <div class="res-section">
+      <div class="res-section-title">Saldo, 13º e férias <span>Avos automáticos e editáveis</span></div>
+      <div class="form-grid">
+        <div>
+          <label>Dias de saldo de salário</label>
+          <input type="number" min="0" max="30" id="resDias" value="0">
+        </div>
+        <div>
+          <label>Avos de 13º proporcional</label>
+          <input type="number" min="0" max="12" id="resMeses13" value="0">
+        </div>
+        <div>
+          <label>Avos de férias proporcionais</label>
+          <input type="number" min="0" max="12" id="resMesesFerias" value="0">
+        </div>
+        <div>
+          <label>Férias integrais adquiridas e não gozadas</label>
+          <input type="number" min="0" max="10" id="resFeriasIntegrais" value="0">
+        </div>
+        <div>
+          <label>Férias vencidas em dobro</label>
+          <input type="number" min="0" max="10" id="resFeriasDobro" value="0">
+        </div>
+        <div>
+          <label>13º já adiantado (R$)</label>
+          <input type="number" min="0" step="0.01" id="res13Adiantado" value="0">
+        </div>
       </div>
     </div>
 
-    <button class="calc-btn" onclick="calcRescisao()">Calcular estimativa</button>
+    <div class="res-section">
+      <div class="res-section-title">Aviso prévio <span>Proporcional ao tempo de serviço</span></div>
+      <div class="form-grid">
+        <div>
+          <label>Tratamento do aviso</label>
+          <select id="resAviso" onchange="updateRescisaoAuto()">
+            <option value="receber">Indenizado a receber</option>
+            <option value="receber_metade">Indenizado pela metade</option>
+            <option value="trabalhado">Trabalhado (sem valor extra)</option>
+            <option value="descontar">Descontar do empregado</option>
+            <option value="dispensado">Dispensado sem desconto</option>
+            <option value="nao">Não aplicar</option>
+          </select>
+        </div>
+        <div>
+          <label>Dias de aviso</label>
+          <input type="number" min="0" max="90" id="resAvisoDias" value="30" onchange="updateRescisaoAuto()">
+        </div>
+      </div>
+      <label class="check" style="margin-top:10px">
+        <input type="checkbox" id="resProjetarAviso" onchange="updateRescisaoAuto()">
+        Projetar aviso indenizado no tempo de serviço para 13º e férias
+      </label>
+    </div>
+
+    <div class="res-section">
+      <div class="res-section-title">FGTS e indenizações <span>Valores do extrato tornam o cálculo melhor</span></div>
+      <div class="form-grid">
+        <div>
+          <label>Base total para fins rescisórios do FGTS (R$)</label>
+          <input type="number" min="0" step="0.01" id="resFgtsBase" value="0" placeholder="Veja no extrato/FGTS Digital">
+        </div>
+        <div>
+          <label>Multa rescisória do FGTS (%)</label>
+          <input type="number" min="0" max="100" step="0.01" id="resMulta" value="40">
+        </div>
+        <div>
+          <label>Outros vencimentos tributáveis (R$)</label>
+          <input type="number" min="0" step="0.01" id="resOutrosTrib" value="0">
+        </div>
+        <div>
+          <label>Outras verbas indenizatórias (R$)</label>
+          <input type="number" min="0" step="0.01" id="resOutrosInden" value="0">
+        </div>
+      </div>
+      <label class="check" style="margin-top:10px">
+        <input type="checkbox" id="resIndDataBase">
+        Incluir indenização adicional de 1 remuneração (quando aplicável à dispensa antes da data-base)
+      </label>
+    </div>
+
+    <div class="res-section">
+      <div class="res-section-title">Descontos <span>Para aproximar o líquido</span></div>
+      <div class="form-grid">
+        <div>
+          <label>Outros descontos (R$)</label>
+          <input type="number" min="0" step="0.01" id="resOutrosDesc" value="0" placeholder="Ex.: adiantamentos">
+        </div>
+        <div>
+          <label>Pensão / desconto adicional informado (R$)</label>
+          <input type="number" min="0" step="0.01" id="resPensao" value="0">
+        </div>
+      </div>
+    </div>
+
+    <button class="calc-btn" onclick="calcRescisao()">Calcular rescisão detalhada</button>
     <div class="result" id="resResult"></div>
 
     <p class="muted">
-      Simulação informativa. O valor real pode mudar por convenção coletiva, médias de adicionais,
-      horas extras, comissões, projeção do aviso, faltas, descontos, férias em dobro, FGTS efetivamente
-      depositado e outras particularidades do contrato.
+      Ferramenta de estimativa. Convenção coletiva, estabilidade, faltas que alterem férias, médias calculadas
+      por critérios específicos, múltiplos vínculos, pensão judicial, contrato a termo rescindido antecipadamente
+      e outras particularidades podem mudar o valor oficial.
     </p>
     <div class="source-links">
-      Referências gerais:
+      Referências:
+      <a href="https://www.gov.br/trabalho-e-emprego/pt-br/acesso-a-informacao/acoes-e-programas/programas-projetos-acoes-obras-e-atividades/proteja/duvidas-frequentes" target="_blank" rel="noopener">MTE — verbas rescisórias</a>
+      ·
       <a href="https://www.fgts.gov.br/Paginas/trabalhador/perguntas-frequentes.aspx" target="_blank" rel="noopener">FGTS</a>
       ·
-      <a href="https://www.gov.br/trabalho-e-emprego/pt-br/acesso-a-informacao/acoes-e-programas/programas-projetos-acoes-obras-e-atividades/proteja/duvidas-frequentes" target="_blank" rel="noopener">Ministério do Trabalho e Emprego</a>
+      <a href="https://www.gov.br/inss/pt-br/direitos-e-deveres/inscricao-e-contribuicao/tabela-de-contribuicao-mensal" target="_blank" rel="noopener">INSS 2026</a>
+      ·
+      <a href="https://www.gov.br/receitafederal/pt-br/assuntos/meu-imposto-de-renda/tabelas/2026" target="_blank" rel="noopener">IRRF 2026</a>
     </div>
   `);
   setRescisaoPreset();
 }
 
 function calcRescisao(){
-  const salario=+document.getElementById('resSalario').value;
+  const {adm,desl}=getResDates();
+  const tipo=document.getElementById('resTipo').value;
+  const salario=Math.max(0,+document.getElementById('resSalario').value||0);
+  const medias=Math.max(0,+document.getElementById('resMedias').value||0);
+  const remuneracao=salario+medias;
+  const dependentes=Math.max(0,+document.getElementById('resDependentes').value||0);
+
+  if(!adm || !desl) return alert('Informe as datas de admissão e desligamento.');
+  if(desl<adm) return alert('A data de desligamento não pode ser anterior à admissão.');
+  if(remuneracao<=0) return alert('Informe o salário ou remuneração.');
+
   const dias=Math.min(30,Math.max(0,+document.getElementById('resDias').value||0));
-  const meses13=Math.min(12,Math.max(0,+document.getElementById('resMeses13').value||0));
-  const mesesFerias=Math.min(12,Math.max(0,+document.getElementById('resMesesFerias').value||0));
-  const venc=Math.max(0,+document.getElementById('resFeriasVenc').value||0);
+  let avos13=Math.min(12,Math.max(0,+document.getElementById('resMeses13').value||0));
+  let avosFer=Math.min(12,Math.max(0,+document.getElementById('resMesesFerias').value||0));
+  const feriasIntegrais=Math.max(0,+document.getElementById('resFeriasIntegrais').value||0);
+  const feriasDobro=Math.max(0,+document.getElementById('resFeriasDobro').value||0);
+  const adiant13=Math.max(0,+document.getElementById('res13Adiantado').value||0);
+
   const aviso=document.getElementById('resAviso').value;
   const avisoDias=Math.max(0,+document.getElementById('resAvisoDias').value||0);
   const fgtsBase=Math.max(0,+document.getElementById('resFgtsBase').value||0);
   const multaPct=Math.max(0,+document.getElementById('resMulta').value||0);
+  const outrosTrib=Math.max(0,+document.getElementById('resOutrosTrib').value||0);
+  const outrosInden=Math.max(0,+document.getElementById('resOutrosInden').value||0);
+  const outrosDesc=Math.max(0,+document.getElementById('resOutrosDesc').value||0);
+  const pensao=Math.max(0,+document.getElementById('resPensao').value||0);
+  const indDataBase=document.getElementById('resIndDataBase').checked;
 
-  if(salario<=0) return alert('Informe o salário-base.');
+  // Direitos conforme motivo, mantendo campos editáveis para cenários específicos.
+  let paga13=true, pagaFerProp=true;
+  if(tipo==='justa'){
+    paga13=false;
+    pagaFerProp=false;
+  }
+  if(!paga13) avos13=0;
+  if(!pagaFerProp) avosFer=0;
 
-  const saldoSalario=(salario/30)*dias;
-  const decimo=(salario/12)*meses13;
-  const feriasProp=(salario/12)*mesesFerias;
-  const feriasPropTerco=feriasProp/3;
-  const feriasVencidas=salario*venc;
-  const feriasVencTerco=feriasVencidas/3;
+  const saldoSalario=(remuneracao/30)*dias;
+  const decimo=(remuneracao/12)*avos13;
 
-  let avisoValor=(salario/30)*avisoDias;
-  let avisoLiquido=0;
-  if(aviso==='receber') avisoLiquido=avisoValor;
-  if(aviso==='receber_metade') avisoLiquido=avisoValor/2;
-  if(aviso==='descontar') avisoLiquido=-avisoValor;
+  const ferPropBase=(remuneracao/12)*avosFer;
+  const ferPropTotal=ferPropBase+(ferPropBase/3);
+
+  const ferIntBase=remuneracao*feriasIntegrais;
+  const ferIntTotal=ferIntBase+(ferIntBase/3);
+
+  const ferDobroBase=(remuneracao*2)*feriasDobro;
+  const ferDobroTotal=ferDobroBase+(ferDobroBase/3);
+
+  const avisoBase=(remuneracao/30)*avisoDias;
+  let avisoCredito=0, avisoDesconto=0;
+  if(aviso==='receber') avisoCredito=avisoBase;
+  if(aviso==='receber_metade') avisoCredito=avisoBase/2;
+  if(aviso==='descontar') avisoDesconto=avisoBase;
 
   const multaFgts=fgtsBase*(multaPct/100);
+  const indenDataBase=indDataBase ? remuneracao : 0;
 
-  const total =
-    saldoSalario +
-    decimo +
-    feriasProp + feriasPropTerco +
-    feriasVencidas + feriasVencTerco +
-    avisoLiquido +
-    multaFgts;
+  // Tributação estimada de salários/outros tributáveis e 13º em separado.
+  const baseMensalTrib=saldoSalario+outrosTrib;
+  const inssSal=calcINSS2026(baseMensalTrib);
+  const irSalObj=calcIRRF2026(baseMensalTrib,inssSal,dependentes);
+  const irSal=irSalObj.imposto;
+
+  const inss13=decimo>0 ? calcINSS2026(decimo) : 0;
+  const ir13Obj=decimo>0 ? calcIRRF2026(decimo,inss13,dependentes) : {imposto:0};
+  const ir13=ir13Obj.imposto;
+
+  const creditosEmpresa =
+    saldoSalario + decimo + ferPropTotal + ferIntTotal + ferDobroTotal +
+    avisoCredito + outrosTrib + outrosInden + indenDataBase;
+
+  const descontos =
+    inssSal + irSal + inss13 + ir13 + adiant13 + avisoDesconto + outrosDesc + pensao;
+
+  const liquidoEmpresa=Math.max(0,creditosEmpresa-descontos);
+  const totalEconomico=liquidoEmpresa+multaFgts;
+
+  const fimConsiderado=resProjectEnd();
+  const anos=completedYearsBetween(adm,desl);
+
+  const motivoTexto={
+    semjusta:'Dispensa sem justa causa',
+    pedido:'Pedido de demissão',
+    acordo:'Extinção por acordo',
+    justa:'Dispensa por justa causa',
+    indireta:'Rescisão indireta',
+    termino:'Término de contrato por prazo determinado',
+    manual:'Personalizado'
+  }[tipo] || 'Personalizado';
 
   const r=document.getElementById('resResult');
   r.innerHTML=`
-    <div class="result-grid">
-      <div class="result-item"><small>Saldo de salário</small><b>${money(saldoSalario)}</b></div>
-      <div class="result-item"><small>13º proporcional</small><b>${money(decimo)}</b></div>
-      <div class="result-item"><small>Férias proporcionais + 1/3</small><b>${money(feriasProp+feriasPropTerco)}</b></div>
-      <div class="result-item"><small>Férias vencidas + 1/3</small><b>${money(feriasVencidas+feriasVencTerco)}</b></div>
-      <div class="result-item"><small>Aviso na simulação</small><b>${money(avisoLiquido)}</b></div>
-      <div class="result-item"><small>Multa do FGTS</small><b>${money(multaFgts)}</b></div>
+    <div class="res-summary">
+      <div class="res-summary-item"><small>Remuneração usada</small><b>${money(remuneracao)}</b></div>
+      <div class="res-summary-item"><small>Tempo de serviço</small><b>${anos} ano(s)</b></div>
+      <div class="res-summary-item"><small>Data considerada nos avos</small><b>${fmtDateBR(fimConsiderado)}</b></div>
     </div>
+
+    <div class="memory-title">Vencimentos</div>
+    <div class="memory-row credit"><span>Saldo de salário (${dias}/30)</span><b>${money(saldoSalario)}</b></div>
+    <div class="memory-row credit"><span>13º proporcional (${avos13}/12)</span><b>${money(decimo)}</b></div>
+    <div class="memory-row credit"><span>Férias proporcionais + 1/3 (${avosFer}/12)</span><b>${money(ferPropTotal)}</b></div>
+    <div class="memory-row credit"><span>Férias integrais + 1/3</span><b>${money(ferIntTotal)}</b></div>
+    <div class="memory-row credit"><span>Férias vencidas em dobro + 1/3</span><b>${money(ferDobroTotal)}</b></div>
+    <div class="memory-row credit"><span>Aviso prévio</span><b>${money(avisoCredito)}</b></div>
+    <div class="memory-row credit"><span>Outros vencimentos tributáveis</span><b>${money(outrosTrib)}</b></div>
+    <div class="memory-row credit"><span>Outras verbas indenizatórias</span><b>${money(outrosInden)}</b></div>
+    ${indDataBase?`<div class="memory-row credit"><span>Indenização adicional informada</span><b>${money(indenDataBase)}</b></div>`:''}
+
+    <div class="memory-title">Descontos estimados</div>
+    <div class="memory-row discount"><span>INSS sobre salários/outros tributáveis</span><b>- ${money(inssSal)}</b></div>
+    <div class="memory-row discount"><span>IRRF sobre salários/outros tributáveis</span><b>- ${money(irSal)}</b></div>
+    <div class="memory-row discount"><span>INSS sobre 13º</span><b>- ${money(inss13)}</b></div>
+    <div class="memory-row discount"><span>IRRF sobre 13º</span><b>- ${money(ir13)}</b></div>
+    <div class="memory-row discount"><span>13º já adiantado</span><b>- ${money(adiant13)}</b></div>
+    <div class="memory-row discount"><span>Desconto de aviso prévio</span><b>- ${money(avisoDesconto)}</b></div>
+    <div class="memory-row discount"><span>Outros descontos + pensão informada</span><b>- ${money(outrosDesc+pensao)}</b></div>
+
     <div class="total-box">
-      <div class="muted">Estimativa bruta das parcelas incluídas</div>
-      <div class="big">${money(total)}</div>
-      <div class="muted">Não inclui automaticamente INSS, IRRF, empréstimos, faltas ou outros descontos.</div>
-    </div>`;
+      <div class="muted">${motivoTexto} • total líquido estimado pago nas verbas</div>
+      <div class="big">${money(liquidoEmpresa)}</div>
+      <div class="muted">Créditos: ${money(creditosEmpresa)} • descontos: ${money(descontos)}</div>
+    </div>
+
+    <div class="total-box" style="margin-top:8px">
+      <div class="muted">Multa rescisória do FGTS (${multaPct.toLocaleString('pt-BR')}%)</div>
+      <div class="big">${money(multaFgts)}</div>
+      <div class="muted">Calculada sobre a base informada de ${money(fgtsBase)}. A multa do FGTS é mostrada separadamente das verbas pagas diretamente.</div>
+    </div>
+
+    <div class="total-box" style="margin-top:8px">
+      <div class="muted">Total econômico estimado (líquido + multa FGTS)</div>
+      <div class="big">${money(totalEconomico)}</div>
+    </div>
+
+    <div class="res-alert">
+      A memória acima é uma simulação. Para conferir um TRCT real, compare também médias históricas,
+      extrato/base rescisória do FGTS, convenção coletiva e descontos efetivamente lançados pela empresa.
+    </div>
+  `;
   r.classList.add('show');
 }
 
