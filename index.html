@@ -739,6 +739,38 @@
       .popular-bar{gap:5px}
       .popular-label{width:100%;margin-bottom:3px}
     }
+  
+    .inline-actions{
+      display:flex;gap:8px;flex-wrap:wrap;margin-top:10px
+    }
+    .secondary-btn{
+      min-height:40px;border:1px solid var(--line);background:rgba(255,255,255,.035);
+      color:#c6d4e3;border-radius:10px;padding:0 13px;cursor:pointer;font-weight:700
+    }
+    .secondary-btn:hover{background:rgba(255,255,255,.06);color:white}
+    .password-output{
+      margin-top:14px;padding:14px;border-radius:12px;background:#09172a;border:1px solid var(--line);
+      font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:16px;word-break:break-all;
+      color:#dff7ff
+    }
+    .check-row{
+      display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:10px
+    }
+    .check{
+      display:flex;align-items:center;gap:9px;padding:10px 11px;border:1px solid var(--line);
+      border-radius:10px;background:rgba(255,255,255,.025);color:#9fb2c7;font-size:13px
+    }
+    .check input{width:auto;min-height:auto;accent-color:#58c7ff}
+    .qr-wrap{
+      margin-top:15px;display:none;text-align:center;padding:18px;border-radius:13px;
+      background:white
+    }
+    .qr-wrap.show{display:block}
+    .qr-wrap img{max-width:230px;width:100%;height:auto;display:block;margin:auto}
+    .range-line{display:flex;gap:10px;align-items:center}
+    .range-line input[type="range"]{padding:0;background:transparent;border:none}
+    @media(max-width:620px){.check-row{grid-template-columns:1fr}}
+
   </style>
 </head>
 <body>
@@ -763,14 +795,14 @@
     <p>Calcule, organize e resolva tarefas comuns de trabalho, estudos, veículos e finanças em poucos segundos.</p>
 
     <div class="searchbox">
-      <input id="search" type="search" placeholder="Ex.: escala 12x36, combustível, adicional..." oninput="renderTools()" />
+      <input id="search" type="search" placeholder="Ex.: salário líquido, férias, QR Code, escala..." oninput="renderTools()" />
       <button class="primary" onclick="renderTools()">Pesquisar</button>
     </div>
     <div class="quick">
       <span>💼 Trabalho</span><span>📚 Estudos</span><span>🚗 Veículos</span><span>💰 Dinheiro</span><span>🧰 Utilidades</span>
     </div>
     <div class="hero-stats">
-      <div class="hero-stat">🧰 <strong>6</strong> ferramentas disponíveis</div>
+      <div class="hero-stat">🧰 <strong>12</strong> ferramentas disponíveis</div>
       <div class="hero-stat">⚡ Resultado instantâneo</div>
       <div class="hero-stat">🔒 Sem login ou cadastro</div>
     </div>
@@ -791,6 +823,7 @@
       <button class="popular-chip" onclick="openTool('escala')">📅 Escala 12x36</button>
       <button class="popular-chip" onclick="openTool('noturno')">🌙 Adicional noturno</button>
       <button class="popular-chip" onclick="openTool('combustivel')">⛽ Custo de viagem</button>
+      <button class="popular-chip" onclick="openTool('salario-liquido')">💵 Salário líquido</button>
     </div>
 
     <div class="tabs" id="tabs">
@@ -800,6 +833,7 @@
       <button class="tab" data-cat="Estudos" onclick="setCategory('Estudos', this)">Estudos</button>
       <button class="tab" data-cat="Veículos" onclick="setCategory('Veículos', this)">Veículos</button>
       <button class="tab" data-cat="Dinheiro" onclick="setCategory('Dinheiro', this)">Dinheiro</button>
+      <button class="tab" data-cat="Utilidades" onclick="setCategory('Utilidades', this)">Utilidades</button>
     </div>
 
     <div class="grid" id="toolGrid"></div>
@@ -928,6 +962,61 @@ const tools = [
     desc:'Calcule sua porcentagem de acertos em provas, simulados e questões.',
     tag:'Estudos',
     open: openAcertos
+  },
+  {
+    id:'ferias',
+    title:'Férias',
+    icon:'🏖️',
+    cat:'Trabalho',
+    desc:'Estime o valor bruto das férias e do adicional constitucional de 1/3.',
+    tag:'Trabalho',
+    open: openFerias
+  },
+  {
+    id:'salario-liquido',
+    title:'Salário líquido',
+    icon:'💵',
+    cat:'Dinheiro',
+    desc:'Estime INSS, IRRF e o valor líquido mensal usando as tabelas de 2026.',
+    tag:'Dinheiro',
+    featured:true,
+    open: openSalarioLiquido
+  },
+  {
+    id:'decimo-terceiro',
+    title:'13º salário',
+    icon:'📆',
+    cat:'Trabalho',
+    desc:'Calcule o 13º proporcional conforme os meses trabalhados no ano.',
+    tag:'Trabalho',
+    open: openDecimoTerceiro
+  },
+  {
+    id:'senha',
+    title:'Gerador de senha',
+    icon:'🔐',
+    cat:'Utilidades',
+    desc:'Crie senhas fortes escolhendo tamanho, letras, números e símbolos.',
+    tag:'Utilidades',
+    open: openSenha
+  },
+  {
+    id:'qrcode',
+    title:'QR Code',
+    icon:'▦',
+    cat:'Utilidades',
+    desc:'Transforme links e textos em um QR Code pronto para usar.',
+    tag:'Utilidades',
+    open: openQRCode
+  },
+  {
+    id:'conversores',
+    title:'Conversores',
+    icon:'📏',
+    cat:'Utilidades',
+    desc:'Converta comprimento, peso e temperatura rapidamente.',
+    tag:'Utilidades',
+    open: openConversores
   }
 ];
 
@@ -1006,6 +1095,349 @@ function modalOutside(e){ if(e.target.id==='modal') closeModal(); }
 function focusSearch(){ document.getElementById('search').focus(); }
 function scrollToTools(){ document.getElementById('tools').scrollIntoView({behavior:'smooth'}); }
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
+
+
+
+function calcINSS2026(salario){
+  const teto = 8475.55;
+  const base = Math.min(Math.max(0, salario), teto);
+  const faixas = [
+    [1621.00, 0.075],
+    [2902.84, 0.09],
+    [4354.27, 0.12],
+    [8475.55, 0.14]
+  ];
+  let anterior = 0;
+  let total = 0;
+  for(const [limite, aliquota] of faixas){
+    if(base <= anterior) break;
+    const faixa = Math.min(base, limite) - anterior;
+    if(faixa > 0) total += faixa * aliquota;
+    anterior = limite;
+  }
+  return total;
+}
+
+function calcIRRF2026(bruto, inss, dependentes){
+  const dedLegal = inss + (Math.max(0, dependentes || 0) * 189.59);
+  const dedSimplificada = 607.20;
+  const deducaoUsada = Math.max(dedLegal, dedSimplificada);
+  const base = Math.max(0, bruto - deducaoUsada);
+
+  let imposto = 0;
+  if(base <= 2428.80) imposto = 0;
+  else if(base <= 2826.65) imposto = base * 0.075 - 182.16;
+  else if(base <= 3751.05) imposto = base * 0.15 - 394.16;
+  else if(base <= 4664.68) imposto = base * 0.225 - 675.49;
+  else imposto = base * 0.275 - 908.73;
+  imposto = Math.max(0, imposto);
+
+  let reducao = 0;
+  if(bruto <= 5000){
+    reducao = Math.min(imposto, 312.89);
+  }else if(bruto <= 7350){
+    reducao = Math.max(0, 978.62 - (0.133145 * bruto));
+    reducao = Math.min(imposto, reducao);
+  }
+  return {
+    base,
+    impostoAntesReducao: imposto,
+    reducao,
+    imposto: Math.max(0, imposto - reducao),
+    tipoDeducao: deducaoUsada === dedSimplificada ? 'simplificada' : 'legal'
+  };
+}
+
+function openFerias(){
+  showModal('🏖️ Férias — estimativa', `
+    <div class="form-grid">
+      <div>
+        <label>Salário-base mensal (R$)</label>
+        <input type="number" step="0.01" id="ferSalario" placeholder="Ex.: 3000">
+      </div>
+      <div>
+        <label>Dias de férias</label>
+        <input type="number" min="1" max="30" id="ferDias" value="30">
+      </div>
+    </div>
+    <button class="calc-btn" onclick="calcFerias()">Calcular férias</button>
+    <div class="result" id="ferResult"></div>
+    <p class="muted">Estimativa bruta: considera a remuneração proporcional aos dias informados mais o adicional constitucional de 1/3. Não calcula automaticamente INSS, IRRF, médias, abono pecuniário ou particularidades da folha.</p>
+  `);
+}
+function calcFerias(){
+  const salario=+document.getElementById('ferSalario').value;
+  const dias=Math.min(30,Math.max(1,+document.getElementById('ferDias').value||30));
+  if(salario<=0) return alert('Informe o salário-base.');
+  const remuneracao=(salario/30)*dias;
+  const terco=remuneracao/3;
+  const total=remuneracao+terco;
+  const r=document.getElementById('ferResult');
+  r.innerHTML=`
+    <div class="result-grid">
+      <div class="result-item"><small>Remuneração das férias</small><b>${money(remuneracao)}</b></div>
+      <div class="result-item"><small>Adicional de 1/3</small><b>${money(terco)}</b></div>
+    </div>
+    <div class="total-box"><div class="muted">Total bruto estimado</div><div class="big">${money(total)}</div></div>`;
+  r.classList.add('show');
+}
+
+function openSalarioLiquido(){
+  showModal('💵 Salário líquido — estimativa 2026', `
+    <div class="form-grid">
+      <div>
+        <label>Salário bruto mensal (R$)</label>
+        <input type="number" step="0.01" id="salBruto" placeholder="Ex.: 4500">
+      </div>
+      <div>
+        <label>Dependentes para IRRF</label>
+        <input type="number" min="0" id="salDep" value="0">
+      </div>
+      <div>
+        <label>Vale-transporte / desconto (R$)</label>
+        <input type="number" step="0.01" min="0" id="salVT" value="0">
+      </div>
+      <div>
+        <label>Outros descontos (R$)</label>
+        <input type="number" step="0.01" min="0" id="salOutros" value="0">
+      </div>
+    </div>
+    <button class="calc-btn" onclick="calcSalarioLiquido()">Calcular salário líquido</button>
+    <div class="result" id="salResult"></div>
+    <p class="muted">Estimativa para empregado usando tabela progressiva do INSS válida a partir de janeiro de 2026 e tabela mensal/redução do IRPF de 2026. Benefícios, pensão, múltiplos vínculos e regras específicas podem alterar o resultado.</p>
+    <div class="source-links">
+      Fontes oficiais:
+      <a href="https://www.gov.br/inss/pt-br/direitos-e-deveres/inscricao-e-contribuicao/tabela-de-contribuicao-mensal" target="_blank" rel="noopener">INSS 2026</a>
+      ·
+      <a href="https://www.gov.br/receitafederal/pt-br/assuntos/meu-imposto-de-renda/tabelas/2026" target="_blank" rel="noopener">Receita Federal 2026</a>
+    </div>
+  `);
+}
+function calcSalarioLiquido(){
+  const bruto=+document.getElementById('salBruto').value;
+  const dep=Math.max(0,+document.getElementById('salDep').value||0);
+  const vt=Math.max(0,+document.getElementById('salVT').value||0);
+  const outros=Math.max(0,+document.getElementById('salOutros').value||0);
+  if(bruto<=0) return alert('Informe o salário bruto.');
+
+  const inss=calcINSS2026(bruto);
+  const ir=calcIRRF2026(bruto,inss,dep);
+  const liquido=Math.max(0,bruto-inss-ir.imposto-vt-outros);
+
+  const r=document.getElementById('salResult');
+  r.innerHTML=`
+    <div class="result-grid">
+      <div class="result-item"><small>INSS estimado</small><b>${money(inss)}</b></div>
+      <div class="result-item"><small>IRRF estimado</small><b>${money(ir.imposto)}</b></div>
+      <div class="result-item"><small>Outros descontos informados</small><b>${money(vt+outros)}</b></div>
+      <div class="result-item"><small>Dedução usada no IRRF</small><b>${ir.tipoDeducao==='simplificada'?'Simplificada':'Legal'}</b></div>
+    </div>
+    <div class="total-box">
+      <div class="muted">Salário líquido estimado</div>
+      <div class="big">${money(liquido)}</div>
+      <div class="muted">Bruto: ${money(bruto)} • descontos estimados: ${money(bruto-liquido)}</div>
+    </div>`;
+  r.classList.add('show');
+}
+
+function openDecimoTerceiro(){
+  showModal('📆 13º salário — estimativa', `
+    <div class="form-grid">
+      <div>
+        <label>Remuneração usada no cálculo (R$)</label>
+        <input type="number" step="0.01" id="decSalario" placeholder="Ex.: 3000">
+      </div>
+      <div>
+        <label>Meses com direito no ano</label>
+        <input type="number" min="1" max="12" id="decMeses" value="12">
+      </div>
+    </div>
+    <button class="calc-btn" onclick="calcDecimoTerceiro()">Calcular 13º</button>
+    <div class="result" id="decResult"></div>
+    <p class="muted">Estimativa bruta. Em regra, cada mês conta como 1/12 quando houver pelo menos 15 dias de serviço no mês. Descontos legais e médias de verbas variáveis podem alterar o valor recebido.</p>
+  `);
+}
+function calcDecimoTerceiro(){
+  const salario=+document.getElementById('decSalario').value;
+  const meses=Math.min(12,Math.max(1,+document.getElementById('decMeses').value||12));
+  if(salario<=0) return alert('Informe a remuneração.');
+  const bruto=(salario/12)*meses;
+  const primeira=bruto/2;
+  const saldoAntesDescontos=bruto-primeira;
+  const r=document.getElementById('decResult');
+  r.innerHTML=`
+    <div class="result-grid">
+      <div class="result-item"><small>13º bruto proporcional</small><b>${money(bruto)}</b></div>
+      <div class="result-item"><small>Metade do valor bruto</small><b>${money(primeira)}</b></div>
+    </div>
+    <div class="total-box">
+      <div class="muted">${meses}/12 avos considerados</div>
+      <div class="big">${money(bruto)}</div>
+      <div class="muted">A divisão em parcelas mostrada é apenas uma referência antes de descontos aplicáveis.</div>
+    </div>`;
+  r.classList.add('show');
+}
+
+function openSenha(){
+  showModal('🔐 Gerador de senha', `
+    <div>
+      <label>Tamanho da senha</label>
+      <div class="range-line">
+        <input type="range" id="pwdLen" min="8" max="40" value="16" oninput="document.getElementById('pwdLenVal').textContent=this.value">
+        <strong id="pwdLenVal">16</strong>
+      </div>
+    </div>
+    <div class="check-row">
+      <label class="check"><input type="checkbox" id="pwdLower" checked> Letras minúsculas</label>
+      <label class="check"><input type="checkbox" id="pwdUpper" checked> Letras maiúsculas</label>
+      <label class="check"><input type="checkbox" id="pwdNum" checked> Números</label>
+      <label class="check"><input type="checkbox" id="pwdSym" checked> Símbolos</label>
+    </div>
+    <button class="calc-btn" onclick="gerarSenha()">Gerar senha</button>
+    <div class="password-output" id="pwdOutput">Clique em “Gerar senha”.</div>
+    <div class="inline-actions">
+      <button class="secondary-btn" onclick="copiarSenha()">Copiar senha</button>
+      <button class="secondary-btn" onclick="gerarSenha()">Gerar outra</button>
+    </div>
+    <p class="muted">A senha é gerada diretamente no seu navegador usando valores aleatórios criptograficamente seguros quando disponíveis.</p>
+  `);
+}
+function gerarSenha(){
+  const len=+document.getElementById('pwdLen').value;
+  let chars='';
+  if(document.getElementById('pwdLower').checked) chars+='abcdefghijkmnopqrstuvwxyz';
+  if(document.getElementById('pwdUpper').checked) chars+='ABCDEFGHJKLMNPQRSTUVWXYZ';
+  if(document.getElementById('pwdNum').checked) chars+='23456789';
+  if(document.getElementById('pwdSym').checked) chars+='!@#$%&*+-_=.?';
+  if(!chars) return alert('Marque pelo menos um tipo de caractere.');
+  let out='';
+  const arr=new Uint32Array(len);
+  if(window.crypto && crypto.getRandomValues) crypto.getRandomValues(arr);
+  else for(let i=0;i<len;i++) arr[i]=Math.floor(Math.random()*4294967295);
+  for(let i=0;i<len;i++) out+=chars[arr[i]%chars.length];
+  document.getElementById('pwdOutput').textContent=out;
+}
+async function copiarSenha(){
+  const txt=document.getElementById('pwdOutput').textContent;
+  if(!txt || txt.includes('Clique')) return;
+  try{
+    await navigator.clipboard.writeText(txt);
+    alert('Senha copiada.');
+  }catch(e){
+    prompt('Copie a senha:',txt);
+  }
+}
+
+function openQRCode(){
+  showModal('▦ Gerador de QR Code', `
+    <div class="form-grid">
+      <div style="grid-column:1/-1">
+        <label>Link ou texto</label>
+        <input type="text" id="qrText" placeholder="Ex.: https://novabytesolucoes.com.br">
+      </div>
+      <div>
+        <label>Tamanho</label>
+        <select id="qrSize">
+          <option value="180">180 × 180</option>
+          <option value="220" selected>220 × 220</option>
+          <option value="300">300 × 300</option>
+        </select>
+      </div>
+    </div>
+    <button class="calc-btn" onclick="gerarQRCode()">Gerar QR Code</button>
+    <div class="qr-wrap" id="qrWrap"><img id="qrImg" alt="QR Code gerado"></div>
+    <p class="muted">O QR Code é gerado por um serviço externo a partir do texto informado. Evite inserir informações sensíveis.</p>
+  `);
+}
+function gerarQRCode(){
+  const txt=document.getElementById('qrText').value.trim();
+  const size=document.getElementById('qrSize').value;
+  if(!txt) return alert('Digite um link ou texto.');
+  const url='https://api.qrserver.com/v1/create-qr-code/?size='+size+'x'+size+'&data='+encodeURIComponent(txt);
+  document.getElementById('qrImg').src=url;
+  document.getElementById('qrWrap').classList.add('show');
+}
+
+const convData = {
+  comprimento: {
+    units:{'m':'Metro','km':'Quilômetro','cm':'Centímetro','mm':'Milímetro','mi':'Milha','ft':'Pé'},
+    toBase:{m:1,km:1000,cm:.01,mm:.001,mi:1609.344,ft:.3048}
+  },
+  peso: {
+    units:{'kg':'Quilograma','g':'Grama','lb':'Libra','oz':'Onça'},
+    toBase:{kg:1,g:.001,lb:.45359237,oz:.028349523125}
+  }
+};
+function openConversores(){
+  showModal('📏 Conversores', `
+    <div class="form-grid">
+      <div>
+        <label>Tipo de conversão</label>
+        <select id="convTipo" onchange="updateConvUnits()">
+          <option value="comprimento">Comprimento</option>
+          <option value="peso">Peso</option>
+          <option value="temperatura">Temperatura</option>
+        </select>
+      </div>
+      <div>
+        <label>Valor</label>
+        <input type="number" step="any" id="convValor" value="1">
+      </div>
+      <div>
+        <label>De</label>
+        <select id="convDe"></select>
+      </div>
+      <div>
+        <label>Para</label>
+        <select id="convPara"></select>
+      </div>
+    </div>
+    <button class="calc-btn" onclick="converterValor()">Converter</button>
+    <div class="result" id="convResult"></div>
+  `);
+  updateConvUnits();
+}
+function updateConvUnits(){
+  const tipo=document.getElementById('convTipo').value;
+  const de=document.getElementById('convDe');
+  const para=document.getElementById('convPara');
+  let units;
+  if(tipo==='temperatura'){
+    units={'c':'Celsius','f':'Fahrenheit','k':'Kelvin'};
+  }else{
+    units=convData[tipo].units;
+  }
+  const opts=Object.entries(units).map(([k,v])=>`<option value="${k}">${v}</option>`).join('');
+  de.innerHTML=opts;
+  para.innerHTML=opts;
+  if(para.options.length>1) para.selectedIndex=1;
+}
+function converterValor(){
+  const tipo=document.getElementById('convTipo').value;
+  const valor=+document.getElementById('convValor').value;
+  const de=document.getElementById('convDe').value;
+  const para=document.getElementById('convPara').value;
+  if(!Number.isFinite(valor)) return alert('Informe um valor válido.');
+
+  let res;
+  if(tipo==='temperatura'){
+    let c;
+    if(de==='c') c=valor;
+    else if(de==='f') c=(valor-32)*5/9;
+    else c=valor-273.15;
+    if(para==='c') res=c;
+    else if(para==='f') res=(c*9/5)+32;
+    else res=c+273.15;
+  }else{
+    const data=convData[tipo];
+    const base=valor*data.toBase[de];
+    res=base/data.toBase[para];
+  }
+  const r=document.getElementById('convResult');
+  const txt=Math.abs(res)>=1000000 ? res.toExponential(6) : Number(res.toFixed(8)).toLocaleString('pt-BR',{maximumFractionDigits:8});
+  r.innerHTML=`<div class="muted">Resultado</div><div class="big">${txt}</div>`;
+  r.classList.add('show');
+}
 
 
 function setRescisaoPreset(){
