@@ -178,6 +178,7 @@ let pdfDoc=null, originalBytes=null, currentPageIndex=0, pageOrder=[], pageData=
 let exportedPdfUrl=null, exportedPdfBlob=null, exportedPdfFile=null;
 let selectedId=null, mode=null, isDrawing=false, activeStroke=null, signatureDrawing=false, currentRotation={};
 let ocrWorker=null, ocrLogger=null, ocrBusy=false, ocrEditingId=null;
+let activeInlineEditId=null, inlineBlurGuardUntil=0;
 const $=id=>document.getElementById(id);
 
 $('fileInput').addEventListener('change',e=>handleFiles([...e.target.files]));
@@ -185,7 +186,11 @@ $('imageInput').addEventListener('change',e=>{const f=e.target.files[0];if(f)add
 ['dragenter','dragover'].forEach(ev=>$('dropzone').addEventListener(ev,e=>{e.preventDefault();$('dropzone').style.borderColor='#58c7ff'}));
 ['dragleave','drop'].forEach(ev=>$('dropzone').addEventListener(ev,e=>{e.preventDefault();$('dropzone').style.borderColor='rgba(88,199,255,.35)'}));
 $('dropzone').addEventListener('drop',e=>handleFiles([...e.dataTransfer.files]));
-window.addEventListener('resize',debounce(()=>{if(pdfDoc)renderCurrentPage()},180));
+window.addEventListener('resize',debounce(()=>{
+  const ae=document.activeElement;
+  const typing=activeInlineEditId || (ae && ae.classList && ae.classList.contains('ocr-item'));
+  if(pdfDoc && !typing) renderCurrentPage();
+},220));
 
 function debounce(fn,ms){let t;return(...a)=>{clearTimeout(t);t=setTimeout(()=>fn(...a),ms)}}
 function toast(msg){const t=$('toast');t.textContent=msg;t.classList.add('show');clearTimeout(t._tm);t._tm=setTimeout(()=>t.classList.remove('show'),2200)}
@@ -298,17 +303,23 @@ function renderItems(){
       el.title='Toque no texto e digite diretamente';
       if(it.editBg) el.style.setProperty('--edit-bg',it.editBg);
       if(it.editFg) el.style.setProperty('--edit-fg',it.editFg);
-      el.addEventListener('pointerdown',e=>e.stopPropagation());
+      el.addEventListener('pointerdown',e=>{
+        e.stopPropagation();
+        activeInlineEditId=it.id;
+        inlineBlurGuardUntil=performance.now()+1200;
+      });
       el.addEventListener('pointerup',e=>{
         e.stopPropagation();
         selectedId=it.id;
+        activeInlineEditId=it.id;
+        inlineBlurGuardUntil=performance.now()+1200;
         applyInlineEditColors(it,el);
         el.focus({preventScroll:true});
         requestAnimationFrame(()=>placeCaretFromPoint(el,e.clientX,e.clientY));
         updateSelectionUI();
       });
-      el.addEventListener('click',e=>{e.stopPropagation();selectedId=it.id;applyInlineEditColors(it,el);updateSelectionUI()});
-      el.addEventListener('focus',e=>{e.stopPropagation();selectedId=it.id;applyInlineEditColors(it,el);updateSelectionUI();el.dataset.empty=el.textContent?'0':'1'});
+      el.addEventListener('click',e=>{e.stopPropagation();selectedId=it.id;activeInlineEditId=it.id;inlineBlurGuardUntil=performance.now()+900;applyInlineEditColors(it,el);updateSelectionUI()});
+      el.addEventListener('focus',e=>{e.stopPropagation();selectedId=it.id;activeInlineEditId=it.id;inlineBlurGuardUntil=performance.now()+900;applyInlineEditColors(it,el);updateSelectionUI();el.dataset.empty=el.textContent?'0':'1'});
       el.addEventListener('input',()=>{
         const value=(el.innerText||'').replace(/\n/g,' ');
         it.text=value;
@@ -328,8 +339,21 @@ function renderItems(){
       el.addEventListener('blur',()=>{
         it.text=(el.innerText||'').replace(/\n/g,' ');
         it.modified=it.text!==(it.originalText??'');
+
+        // No Android, abrir o teclado pode causar um blur/resize transitório.
+        // Enquanto o usuário acabou de tocar no texto, recupera o foco em vez de fechar.
+        if(activeInlineEditId===it.id && performance.now()<inlineBlurGuardUntil){
+          setTimeout(()=>{
+            if(activeInlineEditId===it.id && document.activeElement!==el){
+              try{el.focus({preventScroll:true});placeCaretAtEnd(el)}catch{}
+            }
+          },60);
+          return;
+        }
+
+        if(activeInlineEditId===it.id) activeInlineEditId=null;
         selectedId=null;
-        setTimeout(()=>{if(document.activeElement!==el){renderItems();updateSelectionUI()}},20);
+        setTimeout(()=>{if(document.activeElement!==el){renderItems();updateSelectionUI()}},40);
       });
     }
     if(it.type==='image'){el.innerHTML=`<img src="${it.src}" alt="Imagem inserida"><span class="resize-handle"></span>`}
@@ -402,6 +426,28 @@ function createInlineTextAtPointer(e){
   dataFor(currentPageNumber()).items.push(it);selectedId=it.id;renderItems();updateSelectionUI();
   requestAnimationFrame(()=>{const el=[...$('overlayLayer').children].find(n=>n.dataset.id===it.id);if(el){el.focus();placeCaretFromPoint(el,e.clientX,e.clientY)}})
 }
+function placeCaretAtEnd(el){
+  try{
+    const r=document.createRange();
+    r.selectNodeContents(el);
+    r.collapse(false);
+    const sel=getSelection();
+    sel.removeAllRanges();
+    sel.addRange(r);
+  }catch{}
+}
+
+// Fecha a edição somente quando o usuário realmente toca fora do texto.
+document.addEventListener('pointerdown',e=>{
+  if(!activeInlineEditId) return;
+  if(e.target && e.target.closest && e.target.closest('.ocr-item')) return;
+  const id=activeInlineEditId;
+  activeInlineEditId=null;
+  inlineBlurGuardUntil=0;
+  const ae=document.activeElement;
+  if(ae && ae.classList && ae.classList.contains('ocr-item')) ae.blur();
+},true);
+
 function placeCaretFromPoint(el,x,y){
   try{
     let range=null;
@@ -653,6 +699,7 @@ async function paintEditsOnExportCanvas(ctx,canvas,pnum,exportScale){
 
 async function exportPDF(){
   if(!pdfDoc||!pageOrder.length)return toast('Abra um arquivo primeiro.');
+  activeInlineEditId=null; inlineBlurGuardUntil=0;
   document.activeElement?.blur?.();
   toast('Gerando PDF...');
 
