@@ -363,6 +363,10 @@ function renderItems(){
         it.w=Math.max(.006,px/W);
       });
       el.addEventListener('keydown',e=>{
+        // Enquanto o texto estiver sendo editado, nenhuma tecla deve chegar
+        // aos atalhos globais do editor. Isso evita que Backspace/Delete
+        // excluam o elemento inteiro no Android.
+        e.stopPropagation();
         if(e.key==='Enter'){e.preventDefault();el.blur()}
         if(e.key==='Escape'){e.preventDefault();el.blur()}
       });
@@ -823,7 +827,22 @@ async function shareExportedPDF(){
 function toggleMore(force){const m=$('moreMenu');const open=typeof force==='boolean'?force:!m.classList.contains('show');m.classList.toggle('show',open)}
 function closeModal(id){$(id).classList.remove('show')}
 document.querySelectorAll('.modal').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('show')}));
-document.addEventListener('keydown',e=>{if(e.key==='Delete'||e.key==='Backspace'){if(selectedId&&!['INPUT','TEXTAREA'].includes(document.activeElement.tagName))deleteSelected()}if(e.key==='Escape'){toggleMore(false);document.querySelectorAll('.modal.show').forEach(x=>x.classList.remove('show'))}});
+document.addEventListener('keydown',e=>{
+  const ae=document.activeElement;
+  const editingInline=!!(ae && (ae.isContentEditable || (ae.classList && ae.classList.contains('ocr-item'))));
+
+  // Backspace/Delete pertencem ao texto enquanto o cursor estiver na folha.
+  // Nunca excluir o elemento inteiro nesse estado.
+  if(editingInline) return;
+
+  if(e.key==='Delete'||e.key==='Backspace'){
+    if(selectedId && !['INPUT','TEXTAREA'].includes(ae?.tagName)) deleteSelected();
+  }
+  if(e.key==='Escape'){
+    toggleMore(false);
+    document.querySelectorAll('.modal.show').forEach(x=>x.classList.remove('show'));
+  }
+});
 </script>
 </body>
 </html>
