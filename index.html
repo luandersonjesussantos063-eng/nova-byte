@@ -510,6 +510,91 @@
     }
     .ad strong{color:#9cafc1;font-weight:650}
 
+    /* Anúncio direto - Gilberto Araujo Advogado */
+    .partner-ad{
+      margin:26px 0 0;
+      padding:18px;
+      border:1px solid rgba(88,199,255,.18);
+      border-radius:16px;
+      background:linear-gradient(135deg,rgba(88,199,255,.08),rgba(255,255,255,.025));
+    }
+    .partner-ad-label{
+      margin-bottom:12px;
+      color:#60758c;
+      font-size:9px;
+      font-weight:800;
+      letter-spacing:1.5px;
+    }
+    .partner-ad-content{
+      display:flex;
+      align-items:center;
+      gap:16px;
+    }
+    .partner-ad-logo{
+      display:flex;
+      width:64px;
+      height:64px;
+      min-width:64px;
+      align-items:center;
+      justify-content:center;
+      border:1px solid rgba(88,199,255,.18);
+      border-radius:15px;
+      background:#09192b;
+      font-size:30px;
+    }
+    .partner-ad-text{flex:1}
+    .partner-ad-text strong{
+      display:block;
+      margin-bottom:3px;
+      color:#eef7ff;
+      font-size:17px;
+    }
+    .partner-ad-oab{
+      display:block;
+      margin-bottom:8px;
+      color:#58c7ff;
+      font-size:11px;
+      font-weight:700;
+    }
+    .partner-ad-text p{
+      margin:0 0 5px;
+      color:#91a5b9;
+      font-size:12.5px;
+      line-height:1.5;
+    }
+    .partner-ad-text small{
+      color:#6f849a;
+      font-size:10.5px;
+    }
+    .partner-ad-actions{
+      display:flex;
+      flex-direction:column;
+      gap:7px;
+      min-width:175px;
+    }
+    .partner-ad-btn,.partner-ad-site{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:10px 14px;
+      border-radius:10px;
+      text-decoration:none;
+      font-size:11.5px;
+      font-weight:800;
+    }
+    .partner-ad-btn{background:#25D366;color:#06150b}
+    .partner-ad-site{
+      border:1px solid rgba(88,199,255,.22);
+      background:rgba(88,199,255,.06);
+      color:#bfeaff;
+    }
+    .partner-ad-btn:hover,.partner-ad-site:hover{filter:brightness(1.1)}
+    @media(max-width:700px){
+      .partner-ad-content{align-items:flex-start;flex-wrap:wrap}
+      .partner-ad-text{min-width:calc(100% - 85px)}
+      .partner-ad-actions{width:100%}
+    }
+
     .coming{
       opacity:.55;
       min-height:145px;
@@ -912,66 +997,7 @@
       .scale-summary{grid-template-columns:1fr}
     }
 
-  
-/* CTA comercial e conteúdo SEO */
-.cta-commercial{
-  margin-top:26px;
-  padding:28px;
-  border-radius:22px;
-  border:1px solid rgba(88,199,255,.18);
-  background:
-    radial-gradient(circle at 85% 15%,rgba(122,108,255,.14),transparent 34%),
-    linear-gradient(135deg,rgba(88,199,255,.08),rgba(122,108,255,.06));
-}
-.cta-commercial h2{margin:10px 0 10px;font-size:clamp(25px,4vw,38px);letter-spacing:-.8px}
-.cta-commercial p{max-width:760px;margin:0;color:#a9bbcf;line-height:1.7}
-.cta-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:20px}
-.cta-actions .btn{display:inline-flex;align-items:center;justify-content:center;min-height:46px}
-.whatsapp-btn{background:#25d366;color:#062b16!important;border:0!important}
-.whatsapp-btn:hover{filter:brightness(1.06);transform:translateY(-1px)}
-.whatsapp-float{
-  position:fixed;right:18px;bottom:18px;z-index:80;
-  display:flex;align-items:center;gap:8px;
-  padding:12px 15px;border-radius:999px;
-  background:#25d366;color:#062b16!important;
-  font-weight:900;box-shadow:0 16px 42px rgba(0,0,0,.32);
-}
-.whatsapp-float:hover{filter:brightness(1.05);transform:translateY(-1px)}
-.seo-block{margin-top:28px}
-.seo-block h2{margin-top:0}
-.seo-block h3{margin-top:24px}
-.seo-example{
-  margin:18px 0;padding:16px;border-radius:14px;
-  background:rgba(88,199,255,.055);
-  border:1px solid rgba(88,199,255,.15)
-}
-.seo-example strong{color:#dff6ff}
-.faq{margin-top:26px}
-.faq details{
-  border:1px solid var(--line);
-  background:rgba(255,255,255,.025);
-  border-radius:13px;padding:14px 16px;margin:9px 0
-}
-.faq summary{cursor:pointer;font-weight:850;color:#e8f2fb}
-.faq details p{margin:10px 0 0}
-.quick-links{
-  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));
-  gap:10px;margin-top:18px
-}
-.quick-links a{
-  border:1px solid var(--line);border-radius:14px;
-  padding:14px;background:rgba(255,255,255,.025)
-}
-.quick-links a:hover{border-color:rgba(88,199,255,.35)}
-@media(max-width:800px){
-  .cta-commercial{padding:21px}
-  .cta-actions{flex-direction:column}
-  .cta-actions .btn{width:100%}
-  .quick-links{grid-template-columns:1fr}
-  .whatsapp-float{right:12px;bottom:12px;padding:11px 13px}
-}
-
-</style>
+  </style>
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2466231259507657"
      crossorigin="anonymous"></script>
 </head>
@@ -1040,22 +1066,34 @@
 
     <div class="grid" id="toolGrid"></div>
 
-    <div class="ad">
-      <strong>Publicidade</strong><br>
-      Espaço reservado para parceiros e anúncios.
-    </div>
+    <aside class="partner-ad" aria-label="Publicidade - Gilberto Araujo Advogado">
+      <div class="partner-ad-label">PUBLICIDADE</div>
+      <div class="partner-ad-content">
+        <div class="partner-ad-logo" aria-hidden="true">⚖️</div>
+        <div class="partner-ad-text">
+          <strong>Gilberto Araujo Advogado</strong>
+          <span class="partner-ad-oab">Direito do Trabalho • OAB/MT 36.486</span>
+          <p>Orientação jurídica em rescisão, cálculos trabalhistas, acidente de trabalho, demissão, vínculo empregatício e outras questões trabalhistas.</p>
+          <small>Atendimento em Nova Mutum/MT e online.</small>
+        </div>
+        <div class="partner-ad-actions">
+          <a href="https://wa.me/5565999052304?text=Ol%C3%A1%2C%20vim%20pelo%20NovaByte%20Tools%20e%20gostaria%20de%20informa%C3%A7%C3%B5es%20sobre%20atendimento%20jur%C3%ADdico%20trabalhista." target="_blank" rel="noopener sponsored" class="partner-ad-btn">💬 Falar no WhatsApp</a>
+          <a href="https://www.gilbertoaraujoadv.com.br/" target="_blank" rel="noopener sponsored" class="partner-ad-site">Conhecer o escritório</a>
+        </div>
+      </div>
+    </aside>
   </section>
 
 <section class="section wrap" id="paginas-calculadoras">
   <div class="section-head"><div><h2>Calculadoras populares</h2><p>Acesse páginas específicas para cada cálculo.</p></div></div>
   <div class="service-grid">
-    <a class="service" href="/calculadora-rescisao.html"><div class="icon">📄</div><b>Calculadora de rescisão</b><p>Saldo, férias, 13º, aviso e FGTS.</p></a>
-    <a class="service" href="/escala-12x36.html"><div class="icon">📅</div><b>Escala 12x36</b><p>Calendário de plantões e folgas.</p></a>
-    <a class="service" href="/escala-24x48.html"><div class="icon">🗓️</div><b>Escala 24x48</b><p>Veja seus próximos plantões.</p></a>
-    <a class="service" href="/escala-24x72.html"><div class="icon">⏱️</div><b>Escala 24x72</b><p>Calendário mensal do ciclo.</p></a>
-    <a class="service" href="/escala-6x1.html"><div class="icon">🔁</div><b>Escala 6x1</b><p>Trabalho e folga no mês.</p></a>
-    <a class="service" href="/adicional-noturno.html"><div class="icon">🌙</div><b>Adicional noturno</b><p>Estimativa rápida do adicional.</p></a>
-    <a class="service" href="/periculosidade.html"><div class="icon">⚠️</div><b>Periculosidade</b><p>Calcule o adicional percentual.</p></a>
+    <a class="service" href="/calculadora-rescisao/"><div class="icon">📄</div><b>Calculadora de rescisão</b><p>Saldo, férias, 13º, aviso e FGTS.</p></a>
+    <a class="service" href="/escala-12x36/"><div class="icon">📅</div><b>Escala 12x36</b><p>Calendário de plantões e folgas.</p></a>
+    <a class="service" href="/escala-24x48/"><div class="icon">🗓️</div><b>Escala 24x48</b><p>Veja seus próximos plantões.</p></a>
+    <a class="service" href="/escala-24x72/"><div class="icon">⏱️</div><b>Escala 24x72</b><p>Calendário mensal do ciclo.</p></a>
+    <a class="service" href="/escala-6x1/"><div class="icon">🔁</div><b>Escala 6x1</b><p>Trabalho e folga no mês.</p></a>
+    <a class="service" href="/adicional-noturno/"><div class="icon">🌙</div><b>Adicional noturno</b><p>Estimativa rápida do adicional.</p></a>
+    <a class="service" href="/periculosidade/"><div class="icon">⚠️</div><b>Periculosidade</b><p>Calcule o adicional percentual.</p></a>
   </div>
 </section>
 <section class="section wrap" id="servicos">
@@ -1068,16 +1106,16 @@
       </p>
 
       <div class="service-grid">
-        <a class="service" href="/criacao-de-sites/">
+        <div class="service">
           <div class="icon">🌐</div>
-          <b>Criação de sites</b>
-          <p>Sites responsivos para apresentar sua empresa, seus serviços e transformar visitas em contatos.</p>
-        </a>
-        <a class="service" href="/landing-pages/">
-          <div class="icon">📄</div>
-          <b>Landing pages</b>
-          <p>Páginas focadas em campanhas, apresentação de ofertas e captação de clientes.</p>
-        </a>
+          <b>Sites e landing pages</b>
+          <p>Páginas responsivas para apresentar empresas, serviços, campanhas e captar clientes.</p>
+        </div>
+        <div class="service">
+          <div class="icon">📱</div>
+          <b>Sistemas e protótipos</b>
+          <p>Interfaces interativas e soluções personalizadas para validar ideias e processos.</p>
+        </div>
         <div class="service">
           <div class="icon">🍔</div>
           <b>Cardápios digitais</b>
@@ -1091,9 +1129,8 @@
       </div>
 
       <div class="business-actions">
-        <a class="primary" style="display:inline-flex;align-items:center;justify-content:center" href="/criacao-de-sites/">🌐 Criação de sites</a>
-        <a class="ghost" style="display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--line)" href="/landing-pages/">📄 Landing pages</a>
-        <a class="whatsapp-btn" style="display:inline-flex;align-items:center;justify-content:center;min-height:42px;padding:0 15px;border-radius:11px;font-weight:850" href="https://wa.me/5531983771576?text=Ol%C3%A1%2C%20conheci%20a%20NovaByte%20pelas%20ferramentas%20do%20site%20e%20gostaria%20de%20solicitar%20um%20or%C3%A7amento." target="_blank" rel="noopener">💬 Falar no WhatsApp</a>
+        <button class="primary" onclick="document.getElementById('tools').scrollIntoView({behavior:'smooth'})">Usar ferramentas grátis</button>
+        <button class="ghost" onclick="alert('Depois vamos ligar este botão ao seu WhatsApp comercial da NovaByte.')">Quero um projeto personalizado</button>
       </div>
 
       <div class="notice">
@@ -1102,23 +1139,6 @@
       </div>
     </div>
   </section>
-
-
-<section class="wrap content" id="projeto-digital">
-  <article class="cta-commercial">
-    <span class="badge">🚀 NovaByte Soluções</span>
-    <h2>Precisa de um site ou página para sua empresa?</h2>
-    <p>
-      A NovaByte também desenvolve sites, landing pages e soluções digitais para apresentar seu negócio,
-      captar contatos e facilitar o atendimento. Veja os serviços ou fale direto pelo WhatsApp.
-    </p>
-    <div class="cta-actions">
-      <a class="btn primary" href="/criacao-de-sites/">🌐 Criação de sites</a>
-      <a class="btn secondary" href="/landing-pages/">📄 Landing pages</a>
-      <a class="btn whatsapp-btn" href="https://wa.me/5531983771576?text=Ol%C3%A1%2C%20conheci%20a%20NovaByte%20pelas%20ferramentas%20do%20site%20e%20gostaria%20de%20solicitar%20um%20or%C3%A7amento." target="_blank" rel="noopener">💬 Falar comigo no WhatsApp</a>
-    </div>
-  </article>
-</section>
 
 </main>
 
@@ -2419,6 +2439,5 @@ function calcAcertos(){
 
 renderTools();
 </script>
-<a class="whatsapp-float" href="https://wa.me/5531983771576?text=Ol%C3%A1%2C%20conheci%20a%20NovaByte%20pelas%20ferramentas%20do%20site%20e%20gostaria%20de%20solicitar%20um%20or%C3%A7amento." target="_blank" rel="noopener" aria-label="Falar com a NovaByte no WhatsApp">💬 WhatsApp</a>
 </body>
 </html>
