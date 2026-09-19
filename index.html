@@ -320,12 +320,80 @@
     }
     #countTools{font-size:13px;color:#6f8398}
 
+    .tools-toolbar{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-bottom:14px;
+    }
+    .tools-highlight-btn,
+    .tools-menu-btn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+      min-height:44px;
+      border-radius:12px;
+      padding:0 16px;
+      font-size:13px;
+      font-weight:800;
+      cursor:pointer;
+      transition:.18s ease;
+    }
+    .tools-highlight-btn{
+      border:1px solid rgba(88,199,255,.26);
+      background:linear-gradient(135deg,rgba(88,199,255,.16),rgba(88,199,255,.07));
+      color:#dff6ff;
+    }
+    .tools-menu-btn{
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.025);
+      color:#b7c8d8;
+    }
+    .tools-highlight-btn:hover,
+    .tools-menu-btn:hover{
+      transform:translateY(-1px);
+      filter:brightness(1.06);
+    }
+    .tools-menu-btn::after{
+      content:'▾';
+      font-size:11px;
+      transition:transform .18s ease;
+    }
+    .tools-menu-btn.open::after{
+      transform:rotate(180deg);
+    }
+
+    .tools-filter-panel{
+      display:none;
+      margin-bottom:16px;
+      padding:16px;
+      border:1px solid var(--line);
+      border-radius:16px;
+      background:rgba(11,24,41,.82);
+    }
+    .tools-filter-panel.show{display:block}
+    .tools-filter-group + .tools-filter-group{
+      margin-top:14px;
+      padding-top:14px;
+      border-top:1px solid rgba(255,255,255,.06);
+    }
+    .tools-filter-title{
+      margin-bottom:10px;
+      color:#7f93aa;
+      font-size:11px;
+      font-weight:800;
+      letter-spacing:.8px;
+      text-transform:uppercase;
+    }
+
     .popular-bar{
       display:flex;
       align-items:center;
       gap:7px;
       flex-wrap:wrap;
-      margin-bottom:16px;
+      margin-bottom:0;
     }
     .popular-label{
       font-size:12px;
@@ -339,8 +407,8 @@
       border:1px solid var(--line);
       background:rgba(255,255,255,.025);
       color:#a9bacd;
-      border-radius:9px;
-      padding:8px 11px;
+      border-radius:999px;
+      padding:8px 12px;
       cursor:pointer;
       transition:.18s ease;
       font-size:13px;
@@ -354,31 +422,31 @@
     .tabs{
       display:flex;
       align-items:center;
-      gap:3px;
-      overflow-x:auto;
-      padding:4px 0 14px;
-      margin-bottom:10px;
+      gap:8px;
+      flex-wrap:wrap;
+      overflow:visible;
+      padding:0;
+      margin-bottom:0;
       scrollbar-width:none;
     }
     .tabs::-webkit-scrollbar{display:none}
     .tab{
       flex:0 0 auto;
-      border:0;
-      border-bottom:2px solid transparent;
-      background:transparent;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.025);
       color:#7f93aa;
-      padding:9px 13px 10px;
+      padding:9px 13px;
       cursor:pointer;
-      border-radius:0;
-      font-size:14px;
-      font-weight:650;
+      border-radius:999px;
+      font-size:13px;
+      font-weight:700;
       transition:.18s;
     }
-    .tab:hover{color:#c9d6e4}
+    .tab:hover{color:#c9d6e4;border-color:var(--line-strong)}
     .tab.active{
       color:white;
-      border-bottom-color:#63ccff;
-      background:transparent;
+      border-color:#63ccff;
+      background:rgba(88,199,255,.1);
     }
 
     .grid{
@@ -883,6 +951,8 @@
       .modal{padding:10px}
       .modal-card{border-radius:15px}
       .modal-head,.modal-body{padding-left:16px;padding-right:16px}
+      .tools-toolbar{flex-direction:column;align-items:stretch}
+      .tools-highlight-btn,.tools-menu-btn{width:100%}
       .popular-bar{gap:5px}
       .popular-label{width:100%;margin-bottom:3px}
     }
@@ -997,6 +1067,52 @@
       .scale-summary{grid-template-columns:1fr}
     }
 
+    .service-mini-list{
+      display:grid;
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:8px;
+    }
+    .service-mini-btn{
+      display:flex;
+      flex-direction:column;
+      align-items:flex-start;
+      justify-content:center;
+      gap:4px;
+      min-height:62px;
+      padding:12px;
+      border:1px solid rgba(255,255,255,.08);
+      border-radius:12px;
+      background:rgba(255,255,255,.025);
+      color:#d9e8f5;
+      cursor:pointer;
+      transition:.18s ease;
+      text-align:left;
+    }
+    .service-mini-btn:hover{
+      transform:translateY(-1px);
+      background:rgba(255,255,255,.045);
+      border-color:rgba(88,199,255,.22);
+    }
+    .service-mini-btn span{
+      font-size:13px;
+      font-weight:800;
+      line-height:1.3;
+    }
+    .service-mini-btn small{
+      color:#7f93aa;
+      font-size:11px;
+    }
+
+    @media(max-width:768px){
+      .section-head p{display:none}
+      .tools-toolbar{flex-direction:column;align-items:stretch}
+      .tools-highlight-btn,.tools-menu-btn{width:100%}
+      .service-mini-list{grid-template-columns:1fr}
+      .popular-bar,.tabs{display:none}
+      #toolGrid .tool-card{display:none}
+      #toolGrid .tool-card.mobile-main{display:block}
+    }
+
   </style>
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2466231259507657"
      crossorigin="anonymous"></script>
@@ -1045,23 +1161,51 @@
       <div id="countTools" class="muted"></div>
     </div>
 
-    <div class="popular-bar">
-      <span class="popular-label">🔥 Mais acessadas:</span>
-      <button class="popular-chip" onclick="openTool('rescisao')">📄 Rescisão</button>
-      <button class="popular-chip" onclick="openTool('escala')">📅 Escalas</button>
-      <button class="popular-chip" onclick="openTool('noturno')">🌙 Adicional noturno</button>
-      <button class="popular-chip" onclick="openTool('combustivel')">⛽ Custo de viagem</button>
-      <button class="popular-chip" onclick="openTool('salario-liquido')">💵 Salário líquido</button>
+    <div class="tools-toolbar">
+      <button class="tools-highlight-btn" onclick="openTool('salario-liquido')">
+        💵 Abrir salário líquido
+      </button>
+
+      <button
+        class="tools-menu-btn"
+        id="toolsMenuBtn"
+        onclick="toggleToolsMenu()"
+        aria-expanded="false"
+        aria-controls="toolsMenuPanel"
+      >
+        ☰ Escolher outro serviço
+      </button>
     </div>
 
-    <div class="tabs" id="tabs">
-      <button class="tab active" data-cat="Todos" onclick="setCategory('Todos', this)">Todos</button>
-      <button class="tab" data-cat="Favoritos" onclick="setCategory('Favoritos', this)">⭐ Favoritos</button>
-      <button class="tab" data-cat="Trabalho" onclick="setCategory('Trabalho', this)">Trabalho</button>
-      <button class="tab" data-cat="Estudos" onclick="setCategory('Estudos', this)">Estudos</button>
-      <button class="tab" data-cat="Veículos" onclick="setCategory('Veículos', this)">Veículos</button>
-      <button class="tab" data-cat="Dinheiro" onclick="setCategory('Dinheiro', this)">Dinheiro</button>
-      <button class="tab" data-cat="Utilidades" onclick="setCategory('Utilidades', this)">Utilidades</button>
+    <div class="tools-filter-panel" id="toolsMenuPanel">
+      <div class="tools-filter-group">
+        <div class="tools-filter-title">Todos os serviços</div>
+        <div class="service-mini-list" id="serviceMiniList"></div>
+      </div>
+
+      <div class="tools-filter-group">
+        <div class="tools-filter-title">Mais acessadas</div>
+        <div class="popular-bar">
+          <button class="popular-chip" onclick="openTool('rescisao')">📄 Rescisão</button>
+          <button class="popular-chip" onclick="openTool('escala')">📅 Escalas</button>
+          <button class="popular-chip" onclick="openTool('noturno')">🌙 Adicional noturno</button>
+          <button class="popular-chip" onclick="openTool('combustivel')">⛽ Custo de viagem</button>
+          <button class="popular-chip" onclick="openTool('salario-liquido')">💵 Salário líquido</button>
+        </div>
+      </div>
+
+      <div class="tools-filter-group">
+        <div class="tools-filter-title">Categorias</div>
+        <div class="tabs" id="tabs">
+          <button class="tab active" data-cat="Todos" onclick="setCategory('Todos', this)">Todos</button>
+          <button class="tab" data-cat="Favoritos" onclick="setCategory('Favoritos', this)">⭐ Favoritos</button>
+          <button class="tab" data-cat="Trabalho" onclick="setCategory('Trabalho', this)">Trabalho</button>
+          <button class="tab" data-cat="Estudos" onclick="setCategory('Estudos', this)">Estudos</button>
+          <button class="tab" data-cat="Veículos" onclick="setCategory('Veículos', this)">Veículos</button>
+          <button class="tab" data-cat="Dinheiro" onclick="setCategory('Dinheiro', this)">Dinheiro</button>
+          <button class="tab" data-cat="Utilidades" onclick="setCategory('Utilidades', this)">Utilidades</button>
+        </div>
+      </div>
     </div>
 
     <div class="grid" id="toolGrid"></div>
@@ -1287,22 +1431,29 @@ function renderTools(){
   const filtered = tools.filter(t => {
     const catOk = currentCategory === 'Todos' ||
       (currentCategory === 'Favoritos' ? favorites.includes(t.id) : t.cat === currentCategory);
-    const textOk = !q || (t.title+' '+t.desc+' '+t.cat).toLowerCase().includes(q);
+    const textOk = !q || (t.title + ' ' + t.desc + ' ' + t.cat).toLowerCase().includes(q);
     return catOk && textOk;
   });
 
-  document.getElementById('countTools').textContent = filtered.length + ' disponível' + (filtered.length === 1 ? '' : 'eis');
+  document.getElementById('countTools').textContent =
+    filtered.length + ' disponível' + (filtered.length === 1 ? '' : 'eis');
 
   if(!filtered.length){
     grid.innerHTML = '<div class="empty-state">Nenhuma ferramenta encontrada.</div>';
     return;
   }
 
+  const mobileMainId = filtered.some(t => t.id === 'salario-liquido')
+    ? 'salario-liquido'
+    : filtered[0].id;
+
   grid.innerHTML = filtered.map(t => `
-    <article class="tool-card ${t.featured ? 'featured' : ''}">
+    <article class="tool-card ${t.featured ? 'featured' : ''} ${t.id === mobileMainId ? 'mobile-main' : ''}">
       <div class="tool-top">
         <div class="icon" aria-hidden="true">${t.icon}</div>
-        <button class="fav ${favorites.includes(t.id)?'on':''}" onclick="toggleFav('${t.id}',event)" aria-label="Favoritar">${favorites.includes(t.id)?'★':'☆'}</button>
+        <button class="fav ${favorites.includes(t.id) ? 'on' : ''}" onclick="toggleFav('${t.id}',event)" aria-label="Favoritar">
+          ${favorites.includes(t.id) ? '★' : '☆'}
+        </button>
       </div>
       <h3>${t.title}</h3>
       <p>${t.desc}</p>
@@ -1322,15 +1473,27 @@ function toggleFav(id,e){
   renderTools();
 }
 
+function toggleToolsMenu(forceState){
+  const panel = document.getElementById('toolsMenuPanel');
+  const btn = document.getElementById('toolsMenuBtn');
+  if(!panel || !btn) return;
+  const open = typeof forceState === 'boolean' ? forceState : !panel.classList.contains('show');
+  panel.classList.toggle('show', open);
+  btn.classList.toggle('open', open);
+  btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+}
+
 function setCategory(cat,el){
   currentCategory=cat;
   document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
   el.classList.add('active');
   renderTools();
+  if(window.innerWidth < 900) toggleToolsMenu(false);
 }
 
 function openTool(id){
-  const t=tools.find(x=>x.id===id);
+  const t = tools.find(x => x.id === id);
+  if(window.innerWidth < 900) toggleToolsMenu(false);
   if(t) t.open();
 }
 
@@ -2437,6 +2600,20 @@ function calcAcertos(){
   r.classList.add('show');
 }
 
+function renderServiceMiniList(){
+  const list = document.getElementById('serviceMiniList');
+  if(!list) return;
+
+  list.innerHTML = tools.map(t => `
+    <button class="service-mini-btn" onclick="openTool('${t.id}')">
+      <span>${t.icon} ${t.title}</span>
+      <small>${t.cat}</small>
+    </button>
+  `).join('');
+}
+
+
+renderServiceMiniList();
 renderTools();
 </script>
 </body>
