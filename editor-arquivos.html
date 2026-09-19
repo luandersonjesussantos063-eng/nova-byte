@@ -297,6 +297,10 @@ function renderItems(){
       el.dataset.empty=it.text?'0':'1';
       el.textContent=it.text||'';
       el.style.fontSize=Math.max(7,(it.font||16)*renderScale)+'px';
+      el.style.fontFamily=it.fontFamily||'Arial, Helvetica, sans-serif';
+      el.style.fontWeight=String(it.fontWeight||400);
+      el.style.fontStyle=it.fontStyle||'normal';
+      el.style.letterSpacing=((it.letterSpacing||0)*renderScale)+'px';
       el.style.height=Math.max(12,it.h*H)+'px';
       el.style.lineHeight=Math.max(12,it.h*H)+'px';
       el.style.minWidth=Math.max(8,it.w*W)+'px';
@@ -469,7 +473,7 @@ function applyInlineEditColors(it,el){
 function createInlineTextAtPointer(e){
   if(!pdfDoc)return;
   const r=$('overlayLayer').getBoundingClientRect(),x=Math.max(0,Math.min(.94,(e.clientX-r.left)/r.width)),y=Math.max(0,Math.min(.96,(e.clientY-r.top)/r.height));
-  const it={id:uid(),type:'ocr',source:'added',x,y,w:.16,h:.035,baseW:.16,text:'',originalText:'',font:16,color:'#111111',modified:true,editBg:'rgba(255,255,255,.98)',editFg:'#111111'};
+  const it={id:uid(),type:'ocr',source:'added',x,y,w:.16,h:.035,baseW:.16,text:'',originalText:'',font:16,color:'#111111',fontFamily:'Arial, Helvetica, sans-serif',fontWeight:400,fontStyle:'normal',letterSpacing:0,modified:true,editBg:'rgba(255,255,255,.98)',editFg:'#111111'};
   dataFor(currentPageNumber()).items.push(it);selectedId=it.id;renderItems();updateSelectionUI();
   requestAnimationFrame(()=>{const el=[...$('overlayLayer').children].find(n=>n.dataset.id===it.id);if(el){el.focus();placeCaretFromPoint(el,e.clientX,e.clientY)}})
 }
@@ -551,6 +555,47 @@ async function isLikelyScannedPDF(){
 }
 
 
+function cleanFontFamily(v){
+  v=String(v||'').trim();
+  if(!v)return 'Arial, Helvetica, sans-serif';
+  // PDF.js às vezes devolve famílias internas. Mantemos as famílias CSS úteis
+  // e adicionamos fallbacks para o navegador/canvas do Android.
+  const low=v.toLowerCase();
+  if(low.includes('monospace'))return 'monospace';
+  if(low.includes('serif')&&!low.includes('sans'))return 'Georgia, "Times New Roman", serif';
+  if(low.includes('sans'))return 'Arial, Helvetica, sans-serif';
+  return v+', Arial, Helvetica, sans-serif';
+}
+function inferPdfTypography(page,item,style,fontH,targetWidth){
+  let fontObj=null;
+  try{ fontObj=page?.commonObjs?.get?.(item.fontName)||null; }catch{}
+  const raw=[item.fontName,style?.fontFamily,fontObj?.name,fontObj?.fallbackName,fontObj?.loadedName].filter(Boolean).join(' ');
+  const low=raw.toLowerCase();
+  let fontFamily=cleanFontFamily(style?.fontFamily||fontObj?.fallbackName||fontObj?.name||'');
+  let fontWeight=400;
+  if(fontObj?.black||/black|heavy|extrabold|ultrabold/.test(low))fontWeight=900;
+  else if(fontObj?.bold||/bold|demi|semibold|semi-bold/.test(low))fontWeight=/semi|demi/.test(low)?600:700;
+  let fontStyle='normal';
+  if(fontObj?.italic||fontObj?.italicAngle||/italic|oblique/.test(low))fontStyle='italic';
+
+  // Calcula um espaçamento aproximado para o novo texto ocupar a mesma métrica
+  // horizontal do trecho original. Se a fonte real não estiver disponível, isso
+  // ajuda bastante a manter o aspecto visual do PDF.
+  let letterSpacing=0;
+  try{
+    const cv=document.createElement('canvas'),cx=cv.getContext('2d');
+    cx.font=`${fontStyle} ${fontWeight} ${Math.max(5,fontH)}px ${fontFamily}`;
+    const measured=cx.measureText(String(item.str||'')).width;
+    const chars=Math.max(1,String(item.str||'').length-1);
+    const diff=(targetWidth||0)-measured;
+    if(chars>0 && Number.isFinite(diff))letterSpacing=Math.max(-1.5,Math.min(3,diff/chars));
+  }catch{}
+  return{fontFamily,fontWeight,fontStyle,letterSpacing};
+}
+function canvasFontForItem(it,sizePx){
+  const style=it.fontStyle||'normal',weight=it.fontWeight||400,family=it.fontFamily||'Arial, Helvetica, sans-serif';
+  return `${style} ${weight} ${Math.max(7,sizePx)}px ${family}`;
+}
 async function prepareNativeTextLayers(){
   if(!pdfDoc)return;
   try{
@@ -570,7 +615,9 @@ async function extractNativeTextPage(pnum){
     if(x<0||y<0||x>viewport.width||y>viewport.height)continue;
     w=Math.min(w,viewport.width-x);h=Math.min(h,viewport.height-y);
     const nx=x/viewport.width,ny=y/viewport.height,nw=Math.max(.006,w/viewport.width),nh=Math.max(.008,h/viewport.height);
-    items.push({id:uid(),type:'ocr',source:'native',x:nx,y:ny,w:nw,baseW:nw,h:nh,text,originalText:text,font:fontH,color:'#111111',modified:false});
+    const style=(tc.styles&&item.fontName)?tc.styles[item.fontName]:null;
+    const typo=inferPdfTypography(page,item,style,fontH,w);
+    items.push({id:uid(),type:'ocr',source:'native',x:nx,y:ny,w:nw,baseW:nw,h:nh,text,originalText:text,font:fontH,color:'#111111',fontFamily:typo.fontFamily,fontWeight:typo.fontWeight,fontStyle:typo.fontStyle,letterSpacing:typo.letterSpacing,modified:false});
   }
   d.items.push(...items);
   return items.length;
@@ -601,7 +648,7 @@ function parseTSVWords(tsv,canvasW,canvasH,ocrScale){
     const nw=w/canvasW,nh=h/canvasH;
     if(nw>.32||nh>.10)continue;
     const font=Math.max(8,Math.min(54,(h/ocrScale)*.78));
-    out.push({id:uid(),type:'ocr',source:'ocr',x:left/canvasW,y:top/canvasH,w:Math.max(.012,nw),baseW:Math.max(.012,nw),h:Math.max(.012,nh),text,originalText:text,font,color:'#111111',conf,modified:false});
+    out.push({id:uid(),type:'ocr',source:'ocr',x:left/canvasW,y:top/canvasH,w:Math.max(.012,nw),baseW:Math.max(.012,nw),h:Math.max(.012,nh),text,originalText:text,font,color:'#111111',fontFamily:'Arial, Helvetica, sans-serif',fontWeight:400,fontStyle:'normal',letterSpacing:0,conf,modified:false});
   }
   return out;
 }
@@ -736,7 +783,13 @@ async function paintEditsOnExportCanvas(ctx,canvas,pnum,exportScale){
       }
       const txt=String(it.text||'');
       if(txt){
-        ctx.save();ctx.fillStyle=it.editFg||it.color||'#111111';ctx.font=`${Math.max(7,(it.font||16)*exportScale)}px Arial, Helvetica, sans-serif`;ctx.textBaseline='top';ctx.fillText(txt,x,y);ctx.restore();
+        ctx.save();
+        ctx.fillStyle=it.editFg||it.color||'#111111';
+        ctx.font=canvasFontForItem(it,(it.font||16)*exportScale);
+        ctx.textBaseline='top';
+        if('letterSpacing' in ctx)ctx.letterSpacing=((it.letterSpacing||0)*exportScale)+'px';
+        ctx.fillText(txt,x,y);
+        ctx.restore();
       }
       continue;
     }
