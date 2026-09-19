@@ -152,15 +152,39 @@
       white-space:nowrap;
     }
     .logo{
-      width:38px;
-      height:38px;
-      border-radius:12px;
+      width:42px;
+      height:42px;
+      border-radius:13px;
       display:grid;
       place-items:center;
-      background:linear-gradient(135deg,#52c9ff,#7268ff);
-      box-shadow:0 10px 30px rgba(88,199,255,.18);
-      font-size:16px;
-      color:white;
+      position:relative;
+      overflow:hidden;
+      isolation:isolate;
+      border:1px solid rgba(112,216,255,.32);
+      background:linear-gradient(135deg,#58c7ff 0%,#7063f6 58%,#9a68ff 100%);
+      box-shadow:0 10px 30px rgba(88,199,255,.20),inset 0 1px 0 rgba(255,255,255,.22);
+    }
+    .logo::before{
+      content:"";
+      position:absolute;
+      inset:2px;
+      border-radius:11px;
+      background:
+        radial-gradient(circle at 22% 24%,rgba(88,199,255,.20),transparent 32%),
+        linear-gradient(145deg,#10263b,#0a1424 70%);
+      z-index:-1;
+    }
+    .logo::after{
+      content:"NB";
+      font-size:15px;
+      line-height:1;
+      font-weight:950;
+      letter-spacing:-1.6px;
+      background:linear-gradient(90deg,#ffffff 0%,#7de1ff 48%,#a99cff 100%);
+      -webkit-background-clip:text;
+      background-clip:text;
+      color:transparent;
+      text-shadow:0 0 20px rgba(88,199,255,.16);
     }
     .brand span{color:#73d8ff}
     .nav-actions{
@@ -1121,7 +1145,7 @@
 <header>
   <div class="wrap nav">
     <a class="brand" href="#top">
-      <div class="logo">N</div>
+      <div class="logo" aria-label="NovaByte"></div>
       <div>NovaByte <span style="color:#71dcff">Tools</span></div>
     </a>
     <div class="nav-actions">
