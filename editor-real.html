@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#07101c">
+  <title>Editor PDF Real | NovaByte Tools</title>
+  <meta name="description" content="Editor estrutural de PDF da NovaByte Tools.">
+  <style>
+    :root{
+      --bg:#07101c;--panel:#0b1829;--line:rgba(255,255,255,.10);
+      --text:#edf6ff;--muted:#8ba0b5;--blue:#58c7ff;--purple:#7568ff;
+      --green:#35db8a;--danger:#ff6b7a;--safe:env(safe-area-inset-bottom,0px)
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;width:100%;height:100%;font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--bg);color:var(--text)}
+    body{overflow:hidden}
+    button{font:inherit;color:inherit}
+    .app{height:100dvh;display:grid;grid-template-rows:auto 1fr;background:var(--bg)}
+    .topbar{min-height:62px;padding:8px 9px;display:flex;align-items:center;gap:7px;border-bottom:1px solid var(--line);background:rgba(7,16,28,.97);z-index:10}
+    .brand{display:flex;align-items:center;gap:8px;min-width:0;flex:1}
+    .logo{width:38px;height:38px;flex:0 0 38px;border-radius:11px;display:grid;place-items:center;font-size:12px;font-weight:950;letter-spacing:-1px;background:linear-gradient(135deg,#4bc4ff,#7568ff)}
+    .title{min-width:0}.title strong{display:block;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.title small{display:block;color:var(--muted);font-size:9px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .btn{min-height:40px;border:1px solid var(--line);border-radius:10px;padding:0 11px;background:rgba(255,255,255,.04);font-weight:850;cursor:pointer;white-space:nowrap}
+    .btn.primary{border-color:transparent;background:linear-gradient(135deg,#4dbff5,#7267f5)}
+    .btn.green{border-color:rgba(53,219,138,.25);background:rgba(53,219,138,.10);color:#a9f2cc}
+    .btn:disabled{opacity:.4;cursor:not-allowed}
+    .viewer-wrap{position:relative;min-height:0;background:#111827}
+    #viewer{width:100%;height:100%}
+    .empty{position:absolute;inset:0;z-index:3;display:flex;align-items:center;justify-content:center;padding:18px;background:#081321}
+    .empty-card{width:min(520px,100%);padding:24px 18px;border:1px solid var(--line);border-radius:18px;text-align:center;background:#0b1829;box-shadow:0 24px 70px rgba(0,0,0,.35)}
+    .empty-icon{font-size:46px}.empty h1{margin:9px 0 8px;font-size:22px}.empty p{color:var(--muted);font-size:13px;line-height:1.55;margin:0 0 16px}
+    .pill{display:inline-flex;padding:6px 10px;margin-bottom:10px;border-radius:999px;border:1px solid rgba(53,219,138,.2);background:rgba(53,219,138,.06);color:#9ff1c6;font-size:10px;font-weight:850}
+    .status{position:fixed;z-index:120;left:50%;bottom:calc(14px + var(--safe));transform:translate(-50%,20px);max-width:calc(100vw - 24px);padding:10px 14px;border:1px solid var(--line);border-radius:999px;background:#102034;color:#e2edf7;font-size:11px;opacity:0;pointer-events:none;transition:.2s;text-align:center}.status.show{opacity:1;transform:translate(-50%,0)}
+    .error{display:none;position:absolute;left:10px;right:10px;top:10px;z-index:8;padding:12px;border:1px solid rgba(255,107,122,.28);border-radius:12px;background:rgba(62,14,26,.95);color:#ffc2c9;font-size:11px;line-height:1.5}.error.show{display:block}
+    .modal{position:fixed;inset:0;z-index:150;display:none;align-items:center;justify-content:center;padding:16px;background:rgba(0,0,0,.72)}.modal.show{display:flex}
+    .modal-card{width:min(430px,100%);border:1px solid var(--line);border-radius:17px;background:#0b192b;overflow:hidden}.modal-head{padding:15px;border-bottom:1px solid var(--line)}.modal-body{padding:15px}.modal-body p{color:var(--muted);font-size:12px;line-height:1.55;margin:0 0 13px}.modal-actions{display:grid;gap:8px}.modal-actions a,.modal-actions button{min-height:46px;display:flex;align-items:center;justify-content:center;border:1px solid var(--line);border-radius:10px;background:rgba(255,255,255,.035);color:var(--text);text-decoration:none;font-weight:900}.modal-actions a.primary{border-color:transparent;background:linear-gradient(135deg,#4dbff5,#7267f5)}
+    @media(max-width:720px){.topbar{min-height:58px}.btn{font-size:10px;padding:0 9px;min-height:38px}.title strong{font-size:12px}.title small{display:none}#backBtn{width:38px;padding:0}.logo{width:36px;height:36px;flex-basis:36px}}
+  </style>
+  <script src="https://cdn.cloud.nutrient.io/pspdfkit-web@1.22.0/nutrient-viewer.js"></script>
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <button class="btn" id="backBtn" type="button" onclick="location.href='index.html'" aria-label="Voltar">←</button>
+    <div class="brand">
+      <div class="logo">NB</div>
+      <div class="title"><strong>Editor PDF Real</strong><small id="fileLabel">Nenhum PDF aberto</small></div>
+    </div>
+    <button class="btn" id="openBtn" type="button">Abrir</button>
+    <button class="btn green" id="editBtn" type="button" disabled>Editar</button>
+    <button class="btn primary" id="saveBtn" type="button" disabled>Salvar</button>
+  </header>
+
+  <main class="viewer-wrap">
+    <div class="error" id="errorBox"></div>
+    <div class="empty" id="emptyState">
+      <div class="empty-card">
+        <div class="pill">✓ edição estrutural do PDF</div>
+        <div class="empty-icon">📄</div>
+        <h1>Editar o texto real do PDF</h1>
+        <p>Abra um PDF com texto nativo. Depois toque em <b>Editar</b>, selecione o bloco de texto e altere o próprio conteúdo do documento — sem caixa branca e sem texto colado por cima.</p>
+        <button class="btn primary" id="emptyOpenBtn" type="button">Selecionar PDF</button>
+      </div>
+    </div>
+    <div id="viewer"></div>
+  </main>
+</div>
+
+<input id="fileInput" type="file" accept="application/pdf,.pdf" hidden>
+<div class="status" id="status"></div>
+
+<div class="modal" id="exportModal">
+  <div class="modal-card">
+    <div class="modal-head"><strong>PDF pronto</strong></div>
+    <div class="modal-body">
+      <p>As alterações foram aplicadas ao conteúdo do PDF. Agora baixe ou compartilhe o arquivo.</p>
+      <div class="modal-actions">
+        <a class="primary" id="downloadLink" href="#" download="documento-editado.pdf">⬇ Baixar PDF</a>
+        <button id="shareBtn" type="button" style="display:none">↗ Compartilhar PDF</button>
+        <button id="closeModalBtn" type="button">Fechar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const viewer = $('viewer');
+  const fileInput = $('fileInput');
+  let instance = null;
+  let currentName = 'documento.pdf';
+  let exportedBlob = null;
+  let exportedUrl = null;
+  let exportedFile = null;
+  let timer = null;
+
+  function toast(msg, ms=2500){
+    clearTimeout(timer);
+    $('status').textContent = msg;
+    $('status').classList.add('show');
+    timer = setTimeout(()=>$('status').classList.remove('show'),ms);
+  }
+
+  function error(msg){ $('errorBox').textContent=msg; $('errorBox').classList.add('show'); }
+  function clearError(){ $('errorBox').textContent=''; $('errorBox').classList.remove('show'); }
+  function outName(){ return (currentName||'documento.pdf').replace(/\.pdf$/i,'')+'-editado.pdf'; }
+
+  async function unload(){
+    if(!instance) return;
+    try{ window.NutrientViewer.unload(viewer); }catch(e){ console.warn(e); }
+    instance=null;
+  }
+
+  async function openPdf(file){
+    clearError();
+    if(!file) return;
+    if(file.type && file.type!=='application/pdf'){
+      error('Nesta primeira etapa do editor real, use PDF. Fotos e scans entram na próxima fase.');
+      return;
+    }
+
+    $('openBtn').disabled=true;
+    $('editBtn').disabled=true;
+    $('saveBtn').disabled=true;
+    toast('Abrindo PDF...');
+
+    try{
+      await unload();
+      const buffer = await file.arrayBuffer();
+      currentName = file.name || 'documento.pdf';
+      $('fileLabel').textContent=currentName;
+
+      const defaults = Array.isArray(window.NutrientViewer.defaultToolbarItems)
+        ? window.NutrientViewer.defaultToolbarItems : [];
+      const hasEditor = defaults.some(x=>x && x.type==='content-editor');
+      const toolbarItems = hasEditor ? defaults : [...defaults,{type:'content-editor',dropdownGroup:'editor'}];
+
+      instance = await window.NutrientViewer.load({
+        container: viewer,
+        document: buffer,
+        useCDN: true,
+        toolbarItems
+      });
+
+      $('emptyState').style.display='none';
+      $('editBtn').disabled=false;
+      $('saveBtn').disabled=false;
+      toast('PDF aberto. Toque em Editar.');
+    }catch(e){
+      console.error(e);
+      const m=String(e?.message||e||'Erro desconhecido');
+      if(/license|content editor|component/i.test(m)){
+        error('O motor abriu em modo de teste, mas o componente de edição de conteúdo precisa estar habilitado na licença/trial.');
+      }else{
+        error('Não consegui abrir o PDF: '+m);
+      }
+      toast('Falha ao abrir o PDF.');
+    }finally{
+      $('openBtn').disabled=false;
+    }
+  }
+
+  function enterEditor(){
+    if(!instance) return toast('Abra um PDF primeiro.');
+    clearError();
+    try{
+      instance.setViewState(v=>v.set('interactionMode',window.NutrientViewer.InteractionMode.CONTENT_EDITOR));
+      toast('Modo de edição real ativado.');
+    }catch(e){
+      console.error(e);
+      const m=String(e?.message||e||'');
+      error(/license|component|content/i.test(m)
+        ? 'O PDF abriu, mas o componente Content Editor não está habilitado nesta licença/trial.'
+        : 'Não consegui ativar a edição: '+m);
+    }
+  }
+
+  async function generate(){
+    if(!instance) return toast('Abra um PDF primeiro.');
+    $('saveBtn').disabled=true;
+    clearError();
+    toast('Gerando PDF...');
+    try{
+      let buffer;
+      const dirty = typeof instance.hasUnsavedContentEditingChanges==='function' && instance.hasUnsavedContentEditingChanges();
+      if(dirty && typeof instance.exportContentEditorPDF==='function'){
+        buffer = await instance.exportContentEditorPDF();
+      }else{
+        buffer = await instance.exportPDF();
+      }
+
+      exportedBlob = new Blob([buffer],{type:'application/pdf'});
+      if(exportedUrl) URL.revokeObjectURL(exportedUrl);
+      exportedUrl = URL.createObjectURL(exportedBlob);
+      $('downloadLink').href=exportedUrl;
+      $('downloadLink').download=outName();
+      try{ exportedFile = new File([exportedBlob],outName(),{type:'application/pdf'}); }catch{ exportedFile=null; }
+      const canShare=!!(exportedFile&&navigator.share&&navigator.canShare&&navigator.canShare({files:[exportedFile]}));
+      $('shareBtn').style.display=canShare?'flex':'none';
+      $('exportModal').classList.add('show');
+      toast('PDF pronto.');
+    }catch(e){
+      console.error(e);
+      error('Não consegui salvar o PDF: '+String(e?.message||e||'Erro desconhecido'));
+      toast('Falha ao gerar o PDF.');
+    }finally{
+      $('saveBtn').disabled=false;
+    }
+  }
+
+  $('openBtn').onclick=()=>fileInput.click();
+  $('emptyOpenBtn').onclick=()=>fileInput.click();
+  $('editBtn').onclick=enterEditor;
+  $('saveBtn').onclick=generate;
+  $('closeModalBtn').onclick=()=>$('exportModal').classList.remove('show');
+  $('shareBtn').onclick=async()=>{
+    if(!exportedFile||!navigator.share) return;
+    try{ await navigator.share({files:[exportedFile],title:exportedFile.name}); }catch(e){ if(e?.name!=='AbortError') console.error(e); }
+  };
+  fileInput.onchange=()=>{
+    const f=fileInput.files?.[0];
+    if(f) openPdf(f);
+    fileInput.value='';
+  };
+  window.onbeforeunload=()=>{ if(exportedUrl) URL.revokeObjectURL(exportedUrl); };
+
+  if(!window.NutrientViewer){
+    error('O motor profissional não carregou. Verifique a internet e atualize a página.');
+  }
+})();
+</script>
+</body>
+</html>
