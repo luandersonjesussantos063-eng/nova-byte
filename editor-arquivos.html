@@ -787,7 +787,7 @@ async function buildTransparentOverlay(page,pnum,rot){
   cv.height=Math.max(1,Math.round(vp.height));
   const ctx=cv.getContext('2d');
   ctx.clearRect(0,0,cv.width,cv.height);
-  await paintEditsOnExportCanvas(ctx,cv,pnum,scale);
+  await paintEditsOnExportCanvas(ctx,cv,pnum,scale,{skipOcr:true});
   return {canvas:cv,bytes:await canvasToPngBytes(cv),base};
 }
 
@@ -813,8 +813,9 @@ function drawWrappedText(ctx,text,x,y,maxWidth,fontPx,color='#111111'){
   ctx.restore();
 }
 
-async function paintEditsOnExportCanvas(ctx,canvas,pnum,exportScale){
+async function paintEditsOnExportCanvas(ctx,canvas,pnum,exportScale,opts={}){
   const d=dataFor(pnum),W=canvas.width,H=canvas.height;
+  const skipOcr=!!opts.skipOcr;
 
   // Desenhos e marca-texto.
   for(const st of d.strokes||[]){
@@ -834,6 +835,9 @@ async function paintEditsOnExportCanvas(ctx,canvas,pnum,exportScale){
 
     // OCR/texto nativo não alterado já existe na página original: não redesenha.
     if(it.type==='ocr' && !it.modified && it.source!=='added')continue;
+    // No caminho vetorial de exportação, OCR editado é desenhado direto no PDF
+    // para evitar halos/linhas de transparência do PNG.
+    if(skipOcr && it.type==='ocr')continue;
 
     if(it.type==='cover'){
       ctx.save();ctx.fillStyle='#ffffff';ctx.fillRect(x,y,w,h);ctx.restore();
@@ -884,6 +888,103 @@ async function paintEditsOnExportCanvas(ctx,canvas,pnum,exportScale){
   }
 }
 
+
+function cssColorToPdfRgb(css,fallback=[1,1,1]){
+  try{
+    if(!css)return PDFLib.rgb(...fallback);
+    const s=String(css).trim().toLowerCase();
+    if(s.startsWith('#')){
+      let h=s.slice(1);
+      if(h.length===3)h=h.split('').map(c=>c+c).join('');
+      if(h.length>=6){
+        const r=parseInt(h.slice(0,2),16),g=parseInt(h.slice(2,4),16),b=parseInt(h.slice(4,6),16);
+        if([r,g,b].every(Number.isFinite))return PDFLib.rgb(r/255,g/255,b/255);
+      }
+    }
+    const m=s.match(/rgba?\(\s*([\d.]+)[,\s]+([\d.]+)[,\s]+([\d.]+)/i);
+    if(m){
+      const r=Math.max(0,Math.min(255,+m[1])),g=Math.max(0,Math.min(255,+m[2])),b=Math.max(0,Math.min(255,+m[3]));
+      return PDFLib.rgb(r/255,g/255,b/255);
+    }
+  }catch{}
+  return PDFLib.rgb(...fallback);
+}
+
+function standardFontNameForItem(it){
+  const fam=String(it.fontFamily||'').toLowerCase();
+  const bold=Number(it.fontWeight||400)>=600 || /bold|black|heavy/.test(fam);
+  const italic=String(it.fontStyle||'').toLowerCase().includes('italic') || /italic|oblique/.test(fam);
+  const SF=PDFLib.StandardFonts;
+  if(/courier|mono/.test(fam)){
+    if(bold&&italic)return SF.CourierBoldOblique;
+    if(bold)return SF.CourierBold;
+    if(italic)return SF.CourierOblique;
+    return SF.Courier;
+  }
+  if(/times|serif/.test(fam) && !/sans/.test(fam)){
+    if(bold&&italic)return SF.TimesRomanBoldItalic;
+    if(bold)return SF.TimesRomanBold;
+    if(italic)return SF.TimesRomanItalic;
+    return SF.TimesRoman;
+  }
+  if(bold&&italic)return SF.HelveticaBoldOblique;
+  if(bold)return SF.HelveticaBold;
+  if(italic)return SF.HelveticaOblique;
+  return SF.Helvetica;
+}
+
+async function applyVectorTextEdits(out,pdfPage,pnum,fontCache){
+  const d=dataFor(pnum);
+  const {width:PW,height:PH}=pdfPage.getSize();
+  for(const it of d.items||[]){
+    if(it.type!=='ocr')continue;
+    if(!it.modified && it.source!=='added')continue;
+
+    const x=Math.max(0,it.x*PW);
+    const topY=Math.max(0,it.y*PH);
+    const boxH=Math.max(.5,it.h*PH);
+    const eraseW=Math.max(.5,(it.baseW||it.w)*PW);
+
+    // Apaga o conteúdo antigo diretamente no espaço vetorial do PDF.
+    // Um micro-overlap de 0,18 pt evita restos de antialiasing do texto original,
+    // sem criar a borda/halo que aparecia no PNG transparente.
+    if(it.source!=='added'){
+      const bleed=.18;
+      const rx=Math.max(0,x-bleed);
+      const ry=Math.max(0,PH-topY-boxH-bleed);
+      const rw=Math.min(PW-rx,eraseW+bleed*2);
+      const rh=Math.min(PH-ry,boxH+bleed*2);
+      pdfPage.drawRectangle({
+        x:rx,y:ry,width:Math.max(.1,rw),height:Math.max(.1,rh),
+        color:cssColorToPdfRgb(it.editBg||'#ffffff',[1,1,1]),
+        borderWidth:0,
+        opacity:1
+      });
+    }
+
+    const txt=String(it.text||'');
+    if(!txt)continue;
+    const fontName=standardFontNameForItem(it);
+    let font=fontCache.get(fontName);
+    if(!font){font=await out.embedFont(fontName);fontCache.set(fontName,font);}
+    const size=Math.max(4,Number(it.font||10));
+    const color=cssColorToPdfRgb(it.editFg||it.color||'#111111',[.07,.07,.07]);
+    // PDF-Lib posiciona texto a partir da linha de base. Convertemos do sistema
+    // top-left do editor para bottom-left do PDF.
+    const baselineY=Math.max(0,PH-topY-size*.86);
+    const spacing=Number(it.letterSpacing||0);
+    if(Math.abs(spacing)>.05 && txt.length>1){
+      let cx=x;
+      for(const ch of txt){
+        pdfPage.drawText(ch,{x:cx,y:baselineY,size,font,color});
+        cx+=font.widthOfTextAtSize(ch,size)+spacing;
+      }
+    }else{
+      pdfPage.drawText(txt,{x,y:baselineY,size,font,color});
+    }
+  }
+}
+
 async function exportPDF(){
   if(!pdfDoc||!pageOrder.length)return toast('Abra um arquivo primeiro.');
   activeInlineEditId=null; inlineBlurGuardUntil=0;
@@ -892,6 +993,7 @@ async function exportPDF(){
 
   try{
     const out=await PDFDocument.create();
+    const vectorFontCache=new Map();
     let sourceDoc=null;
     try{
       sourceDoc=await PDFDocument.load(originalBytes,{ignoreEncryption:true});
@@ -911,6 +1013,8 @@ async function exportPDF(){
         out.addPage(copiedPage);
 
         if(pageHasExportEdits(pnum)){
+          // Elementos gráficos continuam no overlay transparente, mas textos OCR
+          // editados ficam de fora dele para não gerar a linha fina na exportação.
           const overlay=await buildTransparentOverlay(page,pnum,0);
           if(overlay){
             const png=await out.embedPng(overlay.bytes);
@@ -918,6 +1022,7 @@ async function exportPDF(){
             copiedPage.drawImage(png,{x:0,y:0,width:size.width,height:size.height});
             overlay.canvas.width=1;overlay.canvas.height=1;
           }
+          await applyVectorTextEdits(out,copiedPage,pnum,vectorFontCache);
         }
       }else{
         // Fallback para páginas giradas ou PDFs que o PDF-Lib não consegue copiar.
