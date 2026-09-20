@@ -1186,8 +1186,8 @@
     </div>
 
     <div class="tools-toolbar">
-      <button class="tools-highlight-btn" onclick="openTool('salario-liquido')">
-        💵 Abrir salário líquido
+      <button class="tools-highlight-btn" onclick="openTool('editor-arquivos')">
+        📄 Abrir Editor PDF
       </button>
 
       <button
@@ -1400,7 +1400,6 @@ const tools = [
     cat:'Dinheiro',
     desc:'Estime INSS, IRRF e o valor líquido mensal usando as tabelas de 2026.',
     tag:'Dinheiro',
-    featured:true,
     open: openSalarioLiquido
   },
   {
@@ -1423,11 +1422,12 @@ const tools = [
   },
   {
     id:'editor-arquivos',
-    title:'Editor de arquivos',
+    title:'Editor PDF',
     icon:'📄',
     cat:'Utilidades',
     desc:'Edite PDF, imagens e documentos digitalizados direto pelo celular.',
     tag:'Novo',
+    featured:true,
     open: openEditorArquivos
   },
   {
@@ -1465,7 +1465,7 @@ function renderTools(){
     const catOk = currentCategory === 'Todos' ||
       (currentCategory === 'Favoritos' ? favorites.includes(t.id) : t.cat === currentCategory);
     const textOk = !q || (t.title + ' ' + t.desc + ' ' + t.cat).toLowerCase().includes(q);
-    return catOk && textOk;
+    return catOk && textOk && (q || currentCategory !== 'Todos' || t.id === 'editor-arquivos');
   });
 
   document.getElementById('countTools').textContent =
@@ -1476,8 +1476,8 @@ function renderTools(){
     return;
   }
 
-  const mobileMainId = filtered.some(t => t.id === 'salario-liquido')
-    ? 'salario-liquido'
+  const mobileMainId = filtered.some(t => t.id === 'editor-arquivos')
+    ? 'editor-arquivos'
     : filtered[0].id;
 
   grid.innerHTML = filtered.map(t => `
