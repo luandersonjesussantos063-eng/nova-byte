@@ -1,0 +1,2675 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#07111f" />
+  <title>Ferramentas gratuitas | Nova-byte Tecnologia</title>
+
+  <meta name="description" content="Edite textos de PDFs sem marca d’água e use ferramentas gratuitas para escalas de trabalho, férias, salário, estudos e muito mais." />
+
+  <meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1" />
+  <meta name="googlebot" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1" />
+  <meta name="author" content="NovaByte Soluções" />
+  <meta name="application-name" content="NovaByte Tools" />
+
+  <link rel="canonical" href="https://novabytesolucoes.com.br/ferramentas.html" />
+  <link rel="alternate" hreflang="pt-BR" href="https://novabytesolucoes.com.br/ferramentas.html" />
+  <link rel="alternate" hreflang="x-default" href="https://novabytesolucoes.com.br/ferramentas.html" />
+
+  <meta property="og:type" content="website" />
+  <meta property="og:locale" content="pt_BR" />
+  <meta property="og:site_name" content="NovaByte Tools" />
+  <meta property="og:title" content="NovaByte Tools | Editor PDF e ferramentas gratuitas" />
+  <meta property="og:description" content="Editor PDF sem marca d’água e ferramentas práticas para o seu dia a dia." />
+  <meta property="og:url" content="https://novabytesolucoes.com.br/ferramentas.html" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="NovaByte Tools | Editor PDF e ferramentas gratuitas" />
+  <meta name="twitter:description" content="Editor PDF e calculadoras gratuitas para resolver tarefas do dia a dia." />
+
+  <script type="application/ld+json">{"@context": "https://schema.org", "@graph": [{"@type": "WebSite", "@id": "https://novabytesolucoes.com.br/#website", "url": "https://novabytesolucoes.com.br/", "name": "Nova-byte Tecnologia", "alternateName": "NovaByte Soluções", "description": "Portal de calculadoras e ferramentas online gratuitas.", "inLanguage": "pt-BR", "publisher": {"@id": "https://novabytesolucoes.com.br/#organization"}}, {"@type": "Organization", "@id": "https://novabytesolucoes.com.br/#organization", "name": "NovaByte Soluções", "url": "https://novabytesolucoes.com.br/"}, {"@type": "WebApplication", "@id": "https://novabytesolucoes.com.br/ferramentas.html#app", "name": "NovaByte Tools", "url": "https://novabytesolucoes.com.br/ferramentas.html", "applicationCategory": "UtilitiesApplication", "operatingSystem": "All", "browserRequirements": "JavaScript", "isAccessibleForFree": true, "inLanguage": "pt-BR", "description": "Ferramentas online gratuitas para calcular escalas de trabalho, rescisão trabalhista, adicional noturno, periculosidade, custos de viagem, estudos e outras situações do dia a dia.", "offers": {"@type": "Offer", "price": "0", "priceCurrency": "BRL"}, "featureList": ["Calculadora de escala 12x36", "Calculadora de escala 24x48", "Calculadora de escala 24x72", "Calculadora de escala 6x1", "Calculadora de escala 5x2", "Calculadora de escala 4x2", "Calculadora de escala 2x2", "Calculadora de escala 4x1", "Escala personalizada", "Calculadora de rescisão trabalhista", "Calculadora de adicional noturno", "Calculadora de periculosidade", "Calculadora de custo de viagem", "Calculadora de percentual de acertos"], "publisher": {"@id": "https://novabytesolucoes.com.br/#organization"}}]}</script>
+  <style>
+    :root{
+      --bg:#08111f;
+      --bg-soft:#0b1627;
+      --surface:#0d1a2d;
+      --surface-2:#101f35;
+      --surface-3:#142640;
+      --text:#f5f8fc;
+      --muted:#8ea1b8;
+      --line:rgba(255,255,255,.08);
+      --line-strong:rgba(255,255,255,.13);
+      --brand:#58c7ff;
+      --brand-2:#7a6cff;
+      --success:#45d49a;
+      --shadow:0 24px 70px rgba(0,0,0,.28);
+      --radius:18px;
+      --wrap:min(1180px,92%);
+    }
+
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{
+      margin:0;
+      min-height:100vh;
+      font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+      color:var(--text);
+      background:
+        radial-gradient(circle at 20% -10%, rgba(88,199,255,.10), transparent 28%),
+        radial-gradient(circle at 86% 4%, rgba(122,108,255,.08), transparent 25%),
+        linear-gradient(180deg,#07101c 0%,#091423 45%,#08111f 100%);
+      -webkit-font-smoothing:antialiased;
+      text-rendering:optimizeLegibility;
+    }
+
+    button,input,select{font:inherit}
+    button{color:inherit}
+    a{color:inherit;text-decoration:none}
+    .wrap{width:var(--wrap);margin:auto}
+
+    header{
+      position:sticky;
+      top:0;
+      z-index:50;
+      background:rgba(7,16,28,.82);
+      border-bottom:1px solid var(--line);
+      backdrop-filter:blur(18px);
+    }
+    .nav{
+      min-height:70px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:18px;
+    }
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      font-weight:800;
+      letter-spacing:-.2px;
+      white-space:nowrap;
+    }
+    .logo{
+      width:42px;
+      height:42px;
+      border-radius:13px;
+      display:grid;
+      place-items:center;
+      position:relative;
+      overflow:hidden;
+      isolation:isolate;
+      border:1px solid rgba(112,216,255,.32);
+      background:linear-gradient(135deg,#58c7ff 0%,#7063f6 58%,#9a68ff 100%);
+      box-shadow:0 10px 30px rgba(88,199,255,.20),inset 0 1px 0 rgba(255,255,255,.22);
+    }
+    .logo::before{
+      content:"";
+      position:absolute;
+      inset:2px;
+      border-radius:11px;
+      background:
+        radial-gradient(circle at 22% 24%,rgba(88,199,255,.20),transparent 32%),
+        linear-gradient(145deg,#10263b,#0a1424 70%);
+      z-index:-1;
+    }
+    .logo::after{
+      content:"NB";
+      font-size:15px;
+      line-height:1;
+      font-weight:950;
+      letter-spacing:-1.6px;
+      background:linear-gradient(90deg,#ffffff 0%,#7de1ff 48%,#a99cff 100%);
+      -webkit-background-clip:text;
+      background-clip:text;
+      color:transparent;
+      text-shadow:0 0 20px rgba(88,199,255,.16);
+    }
+    .brand span{color:#73d8ff}
+    .nav-actions{
+      display:flex;
+      align-items:center;
+      gap:6px;
+    }
+    .ghost,.primary{
+      min-height:42px;
+      padding:0 15px;
+      border-radius:11px;
+      border:1px solid transparent;
+      cursor:pointer;
+      transition:.2s ease;
+    }
+    .ghost{
+      background:transparent;
+      color:#c8d4e2;
+    }
+    .ghost:hover{
+      background:rgba(255,255,255,.045);
+      border-color:var(--line);
+      color:white;
+    }
+    .primary{
+      border:1px solid rgba(88,199,255,.18);
+      background:linear-gradient(135deg,#4abdf4,#7063f6);
+      font-weight:750;
+      box-shadow:0 8px 24px rgba(88,199,255,.14);
+    }
+    .primary:hover{transform:translateY(-1px);filter:brightness(1.05)}
+
+    .hero{
+      padding:74px 0 34px;
+      text-align:center;
+      position:relative;
+    }
+    .hero::before{
+      content:"";
+      position:absolute;
+      inset:10px 20% auto;
+      height:330px;
+      background:radial-gradient(circle,rgba(88,199,255,.07),transparent 67%);
+      pointer-events:none;
+      filter:blur(16px);
+    }
+    .badge{
+      position:relative;
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:7px 11px;
+      border-radius:999px;
+      border:1px solid rgba(88,199,255,.18);
+      background:rgba(88,199,255,.055);
+      color:#bfeeff;
+      font-size:13px;
+      font-weight:650;
+    }
+    h1{
+      position:relative;
+      max-width:900px;
+      margin:18px auto 13px;
+      font-size:clamp(42px,5.8vw,72px);
+      line-height:1.02;
+      letter-spacing:-2.4px;
+      font-weight:850;
+    }
+    .gradient{
+      background:linear-gradient(90deg,#6edcff,#8a7aff);
+      -webkit-background-clip:text;
+      background-clip:text;
+      color:transparent;
+    }
+    .hero p{
+      position:relative;
+      max-width:700px;
+      margin:0 auto;
+      color:var(--muted);
+      font-size:17px;
+      line-height:1.65;
+    }
+
+    .searchbox{
+      position:relative;
+      max-width:760px;
+      margin:28px auto 0;
+      display:flex;
+      align-items:center;
+      gap:8px;
+      padding:7px;
+      background:rgba(15,31,53,.82);
+      border:1px solid var(--line-strong);
+      border-radius:14px;
+      box-shadow:0 18px 54px rgba(0,0,0,.20);
+    }
+    .searchbox::before{
+      content:"⌕";
+      font-size:23px;
+      color:#7f94aa;
+      margin-left:10px;
+      transform:rotate(-15deg);
+    }
+    .searchbox input{
+      flex:1;
+      min-width:0;
+      border:none;
+      outline:none;
+      background:transparent;
+      color:white;
+      padding:13px 8px;
+      font-size:15px;
+    }
+    .searchbox input::placeholder{color:#708399}
+    .searchbox button{min-width:110px}
+
+    .quick{
+      display:none;
+    }
+    .hero-stats{
+      position:relative;
+      display:flex;
+      justify-content:center;
+      gap:22px;
+      flex-wrap:wrap;
+      margin:18px auto 0;
+      color:#8fa4bb;
+      font-size:13px;
+    }
+    .hero-stat{
+      display:flex;
+      align-items:center;
+      gap:6px;
+      padding:0;
+      border:none;
+      background:none;
+    }
+    .hero-stat strong{color:#e9f0f7;font-weight:700}
+
+    .section{padding:40px 0}
+    .section-head{
+      display:flex;
+      align-items:end;
+      justify-content:space-between;
+      gap:16px;
+      margin-bottom:20px;
+    }
+    .section-head h2{
+      margin:0;
+      font-size:28px;
+      letter-spacing:-.7px;
+    }
+    .section-head p{
+      margin:6px 0 0;
+      color:var(--muted);
+      font-size:14px;
+    }
+    #countTools{font-size:13px;color:#6f8398}
+
+    .tools-toolbar{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-bottom:14px;
+    }
+    .tools-highlight-btn,
+    .tools-menu-btn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+      min-height:44px;
+      border-radius:12px;
+      padding:0 16px;
+      font-size:13px;
+      font-weight:800;
+      cursor:pointer;
+      transition:.18s ease;
+    }
+    .tools-highlight-btn{
+      border:1px solid rgba(88,199,255,.26);
+      background:linear-gradient(135deg,rgba(88,199,255,.16),rgba(88,199,255,.07));
+      color:#dff6ff;
+    }
+    .tools-menu-btn{
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.025);
+      color:#b7c8d8;
+    }
+    .tools-highlight-btn:hover,
+    .tools-menu-btn:hover{
+      transform:translateY(-1px);
+      filter:brightness(1.06);
+    }
+    .tools-menu-btn::after{
+      content:'▾';
+      font-size:11px;
+      transition:transform .18s ease;
+    }
+    .tools-menu-btn.open::after{
+      transform:rotate(180deg);
+    }
+
+    .tools-filter-panel{
+      display:none;
+      margin-bottom:16px;
+      padding:16px;
+      border:1px solid var(--line);
+      border-radius:16px;
+      background:rgba(11,24,41,.82);
+    }
+    .tools-filter-panel.show{display:block}
+    .tools-filter-group + .tools-filter-group{
+      margin-top:14px;
+      padding-top:14px;
+      border-top:1px solid rgba(255,255,255,.06);
+    }
+    .tools-filter-title{
+      margin-bottom:10px;
+      color:#7f93aa;
+      font-size:11px;
+      font-weight:800;
+      letter-spacing:.8px;
+      text-transform:uppercase;
+    }
+
+    .popular-bar{
+      display:flex;
+      align-items:center;
+      gap:7px;
+      flex-wrap:wrap;
+      margin-bottom:0;
+    }
+    .popular-label{
+      font-size:12px;
+      font-weight:750;
+      text-transform:uppercase;
+      letter-spacing:.7px;
+      color:#677b91;
+      margin-right:4px;
+    }
+    .popular-chip{
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.025);
+      color:#a9bacd;
+      border-radius:999px;
+      padding:8px 12px;
+      cursor:pointer;
+      transition:.18s ease;
+      font-size:13px;
+    }
+    .popular-chip:hover{
+      color:white;
+      background:rgba(255,255,255,.05);
+      border-color:var(--line-strong);
+    }
+
+    .tabs{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      flex-wrap:wrap;
+      overflow:visible;
+      padding:0;
+      margin-bottom:0;
+      scrollbar-width:none;
+    }
+    .tabs::-webkit-scrollbar{display:none}
+    .tab{
+      flex:0 0 auto;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.025);
+      color:#7f93aa;
+      padding:9px 13px;
+      cursor:pointer;
+      border-radius:999px;
+      font-size:13px;
+      font-weight:700;
+      transition:.18s;
+    }
+    .tab:hover{color:#c9d6e4;border-color:var(--line-strong)}
+    .tab.active{
+      color:white;
+      border-color:#63ccff;
+      background:rgba(88,199,255,.1);
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns:repeat(3,minmax(0,1fr));
+      gap:12px;
+    }
+    .tool-card{
+      position:relative;
+      min-height:184px;
+      padding:19px;
+      border-radius:16px;
+      border:1px solid var(--line);
+      background:rgba(13,26,45,.68);
+      box-shadow:none;
+      display:flex;
+      flex-direction:column;
+      overflow:hidden;
+      transition:.2s ease;
+    }
+    .tool-card::after{display:none}
+    .tool-card:hover{
+      transform:translateY(-2px);
+      border-color:rgba(88,199,255,.22);
+      background:rgba(16,31,53,.88);
+      box-shadow:0 16px 42px rgba(0,0,0,.14);
+    }
+    .tool-card.featured{
+      border-color:rgba(88,199,255,.16);
+      background:
+        linear-gradient(180deg,rgba(88,199,255,.045),rgba(13,26,45,.74));
+    }
+    .tool-card.featured::before{
+      content:"Novo";
+      position:absolute;
+      top:17px;
+      right:49px;
+      padding:3px 7px;
+      border-radius:999px;
+      background:rgba(88,199,255,.10);
+      border:1px solid rgba(88,199,255,.16);
+      color:#96e2ff;
+      font-size:10px;
+      font-weight:800;
+      letter-spacing:.2px;
+    }
+
+    .tool-top{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+    }
+    .icon{
+      width:38px;
+      height:38px;
+      display:grid;
+      place-items:center;
+      border-radius:11px;
+      background:rgba(255,255,255,.045);
+      border:1px solid var(--line);
+      color:#a9ddff;
+      font-size:19px;
+      position:relative;
+    }
+    .icon::before{display:none}
+    .fav{
+      width:34px;
+      height:34px;
+      border:0;
+      border-radius:9px;
+      background:transparent;
+      color:#5d7188;
+      cursor:pointer;
+      font-size:18px;
+      transition:.18s;
+    }
+    .fav:hover{background:rgba(255,255,255,.04);color:#9cafc2}
+    .fav.on{color:#f6c868}
+
+    .tool-card h3{
+      margin:15px 0 7px;
+      font-size:17px;
+      letter-spacing:-.2px;
+    }
+    .tool-card p{
+      margin:0;
+      color:#8296ad;
+      line-height:1.52;
+      font-size:13.5px;
+      flex:1;
+      max-width:95%;
+    }
+    .card-actions{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      margin-top:17px;
+    }
+    .tag{
+      padding:0;
+      background:none;
+      color:#63778e;
+      font-size:11.5px;
+    }
+    .open-tool{
+      border:0;
+      background:transparent;
+      color:#83dcff;
+      padding:6px 0;
+      cursor:pointer;
+      font-size:13px;
+      font-weight:750;
+      box-shadow:none;
+    }
+    .open-tool::after{content:"  →"}
+    .open-tool:hover{transform:none;filter:none;color:#b1ebff}
+
+    .ad{
+      margin:26px 0 0;
+      padding:18px;
+      border-radius:14px;
+      border:1px dashed rgba(255,255,255,.11);
+      background:rgba(255,255,255,.018);
+      text-align:center;
+      color:#687c91;
+      font-size:13px;
+    }
+    .ad strong{color:#9cafc1;font-weight:650}
+
+    /* Anúncio direto - Gilberto Araujo Advogado */
+    .partner-ad{
+      margin:26px 0 0;
+      padding:18px;
+      border:1px solid rgba(88,199,255,.18);
+      border-radius:16px;
+      background:linear-gradient(135deg,rgba(88,199,255,.08),rgba(255,255,255,.025));
+    }
+    .partner-ad-label{
+      margin-bottom:12px;
+      color:#60758c;
+      font-size:9px;
+      font-weight:800;
+      letter-spacing:1.5px;
+    }
+    .partner-ad-content{
+      display:flex;
+      align-items:center;
+      gap:16px;
+    }
+    .partner-ad-logo{
+      display:flex;
+      width:64px;
+      height:64px;
+      min-width:64px;
+      align-items:center;
+      justify-content:center;
+      border:1px solid rgba(88,199,255,.18);
+      border-radius:15px;
+      background:#09192b;
+      font-size:30px;
+    }
+    .partner-ad-text{flex:1}
+    .partner-ad-text strong{
+      display:block;
+      margin-bottom:3px;
+      color:#eef7ff;
+      font-size:17px;
+    }
+    .partner-ad-oab{
+      display:block;
+      margin-bottom:8px;
+      color:#58c7ff;
+      font-size:11px;
+      font-weight:700;
+    }
+    .partner-ad-text p{
+      margin:0 0 5px;
+      color:#91a5b9;
+      font-size:12.5px;
+      line-height:1.5;
+    }
+    .partner-ad-text small{
+      color:#6f849a;
+      font-size:10.5px;
+    }
+    .partner-ad-actions{
+      display:flex;
+      flex-direction:column;
+      gap:7px;
+      min-width:175px;
+    }
+    .partner-ad-btn,.partner-ad-site{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:10px 14px;
+      border-radius:10px;
+      text-decoration:none;
+      font-size:11.5px;
+      font-weight:800;
+    }
+    .partner-ad-btn{background:#25D366;color:#06150b}
+    .partner-ad-site{
+      border:1px solid rgba(88,199,255,.22);
+      background:rgba(88,199,255,.06);
+      color:#bfeaff;
+    }
+    .partner-ad-btn:hover,.partner-ad-site:hover{filter:brightness(1.1)}
+    @media(max-width:700px){
+      .partner-ad-content{align-items:flex-start;flex-wrap:wrap}
+      .partner-ad-text{min-width:calc(100% - 85px)}
+      .partner-ad-actions{width:100%}
+    }
+
+    .coming{
+      opacity:.55;
+      min-height:145px;
+    }
+    .coming .icon{opacity:.65}
+
+    .business-box{
+      position:relative;
+      overflow:hidden;
+      padding:34px;
+      border-radius:20px;
+      background:
+        radial-gradient(circle at 95% 5%,rgba(122,108,255,.12),transparent 32%),
+        rgba(13,26,45,.75);
+      border:1px solid var(--line);
+      box-shadow:none;
+    }
+    .business-box h2{
+      max-width:720px;
+      margin:12px 0 10px;
+      font-size:clamp(28px,4vw,43px);
+      letter-spacing:-1.3px;
+      line-height:1.08;
+    }
+    .business-box>p{
+      max-width:760px;
+      margin:0;
+      color:var(--muted);
+      line-height:1.65;
+      font-size:15px;
+    }
+    .service-grid{
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      gap:10px;
+      margin-top:24px;
+    }
+    .service{
+      padding:17px;
+      border-radius:14px;
+      background:rgba(255,255,255,.022);
+      border:1px solid var(--line);
+    }
+    .service .icon{margin-bottom:12px}
+    .service b{display:block;margin:0 0 6px;font-size:14px}
+    .service p{
+      margin:0;
+      color:#7f93aa;
+      font-size:12.5px;
+      line-height:1.5;
+    }
+    .business-actions{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      margin-top:22px;
+    }
+    .notice{
+      margin-top:18px;
+      padding-top:15px;
+      border-top:1px solid var(--line);
+      color:#65798f;
+      font-size:12px;
+      line-height:1.55;
+      background:none;
+      border-radius:0;
+    }
+
+    footer{
+      margin-top:40px;
+      padding:28px 0 42px;
+      border-top:1px solid var(--line);
+      color:#64788e;
+      font-size:12.5px;
+    }
+    .footer-row{
+      display:flex;
+      justify-content:space-between;
+      gap:16px;
+      flex-wrap:wrap;
+    }
+
+    .modal{
+      position:fixed;
+      inset:0;
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding:18px;
+      background:rgba(2,8,16,.74);
+      backdrop-filter:blur(10px);
+      z-index:100;
+    }
+    .modal.show{display:flex}
+    .modal-card{
+      width:min(740px,100%);
+      max-height:88vh;
+      overflow:auto;
+      background:#0d1b2f;
+      border:1px solid var(--line-strong);
+      border-radius:19px;
+      box-shadow:0 30px 90px rgba(0,0,0,.45);
+    }
+    .modal-head{
+      position:sticky;
+      top:0;
+      z-index:2;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:16px;
+      padding:20px 22px 14px;
+      background:rgba(13,27,47,.96);
+      border-bottom:1px solid var(--line);
+      backdrop-filter:blur(12px);
+    }
+    .modal-head h3{
+      margin:0;
+      font-size:18px;
+      letter-spacing:-.3px;
+    }
+    .close{
+      width:36px;
+      height:36px;
+      border:0;
+      border-radius:10px;
+      background:rgba(255,255,255,.045);
+      color:#93a7bd;
+      font-size:20px;
+      cursor:pointer;
+    }
+    .close:hover{background:rgba(255,255,255,.07);color:white}
+    .modal-body{padding:20px 22px 24px}
+
+    .form-grid{
+      display:grid;
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:13px;
+    }
+    label{
+      display:block;
+      margin-bottom:7px;
+      color:#9eb1c6;
+      font-size:12.5px;
+      font-weight:650;
+    }
+    input,select{
+      width:100%;
+      min-height:44px;
+      border:1px solid var(--line);
+      border-radius:11px;
+      outline:none;
+      background:#10213a;
+      color:white;
+      padding:10px 12px;
+    }
+    input:focus,select:focus{border-color:rgba(88,199,255,.42)}
+    .calc-btn{
+      width:100%;
+      min-height:46px;
+      margin-top:15px;
+      border:0;
+      border-radius:11px;
+      background:linear-gradient(135deg,#4abdf4,#7063f6);
+      color:white;
+      cursor:pointer;
+      font-weight:800;
+    }
+    .result{
+      display:none;
+      margin-top:16px;
+      padding:16px;
+      border-radius:13px;
+      background:rgba(69,212,154,.055);
+      border:1px solid rgba(69,212,154,.14);
+    }
+    .result.show{display:block}
+    .result .big{
+      margin:4px 0;
+      font-size:28px;
+      font-weight:850;
+      letter-spacing:-.5px;
+    }
+    .muted{
+      color:#7f93aa;
+      font-size:12.5px;
+      line-height:1.55;
+    }
+    .result-grid{
+      display:grid;
+      grid-template-columns:repeat(2,1fr);
+      gap:8px;
+      margin-top:10px;
+    }
+    .result-item{
+      padding:11px;
+      border-radius:10px;
+      background:rgba(255,255,255,.025);
+      border:1px solid var(--line);
+    }
+    .result-item small{
+      display:block;
+      color:#6e8298;
+      margin-bottom:4px;
+      font-size:11px;
+    }
+    .result-item b{font-size:15px}
+    .total-box{
+      margin-top:10px;
+      padding:14px;
+      border-radius:11px;
+      background:rgba(88,199,255,.055);
+      border:1px solid rgba(88,199,255,.14);
+    }
+    .source-links{
+      margin-top:13px;
+      color:#60748a;
+      font-size:11px;
+    }
+    .source-links a{color:#74d8ff;text-decoration:none}
+    .source-links a:hover{text-decoration:underline}
+
+    .calendar{
+      display:grid;
+      grid-template-columns:repeat(7,1fr);
+      gap:5px;
+      margin-top:13px;
+    }
+    .day{
+      padding:9px 3px;
+      text-align:center;
+      border-radius:8px;
+      background:rgba(255,255,255,.025);
+      border:1px solid transparent;
+      font-size:12px;
+    }
+    .day.work{
+      background:rgba(88,199,255,.09);
+      border-color:rgba(88,199,255,.15);
+      color:#bfeeff;
+    }
+    .day.empty{background:transparent}
+    .weekday{
+      padding:4px 0;
+      text-align:center;
+      color:#61758a;
+      font-size:10px;
+      text-transform:uppercase;
+    }
+
+    .hidden{display:none!important}
+    .empty-state{
+      grid-column:1/-1;
+      padding:34px;
+      border:1px dashed var(--line);
+      border-radius:14px;
+      text-align:center;
+      color:#70849a;
+      font-size:13px;
+    }
+
+    @media(max-width:900px){
+      .grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+      .service-grid{grid-template-columns:repeat(2,1fr)}
+      .hero{padding-top:54px}
+    }
+    @media(max-width:620px){
+      .nav{min-height:64px}
+      .nav-actions .ghost{display:none}
+      .hero{padding:46px 0 24px}
+      h1{font-size:42px;letter-spacing:-1.7px}
+      .hero p{font-size:15px}
+      .searchbox{
+        margin-top:22px;
+        padding:6px;
+      }
+      .searchbox button{min-width:90px;padding:0 12px}
+      .hero-stats{gap:12px;font-size:12px}
+      .section{padding:30px 0}
+      .section-head h2{font-size:24px}
+      .grid{grid-template-columns:1fr}
+      .service-grid{grid-template-columns:1fr}
+      .tool-card{min-height:170px}
+      .form-grid,.result-grid{grid-template-columns:1fr}
+      .business-box{padding:24px}
+      .modal{padding:10px}
+      .modal-card{border-radius:15px}
+      .modal-head,.modal-body{padding-left:16px;padding-right:16px}
+      .tools-toolbar{flex-direction:column;align-items:stretch}
+      .tools-highlight-btn,.tools-menu-btn{width:100%}
+      .popular-bar{gap:5px}
+      .popular-label{width:100%;margin-bottom:3px}
+    }
+  
+    .inline-actions{
+      display:flex;gap:8px;flex-wrap:wrap;margin-top:10px
+    }
+    .secondary-btn{
+      min-height:40px;border:1px solid var(--line);background:rgba(255,255,255,.035);
+      color:#c6d4e3;border-radius:10px;padding:0 13px;cursor:pointer;font-weight:700
+    }
+    .secondary-btn:hover{background:rgba(255,255,255,.06);color:white}
+    .password-output{
+      margin-top:14px;padding:14px;border-radius:12px;background:#09172a;border:1px solid var(--line);
+      font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:16px;word-break:break-all;
+      color:#dff7ff
+    }
+    .check-row{
+      display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:10px
+    }
+    .check{
+      display:flex;align-items:center;gap:9px;padding:10px 11px;border:1px solid var(--line);
+      border-radius:10px;background:rgba(255,255,255,.025);color:#9fb2c7;font-size:13px
+    }
+    .check input{width:auto;min-height:auto;accent-color:#58c7ff}
+    .qr-wrap{
+      margin-top:15px;display:none;text-align:center;padding:18px;border-radius:13px;
+      background:white
+    }
+    .qr-wrap.show{display:block}
+    .qr-wrap img{max-width:230px;width:100%;height:auto;display:block;margin:auto}
+    .range-line{display:flex;gap:10px;align-items:center}
+    .range-line input[type="range"]{padding:0;background:transparent;border:none}
+    @media(max-width:620px){.check-row{grid-template-columns:1fr}}
+
+  
+    .res-section{
+      margin-top:16px;padding:15px;border:1px solid var(--line);border-radius:13px;
+      background:rgba(255,255,255,.018)
+    }
+    .res-section:first-child{margin-top:0}
+    .res-section-title{
+      display:flex;align-items:center;justify-content:space-between;gap:10px;
+      margin:0 0 13px;font-size:13px;font-weight:800;color:#dce8f5
+    }
+    .res-section-title span{
+      font-size:10px;font-weight:700;color:#6f849a;text-transform:uppercase;letter-spacing:.7px
+    }
+    .res-summary{
+      margin-top:14px;display:grid;grid-template-columns:repeat(3,1fr);gap:8px
+    }
+    .res-summary-item{
+      padding:11px;border:1px solid var(--line);border-radius:10px;background:rgba(255,255,255,.025)
+    }
+    .res-summary-item small{display:block;color:#6e8298;font-size:10.5px;margin-bottom:4px}
+    .res-summary-item b{font-size:14px}
+    .memory-title{
+      margin:18px 0 8px;font-size:13px;font-weight:850;color:#dce8f5
+    }
+    .memory-row{
+      display:flex;justify-content:space-between;gap:14px;padding:8px 0;
+      border-bottom:1px solid rgba(255,255,255,.055);font-size:12.5px
+    }
+    .memory-row:last-child{border-bottom:0}
+    .memory-row span:first-child{color:#8296ad}
+    .memory-row b{text-align:right;color:#e7eef7}
+    .memory-row.discount b{color:#ffb4b4}
+    .memory-row.credit b{color:#b9f4d8}
+    .res-alert{
+      padding:11px 12px;margin-top:12px;border-radius:10px;
+      border:1px solid rgba(88,199,255,.14);background:rgba(88,199,255,.045);
+      color:#8fa7bd;font-size:11.5px;line-height:1.5
+    }
+    @media(max-width:620px){
+      .res-summary{grid-template-columns:1fr}
+    }
+
+  
+    .scale-presets{
+      display:flex;gap:7px;flex-wrap:wrap;margin:10px 0 0
+    }
+    .scale-preset{
+      border:1px solid var(--line);background:rgba(255,255,255,.025);
+      color:#9eb1c6;border-radius:9px;padding:7px 10px;cursor:pointer;font-size:12px
+    }
+    .scale-preset:hover{background:rgba(255,255,255,.05);color:white}
+    .scale-legend{
+      display:flex;gap:12px;flex-wrap:wrap;margin-top:12px;color:#7f93aa;font-size:11.5px
+    }
+    .scale-dot{
+      width:9px;height:9px;border-radius:50%;display:inline-block;margin-right:5px
+    }
+    .scale-dot.work{background:#58c7ff}
+    .scale-dot.off{background:#3b4a5e}
+    .day.off{
+      background:rgba(255,255,255,.018);
+      color:#64788e
+    }
+    .day .mini{
+      display:block;margin-top:3px;font-size:9px;opacity:.8
+    }
+    .scale-summary{
+      display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px
+    }
+    .scale-summary > div{
+      padding:11px;border:1px solid var(--line);border-radius:10px;
+      background:rgba(255,255,255,.025)
+    }
+    .scale-summary small{display:block;color:#6f8298;font-size:10px;margin-bottom:4px}
+    .scale-summary b{font-size:14px}
+    @media(max-width:620px){
+      .scale-summary{grid-template-columns:1fr}
+    }
+
+    .service-mini-list{
+      display:grid;
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:8px;
+    }
+    .service-mini-btn{
+      display:flex;
+      flex-direction:column;
+      align-items:flex-start;
+      justify-content:center;
+      gap:4px;
+      min-height:62px;
+      padding:12px;
+      border:1px solid rgba(255,255,255,.08);
+      border-radius:12px;
+      background:rgba(255,255,255,.025);
+      color:#d9e8f5;
+      cursor:pointer;
+      transition:.18s ease;
+      text-align:left;
+    }
+    .service-mini-btn:hover{
+      transform:translateY(-1px);
+      background:rgba(255,255,255,.045);
+      border-color:rgba(88,199,255,.22);
+    }
+    .service-mini-btn span{
+      font-size:13px;
+      font-weight:800;
+      line-height:1.3;
+    }
+    .service-mini-btn small{
+      color:#7f93aa;
+      font-size:11px;
+    }
+
+    @media(max-width:768px){
+      .section-head p{display:none}
+      .tools-toolbar{flex-direction:column;align-items:stretch}
+      .tools-highlight-btn,.tools-menu-btn{width:100%}
+      .service-mini-list{grid-template-columns:1fr}
+      .popular-bar,.tabs{display:none}
+      #toolGrid .tool-card{display:none}
+      #toolGrid .tool-card.mobile-main{display:block}
+    }
+
+  /* Acabamento responsivo */
+:root{--muted:#a6b6c9}html{scroll-padding-top:90px}button,a,input,select{touch-action:manipulation}:focus-visible{outline:3px solid #81ddff;outline-offset:4px}
+.hero{padding:54px 0 28px}h1{font-size:clamp(36px,5vw,62px);letter-spacing:-2px;line-height:1.08}.hero p{max-width:620px;font-size:16px}.hero-stats{color:#a6b6c9}.section{padding:30px 0}#countTools{color:#a6b6c9;text-align:right;line-height:1.6}.tools-toolbar{margin-bottom:18px}
+#toolGrid.spotlight{grid-template-columns:1fr}#toolGrid.spotlight .tool-card{min-height:230px;padding:30px;border:1px solid rgba(88,199,255,.3);background:radial-gradient(ellipse at 100% 0,rgba(122,108,255,.16),transparent 65%),linear-gradient(135deg,#102940,#0d192c)}#toolGrid.spotlight .tool-card h3{font-size:29px;letter-spacing:-.7px}#toolGrid.spotlight .tool-card p{max-width:670px;font-size:16px;line-height:1.7;color:#b5c8dc}#toolGrid.spotlight .card-actions{margin-top:24px}#toolGrid.spotlight .open-tool{padding:12px 20px;border-radius:11px;color:#07111f;background:#7bdbff;font-size:14px}
+.tool-card p,.service p,.tag{color:#a6b6c9}.tool-card .fav{width:44px;height:44px;color:#9aacbf}.tool-card.featured::before{right:83px;top:30px}.open-tool{min-height:44px}.service{transition:background .2s,border-color .2s,transform .2s}a.service:hover{background:#142840;border-color:#58c7ff;transform:translateY(-2px)}.service-mini-btn{min-height:70px}.tools-filter-title{color:#adbed0}.tools-filter-panel .tabs,.tools-filter-panel .popular-bar{display:flex}.footer-row nav{display:flex;flex-wrap:wrap;gap:20px}.footer-row a{color:#b8c9dc;font-size:13px}.footer-row a:hover{color:#81ddff}.business-actions .ghost{border-color:rgba(88,199,255,.35);color:#c4efff}.partner-ad{margin-top:30px}.partner-ad-text p{color:#a6b6c9}.partner-ad-label,.partner-ad-text small{color:#a1b4c8}.empty-state{grid-column:1/-1;padding:28px;text-align:center;border:1px solid var(--line);border-radius:16px;color:#c5d4e5}
+@media(max-width:768px){.hero{padding:34px 0 16px}h1{font-size:38px;letter-spacing:-1.5px}.hero p{font-size:15px}.hero-stats{gap:10px;font-size:12px}.section{padding:24px 0}.section-head{align-items:start;flex-direction:column;gap:6px}#countTools{text-align:left;font-size:12px}#toolGrid .tool-card,#toolGrid .tool-card.mobile-main{display:flex}#toolGrid.spotlight .tool-card{padding:22px;min-height:250px}#toolGrid.spotlight .tool-card h3{font-size:26px}#toolGrid.spotlight .tool-card p{font-size:15px}.searchbox{gap:2px}.searchbox input{font-size:16px;width:100%;padding-left:3px}.searchbox button{min-width:84px;padding:0 10px;font-size:13px}.searchbox::before{margin-left:5px}.business-box{padding:24px}.footer-row{gap:18px}.footer-row nav{gap:14px}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*::before,*::after{transition:none!important;animation:none!important}}
+details{border-bottom:1px solid #24364c;padding:16px 0}summary{cursor:pointer;font-weight:700}details p{color:#9db1ca;line-height:1.7}details a{color:#80cfff}.open-tool{text-decoration:none}
+</style>
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1975354620975361"
+     crossorigin="anonymous"></script>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<meta property="og:image" content="https://novabytesolucoes.com.br/og-image.png">
+<link rel="stylesheet" href="/portal-footer.css">
+</head>
+<body>
+<header>
+  <div class="wrap nav">
+    <a class="brand" href="/">
+      <div class="logo" aria-label="NovaByte"></div>
+      <div>Nova-byte <span style="color:#71dcff">/ ferramentas</span></div>
+    </a>
+    <div class="nav-actions">
+      <button class="ghost" onclick="scrollToTools()">Ferramentas</button>
+      <a class="ghost" href="/#servicos">Conhecer a Nova-byte</a>
+      <button class="primary" onclick="focusSearch()">Buscar</button>
+    </div>
+  </div>
+</header>
+
+<main id="top">
+  <section class="hero wrap">
+    <div class="badge">⚡ Ferramentas online gratuitas</div>
+    <h1>Ferramentas úteis.<br><span class="gradient">Acesso gratuito.</span></h1>
+    <p>Uma seleção de ferramentas da Nova-byte para editar documentos, organizar a rotina e conferir cálculos. Escolha o que precisa, sem cadastro.</p>
+
+    <div class="searchbox">
+      <input id="search" type="search" aria-label="Buscar ferramentas" placeholder="Busque PDF, salário, férias, escala..." oninput="renderTools()" onkeydown="if(event.key==='Enter'){renderTools();scrollToTools()}" />
+      <button class="primary" onclick="renderTools();scrollToTools()">Pesquisar</button>
+    </div>
+    <div class="quick">
+      <span>💼 Trabalho</span><span>📚 Estudos</span><span>🚗 Veículos</span><span>💰 Dinheiro</span><span>🧰 Utilidades</span>
+    </div>
+    <div class="hero-stats">
+      <div class="hero-stat">🧰 <strong>13</strong> ferramentas disponíveis</div>
+      <div class="hero-stat">⚡ Resultado instantâneo</div>
+      <div class="hero-stat">🔒 Sem login ou cadastro</div>
+    </div>
+  </section>
+
+  <section class="section wrap" id="tools">
+    <div class="section-head">
+      <div>
+        <h2>Ferramentas</h2>
+        <p>Escolha uma ferramenta e comece agora.</p>
+      </div>
+      <div id="countTools" class="muted" role="status" aria-live="polite"></div>
+    </div>
+
+    <div class="tools-toolbar">
+      <button class="tools-highlight-btn" onclick="openTool('editor-arquivos')">
+        📄 Abrir Editor PDF
+      </button>
+
+      <button
+        class="tools-menu-btn"
+        id="toolsMenuBtn"
+        onclick="toggleToolsMenu()"
+        aria-expanded="false"
+        aria-controls="toolsMenuPanel"
+      >
+        ☰ Escolher outro serviço
+      </button>
+    </div>
+
+    <div class="tools-filter-panel" id="toolsMenuPanel">
+      <div class="tools-filter-group">
+        <div class="tools-filter-title">Todos os serviços</div>
+        <div class="service-mini-list" id="serviceMiniList"></div>
+      </div>
+
+      <div class="tools-filter-group">
+        <div class="tools-filter-title">Atalhos úteis</div>
+        <div class="popular-bar">
+          <button class="popular-chip" onclick="openTool('rescisao')">📄 Rescisão</button>
+          <button class="popular-chip" onclick="openTool('escala')">📅 Escalas</button>
+          <button class="popular-chip" onclick="openTool('noturno')">🌙 Adicional noturno</button>
+          <button class="popular-chip" onclick="openTool('combustivel')">⛽ Custo de viagem</button>
+          <button class="popular-chip" onclick="openTool('salario-liquido')">💵 Salário líquido</button>
+        </div>
+      </div>
+
+      <div class="tools-filter-group">
+        <div class="tools-filter-title">Categorias</div>
+        <div class="tabs" id="tabs">
+          <button class="tab active" data-cat="Todos" onclick="setCategory('Todos', this)">Todos</button>
+          <button class="tab" data-cat="Favoritos" onclick="setCategory('Favoritos', this)">⭐ Favoritos</button>
+          <button class="tab" data-cat="Trabalho" onclick="setCategory('Trabalho', this)">Trabalho</button>
+          <button class="tab" data-cat="Estudos" onclick="setCategory('Estudos', this)">Estudos</button>
+          <button class="tab" data-cat="Veículos" onclick="setCategory('Veículos', this)">Veículos</button>
+          <button class="tab" data-cat="Dinheiro" onclick="setCategory('Dinheiro', this)">Dinheiro</button>
+          <button class="tab" data-cat="Utilidades" onclick="setCategory('Utilidades', this)">Utilidades</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid" id="toolGrid"></div>
+<aside class="partner-ad anuncia-lucas-ad" aria-label="Publicidade - Anuncia Lucas">
+
+  <div class="partner-ad-label">
+    PUBLICIDADE • PROJETO LOCAL
+  </div>
+
+  <div class="partner-ad-content">
+
+    <div class="partner-ad-logo" aria-hidden="true">
+      🏠
+    </div>
+
+    <div class="partner-ad-text">
+
+      <strong>Anuncia Lucas</strong>
+
+      <span class="partner-ad-oab">
+        Lucas do Rio Verde • MT
+      </span>
+
+      <p>
+        Um espaço feito para conectar a cidade.
+        Divulgue serviços, encontre profissionais,
+        oportunidades e negócios locais.
+      </p>
+
+      <small>
+        Enquanto o app oficial está em fase beta,
+        participe pelo nosso grupo do WhatsApp.
+      </small>
+
+    </div>
+
+    <div class="partner-ad-actions">
+
+      <a
+        href="https://chat.whatsapp.com/HoukKj8fTMU3h89pwuNlC0?s=cl&p=a&mlu=4"
+        target="_blank"
+        rel="sponsored noopener noreferrer"
+        class="partner-ad-btn"
+      >
+        💬 Entrar no grupo do WhatsApp
+      </a>
+
+    </div>
+
+  </div>
+
+</aside>
+    <aside class="partner-ad" aria-label="Publicidade - Gilberto Araujo Advogado">
+      <div class="partner-ad-label">PUBLICIDADE</div>
+      <div class="partner-ad-content">
+        <div class="partner-ad-logo" aria-hidden="true">⚖️</div>
+        <div class="partner-ad-text">
+          <strong>Gilberto Araujo Advogado</strong>
+          <span class="partner-ad-oab">Direito do Trabalho • OAB/MT 36.486</span>
+          <p>Orientação jurídica em rescisão, cálculos trabalhistas, acidente de trabalho, demissão, vínculo empregatício e outras questões trabalhistas.</p>
+          <small>Atendimento em Nova Mutum/MT e online.</small>
+        </div>
+        <div class="partner-ad-actions">
+          <a href="https://wa.me/5565999052304?text=Ol%C3%A1%2C%20vim%20pelo%20NovaByte%20Tools%20e%20gostaria%20de%20informa%C3%A7%C3%B5es%20sobre%20atendimento%20jur%C3%ADdico%20trabalhista." target="_blank" rel="noopener sponsored" class="partner-ad-btn">💬 Falar no WhatsApp</a>
+          <a href="https://www.gilbertoaraujoadv.com.br/" target="_blank" rel="noopener sponsored" class="partner-ad-site">Conhecer o escritório</a>
+        </div>
+      </div>
+    </aside>
+  </section>
+
+<section class="section wrap" id="paginas-calculadoras">
+  <div class="section-head"><div><h2>Calculadoras populares</h2><p>Abra a calculadora e faça sua simulação.</p></div></div>
+  <div class="service-grid">
+    <a class="service" href="calculadora-rescisao.html"><div class="icon">📄</div><b>Calculadora de rescisão</b><p>Saldo, férias, 13º, aviso e FGTS.</p></a>
+    <a class="service" href="escala-12x36.html"><div class="icon">📅</div><b>Escala 12x36</b><p>Calendário de plantões e folgas.</p></a>
+    <a class="service" href="escala-24x48.html"><div class="icon">🗓️</div><b>Escala 24x48</b><p>Veja seus próximos plantões.</p></a>
+    <a class="service" href="escala-24x72.html"><div class="icon">⏱️</div><b>Escala 24x72</b><p>Calendário mensal do ciclo.</p></a>
+    <a class="service" href="escala-6x1.html"><div class="icon">🔁</div><b>Escala 6x1</b><p>Trabalho e folga no mês.</p></a>
+    <a class="service" href="adicional-noturno.html"><div class="icon">🌙</div><b>Adicional noturno</b><p>Estimativa rápida do adicional.</p></a>
+    <a class="service" href="periculosidade.html"><div class="icon">⚠️</div><b>Periculosidade</b><p>Calcule o adicional percentual.</p></a>
+  </div>
+</section>
+<section class="section wrap" id="guias"><div class="section-head"><div><h2>Use melhor cada ferramenta</h2><p>Guias com passos práticos, exemplos e limites importantes.</p></div></div><div class="service-grid"><a class="service" href="como-editar-pdf.html"><b>Como editar texto de um PDF</b><p>Abra, altere e confira sua cópia. Entenda o que muda em PDFs escaneados.</p><span>Ler o guia →</span></a><a class="service" href="como-organizar-escala.html"><b>Como conferir sua escala</b><p>Escolha a data de referência e evite deslocar os plantões do mês.</p><span>Ler o guia →</span></a><a class="service" href="sobre.html"><b>Conheça a NovaByte</b><p>Quem mantém as ferramentas, como funciona a publicidade e como pedir ajuda.</p><span>Sobre o portal →</span></a></div></section><section class="section wrap" aria-labelledby="faqPortal"><div class="section-head"><div><h2 id="faqPortal">Antes de começar</h2></div></div><details><summary>Preciso pagar ou criar uma conta?</summary><p>As ferramentas do portal são gratuitas e não exigem cadastro. Publicidade e serviços digitais contratados separadamente ajudam a manter o projeto.</p></details><details><summary>Posso editar um PDF escaneado?</summary><p>O editor precisa identificar texto no arquivo. Uma página escaneada normalmente é uma imagem; a ferramenta não inclui OCR. Guarde o original e confira a cópia exportada.</p></details><details><summary>As calculadoras produzem documentos oficiais?</summary><p>Não. São simulações para conferir cenários. Confira dados, regras do seu caso e documentos oficiais antes de tomar decisões.</p></details><details><summary>Como aviso sobre um erro?</summary><p>Use a <a href="contato.html">página de contato</a> e envie a ferramenta, um exemplo fictício e o resultado esperado. Evite documentos e dados pessoais.</p></details></section>
+<section class="section wrap" id="servicos">
+    <div class="business-box">
+      <div class="badge">🚀 NovaByte Soluções</div>
+      <h2>Gostou da experiência? <span class="gradient">Podemos criar a sua.</span></h2>
+      <p>
+        Precisa de algo personalizado para sua empresa? A NovaByte desenvolve experiências digitais
+        simples, modernas e pensadas para facilitar vendas, atendimento e operação.
+      </p>
+
+      <div class="service-grid">
+        <div class="service">
+          <div class="icon">🌐</div>
+          <b>Sites e landing pages</b>
+          <p>Páginas responsivas para apresentar empresas, serviços, campanhas e captar clientes.</p>
+        </div>
+        <div class="service">
+          <div class="icon">📱</div>
+          <b>Sistemas e protótipos</b>
+          <p>Interfaces interativas e soluções personalizadas para validar ideias e processos.</p>
+        </div>
+        <div class="service">
+          <div class="icon">🍔</div>
+          <b>Cardápios digitais</b>
+          <p>Cardápios clicáveis para facilitar pedidos e levar o cliente direto ao atendimento.</p>
+        </div>
+        <div class="service">
+          <div class="icon">📈</div>
+          <b>Presença digital</b>
+          <p>Estrutura para empresas aparecerem melhor online e transformarem visitas em oportunidades.</p>
+        </div>
+      </div>
+
+      <div class="business-actions">
+        <button class="primary" onclick="document.getElementById('tools').scrollIntoView({behavior:'smooth'})">Usar ferramentas grátis</button>
+        <button class="ghost" onclick="window.open('https://wa.me/5531983771576?text=Ol%C3%A1!%20Gostaria%20de%20um%20or%C3%A7amento%20para%20um%20projeto%20com%20a%20NovaByte.','_blank','noopener,noreferrer')">Quero um projeto personalizado</button>
+      </div>
+
+      <div class="notice">
+        As calculadoras do portal têm finalidade informativa e de simulação. Resultados trabalhistas,
+        financeiros ou jurídicos podem variar conforme regras, convenções e situações específicas.
+      </div>
+    </div>
+  </section>
+
+<noscript><p class="wrap">A interface das ferramentas precisa de JavaScript. Acesse o <a href="/editor-arquivos.html">Editor PDF</a> e os <a href="/guias.html">guias de uso</a>.</p></noscript></main>
+
+
+
+<div class="modal" id="modal" onclick="modalOutside(event)">
+  <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modalTitle" tabindex="-1">
+    <div class="modal-head">
+      <h3 id="modalTitle">Ferramenta</h3>
+      <button class="close" aria-label="Fechar ferramenta" onclick="closeModal()">×</button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+  </div>
+</div>
+
+<script>
+const tools = [
+  {
+    id:'rescisao',
+    title:'Rescisão trabalhista',
+    icon:'📄',
+    cat:'Trabalho',
+    desc:'Faça uma estimativa rápida das principais verbas da rescisão.',
+    tag:'Novo',
+    featured:true,
+    open: openRescisao
+  },
+  {
+    id:'escala',
+    title:'Escalas de trabalho',
+    icon:'📅',
+    cat:'Trabalho',
+    desc:'Monte calendários de 12x36, 24x48, 6x1, 5x2 e outras escalas.',
+    tag:'Trabalho',
+    open: openEscala
+  },
+  {
+    id:'noturno',
+    title:'Adicional noturno',
+    icon:'🌙',
+    cat:'Trabalho',
+    desc:'Calcule um adicional usando o percentual e as horas informadas por você.',
+    tag:'Trabalho',
+    open: openNoturno
+  },
+  {
+    id:'periculosidade',
+    title:'Periculosidade',
+    icon:'⚠️',
+    cat:'Trabalho',
+    desc:'Veja o valor do adicional de periculosidade sobre a base informada.',
+    tag:'Trabalho',
+    open: openPericulosidade
+  },
+  {
+    id:'combustivel',
+    title:'Custo de viagem',
+    icon:'⛽',
+    cat:'Veículos',
+    desc:'Descubra litros necessários e gasto estimado com combustível.',
+    tag:'Veículos',
+    open: openCombustivel
+  },
+  {
+    id:'acertos',
+    title:'Percentual de acertos',
+    icon:'🎯',
+    cat:'Estudos',
+    desc:'Calcule sua porcentagem de acertos em provas, simulados e questões.',
+    tag:'Estudos',
+    open: openAcertos
+  },
+  {
+    id:'ferias',
+    title:'Férias',
+    icon:'🏖️',
+    cat:'Trabalho',
+    desc:'Estime o valor bruto das férias e do adicional constitucional de 1/3.',
+    tag:'Trabalho',
+    open: openFerias
+  },
+  {
+    id:'salario-liquido',
+    title:'Salário líquido',
+    icon:'💵',
+    cat:'Dinheiro',
+    desc:'Estime INSS, IRRF e o valor líquido mensal usando as tabelas de 2026.',
+    tag:'Dinheiro',
+    open: openSalarioLiquido
+  },
+  {
+    id:'decimo-terceiro',
+    title:'13º salário',
+    icon:'📆',
+    cat:'Trabalho',
+    desc:'Calcule o 13º proporcional conforme os meses trabalhados no ano.',
+    tag:'Trabalho',
+    open: openDecimoTerceiro
+  },
+  {
+    id:'senha',
+    title:'Gerador de senha',
+    icon:'🔐',
+    cat:'Utilidades',
+    desc:'Crie senhas fortes escolhendo tamanho, letras, números e símbolos.',
+    tag:'Utilidades',
+    open: openSenha
+  },
+  {
+    id:'editor-arquivos',
+    title:'Editor PDF',
+    icon:'📄',
+    cat:'Utilidades',
+    desc:'Altere textos de PDFs com texto selecionável e salve uma nova cópia. No celular ou computador, sem marca d’água.',
+    tag:'Novo',
+    featured:true,
+    open: openEditorArquivos
+  },
+  {
+    id:'qrcode',
+    title:'QR Code',
+    icon:'▦',
+    cat:'Utilidades',
+    desc:'Transforme links e textos em um QR Code pronto para usar.',
+    tag:'Utilidades',
+    open: openQRCode
+  },
+  {
+    id:'conversores',
+    title:'Conversores',
+    icon:'📏',
+    cat:'Utilidades',
+    desc:'Converta comprimento, peso e temperatura rapidamente.',
+    tag:'Utilidades',
+    open: openConversores
+  }
+];
+
+let currentCategory = 'Todos';
+let favorites = [];
+try { const saved = JSON.parse(localStorage.getItem('nb_favs') || '[]'); if(Array.isArray(saved)) favorites = saved.filter(id => tools.some(t => t.id === id)); } catch {}
+function resetToolSearch(){ document.getElementById('search').value=''; setCategory('Todos',document.querySelector('[data-cat="Todos"]')); } 
+
+function money(v){
+  return Number(v || 0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+}
+
+function renderTools(){
+  const normalize = value => value.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+  const q = normalize(document.getElementById('search').value).trim();
+  const grid = document.getElementById('toolGrid');
+  grid.classList.toggle('spotlight', !q && currentCategory === 'Todos');
+
+  const filtered = tools.filter(t => {
+    const catOk = currentCategory === 'Todos' ||
+      (currentCategory === 'Favoritos' ? favorites.includes(t.id) : t.cat === currentCategory);
+    const textOk = !q || normalize(t.title + ' ' + t.desc + ' ' + t.cat).includes(q);
+    return catOk && textOk && (q || currentCategory !== 'Todos' || t.id === 'editor-arquivos');
+  });
+
+  document.getElementById('countTools').textContent =
+    (!q && currentCategory === 'Todos') ? 'Em destaque · 13 ferramentas no menu' : filtered.length + (filtered.length === 1 ? ' ferramenta encontrada' : ' ferramentas encontradas');
+
+  if(!filtered.length){
+    grid.innerHTML = '<div class="empty-state"><strong>Nenhuma ferramenta encontrada.</strong><p>Tente buscar por PDF, salário, férias ou escala.</p><button class="ghost" onclick="resetToolSearch()">Limpar busca e filtros</button></div>';
+    return;
+  }
+
+  const mobileMainId = filtered.some(t => t.id === 'editor-arquivos')
+    ? 'editor-arquivos'
+    : filtered[0].id;
+
+  grid.innerHTML = filtered.map(t => `
+    <article class="tool-card ${t.featured ? 'featured' : ''} ${t.id === mobileMainId ? 'mobile-main' : ''}">
+      <div class="tool-top">
+        <div class="icon" aria-hidden="true">${t.icon}</div>
+        <button class="fav ${favorites.includes(t.id) ? 'on' : ''}" onclick="toggleFav('${t.id}',event)" aria-label="${favorites.includes(t.id) ? 'Remover dos favoritos' : 'Favoritar'}: ${t.title}" aria-pressed="${favorites.includes(t.id)}">
+          ${favorites.includes(t.id) ? '★' : '☆'}
+        </button>
+      </div>
+      <h3>${t.title}</h3>
+      <p>${t.desc}</p>
+      <div class="card-actions">
+        <span class="tag">${t.cat}</span>
+        ${t.id === 'editor-arquivos' ? '<a class="open-tool" href="editor-arquivos.html">Abrir Editor PDF</a>' : `<button class="open-tool" onclick="openTool('${t.id}')" aria-label="Abrir ${t.title}">Usar ferramenta</button>`}
+      </div>
+    </article>
+  `).join('');
+}
+
+function toggleFav(id,e){
+  e.stopPropagation();
+  if(favorites.includes(id)) favorites = favorites.filter(x=>x!==id);
+  else favorites.push(id);
+  try { localStorage.setItem('nb_favs', JSON.stringify(favorites)); } catch {}
+  renderTools();
+}
+
+function toggleToolsMenu(forceState){
+  const panel = document.getElementById('toolsMenuPanel');
+  const btn = document.getElementById('toolsMenuBtn');
+  if(!panel || !btn) return;
+  const open = typeof forceState === 'boolean' ? forceState : !panel.classList.contains('show');
+  panel.classList.toggle('show', open);
+  btn.classList.toggle('open', open);
+  btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+}
+
+function setCategory(cat,el){
+  currentCategory=cat;
+  document.getElementById('search').value='';
+  document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  renderTools();
+  if(window.innerWidth < 900) toggleToolsMenu(false);
+}
+
+function openTool(id){
+  const t = tools.find(x => x.id === id);
+  if(window.innerWidth < 900) toggleToolsMenu(false);
+  if(t) t.open();
+}
+
+function openEditorArquivos(){
+  window.location.href='editor-arquivos.html';
+}
+
+let modalOpener;
+function showModal(title,html){
+  modalOpener=document.activeElement;
+  document.getElementById('modalTitle').textContent=title;
+  document.getElementById('modalBody').innerHTML=html;
+  document.getElementById('modal').classList.add('show');
+  document.body.style.overflow='hidden';
+  document.querySelectorAll('#modalBody label').forEach(label=>{const input=label.parentElement.querySelector('input,select,textarea');if(input?.id)label.htmlFor=input.id;});
+  document.querySelector('.modal-card').focus();
+}
+function closeModal(){
+  document.getElementById('modal').classList.remove('show');
+  document.body.style.overflow='';
+  if(modalOpener?.isConnected)modalOpener.focus();
+}
+function modalOutside(e){ if(e.target.id==='modal') closeModal(); }
+function focusSearch(){ document.getElementById('search').focus(); }
+function scrollToTools(){ document.getElementById('tools').scrollIntoView({behavior:'smooth'}); }
+document.addEventListener('keydown',e=>{
+  if(!document.getElementById('modal').classList.contains('show')) return;
+  if(e.key==='Escape') closeModal();
+  if(e.key==='Tab'){
+    const card=document.querySelector('.modal-card');
+    const items=[...card.querySelectorAll('button,input,select,textarea,a[href]')].filter(el=>!el.disabled && el.getClientRects().length);
+    const first=items[0],last=items[items.length-1];
+    if(e.shiftKey && (document.activeElement===first || document.activeElement===card)){e.preventDefault();last?.focus();}
+    else if(!e.shiftKey && document.activeElement===last){e.preventDefault();first?.focus();}
+  }
+});
+
+
+
+function calcINSS2026(salario){
+  const teto = 8475.55;
+  const base = Math.min(Math.max(0, salario), teto);
+  const faixas = [
+    [1621.00, 0.075],
+    [2902.84, 0.09],
+    [4354.27, 0.12],
+    [8475.55, 0.14]
+  ];
+  let anterior = 0;
+  let total = 0;
+  for(const [limite, aliquota] of faixas){
+    if(base <= anterior) break;
+    const faixa = Math.min(base, limite) - anterior;
+    if(faixa > 0) total += faixa * aliquota;
+    anterior = limite;
+  }
+  return total;
+}
+
+function calcIRRF2026(bruto, inss, dependentes){
+  const dedLegal = inss + (Math.max(0, dependentes || 0) * 189.59);
+  const dedSimplificada = 607.20;
+  const deducaoUsada = Math.max(dedLegal, dedSimplificada);
+  const base = Math.max(0, bruto - deducaoUsada);
+
+  let imposto = 0;
+  if(base <= 2428.80) imposto = 0;
+  else if(base <= 2826.65) imposto = base * 0.075 - 182.16;
+  else if(base <= 3751.05) imposto = base * 0.15 - 394.16;
+  else if(base <= 4664.68) imposto = base * 0.225 - 675.49;
+  else imposto = base * 0.275 - 908.73;
+  imposto = Math.max(0, imposto);
+
+  let reducao = 0;
+  if(bruto <= 5000){
+    reducao = Math.min(imposto, 312.89);
+  }else if(bruto <= 7350){
+    reducao = Math.max(0, 978.62 - (0.133145 * bruto));
+    reducao = Math.min(imposto, reducao);
+  }
+  return {
+    base,
+    impostoAntesReducao: imposto,
+    reducao,
+    imposto: Math.max(0, imposto - reducao),
+    tipoDeducao: deducaoUsada === dedSimplificada ? 'simplificada' : 'legal'
+  };
+}
+
+function openFerias(){
+  showModal('🏖️ Férias — estimativa', `
+    <div class="form-grid">
+      <div>
+        <label for="ferSalario">Salário-base mensal (R$)</label>
+        <input type="number" step="0.01" id="ferSalario" placeholder="Ex.: 3000">
+      </div>
+      <div>
+        <label for="ferDias">Dias de férias</label>
+        <input type="number" min="1" max="30" id="ferDias" value="30">
+      </div>
+    </div>
+    <button class="calc-btn" onclick="calcFerias()">Calcular férias</button>
+    <div class="result" id="ferResult"></div>
+    <p class="muted">Estimativa bruta: considera a remuneração proporcional aos dias informados mais o adicional constitucional de 1/3. Não calcula automaticamente INSS, IRRF, médias, abono pecuniário ou particularidades da folha.</p>
+  `);
+}
+function calcFerias(){
+  const salario=+document.getElementById('ferSalario').value;
+  const dias=Math.min(30,Math.max(1,+document.getElementById('ferDias').value||30));
+  if(salario<=0) return alert('Informe o salário-base.');
+  const remuneracao=(salario/30)*dias;
+  const terco=remuneracao/3;
+  const total=remuneracao+terco;
+  const r=document.getElementById('ferResult');
+  r.innerHTML=`
+    <div class="result-grid">
+      <div class="result-item"><small>Remuneração das férias</small><b>${money(remuneracao)}</b></div>
+      <div class="result-item"><small>Adicional de 1/3</small><b>${money(terco)}</b></div>
+    </div>
+    <div class="total-box"><div class="muted">Total bruto estimado</div><div class="big">${money(total)}</div></div>`;
+  r.classList.add('show');
+}
+
+function openSalarioLiquido(){
+  showModal('💵 Salário líquido — estimativa 2026', `
+    <div class="form-grid">
+      <div>
+        <label for="salBruto">Salário bruto mensal (R$)</label>
+        <input type="number" step="0.01" id="salBruto" placeholder="Ex.: 4500">
+      </div>
+      <div>
+        <label for="salDep">Dependentes para IRRF</label>
+        <input type="number" min="0" id="salDep" value="0">
+      </div>
+      <div>
+        <label for="salVT">Vale-transporte / desconto (R$)</label>
+        <input type="number" step="0.01" min="0" id="salVT" value="0">
+      </div>
+      <div>
+        <label for="salOutros">Outros descontos (R$)</label>
+        <input type="number" step="0.01" min="0" id="salOutros" value="0">
+      </div>
+    </div>
+    <button class="calc-btn" onclick="calcSalarioLiquido()">Calcular salário líquido</button>
+    <div class="result" id="salResult"></div>
+    <p class="muted">Estimativa para empregado usando tabela progressiva do INSS válida a partir de janeiro de 2026 e tabela mensal/redução do IRPF de 2026. Benefícios, pensão, múltiplos vínculos e regras específicas podem alterar o resultado.</p>
+    <div class="source-links">
+      Fontes oficiais:
+      <a href="https://www.gov.br/inss/pt-br/direitos-e-deveres/inscricao-e-contribuicao/tabela-de-contribuicao-mensal" target="_blank" rel="noopener">INSS 2026</a>
+      ·
+      <a href="https://www.gov.br/receitafederal/pt-br/assuntos/meu-imposto-de-renda/tabelas/2026" target="_blank" rel="noopener">Receita Federal 2026</a>
+    </div>
+  `);
+}
+function calcSalarioLiquido(){
+  const bruto=+document.getElementById('salBruto').value;
+  const dep=Math.max(0,+document.getElementById('salDep').value||0);
+  const vt=Math.max(0,+document.getElementById('salVT').value||0);
+  const outros=Math.max(0,+document.getElementById('salOutros').value||0);
+  if(bruto<=0) return alert('Informe o salário bruto.');
+
+  const inss=calcINSS2026(bruto);
+  const ir=calcIRRF2026(bruto,inss,dep);
+  const liquido=Math.max(0,bruto-inss-ir.imposto-vt-outros);
+
+  const r=document.getElementById('salResult');
+  r.innerHTML=`
+    <div class="result-grid">
+      <div class="result-item"><small>INSS estimado</small><b>${money(inss)}</b></div>
+      <div class="result-item"><small>IRRF estimado</small><b>${money(ir.imposto)}</b></div>
+      <div class="result-item"><small>Outros descontos informados</small><b>${money(vt+outros)}</b></div>
+      <div class="result-item"><small>Dedução usada no IRRF</small><b>${ir.tipoDeducao==='simplificada'?'Simplificada':'Legal'}</b></div>
+    </div>
+    <div class="total-box">
+      <div class="muted">Salário líquido estimado</div>
+      <div class="big">${money(liquido)}</div>
+      <div class="muted">Bruto: ${money(bruto)} • descontos estimados: ${money(bruto-liquido)}</div>
+    </div>`;
+  r.classList.add('show');
+}
+
+function openDecimoTerceiro(){
+  showModal('📆 13º salário — estimativa', `
+    <div class="form-grid">
+      <div>
+        <label for="decSalario">Remuneração usada no cálculo (R$)</label>
+        <input type="number" step="0.01" id="decSalario" placeholder="Ex.: 3000">
+      </div>
+      <div>
+        <label for="decMeses">Meses com direito no ano</label>
+        <input type="number" min="1" max="12" id="decMeses" value="12">
+      </div>
+    </div>
+    <button class="calc-btn" onclick="calcDecimoTerceiro()">Calcular 13º</button>
+    <div class="result" id="decResult"></div>
+    <p class="muted">Estimativa bruta. Em regra, cada mês conta como 1/12 quando houver pelo menos 15 dias de serviço no mês. Descontos legais e médias de verbas variáveis podem alterar o valor recebido.</p>
+  `);
+}
+function calcDecimoTerceiro(){
+  const salario=+document.getElementById('decSalario').value;
+  const meses=Math.min(12,Math.max(1,+document.getElementById('decMeses').value||12));
+  if(salario<=0) return alert('Informe a remuneração.');
+  const bruto=(salario/12)*meses;
+  const primeira=bruto/2;
+  const saldoAntesDescontos=bruto-primeira;
+  const r=document.getElementById('decResult');
+  r.innerHTML=`
+    <div class="result-grid">
+      <div class="result-item"><small>13º bruto proporcional</small><b>${money(bruto)}</b></div>
+      <div class="result-item"><small>Metade do valor bruto</small><b>${money(primeira)}</b></div>
+    </div>
+    <div class="total-box">
+      <div class="muted">${meses}/12 avos considerados</div>
+      <div class="big">${money(bruto)}</div>
+      <div class="muted">A divisão em parcelas mostrada é apenas uma referência antes de descontos aplicáveis.</div>
+    </div>`;
+  r.classList.add('show');
+}
+
+function openSenha(){
+  showModal('🔐 Gerador de senha', `
+    <div>
+      <label>Tamanho da senha</label>
+      <div class="range-line">
+        <input type="range" id="pwdLen" min="8" max="40" value="16" oninput="document.getElementById('pwdLenVal').textContent=this.value">
+        <strong id="pwdLenVal">16</strong>
+      </div>
+    </div>
+    <div class="check-row">
+      <label class="check"><input type="checkbox" id="pwdLower" checked> Letras minúsculas</label>
+      <label class="check"><input type="checkbox" id="pwdUpper" checked> Letras maiúsculas</label>
+      <label class="check"><input type="checkbox" id="pwdNum" checked> Números</label>
+      <label class="check"><input type="checkbox" id="pwdSym" checked> Símbolos</label>
+    </div>
+    <button class="calc-btn" onclick="gerarSenha()">Gerar senha</button>
+    <div class="password-output" id="pwdOutput">Clique em “Gerar senha”.</div>
+    <div class="inline-actions">
+      <button class="secondary-btn" onclick="copiarSenha()">Copiar senha</button>
+      <button class="secondary-btn" onclick="gerarSenha()">Gerar outra</button>
+    </div>
+    <p class="muted">A senha é gerada diretamente no seu navegador usando valores aleatórios criptograficamente seguros quando disponíveis.</p>
+  `);
+}
+function gerarSenha(){
+  const len=+document.getElementById('pwdLen').value;
+  let chars='';
+  if(document.getElementById('pwdLower').checked) chars+='abcdefghijkmnopqrstuvwxyz';
+  if(document.getElementById('pwdUpper').checked) chars+='ABCDEFGHJKLMNPQRSTUVWXYZ';
+  if(document.getElementById('pwdNum').checked) chars+='23456789';
+  if(document.getElementById('pwdSym').checked) chars+='!@#$%&*+-_=.?';
+  if(!chars) return alert('Marque pelo menos um tipo de caractere.');
+  let out='';
+  const arr=new Uint32Array(len);
+  if(window.crypto && crypto.getRandomValues) crypto.getRandomValues(arr);
+  else for(let i=0;i<len;i++) arr[i]=Math.floor(Math.random()*4294967295);
+  for(let i=0;i<len;i++) out+=chars[arr[i]%chars.length];
+  document.getElementById('pwdOutput').textContent=out;
+}
+async function copiarSenha(){
+  const txt=document.getElementById('pwdOutput').textContent;
+  if(!txt || txt.includes('Clique')) return;
+  try{
+    await navigator.clipboard.writeText(txt);
+    alert('Senha copiada.');
+  }catch(e){
+    prompt('Copie a senha:',txt);
+  }
+}
+
+function openQRCode(){
+  showModal('▦ Gerador de QR Code', `
+    <div class="form-grid">
+      <div style="grid-column:1/-1">
+        <label for="qrText">Link ou texto</label>
+        <input type="text" id="qrText" placeholder="Ex.: https://novabytesolucoes.com.br">
+      </div>
+      <div>
+        <label for="qrSize">Tamanho</label>
+        <select id="qrSize">
+          <option value="180">180 × 180</option>
+          <option value="220" selected>220 × 220</option>
+          <option value="300">300 × 300</option>
+        </select>
+      </div>
+    </div>
+    <button class="calc-btn" onclick="gerarQRCode()">Gerar QR Code</button>
+    <div class="qr-wrap" id="qrWrap"><img id="qrImg" alt="QR Code gerado"></div>
+    <p class="muted">O QR Code é gerado por um serviço externo a partir do texto informado. Evite inserir informações sensíveis.</p>
+  `);
+}
+function gerarQRCode(){
+  const txt=document.getElementById('qrText').value.trim();
+  const size=document.getElementById('qrSize').value;
+  if(!txt) return alert('Digite um link ou texto.');
+  const url='https://api.qrserver.com/v1/create-qr-code/?size='+size+'x'+size+'&data='+encodeURIComponent(txt);
+  document.getElementById('qrImg').src=url;
+  document.getElementById('qrWrap').classList.add('show');
+}
+
+const convData = {
+  comprimento: {
+    units:{'m':'Metro','km':'Quilômetro','cm':'Centímetro','mm':'Milímetro','mi':'Milha','ft':'Pé'},
+    toBase:{m:1,km:1000,cm:.01,mm:.001,mi:1609.344,ft:.3048}
+  },
+  peso: {
+    units:{'kg':'Quilograma','g':'Grama','lb':'Libra','oz':'Onça'},
+    toBase:{kg:1,g:.001,lb:.45359237,oz:.028349523125}
+  }
+};
+function openConversores(){
+  showModal('📏 Conversores', `
+    <div class="form-grid">
+      <div>
+        <label for="convTipo">Tipo de conversão</label>
+        <select id="convTipo" onchange="updateConvUnits()">
+          <option value="comprimento">Comprimento</option>
+          <option value="peso">Peso</option>
+          <option value="temperatura">Temperatura</option>
+        </select>
+      </div>
+      <div>
+        <label for="convValor">Valor</label>
+        <input type="number" step="any" id="convValor" value="1">
+      </div>
+      <div>
+        <label for="convDe">De</label>
+        <select id="convDe"></select>
+      </div>
+      <div>
+        <label for="convPara">Para</label>
+        <select id="convPara"></select>
+      </div>
+    </div>
+    <button class="calc-btn" onclick="converterValor()">Converter</button>
+    <div class="result" id="convResult"></div>
+  `);
+  updateConvUnits();
+}
+function updateConvUnits(){
+  const tipo=document.getElementById('convTipo').value;
+  const de=document.getElementById('convDe');
+  const para=document.getElementById('convPara');
+  let units;
+  if(tipo==='temperatura'){
+    units={'c':'Celsius','f':'Fahrenheit','k':'Kelvin'};
+  }else{
+    units=convData[tipo].units;
+  }
+  const opts=Object.entries(units).map(([k,v])=>`<option value="${k}">${v}</option>`).join('');
+  de.innerHTML=opts;
+  para.innerHTML=opts;
+  if(para.options.length>1) para.selectedIndex=1;
+}
+function converterValor(){
+  const tipo=document.getElementById('convTipo').value;
+  const valor=+document.getElementById('convValor').value;
+  const de=document.getElementById('convDe').value;
+  const para=document.getElementById('convPara').value;
+  if(!Number.isFinite(valor)) return alert('Informe um valor válido.');
+
+  let res;
+  if(tipo==='temperatura'){
+    let c;
+    if(de==='c') c=valor;
+    else if(de==='f') c=(valor-32)*5/9;
+    else c=valor-273.15;
+    if(para==='c') res=c;
+    else if(para==='f') res=(c*9/5)+32;
+    else res=c+273.15;
+  }else{
+    const data=convData[tipo];
+    const base=valor*data.toBase[de];
+    res=base/data.toBase[para];
+  }
+  const r=document.getElementById('convResult');
+  const txt=Math.abs(res)>=1000000 ? res.toExponential(6) : Number(res.toFixed(8)).toLocaleString('pt-BR',{maximumFractionDigits:8});
+  r.innerHTML=`<div class="muted">Resultado</div><div class="big">${txt}</div>`;
+  r.classList.add('show');
+}
+
+
+
+function parseLocalDate(v){
+  if(!v) return null;
+  const [y,m,d]=v.split('-').map(Number);
+  return new Date(y,m-1,d,12,0,0,0);
+}
+function addDaysDate(d,n){
+  const x=new Date(d);
+  x.setDate(x.getDate()+n);
+  return x;
+}
+function daysInclusive(a,b){
+  return Math.max(0,Math.floor((b-a)/86400000)+1);
+}
+function completedYearsBetween(a,b){
+  let y=b.getFullYear()-a.getFullYear();
+  const ann=new Date(b.getFullYear(),a.getMonth(),a.getDate(),12);
+  if(b<ann) y--;
+  return Math.max(0,y);
+}
+function avisoProporcionalDias(adm,desl){
+  if(!adm||!desl) return 30;
+  const anos=completedYearsBetween(adm,desl);
+  return Math.min(90,30+(anos*3));
+}
+function addMonthsSafe(date,months){
+  const d=new Date(date);
+  const originalDay=d.getDate();
+  d.setDate(1);
+  d.setMonth(d.getMonth()+months);
+  const last=new Date(d.getFullYear(),d.getMonth()+1,0,12).getDate();
+  d.setDate(Math.min(originalDay,last));
+  d.setHours(12,0,0,0);
+  return d;
+}
+function count13Avos(adm,end){
+  if(!adm||!end||end<adm) return 0;
+  const year=end.getFullYear();
+  let count=0;
+  for(let m=0;m<12;m++){
+    const ms=new Date(year,m,1,12);
+    const me=new Date(year,m+1,0,12);
+    const s=adm>ms?adm:ms;
+    const e=end<me?end:me;
+    if(e>=s && daysInclusive(s,e)>=15) count++;
+  }
+  return Math.min(12,count);
+}
+function currentVacationPeriodStart(adm,end){
+  let start=new Date(adm);
+  while(true){
+    const next=addMonthsSafe(start,12);
+    if(next<=end) start=next;
+    else break;
+  }
+  return start;
+}
+function countVacationAvos(adm,end){
+  if(!adm||!end||end<adm) return 0;
+  const start=currentVacationPeriodStart(adm,end);
+  let count=0;
+  for(let i=0;i<12;i++){
+    const a=addMonthsSafe(start,i);
+    const next=addMonthsSafe(start,i+1);
+    const b=addDaysDate(next,-1);
+    const e=end<b?end:b;
+    if(e>=a && daysInclusive(a,e)>=15) count++;
+    if(a>end) break;
+  }
+  return Math.min(12,count);
+}
+function fmtDateBR(d){
+  if(!d) return '—';
+  return d.toLocaleDateString('pt-BR');
+}
+function getResDates(){
+  const adm=parseLocalDate(document.getElementById('resAdmissao')?.value);
+  const desl=parseLocalDate(document.getElementById('resDesligamento')?.value);
+  return {adm,desl};
+}
+function resProjectEnd(){
+  const {adm,desl}=getResDates();
+  if(!desl) return null;
+  const aviso=document.getElementById('resAviso')?.value || 'nao';
+  const proj=document.getElementById('resProjetarAviso')?.checked;
+  const dias=Math.max(0,+document.getElementById('resAvisoDias')?.value||0);
+  if(proj && (aviso==='receber' || aviso==='receber_metade')){
+    return addDaysDate(desl,dias);
+  }
+  return desl;
+}
+function updateRescisaoAuto(){
+  const {adm,desl}=getResDates();
+  if(!desl) return;
+
+  const diasMes=Math.min(30,desl.getDate());
+  const campoDias=document.getElementById('resDias');
+  if(campoDias) campoDias.value=diasMes;
+
+  const tipo=document.getElementById('resTipo')?.value;
+  const avisoDias=document.getElementById('resAvisoDias');
+  if(avisoDias && adm){
+    avisoDias.value=(tipo==='pedido') ? 30 : avisoProporcionalDias(adm,desl);
+  }
+
+  const end=resProjectEnd();
+  if(end && adm){
+    const av13=count13Avos(adm,end);
+    const avFer=countVacationAvos(adm,end);
+    const c13=document.getElementById('resMeses13');
+    const cf=document.getElementById('resMesesFerias');
+    if(c13) c13.value=av13;
+    if(cf) cf.value=avFer;
+
+    const info=document.getElementById('resAutoInfo');
+    if(info){
+      info.innerHTML=`Tempo considerado até <b>${fmtDateBR(end)}</b> • 13º: <b>${av13}/12</b> • férias proporcionais: <b>${avFer}/12</b>`;
+    }
+  }
+}
+
+function setRescisaoPreset(){
+  const tipo=document.getElementById('resTipo').value;
+  const multa=document.getElementById('resMulta');
+  const aviso=document.getElementById('resAviso');
+  const proj=document.getElementById('resProjetarAviso');
+  const avisoDias=document.getElementById('resAvisoDias');
+
+  if(tipo==='semjusta' || tipo==='indireta'){
+    multa.value='40';
+    aviso.value='receber';
+    proj.checked=true;
+  }else if(tipo==='acordo'){
+    multa.value='20';
+    aviso.value='receber_metade';
+    proj.checked=false;
+  }else if(tipo==='pedido'){
+    multa.value='0';
+    aviso.value='descontar';
+    proj.checked=false;
+    avisoDias.value='30';
+  }else if(tipo==='justa' || tipo==='termino'){
+    multa.value='0';
+    aviso.value='nao';
+    proj.checked=false;
+  }else{
+    multa.value='0';
+    aviso.value='nao';
+    proj.checked=false;
+  }
+  updateRescisaoAuto();
+}
+
+function openRescisao(){
+  showModal('📄 Rescisão trabalhista detalhada', `
+    <div class="res-section">
+      <div class="res-section-title">Contrato <span>Dados principais</span></div>
+      <div class="form-grid">
+        <div>
+          <label for="resAdmissao">Data de admissão</label>
+          <input type="date" id="resAdmissao" onchange="updateRescisaoAuto()">
+        </div>
+        <div>
+          <label for="resDesligamento">Data do desligamento / último dia trabalhado</label>
+          <input type="date" id="resDesligamento" onchange="updateRescisaoAuto()">
+        </div>
+        <div>
+          <label for="resTipo">Motivo da rescisão</label>
+          <select id="resTipo" onchange="setRescisaoPreset()">
+            <option value="semjusta">Dispensa sem justa causa</option>
+            <option value="pedido">Pedido de demissão</option>
+            <option value="acordo">Extinção por acordo</option>
+            <option value="justa">Dispensa por justa causa</option>
+            <option value="indireta">Rescisão indireta</option>
+            <option value="termino">Término normal de contrato por prazo determinado</option>
+            <option value="manual">Personalizar</option>
+          </select>
+        </div>
+        <div>
+          <label for="resSalario">Salário-base mensal (R$)</label>
+          <input type="number" step="0.01" id="resSalario" placeholder="Ex.: 3000">
+        </div>
+        <div>
+          <label for="resMedias">Média mensal de adicionais, HE e comissões (R$)</label>
+          <input type="number" min="0" step="0.01" id="resMedias" value="0" placeholder="Ex.: 650">
+        </div>
+        <div>
+          <label for="resDependentes">Dependentes para IRRF</label>
+          <input type="number" min="0" id="resDependentes" value="0">
+        </div>
+      </div>
+      <div class="res-alert" id="resAutoInfo">Informe admissão e desligamento para calcular automaticamente os avos.</div>
+    </div>
+
+    <div class="res-section">
+      <div class="res-section-title">Saldo, 13º e férias <span>Avos automáticos e editáveis</span></div>
+      <div class="form-grid">
+        <div>
+          <label for="resDias">Dias de saldo de salário</label>
+          <input type="number" min="0" max="30" id="resDias" value="0">
+        </div>
+        <div>
+          <label for="resMeses13">Avos de 13º proporcional</label>
+          <input type="number" min="0" max="12" id="resMeses13" value="0">
+        </div>
+        <div>
+          <label for="resMesesFerias">Avos de férias proporcionais</label>
+          <input type="number" min="0" max="12" id="resMesesFerias" value="0">
+        </div>
+        <div>
+          <label for="resFeriasIntegrais">Férias integrais adquiridas e não gozadas</label>
+          <input type="number" min="0" max="10" id="resFeriasIntegrais" value="0">
+        </div>
+        <div>
+          <label for="resFeriasDobro">Férias vencidas em dobro</label>
+          <input type="number" min="0" max="10" id="resFeriasDobro" value="0">
+        </div>
+        <div>
+          <label for="res13Adiantado">13º já adiantado (R$)</label>
+          <input type="number" min="0" step="0.01" id="res13Adiantado" value="0">
+        </div>
+      </div>
+    </div>
+
+    <div class="res-section">
+      <div class="res-section-title">Aviso prévio <span>Proporcional ao tempo de serviço</span></div>
+      <div class="form-grid">
+        <div>
+          <label for="resAviso">Tratamento do aviso</label>
+          <select id="resAviso" onchange="updateRescisaoAuto()">
+            <option value="receber">Indenizado a receber</option>
+            <option value="receber_metade">Indenizado pela metade</option>
+            <option value="trabalhado">Trabalhado (sem valor extra)</option>
+            <option value="descontar">Descontar do empregado</option>
+            <option value="dispensado">Dispensado sem desconto</option>
+            <option value="nao">Não aplicar</option>
+          </select>
+        </div>
+        <div>
+          <label for="resAvisoDias">Dias de aviso</label>
+          <input type="number" min="0" max="90" id="resAvisoDias" value="30" onchange="updateRescisaoAuto()">
+        </div>
+      </div>
+      <label class="check" style="margin-top:10px">
+        <input type="checkbox" id="resProjetarAviso" onchange="updateRescisaoAuto()">
+        Projetar aviso indenizado no tempo de serviço para 13º e férias
+      </label>
+    </div>
+
+    <div class="res-section">
+      <div class="res-section-title">FGTS e indenizações <span>Valores do extrato tornam o cálculo melhor</span></div>
+      <div class="form-grid">
+        <div>
+          <label for="resFgtsBase">Base total para fins rescisórios do FGTS (R$)</label>
+          <input type="number" min="0" step="0.01" id="resFgtsBase" value="0" placeholder="Veja no extrato/FGTS Digital">
+        </div>
+        <div>
+          <label for="resMulta">Multa rescisória do FGTS (%)</label>
+          <input type="number" min="0" max="100" step="0.01" id="resMulta" value="40">
+        </div>
+        <div>
+          <label for="resOutrosTrib">Outros vencimentos tributáveis (R$)</label>
+          <input type="number" min="0" step="0.01" id="resOutrosTrib" value="0">
+        </div>
+        <div>
+          <label for="resOutrosInden">Outras verbas indenizatórias (R$)</label>
+          <input type="number" min="0" step="0.01" id="resOutrosInden" value="0">
+        </div>
+      </div>
+      <label class="check" style="margin-top:10px">
+        <input type="checkbox" id="resIndDataBase">
+        Incluir indenização adicional de 1 remuneração (quando aplicável à dispensa antes da data-base)
+      </label>
+    </div>
+
+    <div class="res-section">
+      <div class="res-section-title">Descontos <span>Para aproximar o líquido</span></div>
+      <div class="form-grid">
+        <div>
+          <label for="resOutrosDesc">Outros descontos (R$)</label>
+          <input type="number" min="0" step="0.01" id="resOutrosDesc" value="0" placeholder="Ex.: adiantamentos">
+        </div>
+        <div>
+          <label for="resPensao">Pensão / desconto adicional informado (R$)</label>
+          <input type="number" min="0" step="0.01" id="resPensao" value="0">
+        </div>
+      </div>
+    </div>
+
+    <button class="calc-btn" onclick="calcRescisao()">Calcular rescisão detalhada</button>
+    <div class="result" id="resResult"></div>
+
+    <p class="muted">
+      Ferramenta de estimativa. Convenção coletiva, estabilidade, faltas que alterem férias, médias calculadas
+      por critérios específicos, múltiplos vínculos, pensão judicial, contrato a termo rescindido antecipadamente
+      e outras particularidades podem mudar o valor oficial.
+    </p>
+    <div class="source-links">
+      Referências:
+      <a href="https://www.gov.br/trabalho-e-emprego/pt-br/acesso-a-informacao/acoes-e-programas/programas-projetos-acoes-obras-e-atividades/proteja/duvidas-frequentes" target="_blank" rel="noopener">MTE — verbas rescisórias</a>
+      ·
+      <a href="https://www.fgts.gov.br/Paginas/trabalhador/perguntas-frequentes.aspx" target="_blank" rel="noopener">FGTS</a>
+      ·
+      <a href="https://www.gov.br/inss/pt-br/direitos-e-deveres/inscricao-e-contribuicao/tabela-de-contribuicao-mensal" target="_blank" rel="noopener">INSS 2026</a>
+      ·
+      <a href="https://www.gov.br/receitafederal/pt-br/assuntos/meu-imposto-de-renda/tabelas/2026" target="_blank" rel="noopener">IRRF 2026</a>
+    </div>
+  `);
+  setRescisaoPreset();
+}
+
+function calcRescisao(){
+  const {adm,desl}=getResDates();
+  const tipo=document.getElementById('resTipo').value;
+  const salario=Math.max(0,+document.getElementById('resSalario').value||0);
+  const medias=Math.max(0,+document.getElementById('resMedias').value||0);
+  const remuneracao=salario+medias;
+  const dependentes=Math.max(0,+document.getElementById('resDependentes').value||0);
+
+  if(!adm || !desl) return alert('Informe as datas de admissão e desligamento.');
+  if(desl<adm) return alert('A data de desligamento não pode ser anterior à admissão.');
+  if(remuneracao<=0) return alert('Informe o salário ou remuneração.');
+
+  const dias=Math.min(30,Math.max(0,+document.getElementById('resDias').value||0));
+  let avos13=Math.min(12,Math.max(0,+document.getElementById('resMeses13').value||0));
+  let avosFer=Math.min(12,Math.max(0,+document.getElementById('resMesesFerias').value||0));
+  const feriasIntegrais=Math.max(0,+document.getElementById('resFeriasIntegrais').value||0);
+  const feriasDobro=Math.max(0,+document.getElementById('resFeriasDobro').value||0);
+  const adiant13=Math.max(0,+document.getElementById('res13Adiantado').value||0);
+
+  const aviso=document.getElementById('resAviso').value;
+  const avisoDias=Math.max(0,+document.getElementById('resAvisoDias').value||0);
+  const fgtsBase=Math.max(0,+document.getElementById('resFgtsBase').value||0);
+  const multaPct=Math.max(0,+document.getElementById('resMulta').value||0);
+  const outrosTrib=Math.max(0,+document.getElementById('resOutrosTrib').value||0);
+  const outrosInden=Math.max(0,+document.getElementById('resOutrosInden').value||0);
+  const outrosDesc=Math.max(0,+document.getElementById('resOutrosDesc').value||0);
+  const pensao=Math.max(0,+document.getElementById('resPensao').value||0);
+  const indDataBase=document.getElementById('resIndDataBase').checked;
+
+  // Direitos conforme motivo, mantendo campos editáveis para cenários específicos.
+  let paga13=true, pagaFerProp=true;
+  if(tipo==='justa'){
+    paga13=false;
+    pagaFerProp=false;
+  }
+  if(!paga13) avos13=0;
+  if(!pagaFerProp) avosFer=0;
+
+  const saldoSalario=(remuneracao/30)*dias;
+  const decimo=(remuneracao/12)*avos13;
+
+  const ferPropBase=(remuneracao/12)*avosFer;
+  const ferPropTotal=ferPropBase+(ferPropBase/3);
+
+  const ferIntBase=remuneracao*feriasIntegrais;
+  const ferIntTotal=ferIntBase+(ferIntBase/3);
+
+  const ferDobroBase=(remuneracao*2)*feriasDobro;
+  const ferDobroTotal=ferDobroBase+(ferDobroBase/3);
+
+  const avisoBase=(remuneracao/30)*avisoDias;
+  let avisoCredito=0, avisoDesconto=0;
+  if(aviso==='receber') avisoCredito=avisoBase;
+  if(aviso==='receber_metade') avisoCredito=avisoBase/2;
+  if(aviso==='descontar') avisoDesconto=avisoBase;
+
+  const multaFgts=fgtsBase*(multaPct/100);
+  const indenDataBase=indDataBase ? remuneracao : 0;
+
+  // Tributação estimada de salários/outros tributáveis e 13º em separado.
+  const baseMensalTrib=saldoSalario+outrosTrib;
+  const inssSal=calcINSS2026(baseMensalTrib);
+  const irSalObj=calcIRRF2026(baseMensalTrib,inssSal,dependentes);
+  const irSal=irSalObj.imposto;
+
+  const inss13=decimo>0 ? calcINSS2026(decimo) : 0;
+  const ir13Obj=decimo>0 ? calcIRRF2026(decimo,inss13,dependentes) : {imposto:0};
+  const ir13=ir13Obj.imposto;
+
+  const creditosEmpresa =
+    saldoSalario + decimo + ferPropTotal + ferIntTotal + ferDobroTotal +
+    avisoCredito + outrosTrib + outrosInden + indenDataBase;
+
+  const descontos =
+    inssSal + irSal + inss13 + ir13 + adiant13 + avisoDesconto + outrosDesc + pensao;
+
+  const liquidoEmpresa=Math.max(0,creditosEmpresa-descontos);
+  const totalEconomico=liquidoEmpresa+multaFgts;
+
+  const fimConsiderado=resProjectEnd();
+  const anos=completedYearsBetween(adm,desl);
+
+  const motivoTexto={
+    semjusta:'Dispensa sem justa causa',
+    pedido:'Pedido de demissão',
+    acordo:'Extinção por acordo',
+    justa:'Dispensa por justa causa',
+    indireta:'Rescisão indireta',
+    termino:'Término de contrato por prazo determinado',
+    manual:'Personalizado'
+  }[tipo] || 'Personalizado';
+
+  const r=document.getElementById('resResult');
+  r.innerHTML=`
+    <div class="res-summary">
+      <div class="res-summary-item"><small>Remuneração usada</small><b>${money(remuneracao)}</b></div>
+      <div class="res-summary-item"><small>Tempo de serviço</small><b>${anos} ano(s)</b></div>
+      <div class="res-summary-item"><small>Data considerada nos avos</small><b>${fmtDateBR(fimConsiderado)}</b></div>
+    </div>
+
+    <div class="memory-title">Vencimentos</div>
+    <div class="memory-row credit"><span>Saldo de salário (${dias}/30)</span><b>${money(saldoSalario)}</b></div>
+    <div class="memory-row credit"><span>13º proporcional (${avos13}/12)</span><b>${money(decimo)}</b></div>
+    <div class="memory-row credit"><span>Férias proporcionais + 1/3 (${avosFer}/12)</span><b>${money(ferPropTotal)}</b></div>
+    <div class="memory-row credit"><span>Férias integrais + 1/3</span><b>${money(ferIntTotal)}</b></div>
+    <div class="memory-row credit"><span>Férias vencidas em dobro + 1/3</span><b>${money(ferDobroTotal)}</b></div>
+    <div class="memory-row credit"><span>Aviso prévio</span><b>${money(avisoCredito)}</b></div>
+    <div class="memory-row credit"><span>Outros vencimentos tributáveis</span><b>${money(outrosTrib)}</b></div>
+    <div class="memory-row credit"><span>Outras verbas indenizatórias</span><b>${money(outrosInden)}</b></div>
+    ${indDataBase?`<div class="memory-row credit"><span>Indenização adicional informada</span><b>${money(indenDataBase)}</b></div>`:''}
+
+    <div class="memory-title">Descontos estimados</div>
+    <div class="memory-row discount"><span>INSS sobre salários/outros tributáveis</span><b>- ${money(inssSal)}</b></div>
+    <div class="memory-row discount"><span>IRRF sobre salários/outros tributáveis</span><b>- ${money(irSal)}</b></div>
+    <div class="memory-row discount"><span>INSS sobre 13º</span><b>- ${money(inss13)}</b></div>
+    <div class="memory-row discount"><span>IRRF sobre 13º</span><b>- ${money(ir13)}</b></div>
+    <div class="memory-row discount"><span>13º já adiantado</span><b>- ${money(adiant13)}</b></div>
+    <div class="memory-row discount"><span>Desconto de aviso prévio</span><b>- ${money(avisoDesconto)}</b></div>
+    <div class="memory-row discount"><span>Outros descontos + pensão informada</span><b>- ${money(outrosDesc+pensao)}</b></div>
+
+    <div class="total-box">
+      <div class="muted">${motivoTexto} • total líquido estimado pago nas verbas</div>
+      <div class="big">${money(liquidoEmpresa)}</div>
+      <div class="muted">Créditos: ${money(creditosEmpresa)} • descontos: ${money(descontos)}</div>
+    </div>
+
+    <div class="total-box" style="margin-top:8px">
+      <div class="muted">Multa rescisória do FGTS (${multaPct.toLocaleString('pt-BR')}%)</div>
+      <div class="big">${money(multaFgts)}</div>
+      <div class="muted">Calculada sobre a base informada de ${money(fgtsBase)}. A multa do FGTS é mostrada separadamente das verbas pagas diretamente.</div>
+    </div>
+
+    <div class="total-box" style="margin-top:8px">
+      <div class="muted">Total econômico estimado (líquido + multa FGTS)</div>
+      <div class="big">${money(totalEconomico)}</div>
+    </div>
+
+    <div class="res-alert">
+      A memória acima é uma simulação. Para conferir um TRCT real, compare também médias históricas,
+      extrato/base rescisória do FGTS, convenção coletiva e descontos efetivamente lançados pela empresa.
+    </div>
+  `;
+  r.classList.add('show');
+}
+
+
+const scalePresets = {
+  '12x36': {name:'12x36', workDays:1, offDays:1, note:'Plantões iniciando em dias alternados'},
+  '24x48': {name:'24x48', workDays:1, offDays:2, note:'1 dia de plantão e 2 dias de folga'},
+  '24x72': {name:'24x72', workDays:1, offDays:3, note:'1 dia de plantão e 3 dias de folga'},
+  '6x1': {name:'6x1', workDays:6, offDays:1, note:'6 dias de trabalho e 1 de folga'},
+  '5x2': {name:'5x2', workDays:5, offDays:2, note:'5 dias de trabalho e 2 de folga'},
+  '4x2': {name:'4x2', workDays:4, offDays:2, note:'4 dias de trabalho e 2 de folga'},
+  '2x2': {name:'2x2', workDays:2, offDays:2, note:'2 dias de trabalho e 2 de folga'},
+  '4x1': {name:'4x1', workDays:4, offDays:1, note:'4 dias de trabalho e 1 de folga'}
+};
+
+function selectScalePreset(key){
+  const sel=document.getElementById('escalaTipo');
+  if(!sel) return;
+  sel.value=key;
+  updateScalePreset();
+}
+
+function updateScalePreset(){
+  const tipo=document.getElementById('escalaTipo').value;
+  const custom=document.getElementById('escalaCustom');
+  const info=document.getElementById('escalaInfo');
+
+  if(tipo==='custom'){
+    custom.style.display='grid';
+    if(info) info.textContent='Defina quantos dias consecutivos trabalha e quantos dias folga.';
+    return;
+  }
+
+  custom.style.display='none';
+  const p=scalePresets[tipo];
+  if(p && info){
+    info.textContent=p.note;
+  }
+}
+
+function getScaleConfig(){
+  const tipo=document.getElementById('escalaTipo').value;
+  if(tipo==='custom'){
+    const w=Math.max(1,+document.getElementById('escalaWorkDays').value||1);
+    const o=Math.max(1,+document.getElementById('escalaOffDays').value||1);
+    return {name:`${w}x${o} dias`,workDays:w,offDays:o,note:`${w} dia(s) trabalhando e ${o} de folga`};
+  }
+  return scalePresets[tipo];
+}
+
+function mod(n,m){
+  return ((n % m) + m) % m;
+}
+
+function isWorkDayForScale(date,base,workDays,offDays){
+  const cycle=workDays+offDays;
+  const diff=Math.round((date-base)/86400000);
+  const pos=mod(diff,cycle);
+  return pos<workDays;
+}
+
+function openEscala(){
+  showModal('📅 Escalas de trabalho', `
+    <div class="res-section">
+      <div class="res-section-title">Escolha sua escala <span>Presets prontos</span></div>
+
+      <div class="form-grid">
+        <div>
+          <label for="escalaTipo">Tipo de escala</label>
+          <select id="escalaTipo" onchange="updateScalePreset()">
+            <option value="12x36">12x36</option>
+            <option value="24x48">24x48</option>
+            <option value="24x72">24x72</option>
+            <option value="6x1">6x1</option>
+            <option value="5x2">5x2</option>
+            <option value="4x2">4x2</option>
+            <option value="2x2">2x2</option>
+            <option value="4x1">4x1</option>
+            <option value="custom">Personalizada</option>
+          </select>
+        </div>
+
+        <div>
+          <label for="escalaData">Data de início de um ciclo de trabalho</label>
+          <input type="date" id="escalaData">
+        </div>
+
+        <div>
+          <label for="escalaMes">Mês que deseja visualizar</label>
+          <input type="month" id="escalaMes">
+        </div>
+      </div>
+
+      <div class="form-grid" id="escalaCustom" style="display:none;margin-top:12px">
+        <div>
+          <label for="escalaWorkDays">Dias consecutivos trabalhando</label>
+          <input type="number" min="1" max="30" id="escalaWorkDays" value="3">
+        </div>
+        <div>
+          <label for="escalaOffDays">Dias consecutivos de folga</label>
+          <input type="number" min="1" max="30" id="escalaOffDays" value="2">
+        </div>
+      </div>
+
+      <div class="scale-presets">
+        <button class="scale-preset" onclick="selectScalePreset('12x36')">12x36</button>
+        <button class="scale-preset" onclick="selectScalePreset('24x48')">24x48</button>
+        <button class="scale-preset" onclick="selectScalePreset('24x72')">24x72</button>
+        <button class="scale-preset" onclick="selectScalePreset('6x1')">6x1</button>
+        <button class="scale-preset" onclick="selectScalePreset('5x2')">5x2</button>
+        <button class="scale-preset" onclick="selectScalePreset('4x2')">4x2</button>
+        <button class="scale-preset" onclick="selectScalePreset('2x2')">2x2</button>
+      </div>
+
+      <div class="res-alert" id="escalaInfo">Plantões iniciando em dias alternados.</div>
+    </div>
+
+    <button class="calc-btn" onclick="calcEscala()">Gerar calendário da escala</button>
+
+    <div class="result" id="escalaResult"></div>
+
+    <p class="muted">
+      Para escalas por plantão, a data informada deve ser um dia em que começa seu plantão.
+      O calendário considera o ciclo informado e não inclui trocas de plantão, folgas extras,
+      banco de horas ou alterações feitas pela empresa.
+    </p>
+  `);
+
+  const today=new Date();
+  document.getElementById('escalaMes').value=
+    `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}`;
+  document.getElementById('escalaData').value=
+    `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+  updateScalePreset();
+}
+
+function calcEscala(){
+  const baseVal=document.getElementById('escalaData').value;
+  const monthVal=document.getElementById('escalaMes').value;
+  if(!baseVal || !monthVal) return alert('Preencha a data-base e o mês.');
+
+  const cfg=getScaleConfig();
+  const base=new Date(baseVal+'T12:00:00');
+  const [y,m]=monthVal.split('-').map(Number);
+  const first=new Date(y,m-1,1,12);
+  const last=new Date(y,m,0,12);
+  const startWeek=first.getDay();
+  const week=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+
+  let html='<div class="calendar">'+week.map(w=>`<div class="weekday">${w}</div>`).join('');
+  for(let i=0;i<startWeek;i++) html+='<div class="day empty"></div>';
+
+  let workCount=0, offCount=0;
+  let workDates=[];
+
+  for(let d=1;d<=last.getDate();d++){
+    const dt=new Date(y,m-1,d,12);
+    const work=isWorkDayForScale(dt,base,cfg.workDays,cfg.offDays);
+
+    if(work){
+      workCount++;
+      workDates.push(d);
+    }else{
+      offCount++;
+    }
+
+    html+=`
+      <div class="day ${work?'work':'off'}">
+        ${d}
+        <span class="mini">${work?'Trabalho':'Folga'}</span>
+      </div>`;
+  }
+  html+='</div>';
+
+  const cycle=cfg.workDays+cfg.offDays;
+  const pct=((cfg.workDays/cycle)*100).toFixed(1).replace('.',',');
+
+  const result=document.getElementById('escalaResult');
+  result.innerHTML=`
+    <div class="scale-summary">
+      <div><small>Escala</small><b>${cfg.name}</b></div>
+      <div><small>Dias de trabalho no mês</small><b>${workCount}</b></div>
+      <div><small>Dias de folga no mês</small><b>${offCount}</b></div>
+    </div>
+
+    ${html}
+
+    <div class="scale-legend">
+      <span><span class="scale-dot work"></span>Trabalho</span>
+      <span><span class="scale-dot off"></span>Folga</span>
+      <span>${pct}% dos dias do ciclo em trabalho</span>
+    </div>
+  `;
+  result.classList.add('show');
+}
+
+
+function openNoturno(){
+  showModal('Adicional noturno', `
+    <div class="form-grid">
+      <div><label for="notHora">Valor da hora normal (R$)</label><input type="number" step="0.01" id="notHora" placeholder="Ex.: 12,50"></div>
+      <div><label for="notHoras">Horas noturnas no período</label><input type="number" step="0.01" id="notHoras" placeholder="Ex.: 80"></div>
+      <div><label for="notPct">Percentual do adicional (%)</label><input type="number" step="0.01" id="notPct" value="20"></div>
+    </div>
+    <button class="calc-btn" onclick="calcNoturno()">Calcular</button>
+    <div class="result" id="notResult"></div>
+    <p class="muted">Esta ferramenta faz apenas a conta matemática com os valores fornecidos. Regras de hora noturna reduzida, convenção coletiva, categoria profissional e incidências devem ser conferidas separadamente.</p>
+  `);
+}
+
+function calcNoturno(){
+  const h=+document.getElementById('notHora').value;
+  const hrs=+document.getElementById('notHoras').value;
+  const pct=+document.getElementById('notPct').value;
+  if(h<=0||hrs<=0||pct<0) return alert('Confira os valores informados.');
+  const add=h*hrs*(pct/100);
+  const total=h*hrs+add;
+  const r=document.getElementById('notResult');
+  r.innerHTML=`<div class="muted">Valor do adicional</div><div class="big">${money(add)}</div><div class="muted">Total das horas + adicional: ${money(total)}</div>`;
+  r.classList.add('show');
+}
+
+function openPericulosidade(){
+  showModal('⚠️ Periculosidade', `
+    <div class="form-grid">
+      <div><label for="perBase">Base usada no cálculo (R$)</label><input type="number" step="0.01" id="perBase" placeholder="Ex.: 2395"></div>
+      <div><label for="perPct">Percentual (%)</label><input type="number" step="0.01" id="perPct" value="30"></div>
+    </div>
+    <button class="calc-btn" onclick="calcPer()">Calcular</button>
+    <div class="result" id="perResult"></div>
+    <p class="muted">A ferramenta calcula somente o percentual sobre a base informada. A definição jurídica da base correta depende da situação trabalhista aplicável.</p>
+  `);
+}
+function calcPer(){
+  const b=+document.getElementById('perBase').value;
+  const p=+document.getElementById('perPct').value;
+  if(b<=0||p<0) return alert('Confira os valores.');
+  const add=b*(p/100);
+  const r=document.getElementById('perResult');
+  r.innerHTML=`<div class="muted">Adicional estimado</div><div class="big">${money(add)}</div><div class="muted">Base + adicional: ${money(b+add)}</div>`;
+  r.classList.add('show');
+}
+
+function openCombustivel(){
+  showModal('⛽ Custo de viagem', `
+    <div class="form-grid">
+      <div><label for="viaKm">Distância total (km)</label><input type="number" step="0.1" id="viaKm" placeholder="Ex.: 480"></div>
+      <div><label for="viaCons">Consumo do veículo (km/L)</label><input type="number" step="0.1" id="viaCons" placeholder="Ex.: 12"></div>
+      <div><label for="viaPreco">Preço do combustível (R$/L)</label><input type="number" step="0.01" id="viaPreco" placeholder="Ex.: 6,29"></div>
+      <div><label for="viaOutros">Outros custos (R$)</label><input type="number" step="0.01" id="viaOutros" value="0"></div>
+    </div>
+    <button class="calc-btn" onclick="calcVia()">Calcular viagem</button>
+    <div class="result" id="viaResult"></div>
+  `);
+}
+function calcVia(){
+  const km=+document.getElementById('viaKm').value;
+  const cons=+document.getElementById('viaCons').value;
+  const preco=+document.getElementById('viaPreco').value;
+  const outros=+document.getElementById('viaOutros').value;
+  if(km<=0||cons<=0||preco<=0) return alert('Confira distância, consumo e preço.');
+  const litros=km/cons;
+  const comb=litros*preco;
+  const total=comb+outros;
+  const r=document.getElementById('viaResult');
+  r.innerHTML=`<div class="muted">Combustível necessário</div><div class="big">${litros.toFixed(1).replace('.',',')} L</div>
+  <div class="muted">Combustível: ${money(comb)} • Total estimado: <strong>${money(total)}</strong></div>`;
+  r.classList.add('show');
+}
+
+function openAcertos(){
+  showModal('🎯 Percentual de acertos', `
+    <div class="form-grid">
+      <div><label for="acTotal">Total de questões</label><input type="number" id="acTotal" placeholder="Ex.: 40"></div>
+      <div><label for="acCertas">Questões corretas</label><input type="number" id="acCertas" placeholder="Ex.: 29"></div>
+    </div>
+    <button class="calc-btn" onclick="calcAcertos()">Calcular desempenho</button>
+    <div class="result" id="acResult"></div>
+  `);
+}
+function calcAcertos(){
+  const total=+document.getElementById('acTotal').value;
+  const certas=+document.getElementById('acCertas').value;
+  if(total<=0||certas<0||certas>total) return alert('Confira os números.');
+  const pct=(certas/total)*100;
+  const erradas=total-certas;
+  const r=document.getElementById('acResult');
+  r.innerHTML=`<div class="muted">Aproveitamento</div><div class="big">${pct.toFixed(1).replace('.',',')}%</div><div class="muted">${certas} acertos • ${erradas} erros</div>`;
+  r.classList.add('show');
+}
+
+function renderServiceMiniList(){
+  const list = document.getElementById('serviceMiniList');
+  if(!list) return;
+
+  list.innerHTML = tools.map(t => `
+    <button class="service-mini-btn" onclick="openTool('${t.id}')">
+      <span>${t.icon} ${t.title}</span>
+      <small>${t.cat}</small>
+    </button>
+  `).join('');
+}
+
+
+renderServiceMiniList();
+renderTools();
+const requestedTool=new URLSearchParams(window.location.search).get('ferramenta');
+if(requestedTool && tools.some(t=>t.id===requestedTool)) openTool(requestedTool);
+</script>
+<footer class="nb-footer"><strong>NovaByte Tools · Nova-byte Tecnologia</strong><div>Ferramentas gratuitas, guias práticos e soluções digitais.</div><nav aria-label="Transparência e suporte"><a href="/ferramentas.html">Ferramentas</a><a href="/sobre.html">Sobre</a><a href="/guias.html">Guias</a><a href="/contato.html">Contato</a><a href="/privacidade.html">Privacidade</a><a href="/termos.html">Termos</a><a href="/politica-editorial.html">Política editorial</a><a href="/privacidade.html" data-nb-privacy>Opções de privacidade</a></nav></footer>
+<script defer src="/portal-privacy.js"></script></body>
+</html>

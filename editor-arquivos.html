@@ -4,8 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#07101c">
-  <title>Editor PDF Real | NovaByte Tools</title>
-  <meta name="description" content="Editor estrutural de PDF da NovaByte Tools.">
+  <title>Editor PDF online gratuito | NovaByte Tools</title>
+  <meta name="description" content="Edite textos selecionáveis de PDFs no navegador e salve uma cópia sem marca d’água. Confira compatibilidade e limites no guia.">
   <style>
     :root{--bg:#07101c;--panel:#0b1829;--line:rgba(255,255,255,.11);--text:#edf6ff;--muted:#8ba0b5;--blue:#58c7ff;--purple:#7568ff;--green:#35db8a;--danger:#ff6b7a;--safe:env(safe-area-inset-bottom,0px)}
     *{box-sizing:border-box} html,body{margin:0;width:100%;height:100%;font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--bg);color:var(--text)}
@@ -22,11 +22,14 @@
     .modal{position:fixed;inset:0;z-index:250;display:none;align-items:center;justify-content:center;padding:16px;background:rgba(0,0,0,.74)}.modal.show{display:flex}.modal-card{width:min(460px,100%);max-height:90dvh;overflow:auto;border:1px solid var(--line);border-radius:17px;background:#0b192b}.modal-head{padding:15px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:8px}.modal-head strong{flex:1}.modal-body{padding:15px}.field{display:grid;gap:6px;margin-bottom:12px}.field label{font-size:10px;font-weight:850;color:#9eb1c3}.field input{width:100%;min-height:46px;border:1px solid var(--line);border-radius:10px;background:#07111f;padding:10px 12px;outline:none}.field input:focus{border-color:#4dbff5}.row{display:grid;grid-template-columns:1fr 110px;gap:9px}.color-wrap{display:flex;align-items:center;gap:8px}.color-wrap input[type=color]{width:48px;height:42px;padding:2px}.modal-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px}.modal-actions button,.modal-actions a{min-height:46px;display:flex;align-items:center;justify-content:center;border:1px solid var(--line);border-radius:10px;background:rgba(255,255,255,.035);color:var(--text);text-decoration:none;font-weight:900}.modal-actions .primary{border-color:transparent;background:linear-gradient(135deg,#4dbff5,#7267f5)}.modal-note{font-size:10px;line-height:1.5;color:var(--muted);margin:0 0 12px}
     @media(max-width:720px){.topbar{min-height:58px}.btn{font-size:10px;padding:0 9px;min-height:38px}.title strong{font-size:12px}.title small{display:none}#backBtn{width:38px;padding:0}.logo{width:36px;height:36px;flex-basis:36px}.tools{min-height:44px}.hint{display:none}.pages{padding:12px 6px 42px;gap:14px}.row{grid-template-columns:1fr 92px}}
   </style>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<meta property="og:image" content="https://novabytesolucoes.com.br/og-image.png">
+<link rel="canonical" href="https://novabytesolucoes.com.br/editor-arquivos.html"><meta name="robots" content="index,follow">
 </head>
 <body>
 <div class="app">
   <header class="topbar">
-    <button class="btn" id="backBtn" type="button" onclick="location.href='index.html'" aria-label="Voltar">←</button>
+    <button class="btn" id="backBtn" type="button" onclick="location.href='ferramentas.html'" aria-label="Voltar">←</button>
     <div class="brand"><div class="logo">NB</div><div class="title"><strong>Editor PDF Real</strong><small id="fileLabel">Nenhum PDF aberto</small></div></div>
     <button class="btn" id="openBtn" type="button">Abrir</button>
     <button class="btn green" id="editBtn" type="button" disabled>Editar</button>
@@ -45,7 +48,7 @@
     <div class="empty" id="emptyState">
       <div class="empty-card">
         <div class="pill">✓ sem marca d'água</div>
-        <div class="empty-icon">📄</div>
+        <p style="font-size:12px"><a style="color:#8bd4ff" href="como-editar-pdf.html">Como usar e limites</a> · <a style="color:#8bd4ff" href="privacidade.html">Privacidade</a></p><div class="empty-icon">📄</div>
         <h1>Editor estrutural de PDF</h1>
         <p>Abra um PDF com texto nativo. No modo Editar, toque no texto que quer alterar. O texto antigo é removido do conteúdo do PDF antes do novo ser inserido.</p>
         <button class="btn primary" id="emptyOpenBtn" type="button">Selecionar PDF</button>
@@ -63,10 +66,10 @@
     <div class="modal-head"><strong>Editar texto</strong><button class="btn" id="cancelEditTop" type="button">✕</button></div>
     <div class="modal-body">
       <p class="modal-note">A alteração é feita no conteúdo do PDF. Não usamos caixa branca nem texto colado por cima.</p>
-      <div class="field"><label>Texto atual</label><input id="oldText" type="text" disabled></div>
-      <div class="field"><label>Novo texto</label><input id="newText" type="text" autocomplete="off"></div>
+      <div class="field"><label for="oldText">Texto atual</label><input id="oldText" type="text" disabled></div>
+      <div class="field"><label for="newText">Novo texto</label><input id="newText" type="text" autocomplete="off"></div>
       <div class="row">
-        <div class="field"><label>Tamanho</label><input id="fontSize" type="number" min="4" max="96" step="0.5"></div>
+        <div class="field"><label for="fontSize">Tamanho</label><input id="fontSize" type="number" min="4" max="96" step="0.5"></div>
         <div class="field"><label>Cor</label><div class="color-wrap"><input id="textColor" type="color"><span id="colorHex">#000000</span></div></div>
       </div>
       <div class="modal-actions"><button id="cancelEdit" type="button">Cancelar</button><button class="primary" id="applyEdit" type="button">Aplicar alteração</button></div>
