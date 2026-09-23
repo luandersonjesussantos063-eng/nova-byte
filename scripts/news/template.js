@@ -72,7 +72,7 @@ export function renderArticle({ title, description, slug, dateBR, dateISO, summa
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="/portal.css">\n<link rel="stylesheet" href="/brand.css">
 <style>
-.news-cover{width:100%;aspect-ratio:1200/630;object-fit:cover;border-radius:22px;margin:24px 0;border:1px solid #29425d;background:#0b1b2c}
+.news-cover{display:block;width:100%;max-width:100%;height:auto;aspect-ratio:1200/630;object-fit:contain;border-radius:22px;margin:24px 0;border:1px solid #29425d;background:#0b1b2c}
 .news-summary{background:#0b1b2c;border:1px solid #29425d;border-radius:18px;padding:20px;margin:22px 0}
 .news-source{font-size:14px;color:#9bb0ca;margin-top:30px;padding-top:18px;border-top:1px solid #293f5c}
 .news-local{font-size:14px;color:#9bb0ca;margin:18px 0 0;padding:14px 16px;border-left:3px solid #70c8fb;background:#0b1b2c;border-radius:0 12px 12px 0}
