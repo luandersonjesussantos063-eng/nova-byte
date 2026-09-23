@@ -7,7 +7,7 @@ import { renderArticle, escapeHtml } from "./template.js";
 const ROOT = process.cwd();
 const parser = new Parser({
   timeout: 15000,
-  headers: { "User-Agent": "NovaByteAtualiza/1.0 (+https://novabytesolucoes.com.br/)" }
+  headers: { "User-Agent": "NovaByteAtualiza/2.0 (+https://novabytesolucoes.com.br/)" }
 });
 
 const sourcesPath = path.join(ROOT, "scripts/news/sources.json");
@@ -69,7 +69,7 @@ async function getCandidates() {
   for (const source of sources) {
     try {
       const feed = await parser.parseURL(source.url);
-      for (const item of (feed.items || []).slice(0, 10)) {
+      for (const item of (feed.items || []).slice(0, 12)) {
         const id = itemId(item);
         if (!id || history.published_ids.includes(id)) continue;
         all.push({ ...item, sourceName: source.name, sourceCategory: source.category, id });
@@ -81,46 +81,138 @@ async function getCandidates() {
   return all.sort((a,b) => itemScore(b) - itemScore(a));
 }
 
-async function fetchSourceText(url) {
+function looksEnglish(text = "") {
+  const s = ` ${text.toLowerCase()} `;
+  const english = [" the "," and "," with "," for "," your "," new "," to "," from "," developers "," update "," app "," apps "," search "," now "," introduces "];
+  const portuguese = [" o "," a "," os "," as "," de "," do "," da "," para "," com "," novo "," nova "," aplicativo "," atualização "," busca "];
+  const en = english.filter(w => s.includes(w)).length;
+  const pt = portuguese.filter(w => s.includes(w)).length;
+  return en > pt + 1;
+}
+
+async function translateToPt(text = "") {
+  const input = cleanText(text).slice(0, 430);
+  if (!input || !looksEnglish(input)) return input;
   try {
+    const url = new URL("https://api.mymemory.translated.net/get");
+    url.searchParams.set("q", input);
+    url.searchParams.set("langpair", "en|pt-BR");
     const res = await fetch(url, {
-      headers: { "User-Agent": "Mozilla/5.0 (compatible; NovaByteAtualiza/1.0; +https://novabytesolucoes.com.br/)" },
-      redirect: "follow",
-      signal: AbortSignal.timeout(15000)
+      headers: { "User-Agent": "NovaByteAtualiza/2.0" },
+      signal: AbortSignal.timeout(12000)
     });
     if (!res.ok) return "";
-    const html = await res.text();
-    return cleanText(html).slice(0, 14000);
+    const data = await res.json();
+    const translated = cleanText(data?.responseData?.translatedText || "");
+    if (!translated || looksEnglish(translated)) return "";
+    return translated;
   } catch {
     return "";
   }
 }
 
-function validateArticle(article) {
-  if (!article || typeof article !== "object") throw new Error("A IA não retornou um artigo válido.");
-  if (!article.title || article.title.length < 25 || article.title.length > 100) throw new Error("Título fora do padrão.");
-  if (!article.description || article.description.length < 90 || article.description.length > 165) throw new Error("Meta description fora do padrão.");
-  if (!article.summary || article.summary.length < 80) throw new Error("Resumo curto demais.");
-  if (!article.contentHtml || article.contentHtml.length < 1200) throw new Error("Artigo curto demais.");
-  if (!/<h2>/i.test(article.contentHtml)) throw new Error("Artigo sem subtítulos.");
+function sentenceSummary(text = "") {
+  const clean = cleanText(text)
+    .replace(/^Posted by[^.]{0,180}\.?\s*/i, "")
+    .replace(/^Publicado por[^.]{0,180}\.?\s*/i, "");
+  return clean.split(/(?<=[.!?])\s+/).slice(0, 2).join(" ").slice(0, 520).trim();
 }
 
-function generateArticle(item) {
-  const raw = cleanText(item.contentSnippet || item.content || item.summary || "");
-  const excerpt = raw.split(/(?<=[.!?])\s+/).slice(0,3).join(" ").slice(0,650);
-  const title = String(item.title || "Atualização de tecnologia").trim();
+function practicalText(category = "") {
+  const c = category.toLowerCase();
+  if (c.includes("android") || c.includes("aplicativo")) {
+    return "Para empresas e desenvolvedores, o ponto principal é acompanhar compatibilidade, adaptação de interfaces, testes em diferentes formatos de tela e mudanças que possam afetar a publicação de aplicativos.";
+  }
+  if (c.includes("seo") || c.includes("search") || c.includes("google")) {
+    return "Para quem depende do Google, vale verificar se a atualização muda indexação, apresentação dos resultados, conteúdo, desempenho ou a forma como as páginas são descobertas.";
+  }
+  if (c.includes("web") || c.includes("performance")) {
+    return "Para sites e sistemas web, vale observar impacto em desempenho, compatibilidade, experiência no celular e boas práticas de desenvolvimento.";
+  }
+  return "Para empresas e profissionais, vale avaliar se a novidade muda ferramentas, processos, experiência digital ou oportunidades de automação.";
+}
+
+async function generateArticle(item) {
+  const rawTitle = cleanText(item.title || "Atualização de tecnologia");
+  const rawSnippet = sentenceSummary(item.contentSnippet || item.content || item.summary || "");
+  const title = await translateToPt(rawTitle);
+  const snippet = await translateToPt(rawSnippet);
+
+  if (!title || title.length < 18 || looksEnglish(title)) throw new Error("Título não ficou confiável em português.");
+  if (!snippet || snippet.length < 45 || looksEnglish(snippet)) throw new Error("Resumo não ficou confiável em português.");
+
   const category = item.sourceCategory || "Tecnologia";
-  const descriptionBase = `${title}. Veja o que essa atualização significa na prática para empresas, sites, aplicativos e profissionais.`;
-  const description = descriptionBase.slice(0,155);
-  const summary = excerpt || `A ${item.sourceName} publicou uma nova atualização relacionada a ${category.toLowerCase()}. A NovaByte reuniu os pontos principais e o impacto prático.`;
-  const practical = category.toLowerCase().includes("android") ? "Para empresas e desenvolvedores, vale acompanhar como a mudança afeta desenvolvimento, compatibilidade e publicação de aplicativos." : category.toLowerCase().includes("seo") || category.toLowerCase().includes("search") ? "Para donos de sites, vale verificar se a mudança afeta indexação, conteúdo, desempenho ou visibilidade nas buscas." : "Para empresas e profissionais, a principal recomendação é avaliar se a novidade muda ferramentas, processos, desempenho ou experiência digital.";
+  const descriptionBase = `${title}. Entenda a novidade e o impacto prático para empresas, sites, aplicativos e profissionais.`;
+  const description = descriptionBase.slice(0, 155);
+  const summary = snippet.slice(0, 520);
+
   const body = [
-    `<h2>O que foi anunciado</h2><p>${escapeHtml(summary)}</p>`,
-    `<h2>Por que isso importa</h2><p>Esta atualização foi publicada por ${escapeHtml(item.sourceName)} e faz parte das mudanças recentes no ecossistema de ${escapeHtml(category)}. A NovaByte acompanha essas fontes oficiais para destacar apenas novidades com impacto prático.</p>`,
-    `<h2>O que muda na prática</h2><p>${escapeHtml(practical)}</p>`,
-    `<h2>O que vale acompanhar agora</h2><p>Como a atualização pode evoluir ou ganhar novos detalhes, vale acompanhar a documentação oficial e testar mudanças antes de aplicá-las em produção.</p>`
+    `<h2>O que foi anunciado</h2><p>Segundo a ${escapeHtml(item.sourceName)}, ${escapeHtml(summary.charAt(0).toLowerCase() + summary.slice(1))}</p>`,
+    `<h2>Por que isso importa</h2><p>A atualização entra no radar da NovaByte porque está ligada a ${escapeHtml(category.toLowerCase())}. Em vez de reproduzir a publicação original, destacamos o ponto central e o que merece atenção para quem trabalha ou investe em tecnologia.</p>`,
+    `<h2>O que muda na prática</h2><p>${escapeHtml(practicalText(category))}</p>`,
+    `<h2>O que vale acompanhar agora</h2><p>A recomendação é acompanhar a documentação oficial e esperar detalhes adicionais quando a novidade ainda estiver em implantação. Mudanças técnicas devem ser testadas antes de entrar em produção.</p>`
   ].join("");
+
   return { title, description, summary, contentHtml: body };
+}
+
+function escapeXml(value = "") {
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&apos;");
+}
+
+function wrapTitle(text, max = 30) {
+  const words = String(text).split(/\s+/);
+  const lines = [];
+  let line = "";
+  for (const word of words) {
+    const next = line ? line + " " + word : word;
+    if (next.length > max && line) {
+      lines.push(line);
+      line = word;
+    } else {
+      line = next;
+    }
+  }
+  if (line) lines.push(line);
+  return lines.slice(0, 4);
+}
+
+function generateCover({ title, category, dateBR, slug }) {
+  const lines = wrapTitle(title);
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+<defs>
+  <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0%" stop-color="#07111f"/>
+    <stop offset="58%" stop-color="#0d2740"/>
+    <stop offset="100%" stop-color="#173f5e"/>
+  </linearGradient>
+  <radialGradient id="glow">
+    <stop offset="0%" stop-color="#70c8fb" stop-opacity=".28"/>
+    <stop offset="100%" stop-color="#70c8fb" stop-opacity="0"/>
+  </radialGradient>
+</defs>
+<rect width="1200" height="630" fill="url(#bg)"/>
+<circle cx="1040" cy="120" r="260" fill="url(#glow)"/>
+<circle cx="1080" cy="600" r="330" fill="#ffffff" opacity=".025"/>
+<path d="M870 70 L1120 190 L1010 440 L780 320 Z" fill="none" stroke="#70c8fb" stroke-opacity=".12" stroke-width="2"/>
+<text x="72" y="78" fill="#70c8fb" font-family="Arial,Helvetica,sans-serif" font-size="24" font-weight="700" letter-spacing="2">NOVABYTE ATUALIZA</text>
+<rect x="72" y="112" width="410" height="44" rx="22" fill="#102d49" stroke="#376889"/>
+<text x="94" y="141" fill="#d8efff" font-family="Arial,Helvetica,sans-serif" font-size="19" font-weight="700">${escapeXml(category.toUpperCase().slice(0,38))}</text>
+${lines.map((line,i)=>`<text x="72" y="${245+i*66}" fill="#ffffff" font-family="Arial,Helvetica,sans-serif" font-size="48" font-weight="700">${escapeXml(line)}</text>`).join("")}
+<text x="72" y="570" fill="#a9c4da" font-family="Arial,Helvetica,sans-serif" font-size="22">${escapeXml(dateBR)}  •  novabytesolucoes.com.br</text>
+<text x="1080" y="560" text-anchor="middle" fill="#70c8fb" font-family="Arial,Helvetica,sans-serif" font-size="68" font-weight="800">N·B</text>
+</svg>`;
+
+  const dir = path.join(ROOT, "assets/news");
+  fs.mkdirSync(dir, { recursive: true });
+  const out = path.join(dir, `${slug}.svg`);
+  fs.writeFileSync(out, svg, "utf8");
+  return `/assets/news/${slug}.svg`;
 }
 
 function renderNewsCard(post) {
@@ -167,10 +259,25 @@ async function main() {
     return;
   }
 
-  const picked = candidates[0];
+  let picked = null;
+  let article = null;
+  for (const candidate of candidates.slice(0, 8)) {
+    try {
+      const candidateArticle = await generateArticle(candidate);
+      picked = candidate;
+      article = candidateArticle;
+      break;
+    } catch (error) {
+      console.warn(`Pulando "${candidate.title}": ${error.message}`);
+    }
+  }
+
+  if (!picked || !article) {
+    console.log("Nenhuma notícia passou no filtro de português e qualidade hoje.");
+    return;
+  }
+
   console.log(`Tema selecionado: ${picked.title} (${picked.sourceName})`);
-  const sourceText = await fetchSourceText(picked.link);
-  const article = generateArticle(picked);
   const slug = slugify(article.title, { lower: true, strict: true, locale: "pt", trim: true }).slice(0, 90);
   if (!slug) throw new Error("Não foi possível gerar slug.");
   if (fs.existsSync(path.join(ROOT, `${slug}.html`))) {
@@ -181,6 +288,7 @@ async function main() {
   }
 
   const { iso, br } = localDate();
+  const imageUrl = generateCover({ title: article.title, category: picked.sourceCategory, dateBR: br, slug });
   const html = renderArticle({
     title: article.title,
     description: article.description,
@@ -189,6 +297,7 @@ async function main() {
     dateISO: iso,
     summary: article.summary,
     contentHtml: article.contentHtml,
+    imageUrl,
     sourceName: picked.sourceName,
     sourceUrl: picked.link,
     category: picked.sourceCategory
@@ -202,7 +311,7 @@ async function main() {
     description: article.description,
     date: iso,
     category: picked.sourceCategory,
-    image: "/og-image.png",
+    image: imageUrl,
     source: picked.link
   });
   history.published_ids = history.published_ids.slice(0, 500);
