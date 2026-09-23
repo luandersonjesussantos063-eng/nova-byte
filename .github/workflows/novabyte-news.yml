@@ -1,0 +1,50 @@
+name: NovaByte Atualiza
+
+on:
+  schedule:
+    - cron: "30 12 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: novabyte-atualiza
+  cancel-in-progress: false
+
+jobs:
+  publish-news:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Baixar o site
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Instalar dependências
+        run: npm install --no-audit --no-fund
+
+      - name: Gerar e publicar uma notícia
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: node scripts/news/run-news.mjs
+
+      - name: Publicar alterações no repositório
+        run: |
+          if git diff --quiet && [ -z "$(git status --porcelain)" ]; then
+            echo "Nenhuma notícia nova para publicar."
+            exit 0
+          fi
+          git config user.name "NovaByte Atualiza Bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add index.html noticias-tecnologia.html sitemap.xml scripts/news/history.json assets/news/ '*.html'
+          git commit -m "NovaByte Atualiza: publicação automática"
+          git push
