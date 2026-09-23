@@ -1,0 +1,82 @@
+export function escapeHtml(value = "") {
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+export function renderArticle({ title, description, slug, dateBR, dateISO, summary, contentHtml, imageUrl, sourceName, sourceUrl, category }) {
+  const safeTitle = escapeHtml(title);
+  const safeDescription = escapeHtml(description);
+  const safeSummary = escapeHtml(summary);
+  const safeSource = escapeHtml(sourceName);
+  const safeSourceUrl = escapeHtml(sourceUrl);
+  const schema = JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "NewsArticle",
+    headline: title,
+    description,
+    datePublished: dateISO,
+    dateModified: dateISO,
+    image: ["https://novabytesolucoes.com.br" + imageUrl],
+    author: {
+      "@type": "Person",
+      name: "Luanderson Santos",
+      url: "https://novabytesolucoes.com.br/sobre.html#luanderson"
+    },
+    publisher: {
+      "@type": "Organization",
+      name: "NovaByte Soluções",
+      url: "https://novabytesolucoes.com.br/"
+    },
+    mainEntityOfPage: "https://novabytesolucoes.com.br/" + slug + ".html"
+  });
+
+  return `<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta name="google-adsense-account" content="ca-pub-2466231259507657">
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2466231259507657" crossorigin="anonymous"></script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#07111f">
+<title>${safeTitle} | NovaByte Atualiza</title>
+<meta name="description" content="${safeDescription}">
+<meta name="robots" content="index,follow,max-image-preview:large">
+<link rel="canonical" href="https://novabytesolucoes.com.br/${slug}.html">
+<meta property="og:type" content="article">
+<meta property="og:locale" content="pt_BR">
+<meta property="og:site_name" content="NovaByte Soluções">
+<meta property="og:title" content="${safeTitle}">
+<meta property="og:description" content="${safeDescription}">
+<meta property="og:url" content="https://novabytesolucoes.com.br/${slug}.html">
+<meta property="og:image" content="https://novabytesolucoes.com.br${imageUrl}">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/portal.css">
+<style>
+.news-cover{width:100%;aspect-ratio:3/2;object-fit:cover;border-radius:22px;margin:24px 0;border:1px solid #29425d}
+.news-summary{background:#0b1b2c;border:1px solid #29425d;border-radius:18px;padding:20px;margin:22px 0}
+.news-source{font-size:14px;color:#9bb0ca;margin-top:30px;padding-top:18px;border-top:1px solid #293f5c}
+</style>
+<script type="application/ld+json">${schema}</script>
+</head>
+<body>
+<header class="nb-header"><div><a class="nb-brand" href="/">NovaByte Soluções</a><nav><a href="/">Início</a><a href="/noticias-tecnologia.html">Atualiza</a><a href="/respostas-novabyte.html">Respostas</a><a href="/contato.html">Contato</a></nav></div></header>
+<main class="nb-main">
+<p class="nb-crumbs"><a href="/">Início</a> › <a href="/noticias-tecnologia.html">NovaByte Atualiza</a> › ${safeTitle}</p>
+<p class="nb-meta">${escapeHtml(category).toUpperCase()} · ${dateBR}</p>
+<h1>${safeTitle}</h1>
+<p class="lead">${safeDescription}</p>
+<img class="news-cover" src="${imageUrl}" alt="Ilustração da NovaByte para a notícia: ${safeTitle}" width="1536" height="1024">
+<div class="news-summary"><strong>Resumo rápido</strong><p>${safeSummary}</p></div>
+${contentHtml}
+<p class="news-source"><strong>Fonte consultada:</strong> <a href="${safeSourceUrl}" target="_blank" rel="noopener noreferrer nofollow">${safeSource}</a>. A NovaByte resume e contextualiza a informação com texto próprio.</p>
+<section class="nb-callout"><h2>O que isso muda para o seu negócio?</h2><p>Se você quer entender como essa novidade pode ser aplicada ao seu site, sistema ou aplicativo, a NovaByte pode analisar seu caso.</p><a class="nb-button" href="https://wa.me/5531983771576?text=Ol%C3%A1%2C%20vi%20uma%20not%C3%ADcia%20na%20NovaByte%20e%20quero%20entender%20como%20isso%20pode%20ajudar%20meu%20neg%C3%B3cio." target="_blank" rel="noopener noreferrer">Falar com a NovaByte ↗</a></section>
+</main>
+<footer class="nb-footer"><strong>NovaByte Atualiza</strong><div>Notícias de tecnologia explicadas para empresas e profissionais.</div><nav><a href="/noticias-tecnologia.html">Notícias</a><a href="/respostas-novabyte.html">Respostas</a><a href="/sobre.html">Sobre</a><a href="/contato.html">Contato</a></nav></footer>
+<script defer src="/portal-privacy.js"></script>
+</body></html>`;
+}
