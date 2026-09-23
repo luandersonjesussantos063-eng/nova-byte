@@ -7,10 +7,11 @@ export function escapeHtml(value = "") {
     .replaceAll("'", "&#039;");
 }
 
-export function renderArticle({ title, description, slug, dateBR, dateISO, summary, contentHtml, sourceName, sourceUrl, category }) {
+export function renderArticle({ title, description, slug, dateBR, dateISO, summary, contentHtml, imageUrl, sourceName, sourceUrl, category }) {
   const safeTitle = escapeHtml(title);
   const safeDescription = escapeHtml(description);
   const safeSummary = escapeHtml(summary);
+  const safeImage = escapeHtml(imageUrl || "/og-image.png");
   const safeSource = escapeHtml(sourceName);
   const safeSourceUrl = escapeHtml(sourceUrl);
   const schema = JSON.stringify({
@@ -57,6 +58,7 @@ export function renderArticle({ title, description, slug, dateBR, dateISO, summa
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="/portal.css">
 <style>
+.news-cover{width:100%;aspect-ratio:1200/630;object-fit:cover;border-radius:22px;margin:24px 0;border:1px solid #29425d;background:#0b1b2c}
 .news-summary{background:#0b1b2c;border:1px solid #29425d;border-radius:18px;padding:20px;margin:22px 0}
 .news-source{font-size:14px;color:#9bb0ca;margin-top:30px;padding-top:18px;border-top:1px solid #293f5c}
 </style>
@@ -69,9 +71,10 @@ export function renderArticle({ title, description, slug, dateBR, dateISO, summa
 <p class="nb-meta">${escapeHtml(category).toUpperCase()} · ${dateBR}</p>
 <h1>${safeTitle}</h1>
 <p class="lead">${safeDescription}</p>
+<img class="news-cover" src="${safeImage}" alt="Capa da notícia: ${safeTitle}" width="1200" height="630">
 <div class="news-summary"><strong>Resumo rápido</strong><p>${safeSummary}</p></div>
 ${contentHtml}
-<p class="news-source"><strong>Fonte consultada:</strong> <a href="${safeSourceUrl}" target="_blank" rel="noopener noreferrer nofollow">${safeSource}</a>. A NovaByte resume e contextualiza a informação com texto próprio.</p>
+<p class="news-source"><strong>Fonte consultada:</strong> <a href="${safeSourceUrl}" target="_blank" rel="noopener noreferrer nofollow">${safeSource}</a>. A NovaByte publica um resumo próprio e indica a fonte original para consulta.</p>
 <section class="nb-callout"><h2>O que isso muda para o seu negócio?</h2><p>Se você quer entender como essa novidade pode ser aplicada ao seu site, sistema ou aplicativo, a NovaByte pode analisar seu caso.</p><a class="nb-button" href="https://wa.me/5531983771576?text=Ol%C3%A1%2C%20vi%20uma%20not%C3%ADcia%20na%20NovaByte%20e%20quero%20entender%20como%20isso%20pode%20ajudar%20meu%20neg%C3%B3cio." target="_blank" rel="noopener noreferrer">Falar com a NovaByte ↗</a></section>
 </main>
 <footer class="nb-footer"><strong>NovaByte Atualiza</strong><div>Notícias de tecnologia explicadas para empresas e profissionais.</div><nav><a href="/noticias-tecnologia.html">Notícias</a><a href="/respostas-novabyte.html">Respostas</a><a href="/sobre.html">Sobre</a><a href="/contato.html">Contato</a></nav></footer>
