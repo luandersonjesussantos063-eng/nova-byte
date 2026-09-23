@@ -259,7 +259,10 @@ function updateHome() {
   const cards = latest.map(post => `<a class="studio-service" href="/${escapeHtml(post.slug)}.html"><span class="service-number">${escapeHtml(post.date.slice(8,10)+"/"+post.date.slice(5,7))}</span><div class="service-icon" aria-hidden="true">✦</div><h3>${escapeHtml(post.title)}</h3><p>${escapeHtml(post.description)}</p><div class="service-tags"><span>${escapeHtml(post.category)}</span></div></a>`).join("");
   const replacement = `<section class="shell studio-section" aria-labelledby="news-title"><div class="section-intro"><div><p class="section-index">NovaByte Atualiza</p><h2 id="news-title">Tecnologia muda rápido.<br>A gente traduz o que importa.</h2></div><p>Notícias sobre IA, Google, SEO, Android e aplicativos com foco no impacto real para empresas e projetos digitais.</p></div><div class="services-grid">${cards}</div><p><a class="text-link" href="/noticias-tecnologia.html">Ver todas as notícias <span aria-hidden="true">↗</span></a></p></section>`;
   const re = /<section class="shell studio-section" aria-labelledby="news-title">[\s\S]*?<\/section>/;
-  if (!re.test(html)) throw new Error("Não encontrei a seção NovaByte Atualiza na home.");
+  if (!re.test(html)) {
+    console.log("Home comercial sem bloco dinâmico de notícias; atualização da home ignorada.");
+    return;
+  }
   html = html.replace(re, replacement);
   fs.writeFileSync(file, html);
 }
