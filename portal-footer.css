@@ -1,1 +1,2 @@
+@import url("/brand.css");
 .nb-footer{border-top:1px solid #243349;padding:28px 24px;max-width:1100px;margin:auto;color:#98acc8;font:13px/1.7 system-ui,sans-serif}.nb-footer nav{display:flex;flex-wrap:wrap;gap:12px 20px;margin-top:14px}.nb-footer a{color:#aaceef}.nb-editorial{margin-top:26px;padding:18px 0;border-top:1px solid #2a3950;font:14px/1.6 system-ui,sans-serif;color:#9bb1cc}.nb-editorial a{color:#8bd4ff}.nb-footer a:focus-visible{outline:3px solid #91d6ff;outline-offset:3px}
