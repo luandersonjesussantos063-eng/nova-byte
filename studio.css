@@ -51,3 +51,13 @@
 .trust-note{margin-top:15px;color:#768279;font-size:11px}
 @media(max-width:900px){.benefit-grid{grid-template-columns:1fr 1fr}.local-grid{grid-template-columns:1fr;gap:30px}.trust-grid{grid-template-columns:1fr}}
 @media(max-width:760px){.studio-hero-sales{grid-template-columns:1fr}.hero-value-panel{padding:22px}.benefit-grid{grid-template-columns:1fr}.local-section{padding:60px 0}}
+
+/* Depoimentos */
+.testimonials-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.testimonial-card{border:1px solid var(--line);border-radius:13px;background:linear-gradient(155deg,#151c20,#101517);padding:26px;display:flex;flex-direction:column;min-height:100%}
+.testimonial-stars{color:var(--lime);letter-spacing:3px;font-size:13px;margin-bottom:16px}
+.testimonial-card blockquote{margin:0;color:#c9d1cc;font-size:14px;line-height:1.9}
+.testimonial-card footer{margin-top:auto;padding-top:22px;border-top:1px solid #ffffff10}
+.testimonial-card footer strong{display:block;font-size:14px}
+.testimonial-card footer span{display:block;color:#819087;font-size:11px;margin-top:3px}
+@media(max-width:760px){.testimonials-grid{grid-template-columns:1fr}.testimonial-card{padding:22px}.testimonial-card blockquote{font-size:13px}}
