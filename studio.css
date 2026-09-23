@@ -57,7 +57,7 @@
 .testimonial-card{border:1px solid var(--line);border-radius:13px;background:linear-gradient(155deg,#151c20,#101517);padding:26px;display:flex;flex-direction:column;min-height:100%}
 .testimonial-stars{color:var(--lime);letter-spacing:3px;font-size:13px;margin-bottom:16px}
 .testimonial-card blockquote{margin:0;color:#c9d1cc;font-size:14px;line-height:1.9}
-.testimonial-card footer{margin-top:auto;padding-top:22px;border-top:1px solid #ffffff10}
-.testimonial-card footer strong{display:block;font-size:14px}
-.testimonial-card footer span{display:block;color:#819087;font-size:11px;margin-top:3px}
+.testimonial-card footer{margin-top:auto;padding-top:22px;border-top:1px solid #ffffff10;display:flex;flex-direction:column;align-items:flex-start;gap:4px}
+.testimonial-card footer strong{display:block;font-size:16px;line-height:1.25}
+.testimonial-card footer span{display:block;color:#819087;font-size:12px;line-height:1.35;margin-top:0}
 @media(max-width:760px){.testimonials-grid{grid-template-columns:1fr}.testimonial-card{padding:22px}.testimonial-card blockquote{font-size:13px}}
