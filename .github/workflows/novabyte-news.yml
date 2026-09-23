@@ -35,8 +35,6 @@ jobs:
         run: npm install --no-audit --no-fund
 
       - name: Gerar e publicar uma notícia
-        env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: node scripts/news/run-news.mjs
 
       - name: Publicar alterações no repositório
