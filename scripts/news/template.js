@@ -28,9 +28,23 @@ export function renderArticle({ title, description, slug, dateBR, dateISO, summa
       url: "https://novabytesolucoes.com.br/sobre.html#luanderson"
     },
     publisher: {
-      "@type": "Organization",
+      "@type": ["Organization","ProfessionalService"],
       name: "NovaByte Soluções",
-      url: "https://novabytesolucoes.com.br/"
+      url: "https://novabytesolucoes.com.br/",
+      address: {
+        "@type": "PostalAddress",
+        addressLocality: "Lucas do Rio Verde",
+        addressRegion: "MT",
+        addressCountry: "BR"
+      },
+      areaServed: {
+        "@type": "City",
+        name: "Lucas do Rio Verde",
+        containedInPlace: {
+          "@type": "State",
+          name: "Mato Grosso"
+        }
+      }
     },
     mainEntityOfPage: "https://novabytesolucoes.com.br/" + slug + ".html"
   });
@@ -61,6 +75,7 @@ export function renderArticle({ title, description, slug, dateBR, dateISO, summa
 .news-cover{width:100%;aspect-ratio:1200/630;object-fit:cover;border-radius:22px;margin:24px 0;border:1px solid #29425d;background:#0b1b2c}
 .news-summary{background:#0b1b2c;border:1px solid #29425d;border-radius:18px;padding:20px;margin:22px 0}
 .news-source{font-size:14px;color:#9bb0ca;margin-top:30px;padding-top:18px;border-top:1px solid #293f5c}
+.news-local{font-size:14px;color:#9bb0ca;margin:18px 0 0;padding:14px 16px;border-left:3px solid #70c8fb;background:#0b1b2c;border-radius:0 12px 12px 0}
 </style>
 <script type="application/ld+json">${schema}</script>
 </head>
@@ -75,7 +90,8 @@ export function renderArticle({ title, description, slug, dateBR, dateISO, summa
 <div class="news-summary"><strong>Resumo rápido</strong><p>${safeSummary}</p></div>
 ${contentHtml}
 <p class="news-source"><strong>Fonte consultada:</strong> <a href="${safeSourceUrl}" target="_blank" rel="noopener noreferrer nofollow">${safeSource}</a>. A NovaByte publica um resumo próprio e indica a fonte original para consulta.</p>
-<section class="nb-callout"><h2>O que isso muda para o seu negócio?</h2><p>Se você quer entender como essa novidade pode ser aplicada ao seu site, sistema ou aplicativo, a NovaByte pode analisar seu caso.</p><a class="nb-button" href="https://wa.me/5531983771576?text=Ol%C3%A1%2C%20vi%20uma%20not%C3%ADcia%20na%20NovaByte%20e%20quero%20entender%20como%20isso%20pode%20ajudar%20meu%20neg%C3%B3cio." target="_blank" rel="noopener noreferrer">Falar com a NovaByte ↗</a></section>
+<p class="news-local">Conteúdo editorial da <strong>NovaByte Soluções</strong>, tecnologia e desenvolvimento digital em <strong>Lucas do Rio Verde (MT)</strong>.</p>
+<section class="nb-callout"><h2>O que isso muda para o seu negócio?</h2><p>Se você quer entender como essa novidade pode ser aplicada ao seu site, sistema ou aplicativo, a NovaByte pode analisar seu caso. Atendemos negócios de <strong>Lucas do Rio Verde (MT)</strong> e também projetos online.</p><a class="nb-button" href="https://wa.me/5531983771576?text=Ol%C3%A1%2C%20vi%20uma%20not%C3%ADcia%20na%20NovaByte%20e%20quero%20entender%20como%20isso%20pode%20ajudar%20meu%20neg%C3%B3cio." target="_blank" rel="noopener noreferrer">Falar com a NovaByte ↗</a></section>
 </main>
 <footer class="nb-footer"><strong>NovaByte Atualiza</strong><div>Notícias de tecnologia explicadas para empresas e profissionais.</div><nav><a href="/noticias-tecnologia.html">Notícias</a><a href="/respostas-novabyte.html">Respostas</a><a href="/sobre.html">Sobre</a><a href="/contato.html">Contato</a></nav></footer>
 <script defer src="/portal-privacy.js"></script>
