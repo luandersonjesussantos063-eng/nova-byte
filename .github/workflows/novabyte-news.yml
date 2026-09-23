@@ -1,6 +1,9 @@
 name: NovaByte Atualiza
 
 on:
+  push:
+    paths:
+      - ".github/novabyte-news-trigger.txt"
   schedule:
     - cron: "30 12 * * *"
   workflow_dispatch:
