@@ -118,6 +118,26 @@ function sentenceSummary(text = "") {
   return clean.split(/(?<=[.!?])\s+/).slice(0, 2).join(" ").slice(0, 520).trim();
 }
 
+function polishTitle(title = "", category = "") {
+  let t = cleanText(title)
+    .replace(/[.!]+$/g, "")
+    .replace(/^Traga seu jogo para Android para a tela do carro hoje$/i, "Android leva jogos para a tela do carro: veja como funciona")
+    .replace(/^Leve seu jogo para Android para a tela do carro hoje$/i, "Android leva jogos para a tela do carro: veja como funciona")
+    .replace(/^Traga seus jogos para Android para a tela do carro hoje$/i, "Android leva jogos para a tela do carro: veja como funciona")
+    .replace(/^Conheça (.+)$/i, "$1: veja o que muda")
+    .replace(/^Apresentando (.+)$/i, "$1 chega com novidades")
+    .replace(/^Como trazer (.+)$/i, "$1: veja como funciona");
+
+  if (/^como\s+/i.test(t) && !/[?:]/.test(t)) t = t.replace(/^como\s+/i, "") + ": veja como funciona";
+  if (/\bhoje$/i.test(t) && t.length > 55) t = t.replace(/\s+hoje$/i, "");
+  if (t.length > 88) {
+    const cut = t.slice(0, 85);
+    const lastSpace = cut.lastIndexOf(" ");
+    t = (lastSpace > 55 ? cut.slice(0,lastSpace) : cut).trim();
+  }
+  return t;
+}
+
 function practicalText(category = "") {
   const c = category.toLowerCase();
   if (c.includes("android") || c.includes("aplicativo")) {
@@ -135,7 +155,8 @@ function practicalText(category = "") {
 async function generateArticle(item) {
   const rawTitle = cleanText(item.title || "Atualização de tecnologia");
   const rawSnippet = sentenceSummary(item.contentSnippet || item.content || item.summary || "");
-  const title = await translateToPt(rawTitle);
+  const translatedTitle = await translateToPt(rawTitle);
+  const title = polishTitle(translatedTitle, item.sourceCategory || "Tecnologia");
   const snippet = await translateToPt(rawSnippet);
 
   if (!title || title.length < 18 || looksEnglish(title)) throw new Error("Título não ficou confiável em português.");
