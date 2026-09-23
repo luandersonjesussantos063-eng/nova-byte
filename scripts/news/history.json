@@ -1,8 +1,18 @@
 {
   "published_ids": [
+    "tag:blogger.com,1999:blog-6755709643044947179.post-2480597859769864074",
     "tag:blogger.com,1999:blog-6755709643044947179.post-3564094472242054542"
   ],
   "posts": [
+    {
+      "slug": "traga-seu-jogo-para-android-para-a-tela-do-carro-hoje",
+      "title": "Traga seu jogo para Android para a tela do carro hoje",
+      "description": "Traga seu jogo para Android para a tela do carro hoje. Entenda a novidade e o impacto prático para empresas, sites, aplicativos e profissionais.",
+      "date": "2026-09-23",
+      "category": "Android e aplicativos",
+      "image": "/assets/news/traga-seu-jogo-para-android-para-a-tela-do-carro-hoje.svg",
+      "source": "https://android-developers.googleblog.com/2026/09/bring-android-game-to-car-screen.html"
+    },
     {
       "slug": "land-your-apps-on-googlebook-with-adaptive-development",
       "title": "Googlebook usa base Android compartilhada e aposta em apps adaptativos",
