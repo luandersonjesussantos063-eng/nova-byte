@@ -1,0 +1,17 @@
+[
+  {
+    "name": "Google Search Central",
+    "url": "https://developers.google.com/search/updates/search_docs_updates.rss",
+    "category": "Google Search e SEO"
+  },
+  {
+    "name": "Android Developers Blog",
+    "url": "https://android-developers.googleblog.com/feeds/posts/default?alt=rss",
+    "category": "Android e aplicativos"
+  },
+  {
+    "name": "Chrome for Developers",
+    "url": "https://developer.chrome.com/blog/feed.xml",
+    "category": "Web e performance"
+  }
+]
