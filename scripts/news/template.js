@@ -7,7 +7,7 @@ export function escapeHtml(value = "") {
     .replaceAll("'", "&#039;");
 }
 
-export function renderArticle({ title, description, slug, dateBR, dateISO, summary, contentHtml, imageUrl, sourceName, sourceUrl, category }) {
+export function renderArticle({ title, description, slug, dateBR, dateISO, summary, contentHtml, sourceName, sourceUrl, category }) {
   const safeTitle = escapeHtml(title);
   const safeDescription = escapeHtml(description);
   const safeSummary = escapeHtml(summary);
@@ -20,7 +20,7 @@ export function renderArticle({ title, description, slug, dateBR, dateISO, summa
     description,
     datePublished: dateISO,
     dateModified: dateISO,
-    image: ["https://novabytesolucoes.com.br" + imageUrl],
+    image: ["https://novabytesolucoes.com.br/og-image.png"],
     author: {
       "@type": "Person",
       name: "Luanderson Santos",
@@ -52,12 +52,11 @@ export function renderArticle({ title, description, slug, dateBR, dateISO, summa
 <meta property="og:title" content="${safeTitle}">
 <meta property="og:description" content="${safeDescription}">
 <meta property="og:url" content="https://novabytesolucoes.com.br/${slug}.html">
-<meta property="og:image" content="https://novabytesolucoes.com.br${imageUrl}">
+<meta property="og:image" content="https://novabytesolucoes.com.br/og-image.png">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="/portal.css">
 <style>
-.news-cover{width:100%;aspect-ratio:3/2;object-fit:cover;border-radius:22px;margin:24px 0;border:1px solid #29425d}
 .news-summary{background:#0b1b2c;border:1px solid #29425d;border-radius:18px;padding:20px;margin:22px 0}
 .news-source{font-size:14px;color:#9bb0ca;margin-top:30px;padding-top:18px;border-top:1px solid #293f5c}
 </style>
@@ -70,7 +69,6 @@ export function renderArticle({ title, description, slug, dateBR, dateISO, summa
 <p class="nb-meta">${escapeHtml(category).toUpperCase()} · ${dateBR}</p>
 <h1>${safeTitle}</h1>
 <p class="lead">${safeDescription}</p>
-<img class="news-cover" src="${imageUrl}" alt="Ilustração da NovaByte para a notícia: ${safeTitle}" width="1536" height="1024">
 <div class="news-summary"><strong>Resumo rápido</strong><p>${safeSummary}</p></div>
 ${contentHtml}
 <p class="news-source"><strong>Fonte consultada:</strong> <a href="${safeSourceUrl}" target="_blank" rel="noopener noreferrer nofollow">${safeSource}</a>. A NovaByte resume e contextualiza a informação com texto próprio.</p>
