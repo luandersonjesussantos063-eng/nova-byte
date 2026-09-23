@@ -45,6 +45,6 @@ jobs:
           fi
           git config user.name "NovaByte Atualiza Bot"
           git config user.email "actions@users.noreply.github.com"
-          git add index.html noticias-tecnologia.html sitemap.xml scripts/news/history.json assets/news/ '*.html'
+          git add index.html noticias-tecnologia.html sitemap.xml scripts/news/history.json '*.html'
           git commit -m "NovaByte Atualiza: publicação automática"
           git push
