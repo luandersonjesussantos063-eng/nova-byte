@@ -86,7 +86,7 @@ export function renderArticle({ title, description, slug, dateBR, dateISO, summa
 <p class="nb-meta">${escapeHtml(category).toUpperCase()} · ${dateBR}</p>
 <h1>${safeTitle}</h1>
 <p class="lead">${safeDescription}</p>
-<img class="news-cover" src="${safeImage}" alt="Capa da notícia: ${safeTitle}" width="1200" height="630">
+<img class="news-cover" src="${safeImage}" alt="Capa da notícia: ${safeTitle}">
 <div class="news-summary"><strong>Resumo rápido</strong><p>${safeSummary}</p></div>
 ${contentHtml}
 <p class="news-source"><strong>Fonte consultada:</strong> <a href="${safeSourceUrl}" target="_blank" rel="noopener noreferrer nofollow">${safeSource}</a>. A NovaByte publica um resumo próprio e indica a fonte original para consulta.</p>
