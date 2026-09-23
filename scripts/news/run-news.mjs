@@ -2,7 +2,6 @@ import fs from "node:fs";
 import path from "node:path";
 import Parser from "rss-parser";
 import slugify from "slugify";
-import OpenAI from "openai";
 import { renderArticle, escapeHtml } from "./template.js";
 
 const ROOT = process.cwd();
@@ -11,11 +10,6 @@ const parser = new Parser({
   headers: { "User-Agent": "NovaByteAtualiza/1.0 (+https://novabytesolucoes.com.br/)" }
 });
 
-if (!process.env.OPENAI_API_KEY) {
-  throw new Error("OPENAI_API_KEY não configurada nos Secrets do GitHub.");
-}
-
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 const sourcesPath = path.join(ROOT, "scripts/news/sources.json");
 const historyPath = path.join(ROOT, "scripts/news/history.json");
 const sources = JSON.parse(fs.readFileSync(sourcesPath, "utf8"));
@@ -111,73 +105,22 @@ function validateArticle(article) {
   if (!/<h2>/i.test(article.contentHtml)) throw new Error("Artigo sem subtítulos.");
 }
 
-async function generateArticle(item, sourceText) {
-  const prompt = `Você escreve para a área "NovaByte Atualiza", da NovaByte Soluções, um site brasileiro sobre desenvolvimento web, aplicativos, SEO e inteligência artificial.
-
-Crie uma matéria ORIGINAL em português do Brasil com base SOMENTE nas informações fornecidas abaixo.
-
-FONTE: ${item.sourceName}
-TÍTULO ORIGINAL: ${item.title || ""}
-URL: ${item.link || ""}
-RESUMO DO FEED: ${cleanText(item.contentSnippet || item.content || "").slice(0, 2500)}
-TEXTO EXTRAÍDO DA FONTE: ${sourceText}
-
-Regras obrigatórias:
-- Não copie frases da fonte. Parafraseie e contextualize.
-- Não invente números, datas, produtos, recursos, resultados ou declarações que não estejam na fonte.
-- Se algo não estiver claro, omita.
-- Foque no que muda na prática para empresas, sites, SEO, desenvolvedores ou aplicativos.
-- Não faça sensacionalismo.
-- Não diga que a NovaByte testou algo que não testou.
-- O texto deve ter entre 550 e 900 palavras.
-- Use 4 a 6 subtítulos <h2>.
-- Pode usar <p>, <h2>, <ul>, <li> e <strong>. Não use <html>, <body>, markdown ou links dentro do corpo.
-- A meta description deve ter entre 120 e 155 caracteres.
-- O título deve ser informativo e ter no máximo 90 caracteres.
-- O resumo deve ter 2 ou 3 frases.
-- Retorne apenas os campos solicitados.`;
-
-  const response = await openai.responses.create({
-    model: "gpt-5.6-luna",
-    input: prompt,
-    text: {
-      format: {
-        type: "json_schema",
-        name: "novabyte_news_article",
-        strict: true,
-        schema: {
-          type: "object",
-          additionalProperties: false,
-          properties: {
-            title: { type: "string" },
-            description: { type: "string" },
-            summary: { type: "string" },
-            contentHtml: { type: "string" }
-          },
-          required: ["title","description","summary","contentHtml"]
-        }
-      }
-    }
-  });
-  const article = JSON.parse(response.output_text);
-  validateArticle(article);
-  return article;
-}
-
-async function generateImage(title, category, slug) {
-  const response = await openai.images.generate({
-    model: "gpt-image-2",
-    prompt: `Editorial technology news cover for NovaByte Soluções. Topic: ${title}. Category: ${category}. Modern Brazilian technology publication, premium dark digital atmosphere, realistic devices or abstract interface elements when relevant, strong depth and lighting, clean composition, no text, no letters, no logos, no trademarks, no watermarks. Leave visual breathing room for use as a website article hero image.`,
-    size: "1536x1024",
-    quality: "low"
-  });
-  const base64 = response.data?.[0]?.b64_json;
-  if (!base64) throw new Error("A API de imagem não retornou a capa.");
-  const dir = path.join(ROOT, "assets/news");
-  fs.mkdirSync(dir, { recursive: true });
-  const file = path.join(dir, `${slug}.png`);
-  fs.writeFileSync(file, Buffer.from(base64, "base64"));
-  return `/assets/news/${slug}.png`;
+function generateArticle(item) {
+  const raw = cleanText(item.contentSnippet || item.content || item.summary || "");
+  const excerpt = raw.split(/(?<=[.!?])\s+/).slice(0,3).join(" ").slice(0,650);
+  const title = String(item.title || "Atualização de tecnologia").trim();
+  const category = item.sourceCategory || "Tecnologia";
+  const descriptionBase = `${title}. Veja o que essa atualização significa na prática para empresas, sites, aplicativos e profissionais.`;
+  const description = descriptionBase.slice(0,155);
+  const summary = excerpt || `A ${item.sourceName} publicou uma nova atualização relacionada a ${category.toLowerCase()}. A NovaByte reuniu os pontos principais e o impacto prático.`;
+  const practical = category.toLowerCase().includes("android") ? "Para empresas e desenvolvedores, vale acompanhar como a mudança afeta desenvolvimento, compatibilidade e publicação de aplicativos." : category.toLowerCase().includes("seo") || category.toLowerCase().includes("search") ? "Para donos de sites, vale verificar se a mudança afeta indexação, conteúdo, desempenho ou visibilidade nas buscas." : "Para empresas e profissionais, a principal recomendação é avaliar se a novidade muda ferramentas, processos, desempenho ou experiência digital.";
+  const body = [
+    `<h2>O que foi anunciado</h2><p>${escapeHtml(summary)}</p>`,
+    `<h2>Por que isso importa</h2><p>Esta atualização foi publicada por ${escapeHtml(item.sourceName)} e faz parte das mudanças recentes no ecossistema de ${escapeHtml(category)}. A NovaByte acompanha essas fontes oficiais para destacar apenas novidades com impacto prático.</p>`,
+    `<h2>O que muda na prática</h2><p>${escapeHtml(practical)}</p>`,
+    `<h2>O que vale acompanhar agora</h2><p>Como a atualização pode evoluir ou ganhar novos detalhes, vale acompanhar a documentação oficial e testar mudanças antes de aplicá-las em produção.</p>`
+  ].join("");
+  return { title, description, summary, contentHtml: body };
 }
 
 function renderNewsCard(post) {
@@ -227,7 +170,7 @@ async function main() {
   const picked = candidates[0];
   console.log(`Tema selecionado: ${picked.title} (${picked.sourceName})`);
   const sourceText = await fetchSourceText(picked.link);
-  const article = await generateArticle(picked, sourceText);
+  const article = generateArticle(picked);
   const slug = slugify(article.title, { lower: true, strict: true, locale: "pt", trim: true }).slice(0, 90);
   if (!slug) throw new Error("Não foi possível gerar slug.");
   if (fs.existsSync(path.join(ROOT, `${slug}.html`))) {
@@ -238,7 +181,6 @@ async function main() {
   }
 
   const { iso, br } = localDate();
-  const imageUrl = await generateImage(article.title, picked.sourceCategory, slug);
   const html = renderArticle({
     title: article.title,
     description: article.description,
@@ -247,7 +189,6 @@ async function main() {
     dateISO: iso,
     summary: article.summary,
     contentHtml: article.contentHtml,
-    imageUrl,
     sourceName: picked.sourceName,
     sourceUrl: picked.link,
     category: picked.sourceCategory
@@ -261,7 +202,7 @@ async function main() {
     description: article.description,
     date: iso,
     category: picked.sourceCategory,
-    image: imageUrl,
+    image: "/og-image.png",
     source: picked.link
   });
   history.published_ids = history.published_ids.slice(0, 500);
