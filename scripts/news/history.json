@@ -1,5 +1,6 @@
 {
   "published_ids": [
+    "tag:blogger.com,1999:blog-6755709643044947179.post-2032266210748359882",
     "tag:blogger.com,1999:blog-6755709643044947179.post-8242644365515649127",
     "tag:blogger.com,1999:blog-6755709643044947179.post-4451614233790722986",
     "tag:blogger.com,1999:blog-6755709643044947179.post-2715897309015635904",
@@ -7,6 +8,15 @@
     "tag:blogger.com,1999:blog-6755709643044947179.post-3564094472242054542"
   ],
   "posts": [
+    {
+      "slug": "leverage-android-skills-and-gemma-4-in-android-studio-quail-4",
+      "title": "Leverage Android skills and Gemma 4 in Android Studio Quail 4",
+      "description": "Leverage Android skills and Gemma 4 in Android Studio Quail 4. Entenda a novidade e o impacto prático para empresas, sites, aplicativos e profissionais.",
+      "date": "2026-09-24",
+      "category": "Android e aplicativos",
+      "image": "/assets/news/leverage-android-skills-and-gemma-4-in-android-studio-quail-4.svg",
+      "source": "https://android-developers.googleblog.com/2026/09/leverage-gemma-4-android-studio-quail.html"
+    },
     {
       "slug": "build-your-way-use-any-ai-agent-of-your-choice-in-android-studio",
       "title": "Build your way: Use any AI agent of your choice in Android Studio",
