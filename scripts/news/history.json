@@ -1,9 +1,19 @@
 {
   "published_ids": [
+    "tag:blogger.com,1999:blog-6755709643044947179.post-2715897309015635904",
     "tag:blogger.com,1999:blog-6755709643044947179.post-2480597859769864074",
     "tag:blogger.com,1999:blog-6755709643044947179.post-3564094472242054542"
   ],
   "posts": [
+    {
+      "slug": "introducing-the-androidx-security-state-libraries-a-unified-view-of-device-security",
+      "title": "Introducing the AndroidX Security State Libraries: A Unified View of Device Security",
+      "description": "Introducing the AndroidX Security State Libraries: A Unified View of Device Security. Entenda a novidade e o impacto prático para empresas, sites, aplicati",
+      "date": "2026-09-24",
+      "category": "Android e aplicativos",
+      "image": "/assets/news/introducing-the-androidx-security-state-libraries-a-unified-view-of-device-security.svg",
+      "source": "https://android-developers.googleblog.com/2026/09/introducing-androidx-security-state-libraries.html"
+    },
     {
       "slug": "traga-seu-jogo-para-android-para-a-tela-do-carro-hoje",
       "title": "Android leva jogos para a tela do carro: veja como funciona",
