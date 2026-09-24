@@ -1,0 +1,17 @@
+{
+  "name": "Anuncia Lucas",
+  "short_name": "Anuncia Lucas",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#061419",
+  "theme_color": "#071a21",
+  "description": "Classificados locais de Lucas do Rio Verde para vagas de emprego e imóveis para alugar ou comprar.",
+  "icons": [
+    {
+      "src": "./icon.svg?v=13-google",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
