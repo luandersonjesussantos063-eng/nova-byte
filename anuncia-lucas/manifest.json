@@ -8,7 +8,7 @@
   "description": "Classificados locais de Lucas do Rio Verde para vagas de emprego e imóveis para alugar ou comprar.",
   "icons": [
     {
-      "src": "./icon.svg?v=14-login",
+      "src": "./icon.svg?v=15-confirm",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any maskable"
