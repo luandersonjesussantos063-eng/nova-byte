@@ -1,4 +1,4 @@
-const CACHE_NAME = 'anuncia-lucas-v17-mode-toggle';
+const CACHE_NAME = 'anuncia-lucas-v18-fix-js';
 const APP_SHELL = [
   './',
   './index.html',
