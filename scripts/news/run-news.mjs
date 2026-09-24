@@ -83,11 +83,17 @@ async function getCandidates() {
 
 function looksEnglish(text = "") {
   const s = ` ${text.toLowerCase()} `;
-  const english = [" the "," and "," with "," for "," your "," new "," to "," from "," developers "," update "," app "," apps "," search "," now "," introduces "];
-  const portuguese = [" o "," a "," os "," as "," de "," do "," da "," para "," com "," novo "," nova "," aplicativo "," atualização "," busca "];
+  const english = [" the "," and "," with "," for "," your "," new "," to "," from "," developers "," update "," app "," apps "," search "," now "," introduces "," introducing "," unified "," view "," device "," libraries "," security "," building "," using "," launch "," announcing "," bring "," land "," what "," why "," how "];
+  const portuguese = [" o "," a "," os "," as "," de "," do "," da "," para "," com "," novo "," nova "," aplicativo "," atualização "," busca "," segurança "," informações "," dispositivos "," veja "," como "," chega "," muda "];
   const en = english.filter(w => s.includes(w)).length;
   const pt = portuguese.filter(w => s.includes(w)).length;
-  return en > pt + 1;
+
+  // Títulos em inglês costumam ter poucos conectivos detectáveis, mas várias
+  // palavras fortes de manchete. Isso evita publicar títulos inteiros em inglês.
+  const strongEnglish = ["introducing","unified","device","libraries","developers","announcing","building","using","security","launch","bring","land"];
+  const strongHits = strongEnglish.filter(w => s.includes(` ${w} `)).length;
+
+  return en > pt + 1 || (strongHits >= 2 && pt < 2);
 }
 
 async function translateToPt(text = "") {
