@@ -1,10 +1,20 @@
 {
   "published_ids": [
+    "tag:blogger.com,1999:blog-6755709643044947179.post-4451614233790722986",
     "tag:blogger.com,1999:blog-6755709643044947179.post-2715897309015635904",
     "tag:blogger.com,1999:blog-6755709643044947179.post-2480597859769864074",
     "tag:blogger.com,1999:blog-6755709643044947179.post-3564094472242054542"
   ],
   "posts": [
+    {
+      "slug": "android-bench-20-empurrando-a-fronteira-com-tarefas-desafiadoras-de-longo-horizonte",
+      "title": "Android Bench 2.0: empurrando a fronteira com tarefas desafiadoras de longo horizonte",
+      "description": "Android Bench 2.0: empurrando a fronteira com tarefas desafiadoras de longo horizonte. Entenda a novidade e o impacto prático para empresas, sites, aplicat",
+      "date": "2026-09-24",
+      "category": "Android e aplicativos",
+      "image": "/assets/news/android-bench-20-empurrando-a-fronteira-com-tarefas-desafiadoras-de-longo-horizonte.svg",
+      "source": "https://android-developers.googleblog.com/2026/09/android-bench-2-long-horizon-tasks.html"
+    },
     {
       "slug": "introducing-the-androidx-security-state-libraries-a-unified-view-of-device-security",
       "title": "Introducing the AndroidX Security State Libraries: A Unified View of Device Security",
