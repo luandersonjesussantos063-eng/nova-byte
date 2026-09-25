@@ -1,5 +1,6 @@
 {
   "published_ids": [
+    "tag:blogger.com,1999:blog-6755709643044947179.post-2142519968365769225",
     "tag:blogger.com,1999:blog-6755709643044947179.post-2032266210748359882",
     "tag:blogger.com,1999:blog-6755709643044947179.post-8242644365515649127",
     "tag:blogger.com,1999:blog-6755709643044947179.post-4451614233790722986",
@@ -8,6 +9,15 @@
     "tag:blogger.com,1999:blog-6755709643044947179.post-3564094472242054542"
   ],
   "posts": [
+    {
+      "slug": "o-whatsapp-atualizou-para-um-login-seguro-e-sem-interrupcoes-para-1-bilhao-de",
+      "title": "o WhatsApp atualizou para um login seguro e sem interrupções para 1 bilhão de",
+      "description": "o WhatsApp atualizou para um login seguro e sem interrupções para 1 bilhão de. Entenda a novidade e o impacto prático para empresas, sites, aplicativos e p",
+      "date": "2026-09-25",
+      "category": "Android e aplicativos",
+      "image": "/assets/news/o-whatsapp-atualizou-para-um-login-seguro-e-sem-interrupcoes-para-1-bilhao-de.svg",
+      "source": "https://android-developers.googleblog.com/2026/08/whatsapp-passkeys-secure-sign-in.html"
+    },
     {
       "slug": "leverage-android-skills-and-gemma-4-in-android-studio-quail-4",
       "title": "Leverage Android skills and Gemma 4 in Android Studio Quail 4",
