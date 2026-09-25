@@ -1,5 +1,6 @@
 {
   "published_ids": [
+    "2026-09-16-Added-documentation-on-adding-a-Search-profile-badge-to-your-website",
     "tag:blogger.com,1999:blog-6755709643044947179.post-2142519968365769225",
     "tag:blogger.com,1999:blog-6755709643044947179.post-2032266210748359882",
     "tag:blogger.com,1999:blog-6755709643044947179.post-8242644365515649127",
@@ -9,6 +10,15 @@
     "tag:blogger.com,1999:blog-6755709643044947179.post-3564094472242054542"
   ],
   "posts": [
+    {
+      "slug": "adicionada-documentacao-sobre-como-adicionar-um-emblema-de-perfil-de-pesquisa-ao-seu",
+      "title": "Adicionada documentação sobre como adicionar um emblema de perfil de pesquisa ao seu",
+      "description": "Adicionada documentação sobre como adicionar um emblema de perfil de pesquisa ao seu. Entenda a novidade e o impacto prático para empresas, sites, aplicati",
+      "date": "2026-09-25",
+      "category": "Google Search e SEO",
+      "image": "/assets/news/adicionada-documentacao-sobre-como-adicionar-um-emblema-de-perfil-de-pesquisa-ao-seu.svg",
+      "source": "https://developers.google.com/search/updates#september-2026"
+    },
     {
       "slug": "o-whatsapp-atualizou-para-um-login-seguro-e-sem-interrupcoes-para-1-bilhao-de",
       "title": "o WhatsApp atualizou para um login seguro e sem interrupções para 1 bilhão de",
