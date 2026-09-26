@@ -1,4 +1,17 @@
 (function(){
+  if(!window.__nbGaLoaded){
+    window.__nbGaLoaded=true;
+    var s=document.createElement("script");
+    s.async=true;
+    s.src="https://www.googletagmanager.com/gtag/js?id=G-XSB3WYJZ71";
+    document.head.appendChild(s);
+    window.dataLayer=window.dataLayer||[];
+    window.gtag=function(){dataLayer.push(arguments);};
+    gtag("js",new Date());
+    gtag("config","G-XSB3WYJZ71",{send_page_view:true});
+  }
+})();
+(function(){
   try{
     var params=new URLSearchParams(location.search);
     var utm={};
