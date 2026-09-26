@@ -242,5 +242,5 @@ $('editModal').addEventListener('click',e=>{if(e.target===$('editModal'))closeEd
 window.addEventListener('beforeunload',()=>{if(exportedUrl)URL.revokeObjectURL(exportedUrl);if(doc?.destroy)try{doc.destroy();}catch{}});
 window.addEventListener('resize',()=>{if(doc){clearTimeout(window.__nbResize);window.__nbResize=setTimeout(renderDocument,250);}});
 </script>
-</body>
+<script defer src="/analytics-prep.js"></script></body>
 </html>
