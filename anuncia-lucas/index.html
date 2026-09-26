@@ -361,5 +361,5 @@ async function boot(){bind();readOAuthSession();await loadAds();if(session?.acce
 boot();
 if('serviceWorker'in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=18-fix-js').catch(()=>{}));
 </script>
-</body>
+<script defer src="/analytics-prep.js"></script></body>
 </html>
