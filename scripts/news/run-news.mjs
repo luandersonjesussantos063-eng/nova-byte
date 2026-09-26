@@ -144,6 +144,17 @@ function polishTitle(title = "", category = "") {
   return t;
 }
 
+function titleLooksComplete(title = "") {
+  const t = cleanText(title).trim();
+  if (t.length < 24) return false;
+  if (/[,:;\-–—]$/.test(t)) return false;
+  const last = t.toLowerCase().split(/\s+/).at(-1);
+  const weakEndings = new Set(["de","da","do","das","dos","a","o","as","os","e","em","para","por","com","sem","um","uma","seu","sua"]);
+  if (weakEndings.has(last)) return false;
+  if (/\b(?:and|the|with|for|from|using|your|how|why)$/i.test(t)) return false;
+  return true;
+}
+
 function practicalText(category = "") {
   const c = category.toLowerCase();
   if (c.includes("android") || c.includes("aplicativo")) {
@@ -165,8 +176,8 @@ async function generateArticle(item) {
   const title = polishTitle(translatedTitle, item.sourceCategory || "Tecnologia");
   const snippet = await translateToPt(rawSnippet);
 
-  if (!title || title.length < 18 || looksEnglish(title)) throw new Error("Título não ficou confiável em português.");
-  if (!snippet || snippet.length < 45 || looksEnglish(snippet)) throw new Error("Resumo não ficou confiável em português.");
+  if (!title || !titleLooksComplete(title) || looksEnglish(title)) throw new Error("Título não ficou completo e confiável em português.");
+  if (!snippet || snippet.length < 80 || looksEnglish(snippet) || /^[a-z]\./i.test(snippet)) throw new Error("Resumo não ficou completo e confiável em português.");
 
   const category = item.sourceCategory || "Tecnologia";
   const descriptionBase = `${title}. Entenda a novidade e o impacto prático para empresas, sites, aplicativos e profissionais.`;
