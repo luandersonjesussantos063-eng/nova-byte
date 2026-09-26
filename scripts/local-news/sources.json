@@ -1,0 +1,17 @@
+[
+  {
+    "name": "Google Notícias - Lucas do Rio Verde",
+    "url": "https://news.google.com/rss/search?q=%22Lucas%20do%20Rio%20Verde%22&hl=pt-BR&gl=BR&ceid=BR:pt-419",
+    "category": "Lucas do Rio Verde"
+  },
+  {
+    "name": "Google Notícias - Prefeitura de Lucas do Rio Verde",
+    "url": "https://news.google.com/rss/search?q=%22Lucas%20do%20Rio%20Verde%22%20Prefeitura&hl=pt-BR&gl=BR&ceid=BR:pt-419",
+    "category": "Cidade e serviços"
+  },
+  {
+    "name": "Google Notícias - empregos e oportunidades em Lucas",
+    "url": "https://news.google.com/rss/search?q=%22Lucas%20do%20Rio%20Verde%22%20(emprego%20OR%20vagas%20OR%20curso%20OR%20evento)&hl=pt-BR&gl=BR&ceid=BR:pt-419",
+    "category": "Oportunidades"
+  }
+]
