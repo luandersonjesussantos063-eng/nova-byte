@@ -13,60 +13,6 @@
   ],
   "posts": [
     {
-      "slug": "garantindo-a-seguranca-no-ecossistema-de-ia-generativa-protegendo-os-usuarios-de",
-      "title": "Garantindo a segurança no ecossistema de IA generativa: protegendo os usuários de",
-      "description": "Garantindo a segurança no ecossistema de IA generativa: protegendo os usuários de. Entenda a novidade e o impacto prático para empresas, sites, aplicativos",
-      "date": "2026-09-26",
-      "category": "Android e aplicativos",
-      "image": "/assets/news/garantindo-a-seguranca-no-ecossistema-de-ia-generativa-protegendo-os-usuarios-de.svg",
-      "source": "https://android-developers.googleblog.com/2026/08/ensuring-safety-genai-preventing-non-consensual-intimate-content.html"
-    },
-    {
-      "slug": "elevando-a-qualidade-do-aplicativo-reduzindo-o-uso-de-memoria-e-melhorando-a",
-      "title": "Elevando a qualidade do aplicativo: reduzindo o uso de memória e melhorando a",
-      "description": "Elevando a qualidade do aplicativo: reduzindo o uso de memória e melhorando a. Entenda a novidade e o impacto prático para empresas, sites, aplicativos e p",
-      "date": "2026-09-25",
-      "category": "Android e aplicativos",
-      "image": "/assets/news/elevando-a-qualidade-do-aplicativo-reduzindo-o-uso-de-memoria-e-melhorando-a.svg",
-      "source": "https://android-developers.googleblog.com/2026/08/app-quality-memory-optimization-secure-onboarding.html"
-    },
-    {
-      "slug": "adicionada-documentacao-sobre-como-adicionar-um-emblema-de-perfil-de-pesquisa-ao-seu",
-      "title": "Adicionada documentação sobre como adicionar um emblema de perfil de pesquisa ao seu",
-      "description": "Adicionada documentação sobre como adicionar um emblema de perfil de pesquisa ao seu. Entenda a novidade e o impacto prático para empresas, sites, aplicati",
-      "date": "2026-09-25",
-      "category": "Google Search e SEO",
-      "image": "/assets/news/adicionada-documentacao-sobre-como-adicionar-um-emblema-de-perfil-de-pesquisa-ao-seu.svg",
-      "source": "https://developers.google.com/search/updates#september-2026"
-    },
-    {
-      "slug": "o-whatsapp-atualizou-para-um-login-seguro-e-sem-interrupcoes-para-1-bilhao-de",
-      "title": "o WhatsApp atualizou para um login seguro e sem interrupções para 1 bilhão de",
-      "description": "o WhatsApp atualizou para um login seguro e sem interrupções para 1 bilhão de. Entenda a novidade e o impacto prático para empresas, sites, aplicativos e p",
-      "date": "2026-09-25",
-      "category": "Android e aplicativos",
-      "image": "/assets/news/o-whatsapp-atualizou-para-um-login-seguro-e-sem-interrupcoes-para-1-bilhao-de.svg",
-      "source": "https://android-developers.googleblog.com/2026/08/whatsapp-passkeys-secure-sign-in.html"
-    },
-    {
-      "slug": "leverage-android-skills-and-gemma-4-in-android-studio-quail-4",
-      "title": "Leverage Android skills and Gemma 4 in Android Studio Quail 4",
-      "description": "Leverage Android skills and Gemma 4 in Android Studio Quail 4. Entenda a novidade e o impacto prático para empresas, sites, aplicativos e profissionais.",
-      "date": "2026-09-24",
-      "category": "Android e aplicativos",
-      "image": "/assets/news/leverage-android-skills-and-gemma-4-in-android-studio-quail-4.svg",
-      "source": "https://android-developers.googleblog.com/2026/09/leverage-gemma-4-android-studio-quail.html"
-    },
-    {
-      "slug": "build-your-way-use-any-ai-agent-of-your-choice-in-android-studio",
-      "title": "Build your way: Use any AI agent of your choice in Android Studio",
-      "description": "Build your way: Use any AI agent of your choice in Android Studio. Entenda a novidade e o impacto prático para empresas, sites, aplicativos e profissionais",
-      "date": "2026-09-24",
-      "category": "Android e aplicativos",
-      "image": "/assets/news/build-your-way-use-any-ai-agent-of-your-choice-in-android-studio.svg",
-      "source": "https://android-developers.googleblog.com/2026/09/build-your-way-use-any-ai-agent-in-android-studio.html"
-    },
-    {
       "slug": "android-bench-20-empurrando-a-fronteira-com-tarefas-desafiadoras-de-longo-horizonte",
       "title": "Android Bench 2.0: empurrando a fronteira com tarefas desafiadoras de longo horizonte",
       "description": "Android Bench 2.0: empurrando a fronteira com tarefas desafiadoras de longo horizonte. Entenda a novidade e o impacto prático para empresas, sites, aplicat",
