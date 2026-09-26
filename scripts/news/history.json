@@ -1,5 +1,6 @@
 {
   "published_ids": [
+    "2026-09-18-Added-local-business-query-support-to-the-aggregator-and-supplier-units",
     "2026-09-24-Added-creator-property-and-updated-interactionStatistic-in-VideoObject-structured-data",
     "tag:blogger.com,1999:blog-6755709643044947179.post-7129797423235721416",
     "tag:blogger.com,1999:blog-6755709643044947179.post-3046254478597816363",
@@ -13,6 +14,15 @@
     "tag:blogger.com,1999:blog-6755709643044947179.post-3564094472242054542"
   ],
   "posts": [
+    {
+      "slug": "adicionado-suporte-de-consulta-de-negocios-locais-as-unidades-agregadoras-e-fornecedoras",
+      "title": "Adicionado suporte de consulta de negócios locais às unidades agregadoras e fornecedoras",
+      "description": "Adicionado suporte de consulta de negócios locais às unidades agregadoras e fornecedoras. Entenda a novidade e o impacto prático para empresas, sites, apli",
+      "date": "2026-09-26",
+      "category": "Google Search e SEO",
+      "image": "/assets/news/adicionado-suporte-de-consulta-de-negocios-locais-as-unidades-agregadoras-e-fornecedoras.svg",
+      "source": "https://developers.google.com/search/updates#september-2026"
+    },
     {
       "slug": "added-creator-property-and-updated-interactionstatistic-in-videoobject-structured-data",
       "title": "Added creator property and updated interactionStatistic in VideoObject structured data",
