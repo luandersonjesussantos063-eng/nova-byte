@@ -1,5 +1,6 @@
 {
   "published_ids": [
+    "tag:blogger.com,1999:blog-6755709643044947179.post-7129797423235721416",
     "tag:blogger.com,1999:blog-6755709643044947179.post-3046254478597816363",
     "2026-09-16-Added-documentation-on-adding-a-Search-profile-badge-to-your-website",
     "tag:blogger.com,1999:blog-6755709643044947179.post-2142519968365769225",
@@ -11,6 +12,15 @@
     "tag:blogger.com,1999:blog-6755709643044947179.post-3564094472242054542"
   ],
   "posts": [
+    {
+      "slug": "garantindo-a-seguranca-no-ecossistema-de-ia-generativa-protegendo-os-usuarios-de",
+      "title": "Garantindo a segurança no ecossistema de IA generativa: protegendo os usuários de",
+      "description": "Garantindo a segurança no ecossistema de IA generativa: protegendo os usuários de. Entenda a novidade e o impacto prático para empresas, sites, aplicativos",
+      "date": "2026-09-26",
+      "category": "Android e aplicativos",
+      "image": "/assets/news/garantindo-a-seguranca-no-ecossistema-de-ia-generativa-protegendo-os-usuarios-de.svg",
+      "source": "https://android-developers.googleblog.com/2026/08/ensuring-safety-genai-preventing-non-consensual-intimate-content.html"
+    },
     {
       "slug": "elevando-a-qualidade-do-aplicativo-reduzindo-o-uso-de-memoria-e-melhorando-a",
       "title": "Elevando a qualidade do aplicativo: reduzindo o uso de memória e melhorando a",
