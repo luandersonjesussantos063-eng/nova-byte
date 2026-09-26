@@ -1,6 +1,9 @@
 name: Lucas Atualiza
 
 on:
+  push:
+    paths:
+      - ".github/lucas-news-trigger.txt"
   schedule:
     # Horários de Lucas do Rio Verde / Cuiabá (UTC-4): 08:45, 12:45 e 18:45
     - cron: "45 12 * * *"
