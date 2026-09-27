@@ -1,5 +1,6 @@
 {
   "published_ids": [
+    "tag:blogger.com,1999:blog-6755709643044947179.post-6753712392854325591",
     "2026-07-29-Added-guide-on-analyzing-social-and-video-platform-content",
     "2026-09-18-Added-local-business-query-support-to-the-aggregator-and-supplier-units",
     "2026-09-24-Added-creator-property-and-updated-interactionStatistic-in-VideoObject-structured-data",
@@ -15,6 +16,15 @@
     "tag:blogger.com,1999:blog-6755709643044947179.post-3564094472242054542"
   ],
   "posts": [
+    {
+      "slug": "aaos-sdv-secure-by-design",
+      "title": "AAOS SDV - Secure by Design",
+      "description": "AAOS SDV - Secure by Design. Entenda a novidade e o impacto prático para empresas, sites, aplicativos e profissionais.",
+      "date": "2026-09-27",
+      "category": "Android e aplicativos",
+      "image": "/assets/news/aaos-sdv-secure-by-design.svg",
+      "source": "https://android-developers.googleblog.com/2026/08/aaos-sdv-secure-by-design.html"
+    },
     {
       "slug": "added-guide-on-analyzing-social-and-video-platform-content",
       "title": "Added guide on analyzing social and video platform content",
