@@ -4,6 +4,24 @@
 </style><script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"WebApplication","name":"Calculadora de Adicional Noturno","url":"https://novabytesolucoes.com.br/adicional-noturno.html","applicationCategory":"UtilitiesApplication","operatingSystem":"All","isAccessibleForFree":true,"inLanguage":"pt-BR","description":"Calcule o adicional noturno online usando salário, divisor, horas noturnas e percentual. Ferramenta gratuita e rápida.","offers":{"@type":"Offer","price":"0","priceCurrency":"BRL"}},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"NovaByte Soluções Tools","item":"https://novabytesolucoes.com.br/"},{"@type":"ListItem","position":2,"name":"Calculadora de Adicional Noturno","item":"https://novabytesolucoes.com.br/adicional-noturno.html"}]}]}</script><script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2466231259507657" crossorigin="anonymous"></script><link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <meta property="og:image" content="https://novabytesolucoes.com.br/og-image.png">
 <link rel="stylesheet" href="/portal-footer.css">
+
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-XSB3WYJZ71"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-XSB3WYJZ71');
+  document.addEventListener('click', function(event) {
+    const link = event.target.closest && event.target.closest('a[href*="wa.me"]');
+    if (link) {
+      gtag('event', 'whatsapp_click', {
+        link_path: link.pathname,
+        page_path: window.location.pathname
+      });
+    }
+  });
+</script>
 </head><body><header><div class="wrap nav"><a class="brand" href="/"><span>NovaByte</span> Tools</a><nav class="navlinks"><a href="/">Ferramentas</a><a href="/calculadora-rescisao.html">Rescisão</a><a href="/escala-12x36.html">Escalas</a><a href="/adicional-noturno.html">Adicional noturno</a></nav></div></header><main><section class="hero wrap"><span class="badge">Ferramenta online gratuita</span><h1>Calculadora de Adicional Noturno</h1><p>Informe salário, horas e percentual para obter uma estimativa do adicional noturno.</p></section><section class="wrap grid"><div class="card"><h2>Calcular adicional noturno</h2><div class="form-grid"><div><label for="salary">Salário mensal (R$)</label><input id="salary" type="number" min="0" step="0.01" placeholder="Ex.: 2500"></div><div><label for="divisor">Divisor mensal</label><input id="divisor" type="number" min="1" value="220"></div><div><label for="hours">Horas noturnas no período</label><input id="hours" type="number" min="0" step="0.01" placeholder="Ex.: 80"></div><div><label for="pct">Percentual do adicional (%)</label><input id="pct" type="number" min="0" step="0.01" value="20"></div></div><div class="actions"><button class="primary" onclick="calc()">Calcular</button></div><div id="result" class="result"></div></div><div class="card"><h2>O que a ferramenta calcula?</h2><p class="muted">Ela encontra o valor da hora a partir do salário e divisor informados e aplica o percentual de adicional às horas noturnas. Você pode alterar divisor e percentual conforme sua categoria.</p><div class="notice">A simulação não aplica automaticamente hora noturna reduzida, reflexos, convenções coletivas ou regras específicas da categoria.</div><h3 class="section-title">Ferramentas relacionadas</h3><div class="related">
 <a href="/calculadora-rescisao.html"><b>📄 Rescisão</b><div class="muted">Estimativa detalhada</div></a>
 <a href="/escala-12x36.html"><b>📅 Escala 12x36</b><div class="muted">Calendário de plantões</div></a>

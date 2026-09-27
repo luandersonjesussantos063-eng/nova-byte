@@ -146,7 +146,25 @@ function renderArticle(a){
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(title)} | Lucas Atualiza</title>
 <meta name="description" content="${esc(description)}"><meta name="robots" content="index,follow,max-image-preview:large"><link rel="canonical" href="https://novabytesolucoes.com.br/${slug}.html">
 <meta property="og:type" content="article"><meta property="og:site_name" content="NovaByte Soluções"><meta property="og:title" content="${esc(title)}"><meta property="og:description" content="${esc(description)}"><meta property="og:url" content="https://novabytesolucoes.com.br/${slug}.html"><meta property="og:image" content="https://novabytesolucoes.com.br/og-image.png">
-<link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="/portal.css"><script type="application/ld+json">${schema}</script></head><body>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="/portal.css"><script type="application/ld+json">${schema}</script>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-XSB3WYJZ71"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-XSB3WYJZ71');
+  document.addEventListener('click', function(event) {
+    const link = event.target.closest && event.target.closest('a[href*="wa.me"]');
+    if (link) {
+      gtag('event', 'whatsapp_click', {
+        link_path: link.pathname,
+        page_path: window.location.pathname
+      });
+    }
+  });
+</script>
+</head><body>
 <header class="nb-header"><div><a class="nb-brand" href="/">NovaByte Soluções</a><nav><a href="/">Início</a><a href="/noticias-lucas-do-rio-verde.html">Lucas Atualiza</a><a href="/anuncia-lucas/">Anúncia Lucas</a><a href="/contato.html">Contato</a></nav></div></header>
 <main class="nb-main"><p class="nb-crumbs"><a href="/">Início</a> › <a href="/noticias-lucas-do-rio-verde.html">Lucas Atualiza</a> › ${esc(title)}</p>
 <p class="nb-meta">${esc(category.toUpperCase())} · ${dateBR}</p><h1>${esc(title)}</h1><p class="lead">${esc(description)}</p>

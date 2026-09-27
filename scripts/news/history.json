@@ -18,8 +18,8 @@
   "posts": [
     {
       "slug": "aaos-sdv-secure-by-design",
-      "title": "AAOS SDV - Secure by Design",
-      "description": "AAOS SDV - Secure by Design. Entenda a novidade e o impacto prático para empresas, sites, aplicativos e profissionais.",
+      "title": "Android Automotive reforça segurança em veículos definidos por software",
+      "description": "Android Automotive apresenta medidas de segurança para veículos definidos por software e descreve práticas aplicadas ao desenvolvimento automotivo.",
       "date": "2026-09-27",
       "category": "Android e aplicativos",
       "image": "/assets/news/aaos-sdv-secure-by-design.svg",
@@ -27,8 +27,8 @@
     },
     {
       "slug": "added-guide-on-analyzing-social-and-video-platform-content",
-      "title": "Added guide on analyzing social and video platform content",
-      "description": "Added guide on analyzing social and video platform content. Entenda a novidade e o impacto prático para empresas, sites, aplicativos e profissionais.",
+      "title": "Google publica guia para analisar conteúdo social e em vídeo no Search Console",
+      "description": "Guia do Search Console ensina a analisar o desempenho de conteúdos sociais e vídeos nos resultados da Pesquisa Google.",
       "date": "2026-09-27",
       "category": "Google Search e SEO",
       "image": "/assets/news/added-guide-on-analyzing-social-and-video-platform-content.svg",
@@ -45,8 +45,8 @@
     },
     {
       "slug": "added-creator-property-and-updated-interactionstatistic-in-videoobject-structured-data",
-      "title": "Added creator property and updated interactionStatistic in VideoObject structured data",
-      "description": "Added creator property and updated interactionStatistic in VideoObject structured data. Entenda a novidade e o impacto prático para empresas, sites, aplica",
+      "title": "Google atualiza dados estruturados de vídeo com propriedade para identificar criadores",
+      "description": "Atualização da documentação VideoObject explica propriedades para identificar criadores e registrar interações.",
       "date": "2026-09-26",
       "category": "Google Search e SEO",
       "image": "/assets/news/added-creator-property-and-updated-interactionstatistic-in-videoobject-structured-data.svg",

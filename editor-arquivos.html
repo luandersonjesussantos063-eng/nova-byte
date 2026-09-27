@@ -25,6 +25,24 @@
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <meta property="og:image" content="https://novabytesolucoes.com.br/og-image.png">
 <link rel="canonical" href="https://novabytesolucoes.com.br/editor-arquivos.html"><meta name="robots" content="index,follow">
+
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-XSB3WYJZ71"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-XSB3WYJZ71');
+  document.addEventListener('click', function(event) {
+    const link = event.target.closest && event.target.closest('a[href*="wa.me"]');
+    if (link) {
+      gtag('event', 'whatsapp_click', {
+        link_path: link.pathname,
+        page_path: window.location.pathname
+      });
+    }
+  });
+</script>
 </head>
 <body>
 <div class="app">

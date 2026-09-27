@@ -183,6 +183,24 @@ body{
 .authDivider{display:flex;align-items:center;gap:10px;color:#6f898f;font-size:10px;font-weight:900;margin:4px 0}.authDivider:before,.authDivider:after{content:"";height:1px;flex:1;background:#28434a}
 @media(max-width:380px){.stats{grid-template-columns:1fr 1fr}.quickGrid{grid-template-columns:1fr}}
 </style>
+
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-XSB3WYJZ71"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-XSB3WYJZ71');
+  document.addEventListener('click', function(event) {
+    const link = event.target.closest && event.target.closest('a[href*="wa.me"]');
+    if (link) {
+      gtag('event', 'whatsapp_click', {
+        link_path: link.pathname,
+        page_path: window.location.pathname
+      });
+    }
+  });
+</script>
 </head>
 <body>
 <div id="modeGate" class="modeGate hidden">

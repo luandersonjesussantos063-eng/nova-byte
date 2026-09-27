@@ -24,6 +24,24 @@
 {"@type":"Question","name":"IA consegue criar um site ou aplicativo inteiro?","acceptedAnswer":{"@type":"Answer","text":"IA pode acelerar layout, código, textos e protótipos, mas projetos reais ainda precisam de definição de requisitos, testes, segurança, integrações, publicação e manutenção."}}
 ]}
 </script>
+
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-XSB3WYJZ71"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-XSB3WYJZ71');
+  document.addEventListener('click', function(event) {
+    const link = event.target.closest && event.target.closest('a[href*="wa.me"]');
+    if (link) {
+      gtag('event', 'whatsapp_click', {
+        link_path: link.pathname,
+        page_path: window.location.pathname
+      });
+    }
+  });
+</script>
 </head><body>
 <header class="nb-header"><div><a class="nb-brand" href="/">NovaByte Soluções</a><nav><a href="/">Início</a><a href="/ferramentas.html">Ferramentas</a><a href="/guias.html">Guias</a><a href="/contato.html">Contato</a></nav></div></header>
 <main class="nb-main">

@@ -21,6 +21,24 @@
 <script type="application/ld+json">
 {"@context":"https://schema.org","@graph":[{"@type":"WebApplication","name":"Auditoria de Site NovaByte","url":"https://novabytesolucoes.com.br/auditoria-de-site.html","applicationCategory":"DeveloperApplication","operatingSystem":"Web","offers":{"@type":"Offer","price":"0","priceCurrency":"BRL"},"description":"Ferramenta gratuita para analisar SEO, performance, acessibilidade e boas práticas de páginas web."},{"@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Como saber se meu site tem SEO?","acceptedAnswer":{"@type":"Answer","text":"Uma auditoria SEO verifica fatores técnicos como título, meta description, indexabilidade, links, conteúdo rastreável, experiência em dispositivos móveis e desempenho."}},{"@type":"Question","name":"O teste de site da NovaByte é gratuito?","acceptedAnswer":{"@type":"Answer","text":"Sim. A análise inicial é gratuita e usa dados técnicos de auditoria do Lighthouse e PageSpeed."}},{"@type":"Question","name":"Uma nota alta garante primeiro lugar no Google?","acceptedAnswer":{"@type":"Answer","text":"Não. A nota técnica ajuda a identificar problemas, mas posicionamento também depende de conteúdo, autoridade, concorrência, intenção de busca e outros fatores."}}]}]}
 </script>
+
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-XSB3WYJZ71"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-XSB3WYJZ71');
+  document.addEventListener('click', function(event) {
+    const link = event.target.closest && event.target.closest('a[href*="wa.me"]');
+    if (link) {
+      gtag('event', 'whatsapp_click', {
+        link_path: link.pathname,
+        page_path: window.location.pathname
+      });
+    }
+  });
+</script>
 </head>
 <body>
 <header class="nb-header"><div><a class="nb-brand" href="/">NovaByte Soluções</a><nav><a href="/">Início</a><a href="/ferramentas.html">Ferramentas</a><a href="/guias.html">Guias</a><a href="/contato.html">Contato</a></nav></div></header>

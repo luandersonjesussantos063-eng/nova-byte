@@ -90,10 +90,11 @@ function looksEnglish(text = "") {
 
   // Títulos em inglês costumam ter poucos conectivos detectáveis, mas várias
   // palavras fortes de manchete. Isso evita publicar títulos inteiros em inglês.
-  const strongEnglish = ["introducing","unified","device","libraries","developers","announcing","building","using","security","launch","bring","land"];
+  const strongEnglish = ["added","guide","analyzing","social","platform","content","creator","updated","structured","videoobject","secure","design","introducing","unified","device","libraries","developers","announcing","building","using","security","launch","bring","land"];
   const strongHits = strongEnglish.filter(w => s.includes(` ${w} `)).length;
 
-  return en > pt + 1 || (strongHits >= 2 && pt < 2);
+  const knownEnglishPhrases = /\bsecure by design\b|\badded guide\b|\badded creator property\b/i.test(s);
+  return knownEnglishPhrases || en > pt + 1 || (strongHits >= 2 && pt < 2);
 }
 
 async function translateToPt(text = "") {
@@ -127,6 +128,9 @@ function sentenceSummary(text = "") {
 function polishTitle(title = "", category = "") {
   let t = cleanText(title)
     .replace(/[.!]+$/g, "")
+    .replace(/^AAOS SDV\s*[-–—]\s*Secure by Design$/i, "Android Automotive reforça segurança em veículos definidos por software")
+    .replace(/^Added guide on analyzing social and video platform content$/i, "Google publica guia para analisar conteúdo social e em vídeo no Search Console")
+    .replace(/^Added creator property and updated interactionStatistic in VideoObject structured data$/i, "Google atualiza dados estruturados de vídeo com propriedade para identificar criadores")
     .replace(/^Traga seu jogo para Android para a tela do carro hoje$/i, "Android leva jogos para a tela do carro: veja como funciona")
     .replace(/^Leve seu jogo para Android para a tela do carro hoje$/i, "Android leva jogos para a tela do carro: veja como funciona")
     .replace(/^Traga seus jogos para Android para a tela do carro hoje$/i, "Android leva jogos para a tela do carro: veja como funciona")

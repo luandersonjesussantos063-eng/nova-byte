@@ -27,6 +27,24 @@
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"CollectionPage","name":"Lucas Atualiza","url":"https://novabytesolucoes.com.br/noticias-lucas-do-rio-verde.html","description":"Notícias e acontecimentos de Lucas do Rio Verde - MT.","publisher":{"@type":"Organization","name":"NovaByte Soluções","url":"https://novabytesolucoes.com.br/"}}
 </script>
+
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-XSB3WYJZ71"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-XSB3WYJZ71');
+  document.addEventListener('click', function(event) {
+    const link = event.target.closest && event.target.closest('a[href*="wa.me"]');
+    if (link) {
+      gtag('event', 'whatsapp_click', {
+        link_path: link.pathname,
+        page_path: window.location.pathname
+      });
+    }
+  });
+</script>
 </head>
 <body>
 <header class="nb-header"><div><a class="nb-brand" href="/">NovaByte Soluções</a><nav><a href="/">Início</a><a href="/noticias-lucas-do-rio-verde.html">Lucas Atualiza</a><a href="/noticias-tecnologia.html">Tecnologia</a><a href="/anuncia-lucas/">Anúncia Lucas</a><a href="/contato.html">Contato</a></nav></div></header>
