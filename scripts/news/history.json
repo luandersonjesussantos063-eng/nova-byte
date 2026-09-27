@@ -1,5 +1,6 @@
 {
   "published_ids": [
+    "tag:blogger.com,1999:blog-6755709643044947179.post-5847283643542613891",
     "tag:blogger.com,1999:blog-6755709643044947179.post-6753712392854325591",
     "2026-07-29-Added-guide-on-analyzing-social-and-video-platform-content",
     "2026-09-18-Added-local-business-query-support-to-the-aggregator-and-supplier-units",
@@ -16,6 +17,15 @@
     "tag:blogger.com,1999:blog-6755709643044947179.post-3564094472242054542"
   ],
   "posts": [
+    {
+      "slug": "a-depuracao-sem-fio-rapida-e-confiavel-com-o-android-debug-bridge-adb-wi-fi-20",
+      "title": "a depuração sem fio rápida e confiável com o Android Debug Bridge (ADB) Wi-Fi 2.0",
+      "description": "a depuração sem fio rápida e confiável com o Android Debug Bridge (ADB) Wi-Fi 2.0. Entenda a novidade e o impacto prático para empresas, sites, aplicativos",
+      "date": "2026-09-27",
+      "category": "Android e aplicativos",
+      "image": "/assets/news/a-depuracao-sem-fio-rapida-e-confiavel-com-o-android-debug-bridge-adb-wi-fi-20.svg",
+      "source": "https://android-developers.googleblog.com/2026/09/wireless-debugging-adb-wifi-2.html"
+    },
     {
       "slug": "aaos-sdv-secure-by-design",
       "title": "Android Automotive reforça segurança em veículos definidos por software",
