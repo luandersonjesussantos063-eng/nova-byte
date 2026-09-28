@@ -1,5 +1,6 @@
 {
   "published_ids": [
+    "https://developer.chrome.com/blog/agent-ready-toolkit?hl=en",
     "tag:blogger.com,1999:blog-6755709643044947179.post-5847283643542613891",
     "tag:blogger.com,1999:blog-6755709643044947179.post-6753712392854325591",
     "2026-07-29-Added-guide-on-analyzing-social-and-video-platform-content",
@@ -17,6 +18,15 @@
     "tag:blogger.com,1999:blog-6755709643044947179.post-3564094472242054542"
   ],
   "posts": [
+    {
+      "slug": "a-developer-toolkit-to-make-your-website-agent-ready",
+      "title": "A developer toolkit to make your website agent-ready",
+      "description": "A developer toolkit to make your website agent-ready. Entenda a novidade e o impacto prático para empresas, sites, aplicativos e profissionais.",
+      "date": "2026-09-28",
+      "category": "Web e performance",
+      "image": "/assets/news/a-developer-toolkit-to-make-your-website-agent-ready.svg",
+      "source": "https://developer.chrome.com/blog/agent-ready-toolkit?hl=en"
+    },
     {
       "slug": "a-depuracao-sem-fio-rapida-e-confiavel-com-o-android-debug-bridge-adb-wi-fi-20",
       "title": "a depuração sem fio rápida e confiável com o Android Debug Bridge (ADB) Wi-Fi 2.0",
