@@ -1,5 +1,6 @@
 {
   "published_ids": [
+    "https://developer.chrome.com/blog/devtools-for-agents-3p-tools?hl=en",
     "https://developer.chrome.com/blog/agent-ready-toolkit?hl=en",
     "tag:blogger.com,1999:blog-6755709643044947179.post-5847283643542613891",
     "tag:blogger.com,1999:blog-6755709643044947179.post-6753712392854325591",
@@ -18,6 +19,15 @@
     "tag:blogger.com,1999:blog-6755709643044947179.post-3564094472242054542"
   ],
   "posts": [
+    {
+      "slug": "desbloqueie-insights-de-tempo-de-execucao-apresentando-ferramentas-de-desenvolvedor",
+      "title": "Desbloqueie insights de tempo de execução: apresentando ferramentas de desenvolvedor",
+      "description": "Desbloqueie insights de tempo de execução: apresentando ferramentas de desenvolvedor. Entenda a novidade e o impacto prático para empresas, sites, aplicati",
+      "date": "2026-09-28",
+      "category": "Web e performance",
+      "image": "/assets/news/desbloqueie-insights-de-tempo-de-execucao-apresentando-ferramentas-de-desenvolvedor.svg",
+      "source": "https://developer.chrome.com/blog/devtools-for-agents-3p-tools?hl=en"
+    },
     {
       "slug": "a-developer-toolkit-to-make-your-website-agent-ready",
       "title": "A developer toolkit to make your website agent-ready",
