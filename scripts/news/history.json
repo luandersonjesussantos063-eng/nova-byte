@@ -1,5 +1,6 @@
 {
   "published_ids": [
+    "https://developer.chrome.com/blog/seamless-pwa-origin-migration?hl=en",
     "2026-09-08-Added-documentation-about-regional-differences-in-Search-experience",
     "tag:blogger.com,1999:blog-6755709643044947179.post-54966360760178150",
     "https://developer.chrome.com/blog/ai-webmcp-origin-trial?hl=en",
@@ -23,6 +24,15 @@
     "tag:blogger.com,1999:blog-6755709643044947179.post-3564094472242054542"
   ],
   "posts": [
+    {
+      "slug": "seamless-pwa-origin-migration-change-domains-without-losing-users",
+      "title": "Seamless PWA origin migration: Change domains without losing users",
+      "description": "Seamless PWA origin migration: Change domains without losing users. Entenda a novidade e o impacto prático para empresas, sites, aplicativos e profissionai",
+      "date": "2026-09-30",
+      "category": "Web e performance",
+      "image": "/assets/news/seamless-pwa-origin-migration-change-domains-without-losing-users.svg",
+      "source": "https://developer.chrome.com/blog/seamless-pwa-origin-migration?hl=en"
+    },
     {
       "slug": "added-documentation-about-regional-differences-in-search-experience",
       "title": "Added documentation about regional differences in Search experience",
