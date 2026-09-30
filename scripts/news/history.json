@@ -1,5 +1,6 @@
 {
   "published_ids": [
+    "https://developer.chrome.com/blog/new-in-devtools-149?hl=en",
     "https://developer.chrome.com/blog/seamless-pwa-origin-migration?hl=en",
     "2026-09-08-Added-documentation-about-regional-differences-in-Search-experience",
     "tag:blogger.com,1999:blog-6755709643044947179.post-54966360760178150",
@@ -24,6 +25,15 @@
     "tag:blogger.com,1999:blog-6755709643044947179.post-3564094472242054542"
   ],
   "posts": [
+    {
+      "slug": "whats-new-in-devtools-chrome-149",
+      "title": "What's new in DevTools (Chrome 149)",
+      "description": "What's new in DevTools (Chrome 149). Entenda a novidade e o impacto prático para empresas, sites, aplicativos e profissionais.",
+      "date": "2026-09-30",
+      "category": "Web e performance",
+      "image": "/assets/news/whats-new-in-devtools-chrome-149.svg",
+      "source": "https://developer.chrome.com/blog/new-in-devtools-149?hl=en"
+    },
     {
       "slug": "seamless-pwa-origin-migration-change-domains-without-losing-users",
       "title": "Seamless PWA origin migration: Change domains without losing users",
