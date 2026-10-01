@@ -1,5 +1,6 @@
 {
   "published_ids": [
+    "2026-08-20-New-custom-button-for-preferred-sources",
     "https://developer.chrome.com/blog/extensions-io-2026?hl=en",
     "2026-08-28-Updated-the-site-reputation-policy",
     "2026-08-28-Updated-the-favicon-documentation",
@@ -28,6 +29,15 @@
     "tag:blogger.com,1999:blog-6755709643044947179.post-3564094472242054542"
   ],
   "posts": [
+    {
+      "slug": "novo-botao-personalizado-para-fontes-preferidas",
+      "title": "Novo botão personalizado para fontes preferidas",
+      "description": "Novo botão personalizado para fontes preferidas. Entenda a novidade e o impacto prático para empresas, sites, aplicativos e profissionais.",
+      "date": "2026-10-01",
+      "category": "Google Search e SEO",
+      "image": "/assets/news/novo-botao-personalizado-para-fontes-preferidas.svg",
+      "source": "https://developers.google.com/search/updates#august-2026"
+    },
     {
       "slug": "whats-new-in-web-extensions-i-o-2026-recap",
       "title": "What's new in web extensions: I / O 2026 recap",
