@@ -1,5 +1,6 @@
 {
   "published_ids": [
+    "2026-08-28-Updated-the-site-reputation-policy",
     "2026-08-28-Updated-the-favicon-documentation",
     "https://developer.chrome.com/blog/new-in-devtools-149?hl=en",
     "https://developer.chrome.com/blog/seamless-pwa-origin-migration?hl=en",
@@ -26,6 +27,15 @@
     "tag:blogger.com,1999:blog-6755709643044947179.post-3564094472242054542"
   ],
   "posts": [
+    {
+      "slug": "updated-the-site-reputation-policy",
+      "title": "Updated the site reputation policy",
+      "description": "Updated the site reputation policy. Entenda a novidade e o impacto prático para empresas, sites, aplicativos e profissionais.",
+      "date": "2026-10-01",
+      "category": "Google Search e SEO",
+      "image": "/assets/news/updated-the-site-reputation-policy.svg",
+      "source": "https://developers.google.com/search/updates#august-2026"
+    },
     {
       "slug": "updated-the-favicon-documentation",
       "title": "Updated the favicon documentation",
