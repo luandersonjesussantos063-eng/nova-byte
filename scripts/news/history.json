@@ -1,5 +1,6 @@
 {
   "published_ids": [
+    "https://developer.chrome.com/blog/extensions-io-2026?hl=en",
     "2026-08-28-Updated-the-site-reputation-policy",
     "2026-08-28-Updated-the-favicon-documentation",
     "https://developer.chrome.com/blog/new-in-devtools-149?hl=en",
@@ -27,6 +28,15 @@
     "tag:blogger.com,1999:blog-6755709643044947179.post-3564094472242054542"
   ],
   "posts": [
+    {
+      "slug": "whats-new-in-web-extensions-i-o-2026-recap",
+      "title": "What's new in web extensions: I / O 2026 recap",
+      "description": "What's new in web extensions: I / O 2026 recap. Entenda a novidade e o impacto prático para empresas, sites, aplicativos e profissionais.",
+      "date": "2026-10-01",
+      "category": "Web e performance",
+      "image": "/assets/news/whats-new-in-web-extensions-i-o-2026-recap.svg",
+      "source": "https://developer.chrome.com/blog/extensions-io-2026?hl=en"
+    },
     {
       "slug": "updated-the-site-reputation-policy",
       "title": "Updated the site reputation policy",
