@@ -1,5 +1,6 @@
 {
   "published_ids": [
+    "tag:blogger.com,1999:blog-6755709643044947179.post-912436019048406842",
     "2026-07-14-Updated-the-package-tracking-documentation",
     "2026-08-20-New-custom-button-for-preferred-sources",
     "https://developer.chrome.com/blog/extensions-io-2026?hl=en",
@@ -30,6 +31,15 @@
     "tag:blogger.com,1999:blog-6755709643044947179.post-3564094472242054542"
   ],
   "posts": [
+    {
+      "slug": "streaming-de-dispositivos-e-habilidades-do-android-disponivel-na-cli-do-android",
+      "title": "Streaming de dispositivos e habilidades do Android - disponível na CLI do Android",
+      "description": "Streaming de dispositivos e habilidades do Android - disponível na CLI do Android. Entenda a novidade e o impacto prático para empresas, sites, aplicativos",
+      "date": "2026-10-02",
+      "category": "Android e aplicativos",
+      "image": "/assets/news/streaming-de-dispositivos-e-habilidades-do-android-disponivel-na-cli-do-android.svg",
+      "source": "https://android-developers.googleblog.com/2026/10/android-cli-device-streaming-and-skills.html"
+    },
     {
       "slug": "updated-the-package-tracking-documentation",
       "title": "Updated the package tracking documentation",
