@@ -1,5 +1,6 @@
 {
   "published_ids": [
+    "2026-07-14-Updated-the-package-tracking-documentation",
     "2026-08-20-New-custom-button-for-preferred-sources",
     "https://developer.chrome.com/blog/extensions-io-2026?hl=en",
     "2026-08-28-Updated-the-site-reputation-policy",
@@ -29,6 +30,15 @@
     "tag:blogger.com,1999:blog-6755709643044947179.post-3564094472242054542"
   ],
   "posts": [
+    {
+      "slug": "updated-the-package-tracking-documentation",
+      "title": "Updated the package tracking documentation",
+      "description": "Updated the package tracking documentation. Entenda a novidade e o impacto prático para empresas, sites, aplicativos e profissionais.",
+      "date": "2026-10-02",
+      "category": "Google Search e SEO",
+      "image": "/assets/news/updated-the-package-tracking-documentation.svg",
+      "source": "https://developers.google.com/search/updates#july-2026"
+    },
     {
       "slug": "novo-botao-personalizado-para-fontes-preferidas",
       "title": "Novo botão personalizado para fontes preferidas",
