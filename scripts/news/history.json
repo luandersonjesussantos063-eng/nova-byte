@@ -1,5 +1,6 @@
 {
   "published_ids": [
+    "2026-07-24-Added-a-new-review-snippet-guideline",
     "2026-10-01-Updated-guidance-on-using-generative-AI-content",
     "tag:blogger.com,1999:blog-6755709643044947179.post-912436019048406842",
     "2026-07-14-Updated-the-package-tracking-documentation",
@@ -32,6 +33,15 @@
     "tag:blogger.com,1999:blog-6755709643044947179.post-3564094472242054542"
   ],
   "posts": [
+    {
+      "slug": "added-a-new-review-snippet-guideline",
+      "title": "Added a new review snippet guideline",
+      "description": "Added a new review snippet guideline. Entenda a novidade e o impacto prático para empresas, sites, aplicativos e profissionais.",
+      "date": "2026-10-03",
+      "category": "Google Search e SEO",
+      "image": "/assets/news/added-a-new-review-snippet-guideline.svg",
+      "source": "https://developers.google.com/search/updates#july-2026"
+    },
     {
       "slug": "orientacoes-atualizadas-sobre-o-uso-de-conteudo-de-ia-generativo",
       "title": "Orientações atualizadas sobre o uso de conteúdo de IA generativo",
