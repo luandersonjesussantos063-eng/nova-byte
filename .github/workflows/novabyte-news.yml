@@ -36,19 +36,22 @@ jobs:
           node-version: "22"
 
       - name: Instalar dependências
-        run: npm install --no-audit --no-fund
+        run: npm install --no-audit --no-fund --package-lock=false
 
       - name: Gerar e publicar uma notícia
         run: node scripts/news/run-news.mjs
 
       - name: Publicar alterações no repositório
         run: |
-          if git diff --quiet && [ -z "$(git status --porcelain)" ]; then
+          git config user.name "NovaByte Atualiza Bot"
+          git config user.email "actions@users.noreply.github.com"
+
+          git add index.html noticias-tecnologia.html sitemap.xml scripts/news/history.json assets/news/ '*.html'
+
+          if git diff --cached --quiet; then
             echo "Nenhuma notícia nova para publicar."
             exit 0
           fi
-          git config user.name "NovaByte Atualiza Bot"
-          git config user.email "actions@users.noreply.github.com"
-          git add index.html noticias-tecnologia.html sitemap.xml scripts/news/history.json assets/news/ '*.html'
+
           git commit -m "NovaByte Atualiza: publicação automática"
           git push
