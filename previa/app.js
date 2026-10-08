@@ -1,4 +1,4 @@
-import {renderSpec} from './model.js?v=20261008b';
+import {renderSpec} from './model.js?v=20261008c';
 const API='https://vajlhodqxskozuxxlujv.supabase.co/functions/v1/novabyte-preview';
 const KEY='sb_publishable_uT0b4y0Bex1k1QWZoyIfKg_K0pm-yS3';
 const $=id=>document.getElementById(id);let mode='template',current=null,token='',busy=false,lastBrief=null;
