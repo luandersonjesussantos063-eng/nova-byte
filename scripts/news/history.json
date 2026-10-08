@@ -1,5 +1,6 @@
 {
   "published_ids": [
+    "2026-10-08-Added-documentation-on-the-UGC-Fresh-Data-Program",
     "2026-07-24-Added-a-new-review-snippet-guideline",
     "2026-10-01-Updated-guidance-on-using-generative-AI-content",
     "tag:blogger.com,1999:blog-6755709643044947179.post-912436019048406842",
@@ -33,6 +34,15 @@
     "tag:blogger.com,1999:blog-6755709643044947179.post-3564094472242054542"
   ],
   "posts": [
+    {
+      "slug": "added-documentation-on-the-ugc-fresh-data-program",
+      "title": "Added documentation on the UGC Fresh Data Program",
+      "description": "Added documentation on the UGC Fresh Data Program. Entenda a novidade e o impacto prático para empresas, sites, aplicativos e profissionais.",
+      "date": "2026-10-08",
+      "category": "Google Search e SEO",
+      "image": "/assets/news/added-documentation-on-the-ugc-fresh-data-program.svg",
+      "source": "https://developers.google.com/search/updates#october-2026"
+    },
     {
       "slug": "added-a-new-review-snippet-guideline",
       "title": "Added a new review snippet guideline",
