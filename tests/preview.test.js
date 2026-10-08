@@ -6,3 +6,5 @@ test('reject malformed provider output',()=>{for(const change of [{accent:'red;p
 test('template revisions preserve text but update palette',()=>{const first=templateSpec(b);const s=templateSpec({...b,revision:'deixe escuro e azul'},first);assert.equal(s.theme,'dark');assert.equal(s.accent,'blue');assert.equal(s.headline,first.headline);});
 test('template system marks demo data',()=>{assert.match(renderSpec(templateSpec({...b,kind:'system'})),/Dados fictícios/);});
 test('shared frontend and backend model are identical',()=>assert.equal(readFileSync('previa/model.js','utf8'),readFileSync('supabase/functions/novabyte-preview/model.js','utf8')));
+
+test('preview anchors scroll internally instead of navigating the iframe',()=>{const h=renderSpec(templateSpec(b));assert.ok(h.includes("e.preventDefault();const target=document.getElementById"));assert.ok(h.includes("target.scrollIntoView"));});
