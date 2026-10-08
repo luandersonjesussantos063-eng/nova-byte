@@ -1,0 +1,8 @@
+import {test} from 'node:test';import assert from 'node:assert/strict';import {readFileSync} from 'node:fs';import {templateSpec,validateSpec,renderSpec} from '../previa/model.js';
+const b={name:'Aurora Café',kind:'site',prompt:'Uma cafeteria com café e doces para todos.',theme:'light',accent:'orange'};
+test('three renderable project types',()=>{for(const kind of ['site','landing','system']){const s=templateSpec({...b,kind});assert.equal(s.kind,kind);assert.ok(renderSpec(s).includes('Aurora Café'));}});
+test('malicious content is escaped; only fixed script exists',()=>{const s=templateSpec({...b,name:'<img src=x onerror=alert(1)>'});s.headline='</script><script>alert(2)</script>';const h=renderSpec(s);assert.ok(!h.includes('<img src=x'));assert.ok(h.includes('&lt;img'));assert.equal((h.match(/<script>/g)||[]).length,1);assert.ok(h.includes("connect-src 'none'"));assert.ok(h.includes('</script>'));});
+test('reject malformed provider output',()=>{for(const change of [{accent:'red;position:fixed'},{items:[]},{name:'a'.repeat(81)},{kind:'unknown'},{description:null}])assert.throws(()=>validateSpec({...templateSpec(b),...change}));});
+test('template revisions preserve text but update palette',()=>{const first=templateSpec(b);const s=templateSpec({...b,revision:'deixe escuro e azul'},first);assert.equal(s.theme,'dark');assert.equal(s.accent,'blue');assert.equal(s.headline,first.headline);});
+test('template system marks demo data',()=>{assert.match(renderSpec(templateSpec({...b,kind:'system'})),/Dados fictícios/);});
+test('shared frontend and backend model are identical',()=>assert.equal(readFileSync('previa/model.js','utf8'),readFileSync('supabase/functions/novabyte-preview/model.js','utf8')));
