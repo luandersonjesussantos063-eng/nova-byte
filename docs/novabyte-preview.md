@@ -28,4 +28,4 @@ O iframe não tem allow-same-origin, rede, formulários, popups ou navegação d
 - Nunca enviar secrets em logs. Falhas retornam mensagem genérica.
 
 ## Testes e limites de validação
-Testes de unidade cobrem validação, escape, isolamento, temas e seleção por ramo. Testes de UI verificam desktop/mobile, erro, revisão e link de orçamento. Integração real verifica persistência, quotas e acesso negado às tabelas. A chamada real ao modelo requer os secrets de ativação; sem eles não se pode afirmar que a geração IA foi testada de ponta a ponta.
+Testes de unidade cobrem validação, escape, isolamento, temas e seleção por ramo. Conferência no navegador publicado verifica geração, revisão, alternância computador/celular, navegação interna e link de orçamento. Integração real verifica persistência, quotas e acesso negado às tabelas. A chamada real ao modelo requer os secrets de ativação; sem eles não se pode afirmar que a geração IA foi testada de ponta a ponta.
