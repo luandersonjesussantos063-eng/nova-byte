@@ -1,8 +1,8 @@
 {
   "id": "./index.html",
-  "name": "NovaPlay | Streaming",
+  "name": "NovaPlay | TV aberta e clássicos",
   "short_name": "NovaPlay",
-  "description": "Protótipo de streaming com vídeos públicos de demonstração",
+  "description": "Filmes históricos em domínio público, seriados e links oficiais de TV aberta",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
