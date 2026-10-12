@@ -18,7 +18,7 @@ function show(id){
 }
 function disable(submitted){
  busy=submitted;
- ["submit-upload","refresh-list","cancel-edit","video-file","poster-file"].forEach(id=>$(id).disabled=submitted);
+ ["submit-upload","refresh-list","cancel-edit","video-file","poster-file","youtube-url","youtube-poster-file","source-type"].forEach(id=>$(id).disabled=submitted);
  $("submit-upload").textContent=submitted?"Enviando...":"Enviar para a NovaPlay";
 }
 function errorText(err){
@@ -52,6 +52,29 @@ async function checkSession(){
    show("pending-view");
   }else show("login-view");
  }catch(e){show("login-view");status("auth-message",errorText(e),true)}
+}
+function extractYoutubeId(raw){
+ const text=String(raw||"").trim();
+ if(/^[A-Za-z0-9_-]{11}$/.test(text))return text;
+ let url;
+ try{url=new URL(text)}catch(e){return null}
+ if(url.protocol!=="https:")return null;
+ const host=url.hostname.toLowerCase().replace(/^www\./,"");
+ let id=null;
+ if(["youtube.com","m.youtube.com","music.youtube.com","youtube-nocookie.com"].includes(host)){
+  if(url.pathname==="/watch")id=url.searchParams.get("v");
+  else if(/^\/(embed|shorts|live)\/[A-Za-z0-9_-]{11}\/?$/.test(url.pathname))id=url.pathname.split("/")[2];
+ }else if(host==="youtu.be")id=url.pathname.split("/")[1];
+ return id&&/^[A-Za-z0-9_-]{11}$/.test(id)?id:null;
+}
+function sourceMode(){return $("source-type").value}
+function setSourceType(){
+ const youtube=sourceMode()==="youtube";
+ $("youtube-fields").hidden=!youtube;
+ $("upload-files").hidden=youtube;
+ $("youtube-cover-section").hidden=!youtube;
+ $("youtube-url").required=youtube;
+ $("submit-upload").textContent=busy?"Salvando...":editing?"Salvar alterações":youtube?"Cadastrar filme grande":"Enviar para a NovaPlay";
 }
 function fileKind(file,video=true){
  const ext=(file.name.split(".").pop()||"").toLowerCase();
@@ -151,7 +174,7 @@ async function uploadCover(file){
  return path;
 }
 async function loadLibrary(){
- const {data,error}=await client.from("novaplay_library").select("id,title,description,kind,series_title,episode_number,genre,production_year,video_path,poster_path,is_published,file_size_bytes,mime_type,created_at").order("created_at",{ascending:false}).limit(200);
+ const {data,error}=await client.from("novaplay_library").select("id,title,description,kind,series_title,episode_number,genre,production_year,video_path,youtube_id,poster_path,is_published,file_size_bytes,mime_type,created_at").order("created_at",{ascending:false}).limit(200);
  if(error){status("upload-message","Não foi possível ler a biblioteca: "+errorText(error),true);return}
  items=data||[];renderLibrary();
 }
@@ -165,8 +188,8 @@ function renderLibrary(){
  if(!shown.length){const p=document.createElement("p");p.className="muted";p.textContent=filter?"Nenhum vídeo encontrado.":"Nenhum vídeo enviado ainda. Comece pelo formulário ao lado.";list.append(p);return}
  shown.forEach(row=>{
   const item=document.createElement("article");item.className="movie-item";
-  const poster=row.poster_path?client.storage.from(POSTER_BUCKET).getPublicUrl(row.poster_path).data.publicUrl:"../assets/posters/lua.svg";
-  item.innerHTML='<img class="movie-thumb" alt="" loading="lazy" src="'+esc(poster)+'"><div class="movie-main"><strong>'+esc(row.title)+'</strong><small>'+esc(row.kind==="episode"?(row.series_title+" · Ep. "+row.episode_number):"Filme/curta")+' · '+(row.file_size_bytes/(1024*1024)).toFixed(1)+' MB</small><span class="movie-state'+(row.is_published?"":" draft")+'">'+(row.is_published?"PUBLICADO":"RASCUNHO")+'</span><div class="movie-buttons"><button class="edit">Editar</button><button class="publish">'+(row.is_published?"Retirar do catálogo":"Publicar")+'</button><button class="danger delete">Excluir</button></div></div>';
+  const poster=row.poster_path?client.storage.from(POSTER_BUCKET).getPublicUrl(row.poster_path).data.publicUrl:(row.youtube_id?"https://i.ytimg.com/vi/"+encodeURIComponent(row.youtube_id)+"/hqdefault.jpg":"../assets/posters/autoral.svg");
+  item.innerHTML='<img class="movie-thumb" alt="" loading="lazy" src="'+esc(poster)+'"><div class="movie-main"><strong>'+esc(row.title)+'</strong><small>'+esc(row.kind==="episode"?(row.series_title+" · Ep. "+row.episode_number):"Filme/curta")+' · '+(row.youtube_id?"YouTube · Filme grande":(row.file_size_bytes/(1024*1024)).toFixed(1)+" MB")+'</small><span class="movie-state'+(row.is_published?"":" draft")+'">'+(row.is_published?"PUBLICADO":"RASCUNHO")+'</span><div class="movie-buttons"><button class="edit">Editar</button><button class="publish">'+(row.is_published?"Retirar do catálogo":"Publicar")+'</button><button class="danger delete">Excluir</button></div></div>';
   item.querySelector(".edit").onclick=()=>beginEdit(row);
   item.querySelector(".publish").onclick=()=>togglePublish(row);
   item.querySelector(".delete").onclick=()=>removeItem(row);
@@ -186,7 +209,10 @@ function beginEdit(row){
  $("series-name").value=row.series_title||"";$("episode-number").value=row.episode_number||"";
  $("genre").value=row.genre;$("description").value=row.description||"";
  $("publish").checked=row.is_published;
- $("video-file").value="";$("poster-file").value="";
+ $("source-type").value=row.youtube_id?"youtube":"upload";
+ $("youtube-url").value=row.youtube_id?"https://youtu.be/"+row.youtube_id:"";
+ setSourceType();
+ $("video-file").value="";$("poster-file").value="";$("youtube-poster-file").value="";
  $("video-file-label").textContent="Trocar vídeo (opcional)";
  $("poster-file-label").textContent="Trocar capa (opcional)";
  $("submit-upload").textContent="Salvar alterações";
@@ -196,6 +222,7 @@ function beginEdit(row){
 function resetForm(){
  editing=null;$("upload-form").reset();$("form-title").textContent="Adicionar filme ou episódio";
  $("cancel-edit").hidden=true;$("series-fields").hidden=true;$("series-name").required=false;$("episode-number").required=false;
+ $("source-type").value="upload";$("youtube-url").value="";$("youtube-poster-file").value="";setSourceType();
  $("video-file-label").textContent="Selecionar vídeo do telefone";$("poster-file-label").textContent="Escolher capa (opcional)";
  $("submit-upload").textContent="Enviar para a NovaPlay";$("progress-box").hidden=true;$("publish").checked=false;
 }
@@ -212,7 +239,7 @@ async function removeItem(row){
  if(!confirm("Excluir “"+row.title+"” definitivamente? O vídeo e a capa também serão removidos. Esta ação não tem volta."))return;
  const {error}=await client.from("novaplay_library").delete().eq("id",row.id);
  if(error){alert("Não foi possível excluir: "+errorText(error));return;}
- const cleanup=[client.storage.from(VIDEO_BUCKET).remove([row.video_path])];
+ const cleanup=row.video_path?[client.storage.from(VIDEO_BUCKET).remove([row.video_path])]:[];
  if(row.poster_path)cleanup.push(client.storage.from(POSTER_BUCKET).remove([row.poster_path]));
  const results=await Promise.allSettled(cleanup);
  if(results.some(x=>x.status==="rejected"||x.value?.error))alert("O conteúdo saiu da biblioteca, mas a limpeza dos arquivos teve uma falha. Confira o Storage depois.");
@@ -221,16 +248,20 @@ async function removeItem(row){
 }
 async function sendForm(e){
  e.preventDefault();if(busy||!sessionUser)return;
- const video=$("video-file").files[0]||null,cover=$("poster-file").files[0]||null;
- if(!editing&&!video){status("upload-message","Escolha o vídeo do seu telefone para continuar.",true);return}
- if(video){
-  if(!fileKind(video)){status("upload-message","Esse formato não é compatível. Use MP4, WebM ou OGV.",true);return}
-  if(video.size>MAX_VIDEO){status("upload-message","Este vídeo tem "+(video.size/(1024*1024)).toFixed(1)+" MB. O limite atual é 50 MB. Para filmes maiores, precisaremos aumentar o plano de armazenamento.",true);return}
-  if(video.size<1){status("upload-message","O vídeo está vazio.",true);return}
+ const youtube=sourceMode()==="youtube";
+ const file=$("video-file").files[0]||null;
+ const cover=(youtube?$("youtube-poster-file"):$("poster-file")).files[0]||null;
+ const youtubeId=youtube?extractYoutubeId($("youtube-url").value):null;
+ if(youtube&&!youtubeId){status("upload-message","Cole um link válido de vídeo do YouTube. Aceitamos links youtu.be, youtube.com/watch e Shorts.",true);return}
+ if(!youtube&&!file&&(!editing||!editing.video_path)){
+  status("upload-message","Selecione um vídeo MP4/WebM do celular, ou escolha a opção 'Filme grande pelo YouTube'.",true);return;
  }
- if(cover){
-  if(!fileKind(cover,false)||cover.size>MAX_POSTER){status("upload-message","A capa deve ser JPG, PNG ou WebP, com no máximo 5 MB.",true);return}
+ if(!youtube&&file){
+  if(!fileKind(file)){status("upload-message","Formato incompatível: escolha MP4, WebM ou OGV.",true);return}
+  if(file.size>MAX_VIDEO){status("upload-message","Este arquivo tem "+(file.size/(1024*1024)).toFixed(1)+" MB. Para filmes maiores, mude para 'Filme grande pelo YouTube' e cole o link.",true);return}
+  if(file.size<1){status("upload-message","O vídeo está vazio.",true);return}
  }
+ if(cover&&(!fileKind(cover,false)||cover.size>MAX_POSTER)){status("upload-message","Capa inválida. Use JPG, PNG ou WebP com até 5 MB.",true);return}
  const kind=$("kind").value;
  const payload={
   title:$("title").value.trim(),
@@ -242,39 +273,54 @@ async function sendForm(e){
   genre:$("genre").value.trim()||"Autoral",
   is_published:$("publish").checked
  };
- if(payload.title.length<2){status("upload-message","Informe um título válido.",true);return}
- if(kind==="episode"&&(!payload.series_title||!payload.episode_number)){status("upload-message","Preencha o nome da série e o número do episódio.",true);return}
- disable(true);status("upload-message","Iniciando upload. Mantenha esta página aberta até terminar.");
+ if(payload.title.length<2){status("upload-message","Informe um título de pelo menos 2 caracteres.",true);return}
+ if(kind==="episode"&&(!payload.series_title||!payload.episode_number)){status("upload-message","Informe o nome da série e o número do episódio.",true);return}
+ disable(true);status("upload-message",youtube?"Preparando cadastro do filme grande...":"Preparando envio do vídeo...");
  let newVideo=null,newPoster=null;
  try{
   let generated={duration:null,thumbnail:null};
-  if(video){status("upload-message","Lendo duração e preparando capa...");generated=await inspectVideo(video);
+  if(!youtube&&file){
+   status("upload-message","Lendo o vídeo e preparando a capa...");
+   generated=await inspectVideo(file);
    if(generated.duration!==null)payload.duration_seconds=generated.duration;
   }
-  const selectedCover=cover||generated.thumbnail;
-  if(selectedCover){status("upload-message",cover?"Enviando capa...":"Enviando capa gerada automaticamente...");newPoster=await uploadCover(selectedCover)}
-  if(video){
-   newVideo=createVideoPath(video);
-   await uploadVideo(video,newVideo);
+  const chosenCover=cover||generated.thumbnail;
+  if(chosenCover){
+    status("upload-message","Enviando capa...");
+    newPoster=await uploadCover(chosenCover);
   }
-  if(newVideo)Object.assign(payload,{video_path:newVideo,mime_type:extForMime(video).mime,file_size_bytes:video.size});
+  if(youtube){
+   Object.assign(payload,{youtube_id:youtubeId,video_path:null,mime_type:null,file_size_bytes:null,duration_seconds:null});
+  }else{
+   payload.youtube_id=null;
+   if(file){
+     newVideo=createVideoPath(file);
+     await uploadVideo(file,newVideo);
+     Object.assign(payload,{video_path:newVideo,mime_type:extForMime(file).mime,file_size_bytes:file.size});
+   }
+  }
   if(newPoster)payload.poster_path=newPoster;
   if(!editing)payload.created_by=sessionUser.id;
-  status("upload-message","Salvando informações no catálogo...");
-  let dbResult;
-  if(editing)dbResult=await client.from("novaplay_library").update(payload).eq("id",editing.id).select("id").single();
-  else dbResult=await client.from("novaplay_library").insert(payload).select("id").single();
-  if(dbResult.error)throw dbResult.error;
-  // Only clean up originals after database points to the replacements.
-  if(editing&&newVideo&&editing.video_path!==newVideo)await client.storage.from(VIDEO_BUCKET).remove([editing.video_path]);
-  if(editing&&newPoster&&editing.poster_path&&editing.poster_path!==newPoster)await client.storage.from(POSTER_BUCKET).remove([editing.poster_path]);
-  if(video)sessionStorage.removeItem(pendingKey(video));
-  resetForm();status("upload-message","Conteúdo salvo! "+(payload.is_published?"Ele já aparece no catálogo público.":"Ele ficou como rascunho."),false,true);
+  status("upload-message",youtube?"Salvando link no catálogo...":"Salvando informações do filme...");
+  const result=editing
+   ?await client.from("novaplay_library").update(payload).eq("id",editing.id).select("id").single()
+   :await client.from("novaplay_library").insert(payload).select("id").single();
+  if(result.error)throw result.error;
+  if(editing?.video_path && (youtube||newVideo) && editing.video_path!==newVideo){
+    const clean=await client.storage.from(VIDEO_BUCKET).remove([editing.video_path]);
+    if(clean.error)console.warn("Limpeza de vídeo antigo não concluída.");
+  }
+  if(editing?.poster_path&&newPoster&&editing.poster_path!==newPoster){
+    const clean=await client.storage.from(POSTER_BUCKET).remove([editing.poster_path]);
+    if(clean.error)console.warn("Limpeza de capa antiga não concluída.");
+  }
+  if(file)sessionStorage.removeItem(pendingKey(file));
+  resetForm();
+  status("upload-message","Conteúdo salvo! "+(payload.is_published?"Já está disponível na NovaPlay.":"Salvo como rascunho."),false,true);
   await loadLibrary();
  }catch(err){
-  // If insert/update fails, never remove an upload that may still be resumed.
-  status("upload-message","Não foi possível concluir: "+errorText(err)+" Corrija o problema e tente novamente.",true);
- }finally{disable(false);}
+   status("upload-message","Não foi possível salvar: "+errorText(err)+". Confira as informações e tente novamente.",true);
+ }finally{disable(false);setSourceType()}
 }
 async function authAction(e){
  e.preventDefault();
@@ -306,11 +352,12 @@ function init(){
  $("login-form").onsubmit=authAction;$("signup").onclick=signUp;$("forgot").onclick=forgot;
  $("pending-exit").onclick=async()=>{await client.auth.signOut();show("login-view")};
  $("logout").onclick=async()=>{if(busy)return;await client.auth.signOut();sessionUser=null;show("login-view")};
- $("upload-form").onsubmit=sendForm;$("kind").onchange=setKind;
+ $("upload-form").onsubmit=sendForm;$("kind").onchange=setKind;$("source-type").onchange=setSourceType;setSourceType();
  $("cancel-edit").onclick=()=>{resetForm();status("upload-message","Edição cancelada.")};
  $("refresh-list").onclick=loadLibrary;$("filter-title").oninput=renderLibrary;
  $("video-file").onchange=()=>{$("video-file-label").textContent=$("video-file").files[0]?.name||"Selecionar vídeo do telefone"};
  $("poster-file").onchange=()=>{$("poster-file-label").textContent=$("poster-file").files[0]?.name||"Escolher capa (opcional)"};
+ $("youtube-poster-file").onchange=()=>{$("youtube-poster-label").textContent=$("youtube-poster-file").files[0]?.name||"Adicionar capa personalizada (opcional)"};
  client.auth.onAuthStateChange((event)=>{
   if(event==="PASSWORD_RECOVERY"){setTimeout(async()=>{const pass=prompt("Digite sua nova senha (pelo menos 8 caracteres):");if(pass&&pass.length>=8){const {error}=await client.auth.updateUser({password:pass});alert(error?errorText(error):"Senha alterada. Agora você pode entrar.")}},100)}
  });

@@ -5,7 +5,7 @@
 <meta name="theme-color" content="#080e1b"><meta name="robots" content="noindex,nofollow">
 <title>NovaPlay | Painel de conteúdo</title>
 <link rel="icon" href="../assets/icon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="./admin.css?v=0.7.0">
+<link rel="stylesheet" href="./admin.css?v=0.8.0">
 </head>
 <body>
 <header class="top"><a class="brand" href="../"><span class="mark">▶</span> Nova<span>Play</span></a><div class="top-right"><strong>Painel administrativo</strong><button id="logout" class="outline" hidden>Sair</button></div></header>
@@ -60,15 +60,40 @@
         </div>
         <label>Gênero ou categoria<input id="genre" maxlength="90" placeholder="Aventura, documentário, ação..." value="Autoral"></label>
         <label>Sinopse<textarea id="description" maxlength="4000" rows="4" placeholder="Conte um pouco sobre o filme..."></textarea></label>
-        <div class="drop-grid">
+        <div class="source-picker">
+          <label for="source-type">Como deseja adicionar o vídeo?</label>
+          <select id="source-type">
+            <option value="upload">Enviar arquivo do celular (até 50 MB)</option>
+            <option value="youtube">Filme grande pelo YouTube (sem limite de 50 MB)</option>
+          </select>
+        </div>
+        <div id="youtube-fields" class="youtube-fields" hidden>
+          <label for="youtube-url">Link do filme no YouTube <span class="required">*</span>
+            <input id="youtube-url" type="url" inputmode="url" placeholder="https://youtu.be/xxxxxxxxxxx" autocomplete="off">
+          </label>
+          <div class="youtube-howto">
+            <strong>Como publicar um filme grande grátis:</strong>
+            <ol>
+              <li>Envie seu filme autoral pelo YouTube Studio do celular.</li>
+              <li>Marque a visibilidade como <b>Não listado</b> (ou Público) e permita a incorporação.</li>
+              <li>Copie o link e cole acima; depois publique na NovaPlay.</li>
+            </ol>
+            <a href="https://studio.youtube.com/" target="_blank" rel="noopener noreferrer">Abrir YouTube Studio ↗</a>
+            <p>O vídeo será reproduzido dentro da NovaPlay usando o player oficial do YouTube. Não armazenaremos o arquivo no Supabase. O YouTube ainda pode mostrar sua marca, anúncios ou restringir vídeos.</p>
+          </div>
+        </div>
+        <div class="drop-grid" id="upload-files">
           <label class="file-box" for="video-file"><span class="file-symbol">▶</span><strong id="video-file-label">Selecionar vídeo do telefone</strong><small>MP4, WebM ou OGV · até 50 MB neste plano</small><input id="video-file" type="file" accept=".mp4,.webm,.ogv,video/mp4,video/webm,video/ogg"></label>
           <label class="file-box" for="poster-file"><span class="file-symbol">▧</span><strong id="poster-file-label">Escolher capa (opcional)</strong><small>Ou criaremos uma capa do vídeo · até 5 MB</small><input id="poster-file" type="file" accept="image/jpeg,image/png,image/webp"></label>
+        </div>
+        <div id="youtube-cover-section" hidden>
+          <label class="file-box" for="youtube-poster-file"><span class="file-symbol">▧</span><strong id="youtube-poster-label">Adicionar capa personalizada (opcional)</strong><small>Se não escolher, usamos a miniatura do YouTube · JPG, PNG ou WebP, até 5 MB</small><input id="youtube-poster-file" type="file" accept="image/jpeg,image/png,image/webp"></label>
         </div>
         <label class="publish-check"><input id="publish" type="checkbox"><span><strong>Publicar no catálogo quando terminar</strong><small>Desmarcado = salvar como rascunho. Você pode publicar depois.</small></span></label>
         <div id="progress-box" class="progress-box" hidden><div class="progress-head"><span id="progress-label">Enviando vídeo...</span><strong id="progress-value">0%</strong></div><progress id="progress" value="0" max="100"></progress></div>
         <p id="upload-message" class="feedback" role="status" aria-live="polite"></p>
         <button type="submit" id="submit-upload" class="primary wide">Enviar para a NovaPlay</button>
-        <p class="fineprint">Envie apenas material próprio ou que você tenha autorização para distribuir. O vídeo é armazenado em área privada, e o acesso público só é liberado após a publicação. O limite inicial por arquivo é de 50 MB, sujeito ao plano contratado.</p>
+        <p class="fineprint">Envie apenas material próprio ou que você tenha autorização para distribuir. O vídeo é armazenado em área privada, e o acesso público só é liberado após a publicação. Arquivos diretos seguem o limite de 50 MB do Supabase gratuito. Filmes grandes podem usar YouTube não listado, mas o YouTube exige cumprir as regras da plataforma e pode limitar ou remover vídeos.</p>
       </form>
     </section>
     <section class="panel library">
@@ -81,6 +106,6 @@
 </main>
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.58.0/dist/umd/supabase.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/tus-js-client@4.3.1/dist/tus.min.js"></script>
-<script defer src="./admin.js?v=0.7.0"></script>
+<script defer src="./admin.js?v=0.8.0"></script>
 </body>
 </html>

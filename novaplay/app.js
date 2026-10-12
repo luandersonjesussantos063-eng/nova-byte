@@ -19,7 +19,8 @@ const escapeText=x=>String(x??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;"
 let view="inicio",selected=null,featuredIndex=0,current=null,hls=null,timer=0,attempt=0,timeSaved=0,toastTimeout=null;
 let fullscreenOwned=false,closingFullscreen=false,lockedLandscape=false;
 
-function posterUrl(path){
+function posterUrl(path,youtubeId){
+ if(!path&&youtubeId&&/^[A-Za-z0-9_-]{11}$/.test(youtubeId))return"https://i.ytimg.com/vi/"+youtubeId+"/hqdefault.jpg";
  if(!remoteDb||!path)return"./assets/posters/autoral.svg";
  return remoteDb.storage.from("novaplay-posters").getPublicUrl(path).data.publicUrl;
 }
@@ -31,19 +32,19 @@ async function loadUploadedCatalog(){
  if(!remoteDb)return;
  try{
   const {data,error}=await remoteDb.from("novaplay_library")
-   .select("id,title,description,kind,series_title,episode_number,genre,production_year,video_path,poster_path,duration_seconds,created_at")
+   .select("id,title,description,kind,series_title,episode_number,genre,production_year,video_path,youtube_id,poster_path,duration_seconds,created_at")
    .eq("is_published",true).order("created_at",{ascending:false}).limit(150);
   if(error){console.warn("NovaPlay: catálogo remoto indisponível.",error.message);return}
   const grouped=new Map();
   let additions=[];
   (data||[]).forEach(record=>{
-   const cover=posterUrl(record.poster_path);
+   const cover=posterUrl(record.poster_path,record.youtube_id);
    const title=record.title||"Sem título";
    const desc=record.description||"Produção original disponível na NovaPlay.";
    if(record.kind==="movie"){
     const film={id:"upload-"+record.id,title,kind:"film",category:record.genre||"Autoral",description:desc,
       year:record.production_year,duration:durationText(record.duration_seconds),cover,backdrop:cover,
-      mode:"private",video_path:record.video_path,src:null,sourcePage:null,uploaded:true,live:false};
+      mode:record.youtube_id?"youtube":"private",video_path:record.video_path,youtube_id:record.youtube_id,src:null,sourcePage:null,uploaded:true,live:false};
     db.films.push(film);all.push(film);map.set(film.id,film);additions.push(film);
    }else if(record.kind==="episode"&&record.series_title){
     const key=record.series_title.trim().toLocaleLowerCase("pt-BR");
@@ -58,7 +59,7 @@ async function loadUploadedCatalog(){
     category:first.genre||"Autoral",description:first.desc,year:first.production_year,cover:first.cover,
     backdrop:first.cover,uploaded:true,live:false,
     episodes:episodes.map(rec=>({id:"upload-"+rec.id,label:"Episódio "+rec.episode_number,
-      title:rec.title,duration:durationText(rec.duration_seconds),video_path:rec.video_path,src:null,sourcePage:null,mode:"private"}))};
+      title:rec.title,duration:durationText(rec.duration_seconds),video_path:rec.video_path,youtube_id:rec.youtube_id,src:null,sourcePage:null,mode:rec.youtube_id?"youtube":"private"}))};
    db.series.push(show);all.push(show);map.set(show.id,show);additions.push(show);
    show.episodes.forEach(ep=>eps.set(ep.id,{show,ep}));
   }
@@ -374,7 +375,17 @@ function play(item,episode){
     v.play().catch(()=>playerStatus("Toque no botão ▶ do vídeo para começar."));
   }
  }
- if(media.video_path){
+ if(media.youtube_id){
+  // The official YouTube player runs INSIDE NovaPlay; do not bypass YouTube's restrictions.
+  const id=media.youtube_id;
+  if(!/^[A-Za-z0-9_-]{11}$/.test(id)){fail("Endereço do vídeo inválido.");return}
+  v.pause();v.hidden=true;
+  const frame=$("fallback-frame");frame.hidden=false;
+  frame.src="https://www.youtube-nocookie.com/embed/"+encodeURIComponent(id)+"?autoplay=1&playsinline=1&rel=0";
+  $("retry-btn").hidden=true;$("fallback-btn").hidden=true;
+  playerStatus("Player do YouTube carregado. Toque no ▶ se não começar sozinho.");
+  $("player-content-note").textContent="O vídeo está hospedado no YouTube e é exibido pelo player oficial dentro da NovaPlay. A plataforma pode exibir anúncios ou indisponibilizar conteúdos.";
+ }else if(media.video_path){
   if(!remoteDb){fail("Serviço de mídia indisponível. Recarregue a página.");return}
   playerStatus("Preparando vídeo publicado...");
   remoteDb.storage.from("novaplay-videos").createSignedUrl(media.video_path,7200).then(({data,error})=>{
