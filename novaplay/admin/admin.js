@@ -32,6 +32,11 @@ function errorText(err){
 async function hasAdmin(){
  const {data:{user},error}=await client.auth.getUser();
  if(error||!user)return null;
+ // O servidor concede acesso SOMENTE ao proprietário logado,
+ // com e-mail verificado e ID confirmado pelo Supabase Auth.
+ // Não há senha de administrador no código nem acesso liberado por e-mail digitado.
+ const claim=await client.rpc("novaplay_claim_owner_access");
+ if(claim.error)console.warn("NovaPlay: validação de proprietário indisponível.");
  const r=await client.from("novaplay_admins").select("user_id").eq("user_id",user.id).maybeSingle();
  if(r.error)throw r.error;
  return r.data?user:false;
