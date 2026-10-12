@@ -12,7 +12,11 @@ test('seis páginas, acessibilidade básica e identidade visual',()=>{
  assert.match(read('style.css'),/\.bottom-nav/);
 });
 test('PWA offline tem escopo isolado e não interfere no site NovaByte',()=>{
- assert.match(sw,/novabyte-divulga-v1\.0\.0/);
+ const version=app.match(/const VERSION='([^']+)'/)?.[1];
+ assert.ok(version,'O app precisa declarar a versão');
+ assert.ok(sw.includes("const CACHE='novabyte-divulga-v"+version+"'"));
+ assert.ok(html.includes('app.js?v='+version));
+ assert.ok(html.includes('style.css?v='+version));
  assert.match(sw,/pathname\.includes\('\/divulga\/'\)/);
  assert.match(sw,/CACHE/);
  const manifest=JSON.parse(read('manifest.webmanifest'));
