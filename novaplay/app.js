@@ -20,10 +20,11 @@ let view="inicio",selected=null,featuredIndex=0,current=null,hls=null,timer=0,at
 let playerUiTimer=null,seekActive=false;
 let fullscreenOwned=false,closingFullscreen=false,lockedLandscape=false;
 
-function posterUrl(path,youtubeId){
- if(!path&&youtubeId&&/^[A-Za-z0-9_-]{11}$/.test(youtubeId))return"https://i.ytimg.com/vi/"+youtubeId+"/hqdefault.jpg";
- if(!remoteDb||!path)return"./assets/posters/autoral.svg";
- return remoteDb.storage.from("novaplay-posters").getPublicUrl(path).data.publicUrl;
+function posterUrl(path,youtubeId,title,driveId){
+ if(path&&remoteDb)return remoteDb.storage.from("novaplay-posters").getPublicUrl(path).data.publicUrl;
+ if(youtubeId&&/^[A-Za-z0-9_-]{11}$/.test(youtubeId))return"https://i.ytimg.com/vi/"+youtubeId+"/hqdefault.jpg";
+ if(driveId)return window.NovaPlayCover?.driveThumbnail(driveId)||window.NovaPlayCover?.titleCard(title)||"./assets/posters/autoral.svg";
+ return window.NovaPlayCover?.titleCard(title)||"./assets/posters/autoral.svg";
 }
 function durationText(seconds){
  if(!Number.isFinite(seconds)||seconds<=0)return"Produção independente";
@@ -45,7 +46,7 @@ async function loadUploadedCatalog(){
   const grouped=new Map();
   let additions=[];
   (data||[]).forEach(record=>{
-   const cover=posterUrl(record.poster_path,record.youtube_id);
+   const cover=posterUrl(record.poster_path,record.youtube_id,record.title,record.google_drive_id);
    const title=record.title||"Sem título";
    const desc=record.description||"Produção original disponível na NovaPlay.";
    if(record.kind==="movie"){
@@ -106,7 +107,11 @@ function card(item,channel=false){
  +'<h3>'+escapeText(item.title)+'</h3><p>'+escapeText(isEpisode?(Math.max(1,Math.round((item.progress.duration-item.progress.position)/60))+" min restantes"):(item.kind==="tv"?"TV aberta • Assista grátis":(item.year||"Clássico")+" • "+(item.category||"Acervo clássico")))+'</p>';
  el.querySelector(".cover-btn").addEventListener("click",()=>isEpisode?play(item.show,item.episode):openDetails(item));
  el.querySelector(".card-direct-play").addEventListener("click",e=>{e.stopPropagation();if(isEpisode)play(item.show,item.episode);else startWatching(item)});
- el.querySelector("img").addEventListener("error",function(){this.style.display="none";this.parentElement.style.background="linear-gradient(135deg,#173e65,#4e417a)"});
+ el.querySelector("img").addEventListener("error",function(){
+  if(this.dataset.fallbackShown)return;
+  this.dataset.fallbackShown="1";
+  this.src=window.NovaPlayCover?.titleCard(item.title)||"./assets/posters/autoral.svg";
+ });
  return el;
 }
 function empty(title,subtitle){const div=document.createElement("div");div.className="empty-state";const h=document.createElement("h3");h.textContent=title;const p=document.createElement("p");p.textContent=subtitle;div.append(h,p);return div}
