@@ -1,0 +1,42 @@
+/* NovaPlay — capinhas por título + miniaturas originais do Google Drive (quando acessíveis). */
+(function(){
+"use strict";
+function esc(t){return String(t||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
+function paletteFor(title){
+ const colors=[
+  ["#071428","#2052a1","#4fd6ff"],
+  ["#160d2a","#67349a","#e18cfe"],
+  ["#071e26","#076e87","#7fe7dc"],
+  ["#250d20","#853961","#ff9c96"],
+  ["#1a1a2a","#505f9b","#adc9ff"],
+  ["#151b27","#426b8e","#e7a85a"]
+ ];
+ let h=0;for(const c of String(title||""))h=(h*31+c.charCodeAt(0))>>>0;
+ return colors[h%colors.length];
+}
+function linesOf(raw){
+ const words=String(raw||"Filme NovaPlay").trim().replace(/\s+/g," ").split(" ");
+ const result=[];let current="";
+ for(const word of words){
+  if((current+" "+word).trim().length>17&&current){result.push(current);current=word;}
+  else current=(current+" "+word).trim();
+  if(result.length===4)break;
+ }
+ if(result.length<4&&current)result.push(current);
+ const limited=result.slice(0,4);
+ if(limited.length&&words.join(" ").length>limited.join(" ").length)limited[limited.length-1]=limited[limited.length-1].slice(0,14)+"…";
+ return limited;
+}
+function titleCard(title){
+ const [a,b,light]=paletteFor(title);
+ const lines=linesOf(title);
+ const body=lines.map((line,i)=>'<text x="32" y="'+(435+i*54)+'" font-family="Arial,Helvetica,sans-serif" font-size="'+(line.length>17?29:37)+'" font-weight="800" fill="#ffffff">'+esc(line)+'</text>').join("");
+ const svg='<svg xmlns="http://www.w3.org/2000/svg" width="480" height="720" viewBox="0 0 480 720" role="img" aria-label="'+esc(title)+'"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop stop-color="'+a+'"/><stop offset=".75" stop-color="'+b+'"/><stop offset="1" stop-color="'+a+'"/></linearGradient><radialGradient id="shine"><stop stop-color="'+light+'" stop-opacity=".6"/><stop offset="1" stop-color="'+light+'" stop-opacity="0"/></radialGradient></defs><rect width="480" height="720" fill="url(#g)"/><circle cx="330" cy="210" r="230" fill="url(#shine)"/><path d="M-70 160 L550 70 M-50 250 L520 165 M-50 335 L520 250" stroke="#ffffff" stroke-opacity=".1" stroke-width="2"/><circle cx="280" cy="237" r="120" fill="#ffffff" fill-opacity=".06" stroke="#ffffff" stroke-opacity=".25" stroke-width="2"/><path d="M255 175 L345 237 L255 299Z" fill="#ffffff" fill-opacity=".35"/><rect x="0" y="370" width="480" height="350" fill="#050d1b" fill-opacity=".58"/><text x="32" y="62" font-family="Arial,Helvetica,sans-serif" font-size="27" font-weight="900" letter-spacing="2" fill="#ffffff">NOVA<tspan fill="'+light+'">PLAY</tspan></text>'+body+'<text x="32" y="683" font-family="Arial,Helvetica,sans-serif" font-size="17" font-weight="700" letter-spacing="2" fill="#d9ecff">CATÁLOGO DE FILMES</text></svg>';
+ return "data:image/svg+xml;charset=UTF-8,"+encodeURIComponent(svg);
+}
+function driveThumbnail(id){
+ if(!/^[A-Za-z0-9_-]{12,128}$/.test(String(id||"")))return null;
+ return "https://drive.google.com/thumbnail?id="+encodeURIComponent(id)+"&sz=w600";
+}
+window.NovaPlayCover=Object.freeze({titleCard,driveThumbnail});
+})();
