@@ -37,7 +37,7 @@ async function loadUploadedCatalog(){
   // Paginar resultados, inclusive quando o catálogo público ultrapassar 150 títulos.
   for(let offset=0;offset<5000;offset+=500){
    const {data:page,error}=await remoteDb.from("novaplay_library")
-    .select("id,title,description,kind,series_title,episode_number,genre,production_year,video_path,youtube_id,google_drive_id,google_drive_resource_key,poster_path,duration_seconds,created_at")
+    .select("id,title,description,kind,series_title,episode_number,genre,production_year,video_path,youtube_id,google_drive_id,google_drive_resource_key,poster_path,duration_seconds,created_at,catalog_only")
     .eq("is_published",true).order("created_at",{ascending:false}).range(offset,offset+499);
    if(error){console.warn("NovaPlay: catálogo remoto indisponível.",error.message);break}
    data.push(...(page||[]));
@@ -48,11 +48,11 @@ async function loadUploadedCatalog(){
   (data||[]).forEach(record=>{
    const cover=posterUrl(record.poster_path,record.youtube_id,record.title,record.google_drive_id);
    const title=record.title||"Sem título";
-   const desc=record.description||"Produção original disponível na NovaPlay.";
+   const desc=record.description||(record.catalog_only?"Título confirmado na NovaPlay. Aguardando inclusão de vídeo autorizado.":"Conteúdo disponível na NovaPlay.");
    if(record.kind==="movie"){
     const film={id:"upload-"+record.id,title,kind:"film",category:record.genre||"Autoral",description:desc,
-      year:record.production_year,duration:durationText(record.duration_seconds),cover,backdrop:cover,
-      mode:record.google_drive_id?"google-drive":record.youtube_id?"youtube":"private",video_path:record.video_path,youtube_id:record.youtube_id,google_drive_id:record.google_drive_id,google_drive_resource_key:record.google_drive_resource_key,src:null,sourcePage:null,uploaded:true,live:false};
+      year:record.production_year,duration:record.catalog_only?"Em breve":durationText(record.duration_seconds),cover,backdrop:cover,catalogOnly:!!record.catalog_only,
+      mode:record.catalog_only?"catalog-only":record.google_drive_id?"google-drive":record.youtube_id?"youtube":"private",video_path:record.video_path,youtube_id:record.youtube_id,google_drive_id:record.google_drive_id,google_drive_resource_key:record.google_drive_resource_key,src:null,sourcePage:null,uploaded:true,live:false};
     db.films.push(film);all.push(film);map.set(film.id,film);additions.push(film);
    }else if(record.kind==="episode"&&record.series_title){
     const key=record.series_title.trim().toLocaleLowerCase("pt-BR");
@@ -100,13 +100,13 @@ function card(item,channel=false){
  el.dataset.id=item.id;
  const pct=item.progress?Math.min(100,Math.max(0,Math.round(item.progress.position/item.progress.duration*100))):0;
  el.innerHTML='<div class="cover"><img loading="lazy" decoding="async" src="'+escapeText(cover)+'" alt="Capa ilustrativa: '+escapeText(item.title)+'">'
- +(channel?'<span class="onair">AO VIVO</span>':'')
+ +(channel?'<span class="onair">AO VIVO</span>':item.catalogOnly?'<span class="catalog-coming-soon">EM BREVE</span>':'')
  +'<button type="button" class="cover-btn" aria-label="'+escapeText(isEpisode?"Continuar "+item.title:"Ver detalhes de "+item.title)+'"></button>'
- +'<button type="button" class="card-direct-play" aria-label="Assistir '+escapeText(item.title)+'">'+icon("play")+'</button>'
+ +(item.catalogOnly?'':'<button type="button" class="card-direct-play" aria-label="Assistir '+escapeText(item.title)+'">'+icon("play")+'</button>')
  +(pct?'<span class="card-progress"><span style="width:'+pct+'%"></span></span>':'')+'</div>'
- +'<h3>'+escapeText(item.title)+'</h3><p>'+escapeText(isEpisode?(Math.max(1,Math.round((item.progress.duration-item.progress.position)/60))+" min restantes"):(item.kind==="tv"?"TV aberta • Assista grátis":(item.year||"Clássico")+" • "+(item.category||"Acervo clássico")))+'</p>';
+ +'<h3>'+escapeText(item.title)+'</h3><p>'+escapeText(isEpisode?(Math.max(1,Math.round((item.progress.duration-item.progress.position)/60))+" min restantes"):(item.kind==="tv"?"TV aberta • Assista grátis":(item.catalogOnly?"Em breve":(item.year||"Clássico"))+" • "+(item.category||"Acervo clássico")))+'</p>';
  el.querySelector(".cover-btn").addEventListener("click",()=>isEpisode?play(item.show,item.episode):openDetails(item));
- el.querySelector(".card-direct-play").addEventListener("click",e=>{e.stopPropagation();if(isEpisode)play(item.show,item.episode);else startWatching(item)});
+ el.querySelector(".card-direct-play")?.addEventListener("click",e=>{e.stopPropagation();if(isEpisode)play(item.show,item.episode);else startWatching(item)});
  el.querySelector("img").addEventListener("error",function(){
   if(this.dataset.fallbackShown)return;
   this.dataset.fallbackShown="1";
@@ -133,7 +133,7 @@ function renderRows(){
  const blocks=[
  ["Continuar assistindo",continued(),"continuar",false],
  ["TV aberta",db.channels,"tv",true],
- ["Produções da NovaPlay",uploadedCatalog,"filmes",false],
+ ["Produções da NovaPlay",uploadedCatalog.filter(x=>!x.catalogOnly),"filmes",false],
  ["Filmes clássicos",db.films,"filmes",false],
  ["Séries clássicas",db.series,"series",false],
  ["Adicionados ao catálogo",[...db.films.slice().reverse(),...db.series],"filmes",false],
@@ -196,6 +196,7 @@ function refreshFavoriteButton(){
 }
 function startWatching(item){
  if(!item)return;
+ if(item.catalogOnly){toast("Este título está na grade como Em breve. O vídeo ainda não foi cadastrado.");return;}
  if(item.kind==="series"){
   const episode=item.episodes?.find(e=>progressItem(e.id))||item.episodes?.[0];
   if(!episode){toast("Essa série ainda não tem episódios disponíveis");return}
@@ -204,13 +205,15 @@ function startWatching(item){
 }
 function openDetails(item){
  if(!item)return;selected=item;
- $("detail-type").textContent=item.kind==="tv"?"● TV ABERTA":item.kind==="series"?"SÉRIE CLÁSSICA":"FILME CLÁSSICO";
+ $("detail-type").textContent=item.catalogOnly?(item.category==="Anime · Série"?"ANIME / SÉRIE · EM BREVE":"ANIME / FILME · EM BREVE"):item.kind==="tv"?"● TV ABERTA":item.kind==="series"?"SÉRIE CLÁSSICA":"FILME CLÁSSICO";
  $("detail-title").textContent=item.title;
  $("detail-meta").textContent=[item.year,item.duration,item.category].filter(Boolean).join("  •  ");
  $("detail-description").textContent=item.description;
  $("detail-image").src=item.kind==="tv"?item.cover:(item.backdrop||item.cover);
  $("detail-image").alt="Arte ilustrativa de "+item.title;
  $("detail-play-label").textContent=item.kind==="tv"?"Assistir ao vivo":item.kind==="series"?"Assistir à série":"Assistir filme";
+ $("detail-play").hidden=!!item.catalogOnly;
+ $("detail-preview-play").hidden=!!item.catalogOnly;
  $("detail-play").onclick=()=>startWatching(item);
  $("detail-preview-play").onclick=()=>startWatching(item);
  refreshFavoriteButton();
