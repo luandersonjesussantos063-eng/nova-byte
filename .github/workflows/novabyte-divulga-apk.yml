@@ -1,0 +1,79 @@
+name: NovaByte Divulga - gerar APK Android
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'divulga/**'
+      - '.github/workflows/novabyte-divulga-apk.yml'
+permissions:
+  contents: read
+concurrency:
+  group: novabyte-divulga-android-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Validar central e campanhas
+        run: |
+          node --check divulga/app.js
+          node --check divulga/sw.js
+          node --check divulga/mobile/prepare.mjs
+          node --test divulga/tests/app.test.mjs
+      - name: Instalar Capacitor
+        working-directory: divulga/mobile
+        run: npm install --no-audit --no-fund
+      - name: Preparar SDK
+        run: |
+          SDK="${ANDROID_HOME:-${ANDROID_SDK_ROOT}}"
+          test -x "$SDK/cmdline-tools/latest/bin/sdkmanager"
+          yes | "$SDK/cmdline-tools/latest/bin/sdkmanager" --licenses >/dev/null || true
+          "$SDK/cmdline-tools/latest/bin/sdkmanager" "platforms;android-36" "build-tools;36.0.0"
+      - name: Empacotar aplicativo no Capacitor
+        working-directory: divulga/mobile
+        run: |
+          node prepare.mjs
+          npx cap add android
+          npx cap sync android
+      - name: Definir versão do aplicativo
+        env:
+          RUN_NUMBER: ${{ github.run_number }}
+        run: |
+          python3 - <<'PY'
+          import json,re,os
+          from pathlib import Path
+          version=json.loads(Path('divulga/mobile/package.json').read_text())['version']
+          path=Path('divulga/mobile/android/app/build.gradle')
+          text=path.read_text()
+          text,a=re.subn(r'\bversionCode\s+\d+','versionCode '+str(100000+int(os.environ['RUN_NUMBER'])),text,count=1)
+          text,b=re.subn(r'\bversionName\s+"[^"]+"','versionName "'+version+'"',text,count=1)
+          if a!=1 or b!=1:raise SystemExit('Gradle versionName/versionCode não encontrado')
+          path.write_text(text)
+          print('Versão Android:',version)
+          PY
+      - name: Aplicar ícone NovaByte
+        run: |
+          python3 -m pip install --disable-pip-version-check "cairosvg>=2.7,<3" "Pillow>=10,<12"
+          python3 divulga/mobile/create_icons.py
+      - name: Gerar APK de teste
+        working-directory: divulga/mobile/android
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon
+      - name: Anexar APK para testes
+        uses: actions/upload-artifact@v4
+        with:
+          name: novabyte-divulga-debug-apk
+          path: divulga/mobile/android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 14
