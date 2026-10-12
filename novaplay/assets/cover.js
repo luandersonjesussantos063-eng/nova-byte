@@ -52,6 +52,13 @@ const approvedAnimePosters=Object.freeze({
  "great pretender razbliuto filme":"great-pretender",
  "jibaku shounen hanako kun dublado":"hanako"
 });
+const featuredMovieCovers=Object.freeze({
+ "a era do gelo":"a_era_do_gelo",
+ "a era do gelo 4":"a_era_do_gelo_4",
+ "a familia do futuro":"a_familia_do_futuro",
+ "a grande familia o roubo":"a_grande_familia_o_roubo",
+ "a fantastica fabrica de chocolate":"a_fantastica_fabrica_de_chocolate"
+});
 const approvedCoversV2=Object.freeze({
  "a vinganca perfeita":"a_vinganca_perfeita",
  "a vizinhanca assombrada":"a_vizinhanca_assombrada",
@@ -68,6 +75,8 @@ const approvedCoversV2=Object.freeze({
 function approvedAnimePoster(title,admin){
  const key=String(title||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"")
   .toLocaleLowerCase("pt-BR").replace(/[^a-z0-9 ]+/g," ").replace(/\s+/g," ").trim();
+ const featured=featuredMovieCovers[key];
+ if(featured)return(admin?"../":"./")+"assets/featured-covers/"+featured+".jpg";
  const newer=approvedCoversV2[key];
  if(newer)return(admin?"../":"./")+"assets/approved-covers-v2/"+newer+".jpg";
  const slug=approvedAnimePosters[key];
