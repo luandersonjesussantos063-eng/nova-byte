@@ -1,7 +1,7 @@
 (()=>{
 'use strict';
 const KEY='novabyte-divulga-v1';
-const VERSION='1.0.6';
+const VERSION='1.0.7';
 const CITIES=['Lucas do Rio Verde','Sorriso','Sinop','Nova Mutum','Tapurah','Cuiabá','Outra cidade'];
 const SERVICES=['Criação de sites','Landing pages','Cardápio digital','Aplicativos','Sistemas personalizados','Outro serviço'];
 const $=s=>document.querySelector(s);
@@ -207,7 +207,7 @@ function renderQueue(){
  '<h2>'+E(g.name)+'</h2><p class="subhead">'+E(g.city||'Cidade não informada')+' · '+E(c.name)+'</p>'+
  (g.rules?'<div class="hint warning">Regras informadas: '+E(g.rules)+'</div>':'<div class="hint warning">Confira se este grupo permite publicidade antes de postar.</div>')+
  '<div class="campaign-hero"><span class="tag orange">ANÚNCIO PREPARADO</span><div class="preview" style="margin-top:11px">'+(c.image?'<img src="'+E(c.image)+'" alt="Imagem do anúncio">':'')+E(adText(c))+'</div></div>'+
- '<div class="queue-actions">'+button('queue-prepare-open','⧉ Copiar anúncio + abrir grupo','','btn-primary wide')+
+ '<div class="queue-actions">'+button('queue-send-robot','🤖 Enviar ao robô Android','','btn-primary wide')+button('queue-prepare-open','⧉ Copiar anúncio + abrir grupo','','btn-outline wide')+
  button('queue-share','↗ Compartilhar pelo Android','','btn-blue')+
  button('queue-copy','Copiar texto novamente','','btn-outline')+
  button('queue-open','Abrir somente o grupo','','btn-outline')+
@@ -389,6 +389,25 @@ function shareCampaign(c){
  }).catch(error=>{
   if(error?.name!=='AbortError')toast('Não foi possível compartilhar. Use “Copiar anúncio + abrir grupo”.');
  });
+}
+function sendQueueToAndroidRobot(){
+ const q=state.queue;
+ if(!q){toast('Inicie uma fila de divulgação primeiro.');return}
+ const g=state.groups.find(x=>x.id===q.ids[q.index]);
+ const c=state.campaigns.find(x=>x.id===q.campaignId);
+ if(!g||!c){toast('Grupo ou campanha não encontrado.');return}
+ const url=escapeUrl(g.url);
+ if(!url){toast('Cadastre um endereço válido deste grupo.');return}
+ const message='NOVABYTE_ROBO_V1\nGRUPO='+url+'\nTEXTO:\n'+adText(c);
+ if(!navigator.share){
+  void copyText(message);
+  toast('Compartilhamento indisponível. Copie os dados e abra o NovaByte Robô.');
+  return;
+ }
+ // Compartilhamento precisa ocorrer diretamente dentro do clique do usuário.
+ navigator.share({title:'NovaByte Robô — revisão de publicação',text:message})
+ .then(()=>toast('Conteúdo enviado ao aplicativo escolhido. Confira e autorize antes de executar.'))
+ .catch(error=>{if(error?.name!=='AbortError')toast('Falha no compartilhamento. Tente Copiar anúncio + abrir grupo.')});
 }
 function queuePrepareAndOpen(){
  const q=state.queue;
@@ -611,6 +630,7 @@ function handleAction(action,id){
  }
  if(action==='campaign-copy'){copyText(adText(state.campaigns.find(c=>c.id===id)));return}
  if(action==='start-queue'||action==='campaign-start'){startQueue(id);return}
+ if(action==='queue-send-robot'){sendQueueToAndroidRobot();return}
  if(action==='queue-prepare-open'){queuePrepareAndOpen();return}
  if(action==='queue-copy-group-link'){
   const q=state.queue,g=state.groups.find(g=>g.id===q?.ids[q.index]);
