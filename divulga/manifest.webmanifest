@@ -1,0 +1,30 @@
+{
+  "id": "./",
+  "name": "NovaByte Divulga — Central de Divulgação",
+  "short_name": "NovaByte Divulga",
+  "description": "Campanhas, grupos e fila de divulgação assistida da NovaByte Soluções.",
+  "start_url": "./#inicio",
+  "scope": "./",
+  "display": "standalone",
+  "lang": "pt-BR",
+  "background_color": "#080d17",
+  "theme_color": "#0b1120",
+  "categories": [
+    "business",
+    "productivity"
+  ],
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}
