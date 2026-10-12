@@ -43,8 +43,15 @@ function escapeUrl(input){
   if(url.protocol!=='https:'&&url.protocol!=='http:')return null;
   const h=url.hostname.toLowerCase();
   if(!['facebook.com','www.facebook.com','m.facebook.com','web.facebook.com','mbasic.facebook.com','fb.com','www.fb.com'].includes(h))return null;
-  if(!/^\/groups\/[^/]+/.test(url.pathname))return null;
-  return 'https://www.facebook.com'+url.pathname.replace(/\/+$/,'');
+  const parts=url.pathname.split('/').filter(Boolean);
+  // Links copiados pelo botão "Compartilhar grupo" costumam vir como /share/g/... .
+  if(parts[0]==='groups'&&parts[1]){
+   return 'https://www.facebook.com/groups/'+parts[1];
+  }
+  if(parts[0]==='share'&&parts[1]==='g'&&parts[2]){
+   return 'https://www.facebook.com/share/g/'+parts[2];
+  }
+  return null;
  }catch{return null;}
 }
 function simpleUrl(input){
