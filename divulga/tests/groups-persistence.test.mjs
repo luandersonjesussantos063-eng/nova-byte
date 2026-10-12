@@ -51,7 +51,7 @@ test('novo grupo aparece imediatamente na lista e permanece após reabrir o site
  assert.equal(stored.groups.length,1);
  assert.equal(stored.groups[0].name,'Ofertas e Classificados Lucas');
  assert.match(first.get('#groupList').innerHTML,/Ofertas e Classificados Lucas/);
- assert.match(first.get('#grupos').innerHTML,/1 grupo\\(s\\) salvo\\(s\\)/);
+ assert.match(first.get('#grupos').innerHTML,/1 grupo\(s\) salvo\(s\)/);
  assert.match(first.get('#grupos').innerHTML,/salvo com sucesso/);
  const reopened=openApp('#grupos');
  assert.match(reopened.get('#groupList').innerHTML,/Ofertas e Classificados Lucas/);
