@@ -5,10 +5,10 @@
 <meta name="theme-color" content="#080e1b"><meta name="robots" content="noindex,nofollow">
 <title>NovaPlay | Painel de conteúdo</title>
 <link rel="icon" href="../assets/icon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="./admin.css?v=0.16.0">
+<link rel="stylesheet" href="./admin.css?v=0.17.0">
 </head>
 <body>
-<header class="top"><a class="brand" href="../"><span class="mark">▶</span> Nova<span>Play</span></a><div class="top-right"><strong>Painel administrativo · v0.16.0</strong><button id="logout" class="outline" hidden>Sair</button></div></header>
+<header class="top"><a class="brand" href="../"><span class="mark">▶</span> Nova<span>Play</span></a><div class="top-right"><strong>Painel administrativo · v0.17.0</strong><button id="logout" class="outline" hidden>Sair</button></div></header>
 <main class="container">
   <section id="loading" class="panel intro"><div class="spin"></div><p>Preparando seu painel...</p></section>
   <section id="login-view" class="panel login" hidden>
@@ -114,23 +114,7 @@
     </section>
     <section class="panel library">
       <div class="section-title"><div><span class="section-label">BIBLIOTECA</span><h2>Seus uploads</h2></div><button id="refresh-list" class="outline compact">Atualizar</button></div>
-      <details id="review-queue-panel" class="review-queue-panel" open>
-        <summary><span><strong>Novos títulos para conferir direitos</strong><small>Rascunhos particulares vindos do PDF, sem vídeo disponível ao público</small></span><span id="queue-count" class="queue-count">Carregando...</span></summary>
-        <div class="queue-body">
-          <p class="muted">Estas referências <strong>não são links de reprodução</strong>. Confira os direitos de exibição e obtenha uma fonte autorizada antes de cadastrar qualquer filme ou episódio para publicação.</p>
-          <div class="queue-filter">
-            <input id="queue-search" type="search" placeholder="Buscar anime ou filme..." aria-label="Buscar títulos do PDF">
-            <select id="queue-state" aria-label="Filtrar conferência">
-              <option value="all">Todos os 42 registros</option>
-              <option value="pending">Aguardando conferência</option>
-              <option value="confirmed">Direitos confirmados</option>
-              <option value="rejected">Sem autorização</option>
-            </select>
-          </div>
-          <p class="feedback" id="queue-feedback" role="status" aria-live="polite"></p>
-          <div id="queue-items" class="queue-items"><p class="muted">Carregando a lista...</p></div>
-        </div>
-      </details>
+      
       <div class="panel" style="margin:8px 0 14px;padding:14px;border:1px solid rgba(150,186,250,.32);border-radius:12px">
         <strong>Publicação em lote</strong>
         <p class="muted" style="margin:8px 0 12px">Depois de revisar os links e os direitos de exibição de todos os rascunhos, use <b>Marcar todos como conferidos</b> para salvar a conferência de uma vez. Isso não publica os filmes: a liberação é feita separadamente no botão ao lado.</p>
@@ -153,6 +137,7 @@
         <select id="library-state-filter" style="display:block;width:100%;margin-top:8px">
           <option value="all">Todos os filmes cadastrados</option>
           <option value="imported">Importados do PDF</option>
+          <option value="catalog_only">Animes e filmes · Em breve (42)</option>
           <option value="draft">Aguardando publicação (rascunhos)</option>
           <option value="reviewed">Conferidos e prontos para liberar</option>
           <option value="published">Publicados</option>
@@ -165,7 +150,7 @@
 </main>
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.58.0/dist/umd/supabase.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/tus-js-client@4.3.1/dist/tus.min.js"></script>
-<script src="../assets/cover.js?v=0.16.0"></script>
-<script defer src="./admin.js?v=0.16.0"></script>
+<script src="../assets/cover.js?v=0.17.0"></script>
+<script defer src="./admin.js?v=0.17.0"></script>
 </body>
 </html>
