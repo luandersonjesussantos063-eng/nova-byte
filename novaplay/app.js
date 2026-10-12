@@ -2,6 +2,8 @@
 (function(){
 "use strict";
 const db=window.NovaPlayCatalog;
+const remoteDb=window.supabase?.createClient?.("https://vajlhodqxskozuxxlujv.supabase.co","sb_publishable_uT0b4y0Bex1k1QWZoyIfKg_K0pm-yS3",{auth:{persistSession:false,autoRefreshToken:false}});
+let uploadedCatalog=[];
 if(!db){console.error("O catálogo não foi carregado.");return;}
 const $=id=>document.getElementById(id);
 const all=[...db.channels,...db.films,...db.series];
@@ -16,6 +18,57 @@ const save=(key,x)=>{try{localStorage.setItem(key,JSON.stringify(x))}catch(e){}}
 const escapeText=x=>String(x??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 let view="inicio",selected=null,featuredIndex=0,current=null,hls=null,timer=0,attempt=0,timeSaved=0,toastTimeout=null;
 let fullscreenOwned=false,closingFullscreen=false,lockedLandscape=false;
+
+function posterUrl(path){
+ if(!remoteDb||!path)return"./assets/posters/lua.svg";
+ return remoteDb.storage.from("novaplay-posters").getPublicUrl(path).data.publicUrl;
+}
+function durationText(seconds){
+ if(!Number.isFinite(seconds)||seconds<=0)return"Produção independente";
+ return Math.max(1,Math.round(seconds/60))+" min";
+}
+async function loadUploadedCatalog(){
+ if(!remoteDb)return;
+ try{
+  const {data,error}=await remoteDb.from("novaplay_library")
+   .select("id,title,description,kind,series_title,episode_number,genre,production_year,video_path,poster_path,duration_seconds,created_at")
+   .eq("is_published",true).order("created_at",{ascending:false}).limit(150);
+  if(error){console.warn("NovaPlay: catálogo remoto indisponível.",error.message);return}
+  const grouped=new Map();
+  let additions=[];
+  (data||[]).forEach(record=>{
+   const cover=posterUrl(record.poster_path);
+   const title=record.title||"Sem título";
+   const desc=record.description||"Produção original disponível na NovaPlay.";
+   if(record.kind==="movie"){
+    const film={id:"upload-"+record.id,title,kind:"film",category:record.genre||"Autoral",description:desc,
+      year:record.production_year,duration:durationText(record.duration_seconds),cover,backdrop:cover,
+      mode:"private",video_path:record.video_path,src:null,sourcePage:null,uploaded:true,live:false};
+    db.films.push(film);all.push(film);map.set(film.id,film);additions.push(film);
+   }else if(record.kind==="episode"&&record.series_title){
+    const key=record.series_title.trim().toLocaleLowerCase("pt-BR");
+    if(!grouped.has(key))grouped.set(key,[]);
+    grouped.get(key).push({...record,cover,title,desc});
+   }
+  });
+  for(const [key,episodes] of grouped){
+   episodes.sort((a,b)=>(a.episode_number||0)-(b.episode_number||0));
+   const first=episodes[0];
+   const show={id:"uploaded-series-"+first.id,title:first.series_title,kind:"series",
+    category:first.genre||"Autoral",description:first.desc,year:first.production_year,cover:first.cover,
+    backdrop:first.cover,uploaded:true,live:false,
+    episodes:episodes.map(rec=>({id:"upload-"+rec.id,label:"Episódio "+rec.episode_number,
+      title:rec.title,duration:durationText(rec.duration_seconds),video_path:rec.video_path,src:null,sourcePage:null,mode:"private"}))};
+   db.series.push(show);all.push(show);map.set(show.id,show);additions.push(show);
+   show.episodes.forEach(ep=>eps.set(ep.id,{show,ep}));
+  }
+  uploadedCatalog=additions;
+  if(view==="inicio")renderRows();
+  else if(view==="buscar")renderSearch();
+  else if(categories[view])renderCategory(view);
+ }catch(err){console.warn("NovaPlay: não foi possível obter novos conteúdos.",String(err))}
+}
+
 function icon(id){return '<svg aria-hidden="true"><use href="#i-'+id+'"></use></svg>'}
 function toast(message){clearTimeout(toastTimeout);const n=$("toast");n.textContent=message;n.classList.add("show");toastTimeout=setTimeout(()=>n.classList.remove("show"),2600)}
 function favLabel(item){return favorite.has(item.id)?"Na minha lista":"Minha lista"}
@@ -67,6 +120,7 @@ function renderRows(){
  const blocks=[
  ["Continuar assistindo",continued(),"continuar",false],
  ["TV aberta",db.channels,"tv",true],
+ ["Produções da NovaPlay",uploadedCatalog,"filmes",false],
  ["Filmes clássicos",db.films,"filmes",false],
  ["Séries clássicas",db.series,"series",false],
  ["Adicionados ao catálogo",[...db.films.slice().reverse(),...db.series],"filmes",false],
@@ -284,7 +338,7 @@ function play(item,episode){
  $("player-main")?.scrollTo?.(0,0);
  const v=$("video");v.hidden=false;
  const seq=++attempt;
- const src=media.src;
+ let src=media.src;
  let hasFailed=false;
  const fail=msg=>{if(!hasFailed){hasFailed=true;playbackFailed(msg,seq)}};
  v.onerror=()=>fail("O arquivo não pôde ser reproduzido neste navegador. Tente novamente.");
@@ -299,24 +353,36 @@ function play(item,episode){
  const progressId=item.kind==="tv"?null:episode?episode.id:item.id;
  setResume(v,progressId,seq);
  if(item.kind==="tv")timer=setTimeout(()=>{if(seq===attempt&&v.readyState<2)fail("O canal está demorando para carregar. Verifique a conexão ou tente novamente.")},22000);
- if(!src){fail("Conteúdo sem endereço de transmissão.");return}
- if(/\.m3u8(?:\?|$)/i.test(src)){
-   if(v.canPlayType("application/vnd.apple.mpegurl")){
-     v.src=src;v.play().catch(()=>playerStatus("Toque no botão ▶ do vídeo para começar."));
-   }else if(window.Hls&&window.Hls.isSupported()){
-     hls=new window.Hls({enableWorker:true,lowLatencyMode:true,maxBufferLength:20});
-     hls.on(window.Hls.Events.ERROR,(event,data)=>{
-       if(seq!==attempt||!data.fatal)return;
-       if(data.type===window.Hls.ErrorTypes.MEDIA_ERROR){try{hls.recoverMediaError();return}catch(e){}}
-       fail("A transmissão interrompeu. Toque em Tentar novamente.");
-     });
-     hls.loadSource(src);hls.attachMedia(v);
-     hls.on(window.Hls.Events.MANIFEST_PARSED,()=>{if(seq===attempt)v.play().catch(()=>playerStatus("Toque no ▶ do vídeo para começar."))});
-   }else fail("Este navegador não carregou o suporte a HLS.");
- }else{
-   v.src=src;
-   v.play().catch(()=>playerStatus("Toque no botão ▶ do vídeo para começar."));
+ function startSource(){
+  if(seq!==attempt)return;
+  if(!src){fail("Não foi possível localizar o arquivo de vídeo.");return}
+  if(/\.m3u8(?:\?|$)/i.test(src)){
+    if(v.canPlayType("application/vnd.apple.mpegurl")){
+      v.src=src;v.play().catch(()=>playerStatus("Toque no botão ▶ do vídeo para começar."));
+    }else if(window.Hls&&window.Hls.isSupported()){
+      hls=new window.Hls({enableWorker:true,lowLatencyMode:true,maxBufferLength:20});
+      hls.on(window.Hls.Events.ERROR,(event,data)=>{
+        if(seq!==attempt||!data.fatal)return;
+        if(data.type===window.Hls.ErrorTypes.MEDIA_ERROR){try{hls.recoverMediaError();return}catch(e){}}
+        fail("A transmissão interrompeu. Toque em Tentar novamente.");
+      });
+      hls.loadSource(src);hls.attachMedia(v);
+      hls.on(window.Hls.Events.MANIFEST_PARSED,()=>{if(seq===attempt)v.play().catch(()=>playerStatus("Toque no ▶ do vídeo para começar."))});
+    }else fail("Este navegador não carregou o suporte a HLS.");
+  }else{
+    v.src=src;
+    v.play().catch(()=>playerStatus("Toque no botão ▶ do vídeo para começar."));
+  }
  }
+ if(media.video_path){
+  if(!remoteDb){fail("Serviço de mídia indisponível. Recarregue a página.");return}
+  playerStatus("Preparando vídeo publicado...");
+  remoteDb.storage.from("novaplay-videos").createSignedUrl(media.video_path,7200).then(({data,error})=>{
+    if(seq!==attempt)return;
+    if(error||!data?.signedUrl){fail("Este vídeo não está liberado para reprodução. Tente novamente mais tarde.");return}
+    src=data.signedUrl;startSource();
+  }).catch(()=>{if(seq===attempt)fail("Não foi possível conectar ao armazenamento do vídeo.")});
+ }else startSource();
  // No extra focus change or intermediate details screen: playback opens immediately.
 }
 $("player-back").onclick=closePlayer;$("player-close").onclick=closePlayer;
@@ -326,7 +392,7 @@ $("close-details").onclick=closeDetails;
  $("detail-back").onclick=closeDetails;
 document.querySelectorAll("[data-close='details']").forEach(x=>x.addEventListener("click",closeDetails));
 $("search-trigger").onclick=()=>navigate("buscar");
-$("profile-trigger").onclick=()=>toast("NovaPlay V 0.6 · Catálogo grátis, sem cadastro");
+$("profile-trigger").onclick=()=>{window.location.href="./admin/"};
 $("search-input").addEventListener("input",renderSearch);
 $("brand-link").addEventListener("click",e=>{e.preventDefault();navigate("inicio")});
 document.querySelectorAll("[data-nav]").forEach(btn=>btn.addEventListener("click",()=>navigate(btn.dataset.nav)));
@@ -342,4 +408,5 @@ if("serviceWorker" in navigator&&location.protocol==="https:"){
  window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}));
 }
 navigate((location.hash||"").slice(1)||"inicio");
+loadUploadedCatalog();
 })();
