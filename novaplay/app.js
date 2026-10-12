@@ -10,6 +10,23 @@ const all=[...db.channels,...db.films,...db.series];
 const map=new Map(all.map(x=>[x.id,x]));
 const eps=new Map();db.series.forEach(show=>(show.episodes||[]).forEach(ep=>eps.set(ep.id,{show,ep})));
 const favKey="novaplay-favorites-v2",progressKey="novaplay-progress-v1";
+/* Métrica anônima de interesse. Conta abertura da ficha e TENTATIVAS de reprodução,
+   nunca declara que um vídeo externo efetivamente foi reproduzido. */
+function registerCatalogInterest(item,eventType){
+ if(!remoteDb||!item?.id?.startsWith("upload-"))return;
+ if(eventType!=="detail_open"&&eventType!=="play_attempt")return;
+ const mediaId=item.id.slice("upload-".length);
+ if(!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(mediaId))return;
+ const key="novaplay-measure:"+eventType+":"+mediaId;
+ try{
+  const last=Number(sessionStorage.getItem(key)||0);
+  if(Date.now()-last<10*60*1000)return;
+  sessionStorage.setItem(key,String(Date.now()));
+ }catch(e){}
+ remoteDb.from("novaplay_activity_events").insert({media_id:mediaId,event_type:eventType})
+  .then(({error})=>{if(error)console.warn("Medição NovaPlay indisponível:",error.message)})
+  .catch(()=>{});
+}
 function read(key,fallback){try{const x=JSON.parse(localStorage.getItem(key));return x??fallback}catch(e){return fallback}}
 const favorite=new Set((read(favKey,[])).filter(x=>map.has(x)));
 let progress=read(progressKey,{});
@@ -205,6 +222,7 @@ function startWatching(item){
 }
 function openDetails(item){
  if(!item)return;selected=item;
+ registerCatalogInterest(item,"detail_open");
  $("detail-type").textContent=item.catalogOnly?(item.category==="Anime · Série"?"ANIME / SÉRIE · EM BREVE":"ANIME / FILME · EM BREVE"):item.kind==="tv"?"● TV ABERTA":item.kind==="series"?"SÉRIE CLÁSSICA":"FILME CLÁSSICO";
  $("detail-title").textContent=item.title;
  $("detail-meta").textContent=[item.year,item.duration,item.category].filter(Boolean).join("  •  ");
@@ -415,6 +433,8 @@ function setResume(video,id,seq){
 }
 function play(item,episode){
  if(!item)return;
+ if(item.catalogOnly){toast("Este título está em breve; não há vídeo para reproduzir.");return;}
+ registerCatalogInterest(episode||item,"play_attempt");
  // A camada de detalhes fecha, mas o player continua aberto.
  $("detail-layer").hidden=true;selected=null;
  stopPlayback();current={item,episode:episode||null};
