@@ -1,7 +1,7 @@
 (()=>{
 'use strict';
 const KEY='novabyte-divulga-v1';
-const VERSION='1.0.3';
+const VERSION='1.0.4';
 const CITIES=['Lucas do Rio Verde','Sorriso','Sinop','Nova Mutum','Tapurah','Cuiabá','Outra cidade'];
 const SERVICES=['Criação de sites','Landing pages','Cardápio digital','Aplicativos','Sistemas personalizados','Outro serviço'];
 const $=s=>document.querySelector(s);
@@ -14,7 +14,7 @@ const onlyDay=iso=>new Date(iso).toLocaleDateString('pt-BR');
 const hoursElapsed=iso=>(Date.now()-Date.parse(iso||0))/3600000;
 const isToday=iso=>new Date(iso).toDateString()===new Date().toDateString();
 const emptyState=()=>({groups:[],campaigns:[],history:[],queue:null,settings:{reminders:false,intervalHours:1,quietStart:'22:00',quietEnd:'08:00',lastReminder:nowISO()}});
-let state=load(),tab='inicio',filterCity='',searchGroups='',filterHistory='',imageDraft='',toaster=null,reminderTimer=null;
+let state=load(),tab='inicio',filterCity='',searchGroups='',filterHistory='',imageDraft='',toaster=null,reminderTimer=null,groupSavedNotice='';
 function load(){
  try{
   const data=JSON.parse(localStorage.getItem(KEY));
@@ -161,6 +161,7 @@ function renderGroups(){
  const cities=[...new Set(state.groups.map(g=>g.city).filter(Boolean))].sort();
  $('#grupos').innerHTML=title('Meus grupos','Organize os grupos de compra e venda por cidade e regras.',
  button('groups-reload','↻ Atualizar lista','','btn-outline')+button('group-import','↥ Importar links','','btn-outline')+button('group-new','＋ Novo grupo','','btn-primary'))+
+ (groupSavedNotice?'<div class="group-confirmation" role="status" aria-live="polite">✓ '+E(groupSavedNotice)+'</div>':'')+
  '<div class="hint" style="margin:0 0 16px"><strong>'+state.groups.length+' grupo(s) salvo(s) neste navegador.</strong> Seus cadastros ficam no Chrome em que foram criados. Se a lista estiver vazia, confira se abriu o mesmo endereço e navegador. '+button('export','↧ Backup dos grupos e anúncios','','btn-quiet btn-sm')+'</div>'+ '<div class="filters"><input id="groupSearch" class="control" type="search" placeholder="Buscar grupo ou cidade" value="'+E(searchGroups)+'" aria-label="Buscar grupos"><select id="cityFilter" class="control" aria-label="Filtrar por cidade"><option value="">Todas as cidades</option>'+selectOptions(cities,filterCity)+'</select></div>'+
  '<div id="groupList"></div>'+
  '<p class="footer-note">Adicione apenas grupos que permitam anúncios comerciais. O Facebook poderá exigir aprovação do administrador.</p>';
@@ -414,22 +415,63 @@ function reminderCheck(){
   try{new Notification('NovaByte Divulga',{body:message,icon:'./icon.svg'})}catch{}
  }
 }
+function groupFormProblem(message,field){
+ const error=$('#groupFormError');
+ if(error){error.hidden=false;error.textContent=message;error.scrollIntoView?.({block:'nearest'});}
+ if(field)field.focus?.();
+ toast(message);
+}
+function persistGroupFromForm(){
+ const form=$('#groupForm');
+ if(!form){toast('Não foi possível encontrar o formulário do grupo. Atualize a página.');return false}
+ const field=name=>form.querySelector('[name="'+name+'"]');
+ const nameInput=field('name'),urlInput=field('url');
+ const name=String(nameInput?.value||'').trim().slice(0,130);
+ const rawUrl=String(urlInput?.value||'').trim();
+ const url=escapeUrl(rawUrl);
+ if(!name){groupFormProblem('Digite o nome do grupo antes de salvar.',nameInput);return false;}
+ if(!rawUrl){groupFormProblem('Cole o endereço completo do grupo antes de salvar.',urlInput);return false;}
+ if(!url){groupFormProblem('Esse endereço não é um link válido de grupo do Facebook.',urlInput);return false;}
+ const id=String(field('id')?.value||'');
+ if(state.groups.some(g=>g.url===url&&g.id!==id)){
+  groupFormProblem('Este grupo já está cadastrado! Abra a aba Meus grupos para encontrá-lo.',urlInput);
+  return false;
+ }
+ const group={
+  id:id||uuid(),name,url,
+  city:String(field('city')?.value||'Lucas do Rio Verde').trim().slice(0,90),
+  cooldown:Math.min(720,Math.max(1,Number(field('cooldown')?.value)||24)),
+  rules:String(field('rules')?.value||'').trim().slice(0,1200),
+  notes:String(field('notes')?.value||'').trim().slice(0,200)
+ };
+ const previousGroups=state.groups;
+ const all=id?state.groups.map(g=>g.id===id?group:g):[...state.groups,group];
+ try {
+  // Dados antigos são preservados; uma falha de gravação deixa o formulário aberto.
+  const data={...state,groups:all};
+  localStorage.setItem(KEY,JSON.stringify(data));
+  const result=JSON.parse(localStorage.getItem(KEY)||'null');
+  if(!Array.isArray(result?.groups)||!result.groups.some(g=>g.id===group.id&&g.url===group.url)){
+   throw new Error('O navegador não confirmou a gravação dos dados.');
+  }
+  state.groups=result.groups;
+  searchGroups='';filterCity='';
+  groupSavedNotice='Grupo “'+group.name+'” salvo com sucesso. Total: '+state.groups.length+'.';
+  closeModal();tabTo('grupos');
+  toast(groupSavedNotice);
+  return true;
+ }catch(error){
+  state.groups=previousGroups;
+  groupFormProblem('Não foi possível gravar o grupo neste navegador. '+String(error?.message||'Verifique o armazenamento disponível.'),null);
+  return false;
+ }
+}
+
 function handleAction(action,id){
  if(action==='modal-close'){closeModal();return}
  if(action==='group-new'||action==='group-edit'){groupForm(id);return}
  if(action==='group-save'){
-  const form=$('#groupForm');if(!form)return;
-  const urlField=form.elements.url;
-  const label=String(form.elements.name.value||'').trim();
-  const url=String(urlField.value||'').trim();
-  const error=$('#groupFormError');
-  if(!label||!url||!escapeUrl(url)){
-   if(error){error.hidden=false;error.textContent=!label?'Digite o nome do grupo.':!url?'O link ainda não foi colado. Toque em “Colar link” ou segure o campo e escolha “Colar”.':'O link informado não é um endereço de grupo do Facebook.';}
-   toast(!url?'Cole o link do Facebook dentro do campo antes de salvar.':'Corrija os campos destacados.');
-   (label?urlField:form.elements.name).focus();return;
-  }
-  if(error)error.hidden=true;
-  form.requestSubmit();
+  persistGroupFromForm();
   return;
  }
  if(action==='group-paste-link'){
@@ -543,15 +585,8 @@ document.addEventListener('submit',e=>{
  }
  if(e.target.id==='groupForm'){
   e.preventDefault();
-  const f=e.target,data=new FormData(f),url=escapeUrl(data.get('url')),id=String(data.get('id')||'');
-  if(!url){toast('Informe um link válido de grupo do Facebook.');return}
-  if(state.groups.some(g=>g.url===url&&g.id!==id)){toast('Esse grupo já está cadastrado.');return}
-  const group={id:id||uuid(),name:String(data.get('name')||'').trim().slice(0,130),url,city:String(data.get('city')||'').trim().slice(0,90),cooldown:Math.min(720,Math.max(1,Number(data.get('cooldown'))||24)),rules:String(data.get('rules')||'').trim().slice(0,1200),notes:String(data.get('notes')||'').trim().slice(0,200)};
-  if(!group.name){toast('Informe o nome do grupo.');return}
-  const previous=state.groups;
-  state.groups=id?state.groups.map(g=>g.id===id?group:g):[...state.groups,group];
-  if(save()){closeModal();searchGroups='';filterCity='';tabTo('grupos');toast('Grupo salvo: '+state.groups.length+' no total.');}
-  else state.groups=previous;
+  persistGroupFromForm();
+  return;
  }
  if(e.target.id==='campaignForm'){
   e.preventDefault();const data=new FormData(e.target),id=String(data.get('id')||''),link=String(data.get('link')||'').trim();
