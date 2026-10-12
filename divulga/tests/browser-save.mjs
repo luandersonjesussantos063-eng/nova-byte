@@ -40,7 +40,7 @@ try{
  assert.equal(state.groups.length,1);
  assert.equal(state.groups[0].url,'https://www.facebook.com/share/g/123456ABC');
  await page.reload({waitUntil:'domcontentloaded'});
- await page.locator('[data-tab="grupos"]').first().click();
+ await page.locator('.bottom-nav [data-tab="grupos"]').click();
  assert.match(await page.locator('#groupList').innerText(),/Lucas anuncia/);
  assert.equal(await page.locator('#groupList .item').count(),1);
  assert.deepEqual(errors,[]);
