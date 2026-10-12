@@ -1,5 +1,5 @@
-const CACHE="novaplay-v0.12.0";
-const CORE=["./","./index.html","./styles.css","./app.js","./catalog.js","./manifest.webmanifest","./assets/icon.svg",
+const CACHE="novaplay-v0.14.0";
+const CORE=["./","./index.html","./styles.css","./app.js","./assets/cover.js","./catalog.js","./manifest.webmanifest","./assets/icon.svg",
 "./assets/posters/autoral.svg","./assets/posters/nosferatu.svg","./assets/posters/lua.svg","./assets/posters/caligari.svg","./assets/posters/lostworld.svg",
 "./assets/posters/pauline.svg","./assets/posters/phantom.svg","./assets/posters/camara.svg","./assets/posters/brasil.svg","./assets/posters/cultura.svg","./assets/backdrops/lostworld-hero.svg"];
 self.addEventListener("install",e=>{e.waitUntil(caches.open(CACHE).then(c=>c.addAll(CORE)).then(()=>self.skipWaiting()))});
