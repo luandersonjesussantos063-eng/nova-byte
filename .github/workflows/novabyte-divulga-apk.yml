@@ -1,11 +1,7 @@
 name: NovaByte Divulga - gerar APK Android
+# APK somente sob pedido explícito; atualizações normais focam o site.
 on:
   workflow_dispatch:
-  push:
-    branches: [main]
-    paths:
-      - 'divulga/**'
-      - '.github/workflows/novabyte-divulga-apk.yml'
 permissions:
   contents: read
 concurrency:
