@@ -15,6 +15,7 @@ if(!progress||typeof progress!=="object"||Array.isArray(progress))progress={};
 const save=(key,x)=>{try{localStorage.setItem(key,JSON.stringify(x))}catch(e){}};
 const escapeText=x=>String(x??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 let view="inicio",selected=null,featuredIndex=0,current=null,hls=null,timer=0,attempt=0,timeSaved=0,toastTimeout=null;
+let fullscreenOwned=false,closingFullscreen=false,lockedLandscape=false;
 function icon(id){return '<svg aria-hidden="true"><use href="#i-'+id+'"></use></svg>'}
 function toast(message){clearTimeout(toastTimeout);const n=$("toast");n.textContent=message;n.classList.add("show");toastTimeout=setTimeout(()=>n.classList.remove("show"),2600)}
 function favLabel(item){return favorite.has(item.id)?"Na minha lista":"Minha lista"}
@@ -39,10 +40,11 @@ function card(item,channel=false){
  el.innerHTML='<div class="cover"><img loading="lazy" decoding="async" src="'+escapeText(cover)+'" alt="Capa ilustrativa: '+escapeText(item.title)+'">'
  +(channel?'<span class="onair">AO VIVO</span>':'')
  +'<button type="button" class="cover-btn" aria-label="'+escapeText(isEpisode?"Continuar "+item.title:"Ver detalhes de "+item.title)+'"></button>'
- +'<span class="card-play-icon">'+icon("play")+'</span>'
+ +'<button type="button" class="card-direct-play" aria-label="Assistir '+escapeText(item.title)+'">'+icon("play")+'</button>'
  +(pct?'<span class="card-progress"><span style="width:'+pct+'%"></span></span>':'')+'</div>'
  +'<h3>'+escapeText(item.title)+'</h3><p>'+escapeText(isEpisode?(Math.max(1,Math.round((item.progress.duration-item.progress.position)/60))+" min restantes"):(item.kind==="tv"?"TV aberta • Assista grátis":(item.year||"Clássico")+" • "+(item.category||"Acervo clássico")))+'</p>';
  el.querySelector(".cover-btn").addEventListener("click",()=>isEpisode?play(item.show,item.episode):openDetails(item));
+ el.querySelector(".card-direct-play").addEventListener("click",e=>{e.stopPropagation();if(isEpisode)play(item.show,item.episode);else startWatching(item)});
  el.querySelector("img").addEventListener("error",function(){this.style.display="none";this.parentElement.style.background="linear-gradient(135deg,#173e65,#4e417a)"});
  return el;
 }
@@ -125,6 +127,14 @@ function refreshFavoriteButton(){
  const btn=$("detail-favorite");if(!selected)return;
  btn.innerHTML=icon(favorite.has(selected.id)?"check":"plus")+" <span>"+escapeText(favLabel(selected))+"</span>";
 }
+function startWatching(item){
+ if(!item)return;
+ if(item.kind==="series"){
+  const episode=item.episodes?.find(e=>progressItem(e.id))||item.episodes?.[0];
+  if(!episode){toast("Essa série ainda não tem episódios disponíveis");return}
+  play(item,episode);
+ }else play(item);
+}
 function openDetails(item){
  if(!item)return;selected=item;
  $("detail-type").textContent=item.kind==="tv"?"● TV ABERTA":item.kind==="series"?"SÉRIE CLÁSSICA":"FILME CLÁSSICO";
@@ -134,10 +144,8 @@ function openDetails(item){
  $("detail-image").src=item.kind==="tv"?item.cover:(item.backdrop||item.cover);
  $("detail-image").alt="Arte ilustrativa de "+item.title;
  $("detail-play-label").textContent=item.kind==="tv"?"Assistir ao vivo":item.kind==="series"?"Assistir à série":"Assistir filme";
- $("detail-play").onclick=()=>{
-   if(item.kind==="series"){const keep=item.episodes.find(e=>progressItem(e.id));play(item,keep||item.episodes[0])}
-   else play(item)
- };
+ $("detail-play").onclick=()=>startWatching(item);
+ $("detail-preview-play").onclick=()=>startWatching(item);
  refreshFavoriteButton();
  $("detail-favorite").onclick=()=>toggleFavorite(item);
  const section=$("episode-section"),list=$("episode-list");list.replaceChildren();
@@ -157,6 +165,57 @@ function closeDetails(){
  $("detail-layer").hidden=true;selected=null;
  if($("player-layer").hidden)document.body.classList.remove("modal-open");
 }
+function syncLandscape(){
+ const layer=$("player-layer");
+ if(layer.hidden){layer.classList.remove("force-landscape");return}
+ const portrait=window.innerHeight>window.innerWidth;
+ layer.classList.toggle("force-landscape",portrait);
+}
+function enterCinema(){
+ const layer=$("player-layer");
+ layer.classList.add("cinema");fullscreenOwned=false;closingFullscreen=false;
+ syncLandscape();
+ // Must be initiated directly by the tap/click; otherwise Android rejects fullscreen.
+ const enter=layer.requestFullscreen?.bind(layer)||layer.webkitRequestFullscreen?.bind(layer);
+ if(!enter)return;
+ try{
+  const result=enter({navigationUI:"hide"});
+  Promise.resolve(result).then(()=>{
+   if(layer.hidden)return;
+   fullscreenOwned=!!(document.fullscreenElement===layer||document.webkitFullscreenElement===layer);
+   if(screen.orientation&&typeof screen.orientation.lock==="function"){
+    try{
+     Promise.resolve(screen.orientation.lock("landscape")).then(()=>{lockedLandscape=true;syncLandscape()}).catch(()=>{syncLandscape()});
+    }catch(e){syncLandscape()}
+   }else syncLandscape();
+  }).catch(()=>{syncLandscape()});
+ }catch(e){syncLandscape()}
+}
+function leaveCinema(skipFullscreen=false){
+ const layer=$("player-layer");
+ layer.classList.remove("cinema","force-landscape");
+ if(lockedLandscape&&screen.orientation&&typeof screen.orientation.unlock==="function"){
+  try{screen.orientation.unlock()}catch(e){}
+ }
+ lockedLandscape=false;
+ if(!skipFullscreen&&(document.fullscreenElement===layer||document.webkitFullscreenElement===layer)){
+  closingFullscreen=true;
+  try{Promise.resolve(document.exitFullscreen?document.exitFullscreen():document.webkitExitFullscreen?.()).catch(()=>{}).finally(()=>{closingFullscreen=false})}catch(e){closingFullscreen=false}
+ }else{closingFullscreen=false}
+ fullscreenOwned=false;
+}
+document.addEventListener("fullscreenchange",()=>{
+ const layer=$("player-layer"),fs=document.fullscreenElement;
+ if(fs===layer){fullscreenOwned=true;syncLandscape();return}
+ if(fullscreenOwned&&!layer.hidden&&!closingFullscreen)closePlayer(true);
+});
+document.addEventListener("webkitfullscreenchange",()=>{
+ const layer=$("player-layer"),fs=document.webkitFullscreenElement;
+ if(fs===layer){fullscreenOwned=true;syncLandscape();return}
+ if(fullscreenOwned&&!layer.hidden&&!closingFullscreen)closePlayer(true);
+});
+window.addEventListener("resize",()=>{if(!$("player-layer").hidden)syncLandscape()});
+window.addEventListener("orientationchange",()=>{if(!$("player-layer").hidden)syncLandscape()});
 function stopPlayback(){
  ++attempt;clearTimeout(timer);timer=0;const video=$("video");
  video.pause();video.onerror=null;video.onplaying=null;video.onwaiting=null;video.oncanplay=null;video.onloadedmetadata=null;video.ontimeupdate=null;video.onended=null;
@@ -164,7 +223,8 @@ function stopPlayback(){
  video.removeAttribute("src");video.load();video.hidden=false;
  $("fallback-frame").src="about:blank";$("fallback-frame").hidden=true;current=null;
 }
-function closePlayer(){
+function closePlayer(skipFullscreen=false){
+ leaveCinema(skipFullscreen);
  stopPlayback();$("player-layer").hidden=true;document.body.classList.remove("modal-open");
  if(!$("detail-layer").hidden)closeDetails();
  if(view==="inicio")renderRows();
@@ -211,6 +271,7 @@ function play(item,episode){
  stopPlayback();current={item,episode:episode||null};
  const media=episode||item;
  $("player-layer").hidden=false;document.body.classList.add("modal-open");
+ enterCinema();
  $("player-heading").textContent=item.title;
  $("player-title").textContent=episode?item.title+" · "+episode.label:item.title;
  $("player-error").textContent="";playerStatus("Preparando reprodução...");
@@ -256,15 +317,16 @@ function play(item,episode){
    v.src=src;
    v.play().catch(()=>playerStatus("Toque no botão ▶ do vídeo para começar."));
  }
- setTimeout(()=>{if(!$("player-layer").hidden)$("player-back").focus()},40);
+ // No extra focus change or intermediate details screen: playback opens immediately.
 }
 $("player-back").onclick=closePlayer;$("player-close").onclick=closePlayer;
 $("retry-btn").onclick=()=>{if(current)play(current.item,current.episode)};
 $("fallback-btn").onclick=useFallback;
 $("close-details").onclick=closeDetails;
+ $("detail-back").onclick=closeDetails;
 document.querySelectorAll("[data-close='details']").forEach(x=>x.addEventListener("click",closeDetails));
 $("search-trigger").onclick=()=>navigate("buscar");
-$("profile-trigger").onclick=()=>toast("NovaPlay V 0.5 · Catálogo grátis, sem cadastro");
+$("profile-trigger").onclick=()=>toast("NovaPlay V 0.6 · Catálogo grátis, sem cadastro");
 $("search-input").addEventListener("input",renderSearch);
 $("brand-link").addEventListener("click",e=>{e.preventDefault();navigate("inicio")});
 document.querySelectorAll("[data-nav]").forEach(btn=>btn.addEventListener("click",()=>navigate(btn.dataset.nav)));

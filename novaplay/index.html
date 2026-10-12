@@ -9,7 +9,7 @@
 <link rel="icon" href="./assets/icon.svg" type="image/svg+xml">
 <link rel="manifest" href="./manifest.webmanifest">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
-<link rel="stylesheet" href="./styles.css?v=0.5.0">
+<link rel="stylesheet" href="./styles.css?v=0.6.0">
 <title>NovaPlay — Filmes, séries e TV ao vivo</title>
 </head>
 <body>
@@ -93,8 +93,11 @@
 <div id="detail-layer" class="layer" hidden role="dialog" aria-modal="true" aria-labelledby="detail-title">
   <div class="layer-backdrop" data-close="details"></div>
   <section class="detail-sheet" id="detail-sheet">
+    <button class="detail-back" id="detail-back" aria-label="Voltar"><svg><use href="#i-arrow-left"/></svg></button>
     <button class="round-close" id="close-details" aria-label="Fechar informações"><svg><use href="#i-close"/></svg></button>
-    <div class="detail-art"><img id="detail-image" alt="" loading="lazy"><div class="detail-art-shade"></div></div>
+    <div class="detail-art"><img id="detail-image" alt="" loading="lazy"><div class="detail-art-shade"></div>
+      <button id="detail-preview-play" class="detail-preview-play" aria-label="Assistir agora"><svg><use href="#i-play"/></svg></button>
+    </div>
     <div class="detail-body">
       <span class="detail-type" id="detail-type"></span>
       <h2 id="detail-title"></h2>
@@ -111,17 +114,17 @@
 </div>
 <div id="player-layer" class="player-layer" hidden role="dialog" aria-modal="true" aria-label="Reprodutor NovaPlay">
   <div class="player-bar"><button id="player-back" class="player-back" aria-label="Voltar"><svg><use href="#i-arrow-left"/></svg></button><span class="player-brand">Nova<span>Play</span></span><span class="player-bar-title" id="player-heading"></span><button id="player-close" class="round-close" aria-label="Fechar vídeo"><svg><use href="#i-close"/></svg></button></div>
-  <div class="player-main">
-    <div class="video-wrap"><video id="video" controls playsinline preload="metadata" controlsList="nodownload"></video><iframe id="fallback-frame" title="Player alternativo oficial" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen hidden></iframe></div>
+  <div class="player-main" id="player-main">
+    <div class="video-wrap"><video id="video" controls playsinline preload="metadata"></video><iframe id="fallback-frame" title="Player alternativo oficial" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen hidden></iframe></div>
     <div class="player-info"><div><h2 id="player-title"></h2><p id="player-status" role="status" aria-live="polite">Preparando reprodução...</p><p id="player-error" class="player-error" role="alert"></p></div><div class="player-options"><button class="btn btn-secondary" id="retry-btn" hidden>↻ Tentar novamente</button><button class="btn btn-secondary" id="fallback-btn" hidden>Player alternativo</button></div></div>
     <p id="player-content-note" class="player-note"></p>
     <a id="source-link" href="#" target="_blank" rel="noopener noreferrer" class="source-link" hidden>Ver informações da fonte original ↗</a>
   </div>
 </div>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
-<footer class="app-footer">NovaPlay V 0.5.0 · Cinema clássico e TV aberta grátis · Artes ilustrativas da NovaPlay · O uso comercial de cada conteúdo exige verificação dos direitos.</footer>
-<script src="./catalog.js?v=0.5.0"></script>
+<footer class="app-footer">NovaPlay V 0.6.0 · Cinema clássico e TV aberta grátis · Artes ilustrativas da NovaPlay · O uso comercial de cada conteúdo exige verificação dos direitos.</footer>
+<script src="./catalog.js?v=0.6.0"></script>
 <script src="https://cdn.jsdelivr.net/npm/hls.js@1.7.3/dist/hls.min.js" defer></script>
-<script src="./app.js?v=0.5.0" defer></script>
+<script src="./app.js?v=0.6.0" defer></script>
 </body>
 </html>

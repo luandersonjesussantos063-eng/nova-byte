@@ -203,3 +203,77 @@ svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.75;strok
 }
 @media(max-width:360px){.brand{font-size:20px}.hero h1{font-size:36px}.hero-buttons .btn{padding:9px 10px;font-size:11px}.poster-card{flex-basis:135px}.channel-card{flex-basis:233px}}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;animation:none!important;transition:none!important}}
+
+
+/* V 0.6 — tela de título e cinema em paisagem */
+.detail-back{position:sticky;float:left;top:17px;left:17px;z-index:8;margin:17px 0 -58px 18px;width:40px;height:40px;border-radius:50%;display:grid;place-items:center;background:#101a2fc9;border:1px solid #c0d2e555;color:#fff;backdrop-filter:blur(8px)}
+.detail-preview-play{position:absolute;z-index:3;left:50%;top:46%;transform:translate(-50%,-50%);width:64px;height:64px;display:grid;place-items:center;border:2px solid #ffffffeb;border-radius:50%;background:#050914ae;color:#fff;box-shadow:0 5px 20px #0009;transition:transform .2s}
+.detail-preview-play:hover{transform:translate(-50%,-50%) scale(1.08)}
+.detail-preview-play svg{width:26px;height:26px;fill:#fff;stroke-width:1.5}
+.card-direct-play{position:absolute;z-index:4;bottom:9px;right:9px;width:38px;height:38px;border:1px solid #fff9;border-radius:50%;background:#101b33dd;backdrop-filter:blur(5px);display:grid;place-items:center;color:#fff;box-shadow:0 3px 18px #0008;transition:transform .18s,background .18s}
+.card-direct-play:hover{background:#426cd9;transform:scale(1.08)}
+.card-direct-play svg{width:17px;height:17px;fill:#fff;stroke-width:1.7}
+.poster-card .cover-btn{z-index:1}
+.poster-card .card-direct-play{z-index:3}
+.poster-card .cover img{pointer-events:none}
+.detail-body h2{letter-spacing:-.85px}
+.detail-meta{font-weight:650;color:#a9c6dc}
+.detail-actions .btn-primary{background:#fff;color:#090b12}
+
+/* O player inteiro ocupa a tela sem menus ou margens. */
+.player-layer.cinema,.player-layer.cinema:fullscreen{
+  position:fixed;inset:0;width:100dvw;height:100dvh;max-width:none;max-height:none;padding:0;margin:0;overflow:hidden;
+  background:#000;color:#fff;z-index:200;
+}
+.player-layer.cinema .player-main{position:absolute;inset:0;max-width:none;width:100%;height:100%;padding:0;margin:0;overflow:hidden;display:block}
+.player-layer.cinema .video-wrap{position:absolute;inset:0;width:100%;height:100%;aspect-ratio:auto;display:flex;justify-content:center;align-items:center;background:#000;border:0;border-radius:0;overflow:hidden}
+.player-layer.cinema .video-wrap video,
+.player-layer.cinema .video-wrap iframe{width:100%;height:100%;max-width:100%;max-height:100%;display:block;object-fit:contain;border:0;background:#000}
+.player-layer.cinema .player-bar{position:absolute;z-index:12;top:0;left:0;width:100%;height:54px;padding:0 20px;background:linear-gradient(180deg,#000a 0%,#0004 67%,transparent);pointer-events:none}
+.player-layer.cinema .player-bar button{pointer-events:auto}
+.player-layer.cinema .player-brand{font-size:16px}
+.player-layer.cinema .player-bar-title{font-size:12px}
+.player-layer.cinema .player-info{position:absolute;z-index:11;bottom:0;left:0;width:100%;max-height:36%;overflow:auto;margin:0;padding:20px 19px 12px;background:linear-gradient(0deg,#000c,transparent);align-items:end;pointer-events:none}
+.player-layer.cinema .player-info h2{font-size:14px;margin:0 0 2px;text-shadow:0 2px 4px #000}
+.player-layer.cinema .player-info #player-status{font-size:11px}
+.player-layer.cinema .player-info .player-error{font-size:11px;max-width:520px}
+.player-layer.cinema .player-info .player-options{pointer-events:auto}
+.player-layer.cinema .player-note,.player-layer.cinema .source-link{display:none}
+.player-layer.cinema .round-close{height:36px;width:36px;background:#111a29bd;border:1px solid #ffffff6b}
+.player-layer.cinema .player-back{padding:4px}
+
+/* Se Android / navegador bloquear screen.orientation.lock(), a própria interface gira. 
+   A rotação CSS não depende da permissão de orientação do Android. */
+.player-layer.cinema.force-landscape,
+.player-layer.cinema.force-landscape:fullscreen{
+  position:fixed!important;left:100dvw!important;top:0!important;right:auto!important;bottom:auto!important;
+  width:100dvh!important;height:100dvw!important;
+  transform:rotate(90deg)!important;transform-origin:top left!important;
+}
+.player-layer.cinema.force-landscape .video-wrap{width:100%;height:100%}
+@media(max-width:760px){
+ .detail-sheet{position:relative;width:100%;height:100dvh;max-height:100dvh;border:0;border-radius:0;background:#070a10;scrollbar-width:none}
+ .detail-sheet::-webkit-scrollbar{display:none}
+ .detail-art{height:clamp(230px,63vw,365px);background:#090e1c}
+ .detail-art>img{object-position:center 32%}
+ .detail-art-shade{background:linear-gradient(0deg,#070a10 0%,transparent 63%)}
+ .detail-preview-play{width:62px;height:62px;top:43%}
+ .detail-body{padding:0 17px 90px}
+ .detail-body h2{font-size:32px;margin:8px 0 10px}
+ .detail-body .detail-type{font-size:10px}
+ .detail-meta{font-size:12px}
+ .detail-actions{display:grid;grid-template-columns:1fr;gap:8px}
+ .detail-actions .btn{width:100%;font-size:14px;min-height:46px;justify-content:center;border-radius:5px}
+ .detail-actions .btn-secondary{background:#242932;border-color:#333b4d}
+ .detail-description{font-size:13px;line-height:1.7}
+ .detail-sheet #close-details{top:14px;margin-top:14px}
+ .detail-back{top:14px;margin-top:14px}
+ .episode{min-height:77px}
+ .player-layer.cinema .player-main{margin:0;padding:0}
+ .player-layer.cinema .video-wrap{border:0;border-radius:0}
+ .player-layer.cinema .player-bar{height:45px;padding:0 10px;gap:8px}
+ .player-layer.cinema .player-info{padding:14px 10px 8px}
+ .player-layer.cinema .player-options .btn{min-height:30px;padding:5px 8px;font-size:10px}
+ .player-layer.cinema .player-back svg{width:19px;height:19px}
+ .player-layer.cinema #player-close{width:29px;height:29px}
+}
