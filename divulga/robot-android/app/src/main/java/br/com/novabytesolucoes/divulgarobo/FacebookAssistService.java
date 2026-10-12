@@ -155,7 +155,8 @@ public class FacebookAssistService extends AccessibilityService {
         int limit=0;
         while(!queue.isEmpty()&&limit++<600){
             AccessibilityNodeInfo n=queue.removeFirst();
-            if(n.isVisibleToUser()&&n.isEnabled()&&isPublishLabel(nodeLabel(n)))return n;
+            if(n.isVisibleToUser()&&n.isEnabled()&&
+               (isPublishLabel(normalize(n.getText()))||isPublishLabel(normalize(n.getContentDescription()))))return n;
             for(int i=0;i<n.getChildCount();i++){
                 AccessibilityNodeInfo child=n.getChild(i);
                 if(child!=null)queue.addLast(child);
