@@ -214,8 +214,11 @@ function renderLibrary(){
  $("stat-live").textContent=items.filter(x=>x.is_published).length;
  $("stat-drafts").textContent=items.filter(x=>!x.is_published).length;
  const available=items.filter(x=>x.rights_reviewed&&!x.is_published);
+ const pendingReview=items.filter(x=>!x.is_published&&!x.rights_reviewed);
+ const markAll=$("bulk-mark-reviewed");
+ if(markAll){markAll.disabled=busy||!pendingReview.length;markAll.textContent="Marcar todos como conferidos ("+pendingReview.length+")";}
  const bulk=$("bulk-publish");if(bulk){bulk.disabled=busy||!available.length;bulk.textContent="Liberar todos os conferidos ("+available.length+")";}
- const summary=$("review-summary");if(summary)summary.textContent=available.length+" prontos para publicar · "+items.filter(x=>!x.is_published&&!x.rights_reviewed).length+" rascunhos ainda sem conferência";
+ const summary=$("review-summary");if(summary)summary.textContent=available.length+" prontos para publicar · "+pendingReview.length+" rascunhos ainda sem conferência";
  const filter=$("filter-title").value.trim().toLocaleLowerCase("pt-BR");
  const statusFilter=$("library-state-filter")?.value||"all";
  const shown=items.filter(x=>{
@@ -317,6 +320,44 @@ async function togglePublish(row){
  }catch(e){status("bulk-message","Falha ao mudar publicação: "+errorText(e),true)}
  finally{busy=false;renderLibrary()}
 }
+async function bulkMarkReviewed(){
+ if(busy||!sessionUser)return;
+ // Usa todos os rascunhos, independentemente da página ou filtro ativo.
+ const ids=items.filter(x=>!x.is_published&&!x.rights_reviewed).map(x=>x.id);
+ if(!ids.length){
+  status("bulk-message","Não há rascunhos pendentes de conferência.",false,true);
+  return;
+ }
+ const confirmed=confirm(
+  "MARCAR TODOS COMO CONFERIDOS\n\n"+
+  "Você confirma que já revisou os "+ids.length+" filmes pendentes, incluindo os links e as autorizações de exibição pública de cada obra?\n\n"+
+  "Essa ação marca todos os rascunhos pendentes, em todas as páginas, mas NÃO publica nenhum filme. A publicação continuará exigindo o botão 'Liberar todos os conferidos'."
+ );
+ if(!confirmed)return;
+ busy=true;renderLibrary();
+ let marked=0;
+ try{
+  const stamp=new Date().toISOString();
+  for(let index=0;index<ids.length;index+=80){
+   status("bulk-message","Salvando conferência... "+marked+" de "+ids.length);
+   const batch=ids.slice(index,index+80);
+   const {data,error}=await client.from("novaplay_library")
+    .update({rights_reviewed:true,rights_reviewed_at:stamp})
+    .in("id",batch).eq("is_published",false).eq("rights_reviewed",false)
+    .select("id");
+   if(error)throw error;
+   marked+=(data||[]).length;
+  }
+  status("bulk-message","Conferência salva para "+marked+" filme(s). Nenhum filme foi publicado. Use 'Liberar todos os conferidos' quando desejar.",false,true);
+ }catch(err){
+  status("bulk-message","Falha depois de marcar "+marked+" filme(s): "+errorText(err)+". Atualize o painel e confira os restantes.",true);
+ }finally{
+  busy=false;
+  await loadLibrary();
+  renderLibrary();
+ }
+}
+
 async function bulkPublishReviewed(){
  if(busy||!sessionUser)return;
  const ids=items.filter(x=>x.rights_reviewed&&!x.is_published).map(x=>x.id);
@@ -464,6 +505,7 @@ function init(){
  $("logout").onclick=async()=>{if(busy)return;await client.auth.signOut();sessionUser=null;show("login-view")};
  $("upload-form").onsubmit=sendForm;$("kind").onchange=setKind;$("source-type").onchange=setSourceType;setSourceType();
  $("cancel-edit").onclick=()=>{resetForm();status("upload-message","Edição cancelada.")};
+ $("bulk-mark-reviewed").onclick=bulkMarkReviewed;
  $("bulk-publish").onclick=bulkPublishReviewed;
  $("refresh-list").onclick=loadLibrary;$("filter-title").oninput=()=>{libraryPage=0;renderLibrary()};if($("library-state-filter"))$("library-state-filter").onchange=()=>{libraryPage=0;renderLibrary()};
  $("video-file").onchange=()=>{$("video-file-label").textContent=$("video-file").files[0]?.name||"Selecionar vídeo do telefone"};
