@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0b1120">
+<meta name="robots" content="noindex,nofollow">
+<meta name="description" content="Central privada de divulgação assistida da NovaByte Soluções.">
+<title>NovaByte Divulga | Central de divulgação</title>
+<link rel="icon" href="./icon.svg" type="image/svg+xml">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="stylesheet" href="./style.css?v=1.0.0">
+</head>
+<body>
+<div id="app">
+<header class="topbar">
+ <a class="brand" href="#inicio" aria-label="NovaByte Divulga, início"><span class="brandmark">N<span>↗</span></span><span class="brandname"><strong>NovaByte <em>Divulga</em></strong><small>por NovaByte Soluções</small></span></a>
+ <div class="top-right"><span class="status-dot"></span><span class="online-status">Dados no aparelho</span><button id="settingsTop" class="icon-button" aria-label="Configurações">⚙</button></div>
+</header>
+<div class="layout">
+ <nav class="sidebar" aria-label="Navegação principal">
+  <div class="nav-kicker">PAINEL DE DIVULGAÇÃO</div>
+  <button class="nav-item active" data-tab="inicio"><span>◫</span> Visão geral</button>
+  <button class="nav-item" data-tab="grupos"><span>♧</span> Meus grupos</button>
+  <button class="nav-item" data-tab="campanhas"><span>✦</span> Campanhas</button>
+  <button class="nav-item" data-tab="fila"><span>➤</span> Divulgação</button>
+  <button class="nav-item" data-tab="historico"><span>◷</span> Histórico</button>
+  <button class="nav-item" data-tab="config"><span>⚙</span> Configurações</button>
+  <div class="sidebar-foot">NovaByte Soluções <small>Divulga V 1.0.0</small></div>
+ </nav>
+ <main class="main" id="main">
+  <section id="inicio" class="screen" aria-label="Visão geral"></section>
+  <section id="grupos" class="screen" hidden aria-label="Meus grupos"></section>
+  <section id="campanhas" class="screen" hidden aria-label="Campanhas"></section>
+  <section id="fila" class="screen" hidden aria-label="Divulgação"></section>
+  <section id="historico" class="screen" hidden aria-label="Histórico"></section>
+  <section id="config" class="screen" hidden aria-label="Configurações"></section>
+ </main>
+</div>
+<nav class="bottom-nav" aria-label="Navegação móvel">
+ <button data-tab="inicio" class="active"><span>⌂</span><small>Início</small></button>
+ <button data-tab="grupos"><span>♧</span><small>Grupos</small></button>
+ <button data-tab="campanhas"><span>✦</span><small>Anúncios</small></button>
+ <button data-tab="fila"><span>➤</span><small>Publicar</small></button>
+ <button data-tab="historico"><span>◷</span><small>Histórico</small></button>
+</nav>
+<div id="modal" class="modal" hidden role="dialog" aria-modal="true"><div id="modalBody" class="modal-panel"></div></div>
+<div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+</div>
+<script defer src="./app.js?v=1.0.0"></script>
+</body>
+</html>
