@@ -36,6 +36,7 @@ const escapeText=x=>String(x??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;"
 let view="inicio",selected=null,featuredIndex=0,current=null,hls=null,timer=0,attempt=0,timeSaved=0,toastTimeout=null;
 let playerUiTimer=null,seekActive=false;
 let fullscreenOwned=false,closingFullscreen=false,lockedLandscape=false;
+let issueReportBusy=false;
 let previewTimer=null,previewSequence=0,previewHls=null;
 
 function posterUrl(path,youtubeId,title,driveId){
@@ -518,6 +519,10 @@ $("cinema-fullscreen").onclick=()=>{
  showCinemaUi();
 };
 function stopPlayback(){
+ $("player-issue-panel").hidden=true;
+ $("player-issue-open").hidden=true;
+ $("player-issue-feedback").textContent="";
+ issueReportBusy=false;
  resetCinemaUi();
  ++attempt;clearTimeout(timer);timer=0;const video=$("video");
  video.pause();video.onerror=null;video.onplaying=null;video.onwaiting=null;video.oncanplay=null;video.onloadedmetadata=null;video.ontimeupdate=null;video.onended=null;
@@ -579,6 +584,9 @@ function play(item,episode){
  const media=episode||item;
  $("player-layer").hidden=false;document.body.classList.add("modal-open");
  const yt=!!media.youtube_id,drive=!!media.google_drive_id,externalEmbed=yt||drive;
+ // Reports are accepted only for published items in our remote catalog.
+ $("player-issue-open").hidden=!/^upload-[0-9a-f-]{36}$/i.test(media.id||"");
+ $("player-issue-panel").hidden=true;
  $("player-layer").classList.toggle("youtube-active",yt);
  $("player-layer").classList.toggle("drive-active",drive);
  $("cinema-controls").hidden=externalEmbed;
@@ -675,6 +683,36 @@ function play(item,episode){
  }else startSource();
  // No extra focus change or intermediate details screen: playback opens immediately.
 }
+
+function openPlaybackIssue(){
+ if(!current||$("player-issue-open").hidden)return;
+ $("player-issue-panel").hidden=false;
+ $("player-issue-feedback").textContent="";
+ $("player-issue-report").disabled=issueReportBusy;
+}
+async function reportPlaybackIssue(){
+ if(issueReportBusy||!current||!remoteDb)return;
+ const item=current.episode||current.item;
+ const id=String(item.id||"").match(/^upload-([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/i)?.[1];
+ if(!id){$("player-issue-feedback").textContent="Este conteúdo não pode ser reportado aqui.";return}
+ issueReportBusy=true;
+ $("player-issue-report").disabled=true;
+ $("player-issue-feedback").textContent="Enviando aviso...";
+ try{
+  const {data,error}=await remoteDb.rpc("novaplay_report_playback_problem",{p_item_id:id});
+  if(error||data!==true)throw error||new Error("Erro de envio");
+  $("player-issue-feedback").textContent="✓ Aviso enviado. O administrador poderá verificar ou substituir o link. Obrigado!";
+ }catch(e){
+  issueReportBusy=false;
+  $("player-issue-report").disabled=false;
+  $("player-issue-feedback").textContent="Não foi possível enviar o aviso. Tente novamente mais tarde.";
+ }
+}
+$("player-issue-open").onclick=openPlaybackIssue;
+$("player-issue-report").onclick=reportPlaybackIssue;
+$("player-issue-dismiss").onclick=()=>{$("player-issue-panel").hidden=true};
+$("player-issue-retry").onclick=()=>{if(current)play(current.item,current.episode)};
+
 $("hero-preview-close").onclick=stopHeroPreview;
 $("player-back").onclick=closePlayer;$("player-close").onclick=closePlayer;
 $("retry-btn").onclick=()=>{if(current)play(current.item,current.episode)};
@@ -689,7 +727,8 @@ $("brand-link").addEventListener("click",e=>{e.preventDefault();navigate("inicio
 document.querySelectorAll("[data-nav]").forEach(btn=>btn.addEventListener("click",()=>navigate(btn.dataset.nav)));
 document.addEventListener("keydown",e=>{
  if(e.key==="Escape"){
-   if(!$("hero-preview-panel").hidden)stopHeroPreview();
+   if(!$("player-issue-panel").hidden)$("player-issue-panel").hidden=true;
+   else if(!$("hero-preview-panel").hidden)stopHeroPreview();
    else if(!$("player-layer").hidden)closePlayer();
    else if(!$("detail-layer").hidden)closeDetails();
  }

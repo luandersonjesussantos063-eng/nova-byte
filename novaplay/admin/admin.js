@@ -11,6 +11,7 @@ let client=null,editing=null,items=[],busy=false,currentUpload=null,sessionUser=
 let libraryPage=0;
 let qualityFilter="all";
 let activityCounts=new Map(),activityLimitReached=false;
+let playbackIssues=[],issueSaving=false;
 const LIBRARY_PAGE_SIZE=48;
 const featuredDefaults=["lostworld","nosferatu","lua","caligari"];
 const classicFeatureFilms=[
@@ -63,7 +64,7 @@ async function checkSession(){
  try{
   const u=await hasAdmin();
   sessionUser=u||null;
-  if(u){show("dashboard");await Promise.all([loadLibrary(),loadActivity(),loadFeaturedConfig()]);}
+  if(u){show("dashboard");await loadLibrary();await Promise.all([loadActivity(),loadFeaturedConfig(),loadPlaybackIssues()]);}
   else if(u===false){
    const v=await client.auth.getUser();
    $("pending-email").textContent=v.data.user?.email||"Conta aguardando aprovação";
@@ -421,6 +422,71 @@ function restoreFeaturedFilms(){
  saveFeatured(featuredDefaults.slice());
 }
 
+
+/* Reports are not automatic proof that a Drive file is deleted. */
+async function loadPlaybackIssues(){
+ if(!client||!sessionUser)return;
+ const {data,error}=await client.from("novaplay_playback_issues")
+  .select("item_id,report_count,first_reported_at,last_reported_at,status")
+  .eq("status","open").order("last_reported_at",{ascending:false}).limit(150);
+ if(error){status("issue-message","Não foi possível carregar os avisos: "+errorText(error),true);return}
+ playbackIssues=data||[];
+ renderPlaybackIssues();
+}
+function renderPlaybackIssues(){
+ const container=$("issue-list");
+ if(!container)return;
+ const count=$("issue-total");if(count)count.textContent="("+playbackIssues.length+")";
+ container.replaceChildren();
+ if(!playbackIssues.length){
+  const p=document.createElement("p");p.className="muted";
+  p.textContent="Nenhum vídeo reportado até agora. Se alguém encontrar um link que não abre, ele aparecerá aqui.";
+  container.append(p);
+  return;
+ }
+ const byId=new Map(items.map(x=>[x.id,x]));
+ for(const issue of playbackIssues){
+  const movie=byId.get(issue.item_id);
+  const card=document.createElement("article");card.className="issue-item";
+  const info=document.createElement("div");info.className="issue-info";
+  const title=document.createElement("strong");title.textContent=movie?.title||"Título não encontrado no catálogo";
+  const subtitle=document.createElement("small");
+  subtitle.textContent=issue.report_count+" aviso(s) · Último: "+new Date(issue.last_reported_at).toLocaleString("pt-BR");
+  info.append(title,subtitle);
+  const controls=document.createElement("div");controls.className="issue-controls";
+  if(movie?.google_drive_id||movie?.youtube_id){
+   const open=document.createElement("a");open.className="outline compact";
+   open.textContent="Testar link ↗";open.target="_blank";open.rel="noopener noreferrer";
+   open.href=movie.google_drive_id
+    ? "https://drive.google.com/file/d/"+encodeURIComponent(movie.google_drive_id)+"/view"+(movie.google_drive_resource_key?"?resourcekey="+encodeURIComponent(movie.google_drive_resource_key):"")
+    : "https://www.youtube.com/watch?v="+encodeURIComponent(movie.youtube_id);
+   controls.append(open);
+  }
+  if(movie){
+   const edit=document.createElement("button");edit.type="button";edit.className="outline compact";
+   edit.textContent="Corrigir fonte";edit.onclick=()=>{
+    beginEdit(movie);
+    document.querySelector(".editor")?.scrollIntoView({behavior:"smooth",block:"start"});
+   };
+   controls.append(edit);
+  }
+  const fixed=document.createElement("button");fixed.type="button";fixed.className="outline compact";
+  fixed.textContent="Marcar resolvido";fixed.disabled=issueSaving;
+  fixed.onclick=async()=>{
+   if(issueSaving||!confirm("Você conferiu o link e o problema foi resolvido?"))return;
+   issueSaving=true;fixed.disabled=true;
+   const {error}=await client.from("novaplay_playback_issues")
+    .update({status:"resolved",resolved_at:new Date().toISOString()})
+    .eq("item_id",issue.item_id);
+   issueSaving=false;
+   if(error){status("issue-message","Erro ao marcar como resolvido: "+errorText(error),true);fixed.disabled=false;return}
+   status("issue-message","Aviso marcado como resolvido.",false,true);
+   await loadPlaybackIssues();
+  };
+  controls.append(fixed);card.append(info,controls);container.append(card);
+ }
+}
+
 async function loadLibrary(){
  // Ler todas as páginas: o catálogo importado pode ter centenas de rascunhos.
  const gathered=[];
@@ -436,6 +502,7 @@ async function loadLibrary(){
  status("upload-message","Biblioteca atualizada: "+items.length+" registros encontrados no banco.",false,true);
  renderLibrary();
  renderFeatured();
+ renderPlaybackIssues();
 }
 function renderLibrary(){
  $("stat-total").textContent=items.length;
@@ -825,7 +892,8 @@ function init(){
  $("featured-more").onclick=()=>{featuredResultLimit+=24;renderFeaturedBrowser()};
  $("featured-add").onclick=addFeaturedFilm;
  $("featured-defaults").onclick=restoreFeaturedFilms;
- $("refresh-list").onclick=()=>Promise.all([loadLibrary(),loadActivity(),loadFeaturedConfig()]);$("filter-title").oninput=()=>{libraryPage=0;renderLibrary()};if($("library-state-filter"))$("library-state-filter").onchange=()=>{libraryPage=0;renderLibrary()};
+ $("issue-refresh").onclick=loadPlaybackIssues;
+ $("refresh-list").onclick=()=>Promise.all([loadLibrary(),loadActivity(),loadFeaturedConfig(),loadPlaybackIssues()]);$("filter-title").oninput=()=>{libraryPage=0;renderLibrary()};if($("library-state-filter"))$("library-state-filter").onchange=()=>{libraryPage=0;renderLibrary()};
  $("video-file").onchange=()=>{$("video-file-label").textContent=$("video-file").files[0]?.name||"Selecionar vídeo do telefone"};
  $("poster-file").onchange=()=>{$("poster-file-label").textContent=$("poster-file").files[0]?.name||"Escolher capa (opcional)"};
  $("youtube-poster-file").onchange=()=>{$("youtube-poster-label").textContent=$("youtube-poster-file").files[0]?.name||"Adicionar capa personalizada (opcional)"};

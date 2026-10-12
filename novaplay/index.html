@@ -9,7 +9,7 @@
 <link rel="icon" href="./assets/icon.svg" type="image/svg+xml">
 <link rel="manifest" href="./manifest.webmanifest">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
-<link rel="stylesheet" href="./styles.css?v=0.24.1">
+<link rel="stylesheet" href="./styles.css?v=0.25.0">
 <title>NovaPlay — Filmes, séries e TV ao vivo</title>
 </head>
 <body>
@@ -131,7 +131,19 @@
   </section>
 </div>
 <div id="player-layer" class="player-layer" hidden role="dialog" aria-modal="true" aria-label="Reprodutor NovaPlay">
-  <div class="player-bar"><button id="player-back" class="player-back" aria-label="Voltar"><svg><use href="#i-arrow-left"/></svg></button><span class="player-brand">Nova<span>Play</span></span><span class="player-bar-title" id="player-heading"></span><button id="player-close" class="round-close" aria-label="Fechar vídeo"><svg><use href="#i-close"/></svg></button></div>
+  <div class="player-bar"><button id="player-back" class="player-back" aria-label="Voltar"><svg><use href="#i-arrow-left"/></svg></button><span class="player-brand">Nova<span>Play</span></span><span class="player-bar-title" id="player-heading"></span><button type="button" id="player-issue-open" class="player-issue-trigger" hidden aria-label="Informar problema com este vídeo">⚠ Problema no vídeo?</button><button id="player-close" class="round-close" aria-label="Fechar vídeo"><svg><use href="#i-close"/></svg></button></div>
+  <div id="player-issue-panel" class="player-issue-panel" hidden role="dialog" aria-label="Problema ao assistir">
+    <div class="player-issue-card">
+      <h2>Não conseguiu assistir?</h2>
+      <p>Se o Google Drive mostrar “O ficheiro não existe” ou pedir uma permissão que você não tem, a origem do vídeo precisa ser revisada. Não é um problema do seu aparelho.</p>
+      <div class="player-issue-buttons">
+        <button type="button" class="btn btn-primary" id="player-issue-report">Informar link com problema</button>
+        <button type="button" class="btn btn-secondary" id="player-issue-retry">Tentar novamente</button>
+        <button type="button" class="btn btn-secondary" id="player-issue-dismiss">Voltar ao player</button>
+      </div>
+      <p id="player-issue-feedback" role="status" aria-live="polite"></p>
+    </div>
+  </div>
   <div class="player-main" id="player-main">
     <div class="video-wrap"><video id="video" playsinline preload="metadata"></video><iframe id="fallback-frame" title="Player oficial do conteúdo" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen hidden></iframe></div>
     <div class="cinema-controls" id="cinema-controls" hidden aria-label="Controles do vídeo">
@@ -158,11 +170,11 @@
   </div>
 </div>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
-<footer class="app-footer"><a href="./admin/" style="display:inline-block;color:#a6c8ff;font-weight:750;padding:7px 0;text-decoration:underline">Painel do criador ↗</a><div>NovaPlay V 0.24.1 · Cinema clássico e TV aberta grátis · Artes ilustrativas da NovaPlay · O uso comercial de cada conteúdo exige verificação dos direitos.</div></footer>
+<footer class="app-footer"><a href="./admin/" style="display:inline-block;color:#a6c8ff;font-weight:750;padding:7px 0;text-decoration:underline">Painel do criador ↗</a><div>NovaPlay V 0.25.0 · Cinema clássico e TV aberta grátis · Artes ilustrativas da NovaPlay · O uso comercial de cada conteúdo exige verificação dos direitos.</div></footer>
 <script src="./assets/cover.js?v=0.23.0"></script>
 <script src="./catalog.js?v=0.6.0"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.58.0/dist/umd/supabase.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/hls.js@1.7.3/dist/hls.min.js"></script>
-<script src="./app.js?v=0.24.0" defer></script>
+<script src="./app.js?v=0.25.0" defer></script>
 </body>
 </html>

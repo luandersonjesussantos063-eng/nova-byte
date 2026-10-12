@@ -5,10 +5,10 @@
 <meta name="theme-color" content="#080e1b"><meta name="robots" content="noindex,nofollow">
 <title>NovaPlay | Painel de conteúdo</title>
 <link rel="icon" href="../assets/icon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="./admin.css?v=0.21.0">
+<link rel="stylesheet" href="./admin.css?v=0.25.0">
 </head>
 <body>
-<header class="top"><a class="brand" href="../"><span class="mark">▶</span> Nova<span>Play</span></a><div class="top-right"><strong>Painel administrativo · v0.24.0</strong><button id="logout" class="outline" hidden>Sair</button></div></header>
+<header class="top"><a class="brand" href="../"><span class="mark">▶</span> Nova<span>Play</span></a><div class="top-right"><strong>Painel administrativo · v0.25.0</strong><button id="logout" class="outline" hidden>Sair</button></div></header>
 <main class="container">
   <section id="loading" class="panel intro"><div class="spin"></div><p>Preparando seu painel...</p></section>
   <section id="login-view" class="panel login" hidden>
@@ -41,6 +41,15 @@
     </div>
     <p id="source-summary" class="muted" role="status" style="margin:0 0 15px">Conferindo fontes de vídeo...</p>
     <div class="panel" style="margin:16px 0 24px;padding:18px 22px;border-left:3px solid #f3b45a"><strong>Importações do Google Drive</strong><p class="muted" style="margin:8px 0 0">Títulos importados de listas externas ficam como rascunho privado. Confira a autorização de exibição pública e teste o link antes de publicar. Use a busca abaixo para localizar qualquer filme e a paginação para revisar o acervo.</p></div>
+    <section class="panel issue-manager" aria-labelledby="issue-heading">
+      <div class="section-title">
+        <div><span class="section-label">SAÚDE DOS LINKS</span><h2 id="issue-heading">Vídeos com problemas relatados <span id="issue-total">0</span></h2></div>
+        <button type="button" id="issue-refresh" class="outline compact">Atualizar avisos</button>
+      </div>
+      <p class="muted">Quando alguém encontrar um vídeo que não abre, o aviso aparece aqui. Um aviso não confirma automaticamente que o arquivo foi excluído. Abra o link original para conferir; depois, substitua a fonte autorizada ou retire o conteúdo do catálogo.</p>
+      <p id="issue-message" class="feedback" role="status" aria-live="polite"></p>
+      <div id="issue-list" class="issue-list"><p class="muted">Carregando avisos...</p></div>
+    </section>
     <section class="panel featured-manager" aria-labelledby="featured-heading">
       <div class="section-title">
         <div><span class="section-label">DESTAQUES DA PÁGINA INICIAL</span><h2 id="featured-heading">Escolha filmes e séries para o banner</h2></div>
@@ -210,6 +219,6 @@
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.58.0/dist/umd/supabase.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/tus-js-client@4.3.1/dist/tus.min.js"></script>
 <script src="../assets/cover.js?v=0.24.0"></script>
-<script defer src="./admin.js?v=0.21.0"></script>
+<script defer src="./admin.js?v=0.25.0"></script>
 </body>
 </html>

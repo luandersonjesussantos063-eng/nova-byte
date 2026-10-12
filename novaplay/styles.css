@@ -402,3 +402,17 @@ svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.75;strok
   object-position:center;
 }
 .poster-card.channel-card .cover{aspect-ratio:16/9}
+
+
+/* NovaPlay v0.25.0 - problema no vídeo: sobreposição discreta no player oficial */
+.player-issue-trigger{border:1px solid rgba(255,197,119,.55);background:rgba(18,27,43,.89);color:#ffe7ba;font-weight:750;font-size:11px;border-radius:22px;padding:8px 11px;cursor:pointer;margin-left:auto;flex:none;z-index:25}
+.player-issue-trigger[hidden],.player-issue-panel[hidden]{display:none!important}
+.player-issue-panel{position:absolute;inset:0;z-index:35;display:flex;align-items:center;justify-content:center;padding:clamp(12px,3vw,35px);background:rgba(1,7,18,.87);backdrop-filter:blur(9px);overflow:auto}
+.player-issue-card{background:#11213a;color:white;border:1px solid #466b9e;max-width:560px;width:100%;padding:clamp(15px,3vw,28px);border-radius:14px;box-shadow:0 15px 45px #0009}
+.player-issue-card h2{font-size:clamp(18px,2.5vw,24px);margin:0 0 10px}
+.player-issue-card p{font-size:13px;color:#d2dff1;line-height:1.55;margin:0 0 16px}
+.player-issue-buttons{display:flex;gap:8px;flex-wrap:wrap}
+.player-issue-buttons button{flex:1;min-width:142px;padding:10px 11px;font-size:12px}
+#player-issue-feedback{margin:12px 0 0;color:#afd7ff;font-size:12px}
+.player-layer.cinema .player-bar{z-index:20}
+@media(max-width:650px){.player-issue-trigger{font-size:10px;padding:7px 8px}.player-issue-card{max-height:80vh;overflow:auto}.player-issue-buttons{flex-direction:column}.player-issue-buttons button{width:100%}}

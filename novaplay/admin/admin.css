@@ -126,3 +126,19 @@
 .featured-selected-heading span{font-size:11px;color:#bbd3fa;background:#2b4667;border-radius:22px;padding:4px 9px}
 @media(max-width:1100px){.featured-results{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:650px){.featured-search-controls{grid-template-columns:1fr;gap:4px}.featured-results{grid-template-columns:1fr;max-height:355px}.featured-candidate img{width:55px;height:79px}.featured-preview{padding:10px;gap:11px}.featured-preview>img{width:87px;height:131px}.featured-preview-info h3{font-size:15px}.featured-preview-info p{font-size:11px;margin-bottom:12px}.featured-preview-info button{font-size:12px}}
+
+
+/* NovaPlay v0.25.0 - alerts for reported broken playback */
+.issue-manager{margin:0 0 20px;background:linear-gradient(130deg,#192638,#10223d);border:1px solid #445f85;padding:17px}
+.issue-manager .section-title{margin-bottom:10px}
+.issue-manager .section-title h2{font-size:18px;line-height:1.4}
+.issue-manager>p{font-size:12px;line-height:1.65}
+#issue-total{font-size:12px;color:#ffd1a2}
+.issue-list{display:grid;gap:9px;max-height:430px;overflow-y:auto;padding-right:4px}
+.issue-item{display:flex;align-items:center;justify-content:space-between;gap:12px;border-radius:10px;border:1px solid #3d5575;padding:12px;background:#0b1a30}
+.issue-info{min-width:0;flex:1;overflow-wrap:anywhere}
+.issue-info strong{display:block;font-size:13px;color:#f0f5ff}
+.issue-info small{display:block;font-size:11px;color:#adc2dc;margin-top:5px}
+.issue-controls{display:flex;gap:6px;flex-wrap:wrap}
+.issue-controls a,.issue-controls button{display:inline-flex;align-items:center;font-size:11px;padding:8px 9px}
+@media(max-width:700px){.issue-item{align-items:stretch;flex-direction:column}.issue-controls{justify-content:flex-start}.issue-manager{padding:12px}}
