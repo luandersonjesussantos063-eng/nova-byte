@@ -39,20 +39,22 @@ function openApp(hash){
 test('novo grupo aparece imediatamente na lista e permanece após reabrir o site',()=>{
  storage.clear();
  const first=openApp('#grupos');
- const form={id:'groupForm',values:{
-  name:'Ofertas e Classificados Lucas',
-  url:'https://www.facebook.com/groups/123456789?ref=share',
-  city:'Lucas do Rio Verde',cooldown:'24',rules:'Anúncios permitidos',notes:''
- }};
- first.listeners.get('submit')({target:form,preventDefault(){}});
+ const fields={
+  id:{value:''},name:{value:'Ofertas e Classificados Lucas',focus(){}},
+  url:{value:'https://www.facebook.com/groups/123456789?ref=share',focus(){}},
+  city:{value:'Lucas do Rio Verde'},cooldown:{value:'24'},
+  rules:{value:'Anúncios permitidos'},notes:{value:''}
+ };
+ first.get('#groupForm').querySelector=(selector)=>fields[selector.match(/name="([^"]+)"/)?.[1]];
+ first.listeners.get('click')({target:{closest:selector=>selector==='[data-action]'?{dataset:{action:'group-save'}}:null}});
  const stored=JSON.parse(storage.get('novabyte-divulga-v1'));
  assert.equal(stored.groups.length,1);
  assert.equal(stored.groups[0].name,'Ofertas e Classificados Lucas');
  assert.match(first.get('#groupList').innerHTML,/Ofertas e Classificados Lucas/);
- assert.match(first.get('#grupos').innerHTML,/1 grupo\(s\) salvo\(s\)/);
+ assert.match(first.get('#grupos').innerHTML,/1 grupo\\(s\\) salvo\\(s\\)/);
+ assert.match(first.get('#grupos').innerHTML,/salvo com sucesso/);
  const reopened=openApp('#grupos');
  assert.match(reopened.get('#groupList').innerHTML,/Ofertas e Classificados Lucas/);
- assert.match(reopened.get('#grupos').innerHTML,/1 grupo\(s\) salvo\(s\)/);
 });
 test('o botão atualizar lista e o backup existem na aba Grupos',()=>{
  const opened=openApp('#grupos');
@@ -61,7 +63,7 @@ test('o botão atualizar lista e o backup existem na aba Grupos',()=>{
 });
 test('o cadastro usa a mesma chave de dados sem limpar os registros',()=>{
  assert.match(app,/const KEY='novabyte-divulga-v1'/);
- assert.match(app,/state\.groups=id\?state\.groups\.map/);
+ assert.match(app,/localStorage\.setItem\(KEY,JSON\.stringify\(data\)\)/);
  assert.doesNotMatch(app,/localStorage\.clear\(\)/);
 });
 
@@ -77,19 +79,25 @@ test('cadastro mostra botão de colar link e explica que sugestão do teclado n�
  assert.match(modal,/data-action="group-save"/);
  assert.match(modal,/id="groupFormError"/);
 });
-test('o usuário não consegue enviar um grupo quando o link está vazio',()=>{
+test('não deixa gravar sem link, mas salva ao clicar com endereço válido',()=>{
  storage.clear();
  const screen=openApp('#inicio');
  const form=screen.get('#groupForm');
- let submits=0,focuses=0;
- form.elements={name:{value:'Lucas anuncia',focus(){focuses++}},url:{value:'',focus(){focuses++}}};
- form.requestSubmit=()=>{submits++};
- screen.listeners.get('click')({target:{closest:selector=>selector==='[data-action]'?{dataset:{action:'group-save'}}:null}});
- assert.equal(submits,0);
- assert.equal(focuses,1);
- assert.match(screen.get('#groupFormError').textContent,/link ainda não foi colado/);
+ let focusCount=0;
+ const fields={
+  id:{value:''},name:{value:'Lucas anuncia',focus(){focusCount++}},
+  url:{value:'',focus(){focusCount++}},city:{value:'Lucas do Rio Verde'},
+  cooldown:{value:'24'},rules:{value:''},notes:{value:''}
+ };
+ form.querySelector=selector=>fields[selector.match(/name="([^"]+)"/)?.[1]];
+ const event={target:{closest:selector=>selector==='[data-action]'?{dataset:{action:'group-save'}}:null}};
+ screen.listeners.get('click')(event);
+ assert.equal(focusCount,1);
+ assert.match(screen.get('#groupFormError').textContent,/Cole o endereço completo do grupo/);
  assert.equal(storage.has('novabyte-divulga-v1'),false);
- form.elements.url.value='https://www.facebook.com/share/g/AbcdEfGh';
- screen.listeners.get('click')({target:{closest:selector=>selector==='[data-action]'?{dataset:{action:'group-save'}}:null}});
- assert.equal(submits,1);
+ fields.url.value='https://www.facebook.com/share/g/AbcdEfGh';
+ screen.listeners.get('click')(event);
+ assert.equal(JSON.parse(storage.get('novabyte-divulga-v1')).groups.length,1);
+ assert.match(screen.get('#grupos').innerHTML,/salvo com sucesso/);
+ assert.match(screen.get('#groupList').innerHTML,/Lucas anuncia/);
 });
