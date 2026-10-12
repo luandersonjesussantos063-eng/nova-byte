@@ -5,10 +5,10 @@
 <meta name="theme-color" content="#080e1b"><meta name="robots" content="noindex,nofollow">
 <title>NovaPlay | Painel de conteúdo</title>
 <link rel="icon" href="../assets/icon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="./admin.css?v=0.14.0">
+<link rel="stylesheet" href="./admin.css?v=0.15.0">
 </head>
 <body>
-<header class="top"><a class="brand" href="../"><span class="mark">▶</span> Nova<span>Play</span></a><div class="top-right"><strong>Painel administrativo · v0.14.0</strong><button id="logout" class="outline" hidden>Sair</button></div></header>
+<header class="top"><a class="brand" href="../"><span class="mark">▶</span> Nova<span>Play</span></a><div class="top-right"><strong>Painel administrativo · v0.15.0</strong><button id="logout" class="outline" hidden>Sair</button></div></header>
 <main class="container">
   <section id="loading" class="panel intro"><div class="spin"></div><p>Preparando seu painel...</p></section>
   <section id="login-view" class="panel login" hidden>
@@ -116,8 +116,11 @@
       <div class="section-title"><div><span class="section-label">BIBLIOTECA</span><h2>Seus uploads</h2></div><button id="refresh-list" class="outline compact">Atualizar</button></div>
       <div class="panel" style="margin:8px 0 14px;padding:14px;border:1px solid rgba(150,186,250,.32);border-radius:12px">
         <strong>Publicação em lote</strong>
-        <p class="muted" style="margin:8px 0 12px">Marque cada título como conferido após verificar a autorização de exibição e o link. Depois use o botão abaixo para liberar todos os aprovados. Rascunhos não conferidos continuam privados.</p>
-        <button id="bulk-publish" type="button" class="primary" disabled>Liberar todos os conferidos (0)</button>
+        <p class="muted" style="margin:8px 0 12px">Depois de revisar os links e os direitos de exibição de todos os rascunhos, use <b>Marcar todos como conferidos</b> para salvar a conferência de uma vez. Isso não publica os filmes: a liberação é feita separadamente no botão ao lado.</p>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+          <button id="bulk-mark-reviewed" type="button" class="outline" disabled>Marcar todos como conferidos (0)</button>
+          <button id="bulk-publish" type="button" class="primary" disabled>Liberar todos os conferidos (0)</button>
+        </div>
         <p id="review-summary" class="muted" style="margin:10px 0 3px">Buscando dados da biblioteca...</p>
         <p id="bulk-message" class="feedback" role="status" aria-live="polite"></p>
       </div>
@@ -138,7 +141,7 @@
 </main>
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.58.0/dist/umd/supabase.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/tus-js-client@4.3.1/dist/tus.min.js"></script>
-<script src="../assets/cover.js?v=0.14.0"></script>
-<script defer src="./admin.js?v=0.14.0"></script>
+<script src="../assets/cover.js?v=0.15.0"></script>
+<script defer src="./admin.js?v=0.15.0"></script>
 </body>
 </html>
