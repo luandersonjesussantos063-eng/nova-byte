@@ -64,3 +64,32 @@ test('o cadastro usa a mesma chave de dados sem limpar os registros',()=>{
  assert.match(app,/state\.groups=id\?state\.groups\.map/);
  assert.doesNotMatch(app,/localStorage\.clear\(\)/);
 });
+
+
+test('cadastro mostra botão de colar link e explica que sugestão do teclado não preenche o campo',()=>{
+ storage.clear();
+ const screen=openApp('#inicio');
+ screen.listeners.get('click')({target:{closest:selector=>selector==='[data-action]'?{dataset:{action:'group-new',id:''}}:null}});
+ const modal=screen.get('#modalBody').innerHTML;
+ assert.match(modal,/data-action="group-paste-link"/);
+ assert.match(modal,/id="groupUrl"/);
+ assert.match(modal,/O link precisa aparecer dentro deste campo/);
+ assert.match(modal,/data-action="group-save"/);
+ assert.match(modal,/id="groupFormError"/);
+});
+test('o usuário não consegue enviar um grupo quando o link está vazio',()=>{
+ storage.clear();
+ const screen=openApp('#inicio');
+ const form=screen.get('#groupForm');
+ let submits=0,focuses=0;
+ form.elements={name:{value:'Lucas anuncia',focus(){focuses++}},url:{value:'',focus(){focuses++}}};
+ form.requestSubmit=()=>{submits++};
+ screen.listeners.get('click')({target:{closest:selector=>selector==='[data-action]'?{dataset:{action:'group-save'}}:null}});
+ assert.equal(submits,0);
+ assert.equal(focuses,1);
+ assert.match(screen.get('#groupFormError').textContent,/link ainda não foi colado/);
+ assert.equal(storage.has('novabyte-divulga-v1'),false);
+ form.elements.url.value='https://www.facebook.com/share/g/AbcdEfGh';
+ screen.listeners.get('click')({target:{closest:selector=>selector==='[data-action]'?{dataset:{action:'group-save'}}:null}});
+ assert.equal(submits,1);
+});
