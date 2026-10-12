@@ -9,6 +9,7 @@ const MAX_VIDEO=50*1024*1024,MAX_POSTER=5*1024*1024;
 const $=id=>document.getElementById(id);
 let client=null,editing=null,items=[],busy=false,currentUpload=null,sessionUser=null;
 let libraryPage=0;
+let qualityFilter="all";
 const LIBRARY_PAGE_SIZE=48;
 const esc=t=>String(t??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 function status(id,message,isError=false,isSuccess=false){
@@ -198,7 +199,7 @@ async function uploadCover(file){
 async function loadLibrary(){
  // Ler todas as páginas: o catálogo importado pode ter centenas de rascunhos.
  const gathered=[];
- const select="id,title,description,kind,series_title,episode_number,genre,production_year,video_path,youtube_id,google_drive_id,google_drive_resource_key,poster_path,is_published,rights_reviewed,rights_reviewed_at,file_size_bytes,mime_type,created_at";
+ const select="id,title,description,kind,series_title,episode_number,genre,production_year,video_path,youtube_id,google_drive_id,google_drive_resource_key,poster_path,is_published,rights_reviewed,rights_reviewed_at,quality_score,quality_score_source,quality_score_note,quality_scored_at,file_size_bytes,mime_type,created_at";
  for(let offset=0;offset<5000;offset+=500){
   const {data,error}=await client.from("novaplay_library").select(select).order("created_at",{ascending:false}).range(offset,offset+499);
   if(error){status("upload-message","Não foi possível ler a biblioteca: "+errorText(error),true);return}
@@ -221,12 +222,34 @@ function renderLibrary(){
  const summary=$("review-summary");if(summary)summary.textContent=available.length+" prontos para publicar · "+pendingReview.length+" rascunhos ainda sem conferência";
  const filter=$("filter-title").value.trim().toLocaleLowerCase("pt-BR");
  const statusFilter=$("library-state-filter")?.value||"all";
+ const ratingFilter=qualityFilter;
+ const scores=items.filter(x=>Number.isInteger(x.quality_score));
+ const notRated=items.length-scores.length;
+ const below=items.filter(x=>Number.isInteger(x.quality_score)&&x.quality_score<6).length;
+ const approved=items.filter(x=>Number.isInteger(x.quality_score)&&x.quality_score>=6).length;
+ const label=$("quality-summary");
+ if(label)label.textContent=scores.length+" de "+items.length+" filmes avaliados · "+approved+" com nota de 6 a 10 · "+below+" abaixo de 6 · "+notRated+" sem nota.";
+ const chips=$("quality-groups");
+ if(chips){
+  const groups=[["all","Todos",items.length],["pending","Sem nota",notRated],["passing","6 a 10",approved],["below6","Abaixo de 6",below]];
+  for(let n=10;n>=1;n--)groups.push(["score:"+n,"Nota "+n,items.filter(x=>x.quality_score===n).length]);
+  chips.replaceChildren();
+  groups.forEach(([id,name,n])=>{
+   const btn=document.createElement("button");btn.type="button";btn.className="quality-chip"+(ratingFilter===id?" quality-chip-active":"");
+   btn.textContent=name+" ("+n+")";btn.setAttribute("aria-pressed",String(ratingFilter===id));
+   btn.addEventListener("click",()=>{qualityFilter=id;libraryPage=0;renderLibrary()});chips.append(btn);
+  });
+ }
  const shown=items.filter(x=>{
   if(!(x.title+" "+(x.series_title||"")).toLocaleLowerCase("pt-BR").includes(filter))return false;
-  if(statusFilter==="imported")return x.genre==="Importado - revisão";
-  if(statusFilter==="draft")return !x.is_published;
-  if(statusFilter==="reviewed")return !x.is_published&&x.rights_reviewed;
-  if(statusFilter==="published")return x.is_published;
+  if(statusFilter==="imported"&&x.genre!=="Importado - revisão")return false;
+  if(statusFilter==="draft"&&x.is_published)return false;
+  if(statusFilter==="reviewed"&&(x.is_published||!x.rights_reviewed))return false;
+  if(statusFilter==="published"&&!x.is_published)return false;
+  if(ratingFilter==="pending"&&x.quality_score!==null)return false;
+  if(ratingFilter==="passing"&&!(x.quality_score>=6))return false;
+  if(ratingFilter==="below6"&&!(x.quality_score!==null&&x.quality_score<6))return false;
+  if(ratingFilter.startsWith("score:")&&x.quality_score!==Number(ratingFilter.slice(6)))return false;
   return true;
  });
  const list=$("library-list");list.replaceChildren();
@@ -239,12 +262,21 @@ function renderLibrary(){
   const source=row.youtube_id?"YouTube · Link":row.google_drive_id?"Google Drive · Link":((row.file_size_bytes||0)/(1024*1024)).toFixed(1)+" MB";
   const review=row.genre==="Importado - revisão";
   const displayState=row.is_published?"PUBLICADO":row.rights_reviewed?"CONFERIDO · AGUARDA PUBLICAÇÃO":review?"RASCUNHO · REVISAR DIREITOS":"RASCUNHO";
-  item.innerHTML='<img class="movie-thumb" alt="" loading="lazy" src="'+esc(poster)+'"><div class="movie-main"><strong>'+esc(row.title)+'</strong><small>'+esc(row.kind==="episode"?(row.series_title+" · Ep. "+row.episode_number):"Filme/curta")+' · '+esc(source)+'</small><span class="movie-state'+(row.is_published?"":" draft")+'">'+displayState+'</span><div class="movie-buttons"><button class="review">'+(row.rights_reviewed?'✓ Conferido':'Marcar como conferido')+'</button><button class="edit">Editar</button><button class="publish">'+(row.is_published?"Retirar do catálogo":"Publicar")+'</button><button class="danger delete">Excluir</button></div></div>';
+  const grade=Number.isInteger(row.quality_score)?row.quality_score:null;
+  const gradeTag=grade===null?"SEM NOTA":grade<6?"NOTA "+grade+" · CANDIDATO À RETIRADA":"NOTA "+grade+" · MANTER";
+  const gradeBadge='<span class="quality-status'+(grade!==null&&grade<6?" quality-below":"")+'">'+gradeTag+'</span>';
+  const options='<option value="">Sem nota</option>'+Array.from({length:10},(_,i)=>i+1).map(n=>'<option value="'+n+'"'+(grade===n?' selected':'')+'>'+n+'/10</option>').join("");
+  const gradeEditor='<div class="quality-editor">'+
+   '<label class="quality-select-label">Nota <select class="quality-select" aria-label="Nota de '+esc(row.title)+'">'+options+'</select></label>'+
+   '<input type="text" class="quality-note" maxlength="500" placeholder="Motivo da nota (opcional)" value="'+esc(row.quality_score_note||"")+'" aria-label="Motivo da nota de '+esc(row.title)+'">'+
+   '<button type="button" class="quality-save">Salvar nota</button></div>';
+  item.innerHTML='<img class="movie-thumb" alt="" loading="lazy" src="'+esc(poster)+'"><div class="movie-main"><strong>'+esc(row.title)+'</strong><small>'+esc(row.kind==="episode"?(row.series_title+" · Ep. "+row.episode_number):"Filme/curta")+' · '+esc(source)+'</small><span class="movie-state'+(row.is_published?"":" draft")+'">'+displayState+'</span>'+gradeBadge+gradeEditor+'<div class="movie-buttons"><button class="review">'+(row.rights_reviewed?'✓ Conferido':'Marcar como conferido')+'</button><button class="edit">Editar</button><button class="publish">'+(row.is_published?"Retirar do catálogo":"Publicar")+'</button><button class="danger delete">Excluir</button></div></div>';
   item.querySelector(".movie-thumb").addEventListener("error",function(){
    if(this.dataset.fallbackShown)return;
    this.dataset.fallbackShown="1";
    this.src=window.NovaPlayCover?.titleCard(row.title)||"../assets/posters/autoral.svg";
   });
+  item.querySelector(".quality-save").onclick=()=>saveQualityScore(row,item);
   item.querySelector(".review").onclick=()=>toggleReview(row);
    item.querySelector(".edit").onclick=()=>beginEdit(row);
   item.querySelector(".publish").onclick=()=>togglePublish(row);
@@ -290,6 +322,35 @@ function resetForm(){
  $("source-type").value="upload";$("youtube-url").value="";$("drive-url").value="";$("youtube-poster-file").value="";setSourceType();
  $("video-file-label").textContent="Selecionar vídeo do telefone";$("poster-file-label").textContent="Escolher capa (opcional)";
  $("submit-upload").textContent="Enviar para a NovaPlay";$("progress-box").hidden=true;$("publish").checked=false;
+}
+
+
+async function saveQualityScore(row,element){
+ if(busy)return;
+ const raw=element.querySelector(".quality-select").value;
+ const score=raw===""?null:Number(raw);
+ const note=element.querySelector(".quality-note").value.trim();
+ if(score!==null&&(!Number.isInteger(score)||score<1||score>10)){
+  status("quality-message","A nota deve estar entre 1 e 10.",true);return;
+ }
+ const changes={
+  quality_score:score,
+  quality_score_source:score===null?null:"manual",
+  quality_score_note:score===null?null:(note||null),
+  quality_scored_at:score===null?null:new Date().toISOString()
+ };
+ busy=true;
+ const button=element.querySelector(".quality-save");button.disabled=true;button.textContent="Salvando...";
+ try{
+  const {data,error}=await client.from("novaplay_library").update(changes).eq("id",row.id).select("id").single();
+  if(error)throw error;
+  Object.assign(row,changes);
+  status("quality-message",score===null?"Nota de “"+row.title+"” apagada.":"Nota salva para “"+row.title+"”: "+score+"/10.",false,true);
+  renderLibrary();
+ }catch(e){
+  status("quality-message","Falha ao salvar a nota: "+errorText(e),true);
+  button.disabled=false;button.textContent="Salvar nota";
+ }finally{busy=false}
 }
 
 async function toggleReview(row){
