@@ -1,5 +1,6 @@
 {
   "published_ids": [
+    "https://developer.chrome.com/blog/new-in-webgpu-155-156?hl=en",
     "2026-10-08-Added-documentation-on-the-UGC-Fresh-Data-Program",
     "2026-07-24-Added-a-new-review-snippet-guideline",
     "2026-10-01-Updated-guidance-on-using-generative-AI-content",
@@ -34,6 +35,15 @@
     "tag:blogger.com,1999:blog-6755709643044947179.post-3564094472242054542"
   ],
   "posts": [
+    {
+      "slug": "whats-new-in-webgpu-chrome-155-156",
+      "title": "What's New in WebGPU (Chrome 155-156)",
+      "description": "What's New in WebGPU (Chrome 155-156). Entenda a novidade e o impacto prático para empresas, sites, aplicativos e profissionais.",
+      "date": "2026-10-12",
+      "category": "Web e performance",
+      "image": "/assets/news/whats-new-in-webgpu-chrome-155-156.svg",
+      "source": "https://developer.chrome.com/blog/new-in-webgpu-155-156?hl=en"
+    },
     {
       "slug": "added-documentation-on-the-ugc-fresh-data-program",
       "title": "Added documentation on the UGC Fresh Data Program",
