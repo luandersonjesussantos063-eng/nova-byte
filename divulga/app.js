@@ -1,7 +1,7 @@
 (()=>{
 'use strict';
 const KEY='novabyte-divulga-v1';
-const VERSION='1.0.1';
+const VERSION='1.0.2';
 const CITIES=['Lucas do Rio Verde','Sorriso','Sinop','Nova Mutum','Tapurah','Cuiabá','Outra cidade'];
 const SERVICES=['Criação de sites','Landing pages','Cardápio digital','Aplicativos','Sistemas personalizados','Outro serviço'];
 const $=s=>document.querySelector(s);
@@ -160,8 +160,8 @@ function renderHome(){
 function renderGroups(){
  const cities=[...new Set(state.groups.map(g=>g.city).filter(Boolean))].sort();
  $('#grupos').innerHTML=title('Meus grupos','Organize os grupos de compra e venda por cidade e regras.',
- button('group-transfer','↔ Transferir grupos','','btn-outline')+button('group-import','↥ Importar links','','btn-outline')+button('group-new','＋ Novo grupo','','btn-primary'))+
- '<div class="filters"><input id="groupSearch" class="control" type="search" placeholder="Buscar grupo ou cidade" value="'+E(searchGroups)+'" aria-label="Buscar grupos"><select id="cityFilter" class="control" aria-label="Filtrar por cidade"><option value="">Todas as cidades</option>'+selectOptions(cities,filterCity)+'</select></div>'+
+ button('groups-reload','↻ Atualizar lista','','btn-outline')+button('group-import','↥ Importar links','','btn-outline')+button('group-new','＋ Novo grupo','','btn-primary'))+
+ '<div class="hint" style="margin:0 0 16px"><strong>'+state.groups.length+' grupo(s) salvo(s) neste navegador.</strong> Seus cadastros ficam no Chrome em que foram criados. Se a lista estiver vazia, confira se abriu o mesmo endereço e navegador. '+button('export','↧ Backup dos grupos e anúncios','','btn-quiet btn-sm')+'</div>'+ '<div class="filters"><input id="groupSearch" class="control" type="search" placeholder="Buscar grupo ou cidade" value="'+E(searchGroups)+'" aria-label="Buscar grupos"><select id="cityFilter" class="control" aria-label="Filtrar por cidade"><option value="">Todas as cidades</option>'+selectOptions(cities,filterCity)+'</select></div>'+
  '<div id="groupList"></div>'+
  '<p class="footer-note">Adicione apenas grupos que permitam anúncios comerciais. O Facebook poderá exigir aprovação do administrador.</p>';
  showGroups();
@@ -417,6 +417,7 @@ function reminderCheck(){
 function handleAction(action,id){
  if(action==='modal-close'){closeModal();return}
  if(action==='group-new'||action==='group-edit'){groupForm(id);return}
+ if(action==='groups-reload'){state=load();searchGroups='';filterCity='';tabTo('grupos');toast('Lista atualizada: '+state.groups.length+' grupo(s) salvo(s) neste navegador.');return}
  if(action==='group-import'){importGroupsModal();return}
  if(action==='group-transfer'){transferModal();return}
  if(action==='transfer-copy'){copyText($('#transferExport')?.value||'');return}
@@ -531,15 +532,20 @@ document.addEventListener('submit',e=>{
   e.preventDefault();
   const lines=String(new FormData(e.target).get('bulk')||'').split(/\r?\n/).filter(Boolean).slice(0,500);
   let added=0,invalid=0;
+  const oldGroups=state.groups;
+  const known=new Set(state.groups.map(g=>g.url));
+  const imported=[];
   for(const line of lines){
    const chunks=line.split('|').map(s=>s.trim());const url=escapeUrl(chunks.find(x=>x.includes('facebook.com/')||x.includes('fb.com/'))||'');
    if(!url){invalid++;continue}
-   if(state.groups.some(g=>g.url===url))continue;
+   if(known.has(url))continue;
    const idpart=url.split('/').filter(Boolean).pop();
    const g={id:uuid(),name:chunks.length>=2&&!chunks[0].startsWith('http')?chunks[0].slice(0,130):'Grupo '+idpart,url,city:(chunks.length>=3?chunks[2]:'Lucas do Rio Verde').slice(0,90),cooldown:24,rules:'',notes:''};
-   state.groups.push(g);added++;
+   imported.push(g);known.add(url);added++;
   }
-  if(save()){closeModal();searchGroups='';filterCity='';tabTo('grupos');toast(added+' grupo(s) importado(s). '+invalid+' linha(s) inválida(s).');}
+  state.groups=[...oldGroups,...imported];
+  if(save()){closeModal();searchGroups='';filterCity='';tabTo('grupos');toast(added+' grupo(s) importado(s). Total: '+state.groups.length+'. '+invalid+' linha(s) inválida(s).');}
+  else state.groups=oldGroups;
  }
 });
 document.addEventListener('input',e=>{
