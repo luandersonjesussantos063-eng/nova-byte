@@ -5,10 +5,10 @@
 <meta name="theme-color" content="#080e1b"><meta name="robots" content="noindex,nofollow">
 <title>NovaPlay | Painel de conteúdo</title>
 <link rel="icon" href="../assets/icon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="./admin.css?v=0.11.0">
+<link rel="stylesheet" href="./admin.css?v=0.12.0">
 </head>
 <body>
-<header class="top"><a class="brand" href="../"><span class="mark">▶</span> Nova<span>Play</span></a><div class="top-right"><strong>Painel administrativo</strong><button id="logout" class="outline" hidden>Sair</button></div></header>
+<header class="top"><a class="brand" href="../"><span class="mark">▶</span> Nova<span>Play</span></a><div class="top-right"><strong>Painel administrativo · v0.12.0</strong><button id="logout" class="outline" hidden>Sair</button></div></header>
 <main class="container">
   <section id="loading" class="panel intro"><div class="spin"></div><p>Preparando seu painel...</p></section>
   <section id="login-view" class="panel login" hidden>
@@ -115,6 +115,14 @@
     <section class="panel library">
       <div class="section-title"><div><span class="section-label">BIBLIOTECA</span><h2>Seus uploads</h2></div><button id="refresh-list" class="outline compact">Atualizar</button></div>
       <label class="search-label">Buscar no catálogo<input type="search" id="filter-title" placeholder="Buscar pelo título..."></label>
+      <label class="search-label" style="display:block;margin:10px 0 16px">Exibir conteúdo
+        <select id="library-state-filter" style="display:block;width:100%;margin-top:8px">
+          <option value="all">Todos os filmes cadastrados</option>
+          <option value="imported">Importados do PDF</option>
+          <option value="draft">Aguardando publicação (rascunhos)</option>
+          <option value="published">Publicados</option>
+        </select>
+      </label>
       <div id="library-list" class="library-list"><p class="muted">Nenhum vídeo enviado ainda.</p></div>
     </section>
     </div>
@@ -122,6 +130,6 @@
 </main>
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.58.0/dist/umd/supabase.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/tus-js-client@4.3.1/dist/tus.min.js"></script>
-<script defer src="./admin.js?v=0.11.0"></script>
+<script defer src="./admin.js?v=0.12.0"></script>
 </body>
 </html>
