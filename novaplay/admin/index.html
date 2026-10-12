@@ -8,7 +8,7 @@
 <link rel="stylesheet" href="./admin.css?v=0.21.0">
 </head>
 <body>
-<header class="top"><a class="brand" href="../"><span class="mark">▶</span> Nova<span>Play</span></a><div class="top-right"><strong>Painel administrativo · v0.23.0</strong><button id="logout" class="outline" hidden>Sair</button></div></header>
+<header class="top"><a class="brand" href="../"><span class="mark">▶</span> Nova<span>Play</span></a><div class="top-right"><strong>Painel administrativo · v0.24.0</strong><button id="logout" class="outline" hidden>Sair</button></div></header>
 <main class="container">
   <section id="loading" class="panel intro"><div class="spin"></div><p>Preparando seu painel...</p></section>
   <section id="login-view" class="panel login" hidden>
@@ -97,7 +97,14 @@
           <label>Nome da série <span class="required">*</span><input id="series-name" maxlength="140" placeholder="Nome da sua série"></label>
           <label>Número do episódio <span class="required">*</span><input id="episode-number" type="number" min="1" max="9999" placeholder="1"></label>
         </div>
-        <label>Gênero ou categoria<input id="genre" maxlength="90" placeholder="Aventura, documentário, ação..." value="Autoral"></label>
+        <label>Gênero ou categoria<input id="genre" list="novaplay-genre-options" maxlength="90" placeholder="Escolha ou digite o gênero principal" value="Autoral"></label>
+        <datalist id="novaplay-genre-options">
+          <option value="Ação"></option><option value="Animação"></option><option value="Aventura"></option>
+          <option value="Comédia"></option><option value="Drama"></option><option value="Fantasia"></option>
+          <option value="Ficção científica"></option><option value="Romance"></option>
+          <option value="Suspense"></option><option value="Terror"></option><option value="Documentário"></option>
+        </datalist>
+        <p class="muted" style="font-size:11px;margin:0 0 8px">Escolha o gênero principal para que o filme apareça na categoria correta do aplicativo.</p>
         <label>Sinopse<textarea id="description" maxlength="4000" rows="4" placeholder="Conte um pouco sobre o filme..."></textarea></label>
         <div class="source-picker">
           <label for="source-type">Como deseja adicionar o vídeo?</label>
@@ -202,7 +209,7 @@
 </main>
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.58.0/dist/umd/supabase.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/tus-js-client@4.3.1/dist/tus.min.js"></script>
-<script src="../assets/cover.js?v=0.23.0"></script>
+<script src="../assets/cover.js?v=0.24.0"></script>
 <script defer src="./admin.js?v=0.21.0"></script>
 </body>
 </html>

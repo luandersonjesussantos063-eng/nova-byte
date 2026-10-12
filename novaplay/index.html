@@ -9,7 +9,7 @@
 <link rel="icon" href="./assets/icon.svg" type="image/svg+xml">
 <link rel="manifest" href="./manifest.webmanifest">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
-<link rel="stylesheet" href="./styles.css?v=0.17.0">
+<link rel="stylesheet" href="./styles.css?v=0.24.0">
 <title>NovaPlay — Filmes, séries e TV ao vivo</title>
 </head>
 <body>
@@ -65,15 +65,33 @@
         <p class="hero-desc" id="hero-description"></p>
         <div class="hero-buttons">
           <button class="btn btn-primary" id="hero-play"><svg><use href="#i-play"/></svg> Assistir agora</button>
+          <button class="btn btn-secondary" id="hero-preview-open" aria-label="Assistir prévia com áudio do filme em destaque"><svg><use href="#i-play"/></svg> Prévia com som</button>
           <button class="btn btn-secondary" id="hero-info"><svg><use href="#i-info"/></svg> Mais informações</button>
         </div>
       </div>
+      <section id="hero-preview-panel" class="hero-preview-panel" hidden role="dialog" aria-label="Prévia do destaque">
+        <div class="hero-preview-top">
+          <div><span class="hero-preview-eyebrow">NOVA PLAY · PRÉVIA COM SOM</span><h2 id="hero-preview-heading">Prévia</h2></div>
+          <button type="button" id="hero-preview-close" class="hero-preview-close" aria-label="Fechar prévia">✕ Fechar</button>
+        </div>
+        <div class="hero-preview-video">
+          <video id="hero-preview-video" controls playsinline preload="none" hidden></video>
+          <iframe id="hero-preview-frame" title="Prévia no player oficial" loading="lazy" allow="autoplay; fullscreen; encrypted-media; picture-in-picture" allowfullscreen hidden></iframe>
+          <p id="hero-preview-feedback" class="hero-preview-feedback" role="status">Preparando prévia...</p>
+        </div>
+        <p class="hero-preview-note">Prévia com áudio iniciada por você. Em alguns serviços, é necessário tocar em ▶ no próprio player. Feche a prévia para parar o som.</p>
+      </section>
       <div class="hero-dots" id="hero-dots" aria-label="Selecionar destaque"></div>
     </section>
     <div class="home-rows" id="home-rows"></div>
   </div>
   <div id="view-category" class="view" hidden>
     <div class="category-intro"><p class="kicker" id="category-kicker">EXPLORAR</p><h1 id="category-heading"></h1><p id="category-subtitle"></p></div>
+    <div id="genre-filter-panel" class="genre-filter-panel" hidden>
+      <p class="genre-filter-label">ESCOLHA O GÊNERO</p>
+      <div id="genre-filter-buttons" class="genre-filter-buttons" role="group" aria-label="Filtrar filmes por gênero"></div>
+      <p id="genre-filter-count" class="genre-filter-count" role="status"></p>
+    </div>
     <div class="category-grid" id="category-grid"></div>
   </div>
   <div id="view-search" class="view" hidden>
@@ -140,11 +158,11 @@
   </div>
 </div>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
-<footer class="app-footer"><a href="./admin/" style="display:inline-block;color:#a6c8ff;font-weight:750;padding:7px 0;text-decoration:underline">Painel do criador ↗</a><div>NovaPlay V 0.23.0 · Cinema clássico e TV aberta grátis · Artes ilustrativas da NovaPlay · O uso comercial de cada conteúdo exige verificação dos direitos.</div></footer>
+<footer class="app-footer"><a href="./admin/" style="display:inline-block;color:#a6c8ff;font-weight:750;padding:7px 0;text-decoration:underline">Painel do criador ↗</a><div>NovaPlay V 0.24.0 · Cinema clássico e TV aberta grátis · Artes ilustrativas da NovaPlay · O uso comercial de cada conteúdo exige verificação dos direitos.</div></footer>
 <script src="./assets/cover.js?v=0.23.0"></script>
 <script src="./catalog.js?v=0.6.0"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.58.0/dist/umd/supabase.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/hls.js@1.7.3/dist/hls.min.js"></script>
-<script src="./app.js?v=0.21.0" defer></script>
+<script src="./app.js?v=0.24.0" defer></script>
 </body>
 </html>

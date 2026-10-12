@@ -36,6 +36,7 @@ const escapeText=x=>String(x??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;"
 let view="inicio",selected=null,featuredIndex=0,current=null,hls=null,timer=0,attempt=0,timeSaved=0,toastTimeout=null;
 let playerUiTimer=null,seekActive=false;
 let fullscreenOwned=false,closingFullscreen=false,lockedLandscape=false;
+let previewTimer=null,previewSequence=0,previewHls=null;
 
 function posterUrl(path,youtubeId,title,driveId){
  const approved=window.NovaPlayCover?.approvedAnimePoster?.(title,false);
@@ -149,6 +150,29 @@ function shelf(title,items,key,withLive=false){
  items.forEach(item=>track.append(card(item,item.kind==="tv")));
  section.append(head,track);return section;
 }
+
+const genreOrder=["Animação","Ação","Aventura","Comédia","Drama","Fantasia","Ficção científica","Romance","Suspense","Terror","Documentário","Não classificados"];
+let selectedGenre="Todos";
+function normalizeGenre(value){return String(value||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase()}
+function primaryGenre(film){
+ const value=normalizeGenre(film.category).trim();
+ if(!value||/^(importado|autoral|outros|sem genero|a classificar|producao independente)/.test(value))return "Não classificados";
+ const names=[
+ ["Animação",/animac|desenho|infantil/],["Ação",/acao|policial|artes marciais/],
+ ["Aventura",/aventura/],["Comédia",/comedia|humor/],["Drama",/drama/],
+ ["Fantasia",/fantasia|magia/],["Ficção científica",/ficcao cientifica|sci.?fi/],
+ ["Romance",/romance|romant/],["Suspense",/suspense|misterio/],
+ ["Terror",/terror|horror/],["Documentário",/documentario/]
+ ];
+ for(const [name,pattern] of names){if(pattern.test(value))return name}
+ return "Não classificados";
+}
+function genreGroups(){
+ const groups=new Map(genreOrder.map(name=>[name,[]]));
+ for(const item of db.films.filter(x=>x.kind==="film"&&!x.catalogOnly))
+  groups.get(primaryGenre(item)).push(item);
+ return groups;
+}
 function renderRows(){
  const holder=$("home-rows");holder.replaceChildren();
  const blocks=[
@@ -157,10 +181,13 @@ function renderRows(){
  ["Produções da NovaPlay",uploadedCatalog.filter(x=>!x.catalogOnly),"filmes",false],
  ["Filmes clássicos",db.films,"filmes",false],
  ["Séries clássicas",db.series,"series",false],
+ ...genreOrder.filter(name=>name!=="Não classificados")
+  .map(name=>[name,genreGroups().get(name),"genero:"+name,false]).filter(b=>b[1].length),
+ ["Ainda sem gênero",genreGroups().get("Não classificados").slice(0,80),"genero:Não classificados",false],
  ["Adicionados ao catálogo",[...db.films.filter(x=>!x.catalogOnly).slice().reverse(),...db.series,...db.films.filter(x=>x.catalogOnly)],"filmes",false],
  ["Minha lista",all.filter(x=>favorite.has(x.id)),"favoritos",false]
  ];
- blocks.forEach(b=>{const row=shelf(...b);if(row)holder.append(row)});
+ blocks.forEach(b=>{const row=shelf(b[0],b[1].slice(0,36),b[2],b[3]);if(row)holder.append(row)});
 }
 const defaultFeatured=["lostworld","nosferatu","lua","caligari"];
 let featured=defaultFeatured.map(byId).filter(Boolean);
@@ -177,7 +204,74 @@ async function loadFeatured(){
   updateHero(0);
  }catch(e){console.warn("NovaPlay: destaques personalizados indisponíveis.",e.message)}
 }
+
+function stopHeroPreview(){
+ previewSequence++;
+ clearTimeout(previewTimer);previewTimer=null;
+ if(previewHls){previewHls.destroy();previewHls=null}
+ const video=$("hero-preview-video");
+ video.pause();video.removeAttribute("src");video.load();
+ video.hidden=true;video.onerror=null;
+ const frame=$("hero-preview-frame");frame.src="about:blank";frame.hidden=true;
+ $("hero-preview-panel").hidden=true;
+ $("hero-preview-feedback").textContent="";
+}
+async function openHeroPreview(item){
+ if(!item||item.catalogOnly){toast("Este título ainda não tem um vídeo para prévia.");return}
+ stopHeroPreview();
+ const seq=previewSequence;
+ const media=item.kind==="series"?item.episodes?.[0]:item;
+ if(!media){toast("Não há vídeo disponível para esta prévia.");return}
+ const panel=$("hero-preview-panel"),message=$("hero-preview-feedback");
+ panel.hidden=false;$("hero-preview-heading").textContent=item.title;
+ message.textContent="Preparando prévia com áudio...";
+ const video=$("hero-preview-video"),frame=$("hero-preview-frame");
+ const timeout=()=>{
+  if(seq!==previewSequence||panel.hidden)return;
+  stopHeroPreview();toast("Prévia encerrada após 30 segundos.");
+ };
+ const beginTimer=()=>{previewTimer=setTimeout(timeout,30000)};
+ if(media.youtube_id){
+  const id=media.youtube_id;
+  if(!/^[a-zA-Z0-9_-]{11}$/.test(id)){message.textContent="Link do YouTube inválido";return}
+  video.hidden=true;frame.hidden=false;
+  frame.src="https://www.youtube-nocookie.com/embed/"+encodeURIComponent(id)+"?autoplay=1&playsinline=1&rel=0&mute=0";
+  message.textContent="Toque em ▶ no player se o navegador pedir para ativar o som.";
+  beginTimer();
+ }else if(media.google_drive_id){
+  const id=media.google_drive_id,key=media.google_drive_resource_key;
+  if(!/^[A-Za-z0-9_-]{12,128}$/.test(id)||(key&&!/^[A-Za-z0-9_-]{8,256}$/.test(key))){
+   message.textContent="Link do Google Drive inválido";return;
+  }
+  video.hidden=true;frame.hidden=false;
+  frame.src="https://drive.google.com/file/d/"+encodeURIComponent(id)+"/preview"+(key?"?resourcekey="+encodeURIComponent(key):"");
+  message.textContent="Google Drive: toque em ▶ no player para iniciar o vídeo com áudio.";
+  beginTimer();
+ }else{
+  video.hidden=false;frame.hidden=true;video.muted=false;video.volume=1;
+  let source=media.src;
+  if(media.video_path){
+   if(!remoteDb){message.textContent="Serviço de vídeos indisponível";return}
+   const response=await remoteDb.storage.from("novaplay-videos").createSignedUrl(media.video_path,120);
+   if(seq!==previewSequence||panel.hidden)return;
+   if(response.error||!response.data?.signedUrl){message.textContent="Prévia indisponível neste momento.";return}
+   source=response.data.signedUrl;
+  }
+  if(!source){message.textContent="Não há arquivo disponível para prévia.";return}
+  if(/\.m3u8(?:\?|$)/i.test(source)&&!video.canPlayType("application/vnd.apple.mpegurl")&&window.Hls?.isSupported()){
+   previewHls=new window.Hls({enableWorker:true,maxBufferLength:12});
+   previewHls.loadSource(source);previewHls.attachMedia(video);
+  }else video.src=source;
+  video.onerror=()=>{if(seq===previewSequence)message.textContent="Não foi possível carregar o vídeo deste provedor."};
+  video.onplaying=()=>{if(seq===previewSequence)message.textContent="▶ Prévia com áudio · até 30 segundos"};
+  video.play().catch(()=>{
+   if(seq===previewSequence)message.textContent="Toque em ▶ no próprio vídeo para ouvir a prévia.";
+  });
+  beginTimer();
+ }
+}
 function updateHero(index){
+ stopHeroPreview();
  if(!featured.length)return;
  featuredIndex=(index+featured.length)%featured.length;const x=featured[featuredIndex];
  $("hero-art").style.backgroundImage="url('"+(x.backdrop||x.cover).replace(/'/g,"%27")+"')";
@@ -187,6 +281,7 @@ function updateHero(index){
  const wrap=$("hero-metadata");wrap.replaceChildren();
  [x.year,x.duration,x.uploaded?"Disponível na NovaPlay":"Cinema clássico"].filter(Boolean).forEach(s=>{const span=document.createElement("span");span.textContent=s;wrap.append(span)});
  $("hero-play").onclick=()=>startWatching(x);
+ $("hero-preview-open").onclick=()=>openHeroPreview(x);
  $("hero-info").onclick=()=>openDetails(x);
  const dots=$("hero-dots");dots.replaceChildren();
  featured.forEach((film,i)=>{const b=document.createElement("button");b.className="hero-dot"+(i===featuredIndex?" active":"");b.setAttribute("aria-label","Destacar "+film.title);b.addEventListener("click",()=>updateHero(i));dots.append(b)});
@@ -201,8 +296,26 @@ function renderCategory(kind){
  const conf=categories[kind]||categories.filmes;
  $("category-kicker").textContent=conf[0];$("category-heading").textContent=conf[1];$("category-subtitle").textContent=conf[2];
  const content=$("category-grid");content.replaceChildren();
- const list=kind==="favoritos"?all.filter(x=>favorite.has(x.id)):conf[3];
- if(!list.length)content.append(empty("Sua lista está vazia","Abra um filme, série ou canal e toque em 'Minha lista' para salvar aqui."));
+ let list=kind==="favoritos"?all.filter(x=>favorite.has(x.id)):conf[3];
+ const filters=$("genre-filter-panel"),buttons=$("genre-filter-buttons");
+ filters.hidden=kind!=="filmes";
+ if(kind==="filmes"){
+  buttons.replaceChildren();
+  const groups=genreGroups();
+  for(const name of ["Todos",...genreOrder.filter(name=>groups.get(name).length)]){
+   const count=name==="Todos"?db.films.filter(x=>!x.catalogOnly).length:groups.get(name).length;
+   const b=document.createElement("button");b.type="button";
+   b.className="genre-chip"+(selectedGenre===name?" active":"");
+   b.setAttribute("aria-pressed",String(selectedGenre===name));
+   b.textContent=name+" ("+count+")";
+   b.onclick=()=>{selectedGenre=name;renderCategory("filmes")};
+   buttons.append(b);
+  }
+  list=selectedGenre==="Todos"?db.films:groups.get(selectedGenre)||[];
+  $("category-heading").textContent=selectedGenre==="Todos"?"Filmes por gênero":selectedGenre;
+  $("genre-filter-count").textContent=list.length+" título"+(list.length===1?"":"s")+" nesta categoria";
+ }
+ if(!list.length)content.append(empty("Nenhum título nesta categoria","Selecione outro gênero ou classifique títulos no painel administrativo."));
  else list.forEach(item=>content.append(card(item,item.kind==="tv")));
 }
 function renderSearch(){
@@ -214,7 +327,11 @@ function renderSearch(){
  else list.forEach(x=>results.append(card(x,x.kind==="tv")));
 }
 function navigate(page){
- const chosen=page==="buscar"?"buscar":(categories[page]?page:"inicio");
+ stopHeroPreview();
+ const genreLink=typeof page==="string"&&page.startsWith("genero:");
+ if(genreLink)selectedGenre=page.slice("genero:".length);
+ else if(page==="filmes"&&view!=="filmes")selectedGenre="Todos";
+ const chosen=genreLink?"filmes":page==="buscar"?"buscar":(categories[page]?page:"inicio");
  view=chosen;
  $("view-home").hidden=chosen!=="inicio";
  $("view-category").hidden=chosen==="inicio"||chosen==="buscar";
@@ -240,6 +357,7 @@ function startWatching(item){
  }else play(item);
 }
 function openDetails(item){
+ stopHeroPreview();
  if(!item)return;selected=item;
  registerCatalogInterest(item,"detail_open");
  $("detail-type").textContent=item.catalogOnly?(item.category==="Anime · Série"?"ANIME / SÉRIE · EM BREVE":"ANIME / FILME · EM BREVE"):item.kind==="tv"?"● TV ABERTA":item.kind==="series"?"SÉRIE CLÁSSICA":"FILME CLÁSSICO";
@@ -451,6 +569,7 @@ function setResume(video,id,seq){
  video.onended=()=>{delete progress[id];save(progressKey,progress);if(view==="inicio")renderRows()};
 }
 function play(item,episode){
+ stopHeroPreview();
  if(!item)return;
  if(item.catalogOnly){toast("Este título está em breve; não há vídeo para reproduzir.");return;}
  registerCatalogInterest(episode||item,"play_attempt");
@@ -556,6 +675,7 @@ function play(item,episode){
  }else startSource();
  // No extra focus change or intermediate details screen: playback opens immediately.
 }
+$("hero-preview-close").onclick=stopHeroPreview;
 $("player-back").onclick=closePlayer;$("player-close").onclick=closePlayer;
 $("retry-btn").onclick=()=>{if(current)play(current.item,current.episode)};
 $("fallback-btn").onclick=useFallback;
@@ -569,11 +689,12 @@ $("brand-link").addEventListener("click",e=>{e.preventDefault();navigate("inicio
 document.querySelectorAll("[data-nav]").forEach(btn=>btn.addEventListener("click",()=>navigate(btn.dataset.nav)));
 document.addEventListener("keydown",e=>{
  if(e.key==="Escape"){
-   if(!$("player-layer").hidden)closePlayer();
+   if(!$("hero-preview-panel").hidden)stopHeroPreview();
+   else if(!$("player-layer").hidden)closePlayer();
    else if(!$("detail-layer").hidden)closeDetails();
  }
 });
-document.addEventListener("visibilitychange",()=>{if(document.hidden&&!$("player-layer").hidden){$("video").pause()}});
+document.addEventListener("visibilitychange",()=>{if(document.hidden){stopHeroPreview();if(!$("player-layer").hidden)$("video").pause()}});
 window.addEventListener("scroll",()=>$("app-header").classList.toggle("is-scrolled",window.scrollY>24),{passive:true});
 if("serviceWorker" in navigator&&location.protocol==="https:"){
  window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}));

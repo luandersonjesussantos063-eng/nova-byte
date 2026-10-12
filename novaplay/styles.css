@@ -353,3 +353,34 @@ svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.75;strok
 
 /* NovaPlay v0.17: títulos na grade aguardando arquivo de vídeo. */
 .catalog-coming-soon{position:absolute;z-index:4;top:10px;left:10px;display:inline-block;background:#1c2b45e8;border:1px solid #91b1e3;color:#f6fbff;border-radius:5px;padding:5px 7px;font-size:10px;font-weight:850;letter-spacing:.8px}
+
+
+/* NovaPlay v0.24: preview with user-initiated audio and genre navigation */
+.hero-preview-panel{position:absolute;z-index:6;left:clamp(14px,4vw,70px);right:clamp(14px,4vw,70px);top:11%;bottom:10%;display:flex;flex-direction:column;gap:12px;max-width:1080px;margin:auto;background:rgba(6,14,29,.96);border:1px solid rgba(115,167,240,.5);border-radius:18px;padding:15px 18px;box-shadow:0 24px 75px rgba(0,0,0,.62);backdrop-filter:blur(12px)}
+.hero-preview-panel[hidden],.genre-filter-panel[hidden],.hero-preview-frame[hidden],.hero-preview-video[hidden]{display:none!important}
+.hero-preview-top{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-shrink:0}
+.hero-preview-eyebrow{color:#91bfff;font-size:10px;font-weight:900;letter-spacing:2px}
+.hero-preview-top h2{font-size:clamp(16px,2.1vw,25px);font-weight:900;color:#fff;margin:4px 0 0}
+.hero-preview-close{border:1px solid #4b6f9c;background:#172e4c;border-radius:22px;color:white;padding:10px 15px;flex:none;cursor:pointer;font-weight:800}
+.hero-preview-close:hover,.hero-preview-close:focus-visible{background:#275086}
+.hero-preview-video{position:relative;display:flex;flex:1;min-height:130px;align-items:center;justify-content:center;background:#020913;border-radius:12px;overflow:hidden}
+.hero-preview-video video,.hero-preview-video iframe{width:100%;height:100%;min-height:160px;object-fit:contain;border:0;background:#020913}
+.hero-preview-feedback{position:absolute;left:8px;bottom:8px;padding:6px 9px;border-radius:8px;background:rgba(0,0,0,.68);color:#e2ecf9;font-size:11px;max-width:88%;pointer-events:none}
+.hero-preview-note{font-size:11px;color:#c0cde0;line-height:1.45;margin:0;flex-shrink:0}
+.genre-filter-panel{padding:5px clamp(18px,4.2vw,80px) 18px}
+.genre-filter-label{color:#8ebdff;font-size:10px;letter-spacing:2px;font-weight:900;margin:0 0 12px}
+.genre-filter-buttons{display:flex;gap:8px;flex-wrap:wrap}
+.genre-chip{appearance:none;background:#10243e;border:1px solid #304f75;color:#d9e7f8;padding:10px 15px;border-radius:22px;font-size:12px;cursor:pointer;font-weight:750}
+.genre-chip:hover,.genre-chip:focus-visible{border-color:#8ebfff;background:#203d63}
+.genre-chip.active{background:#1262d7;border-color:#4589f3;color:#fff}
+.genre-filter-count{font-size:12px;color:#a6bdd9;margin:12px 0 0}
+@media(max-width:700px){
+ .hero-preview-panel{left:10px;right:10px;top:10%;bottom:6%;padding:11px;gap:9px;border-radius:11px}
+ .hero-preview-note{font-size:10px}
+ .hero-preview-top h2{font-size:16px}
+ .hero-preview-close{font-size:12px;padding:8px 10px}
+ .hero-preview-video{min-height:120px}
+ .genre-filter-buttons{flex-wrap:nowrap;overflow-x:auto;padding:0 0 12px;scrollbar-width:thin}
+ .genre-chip{flex:none;padding:10px 12px}
+ .genre-filter-label{margin-bottom:11px}
+}
