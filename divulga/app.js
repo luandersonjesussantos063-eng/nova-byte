@@ -1,7 +1,7 @@
 (()=>{
 'use strict';
 const KEY='novabyte-divulga-v1';
-const VERSION='1.0.5';
+const VERSION='1.0.6';
 const CITIES=['Lucas do Rio Verde','Sorriso','Sinop','Nova Mutum','Tapurah','Cuiabá','Outra cidade'];
 const SERVICES=['Criação de sites','Landing pages','Cardápio digital','Aplicativos','Sistemas personalizados','Outro serviço'];
 const $=s=>document.querySelector(s);
@@ -14,7 +14,7 @@ const onlyDay=iso=>new Date(iso).toLocaleDateString('pt-BR');
 const hoursElapsed=iso=>(Date.now()-Date.parse(iso||0))/3600000;
 const isToday=iso=>new Date(iso).toDateString()===new Date().toDateString();
 const emptyState=()=>({groups:[],campaigns:[],history:[],queue:null,settings:{reminders:false,intervalHours:1,quietStart:'22:00',quietEnd:'08:00',lastReminder:nowISO()}});
-let state=load(),tab='inicio',filterCity='',searchGroups='',filterHistory='',imageDraft='',toaster=null,reminderTimer=null,groupSavedNotice='',campaignSavedNotice='';
+let state=load(),tab='inicio',filterCity='',searchGroups='',filterHistory='',imageDraft='',toaster=null,reminderTimer=null,groupSavedNotice='',campaignSavedNotice='',queuePreparationNotice='';
 function load(){
  try{
   const data=JSON.parse(localStorage.getItem(KEY));
@@ -202,16 +202,20 @@ function renderQueue(){
  const c=state.campaigns.find(x=>x.id===q.campaignId);
  if(!g||!c){state.queue=null;save();renderQueue();return}
  const pct=Math.round(q.index/q.ids.length*100);
- $('#fila').innerHTML=title('Divulgação em andamento','Copie o anúncio, abra o grupo e confirme somente após publicar.')+
+ $('#fila').innerHTML=title('Divulgação em andamento','Prepare o anúncio e abra o grupo com um toque; a publicação é confirmada por você no Facebook.')+
  '<div class="queue-card"><div class="inline-label"><span class="queue-count">GRUPO '+(q.index+1)+' DE '+q.ids.length+'</span><span class="tag">'+pct+'% percorrido</span></div><div class="queue-progress"><span style="width:'+pct+'%"></span></div>'+
  '<h2>'+E(g.name)+'</h2><p class="subhead">'+E(g.city||'Cidade não informada')+' · '+E(c.name)+'</p>'+
  (g.rules?'<div class="hint warning">Regras informadas: '+E(g.rules)+'</div>':'<div class="hint warning">Confira se este grupo permite publicidade antes de postar.</div>')+
  '<div class="campaign-hero"><span class="tag orange">ANÚNCIO PREPARADO</span><div class="preview" style="margin-top:11px">'+(c.image?'<img src="'+E(c.image)+'" alt="Imagem do anúncio">':'')+E(adText(c))+'</div></div>'+
- '<div class="queue-actions">'+button('queue-copy','⧉ Copiar anúncio','','btn-outline')+button('queue-open','↗ Abrir grupo no Facebook','','btn-blue')+
- (c.image?button('queue-share','Compartilhar anúncio/imagem','','btn-outline'):'')+
+ '<div class="queue-actions">'+button('queue-prepare-open','⧉ Copiar anúncio + abrir grupo','','btn-primary wide')+
+ button('queue-share','↗ Compartilhar pelo Android','','btn-blue')+
+ button('queue-copy','Copiar texto novamente','','btn-outline')+
+ button('queue-open','Abrir somente o grupo','','btn-outline')+
+ button('queue-copy-group-link','Copiar link do grupo','','btn-quiet')+
  button('queue-done','✓ Já publiquei neste grupo','','btn-primary wide')+
  button('queue-skip','Pular grupo','','btn-quiet')+button('queue-end','Encerrar fila','','btn-quiet')+'</div>'+
- '<p class="muted" style="font-size:12px;margin-top:16px">A confirmação é manual. Nenhuma publicação é enviada automaticamente aos grupos.</p></div>';
+ '<p class="muted" style="font-size:12px;margin-top:14px">O botão de 1 toque copia o texto e abre o grupo, mas não escreve nem publica no Facebook. Se o grupo redirecionar para a página inicial, copie seu link para abrir manualmente. O compartilhamento Android depende do aplicativo escolhido e pode não preencher a legenda.</p>'+
+ (queuePreparationNotice?'<div class="hint" role="status" aria-live="polite">'+E(queuePreparationNotice)+'</div>':'')+'</div>';
 }
 function renderHistory(){
  const entries=state.history.filter(h=>h.type==='published'&&(!filterHistory||h.groupName.toLowerCase().includes(filterHistory.toLowerCase())||h.campaignName.toLowerCase().includes(filterHistory.toLowerCase())));
@@ -332,6 +336,7 @@ function startQueue(id){
  if(!campaignId||!state.campaigns.some(c=>c.id===campaignId)){tabTo('campanhas');toast('Crie uma campanha primeiro.');return}
  const eligible=state.groups.filter(nextEligible).map(g=>g.id);
  if(!eligible.length){toast('Nenhum grupo está disponível. Confira os intervalos configurados.');return}
+ queuePreparationNotice='';
  state.queue={campaignId,ids:eligible,index:0,startedAt:nowISO()};
  save();tabTo('fila');
 }
@@ -342,7 +347,7 @@ function queueStep(published){
  if(published&&g&&c){
   state.history.push({id:uuid(),type:'published',groupId:g.id,groupName:g.name,campaignId:c.id,campaignName:c.name,date:nowISO()});
  }
- q.index++;
+ q.index++;queuePreparationNotice='';
  if(q.index>=q.ids.length){state.queue=null;save();tabTo('historico');toast('Fila concluída. Histórico atualizado.');return}
  save();renderQueue();toast(published?'Publicação registrada. Próximo grupo.':'Grupo pulado. Próximo da fila.');
 }
@@ -357,20 +362,72 @@ async function copyText(content){
   toast('Anúncio copiado. Agora cole no grupo.');
  }catch{toast('Não foi possível copiar automaticamente. Selecione o texto na prévia.')}
 }
-async function shareCampaign(c){
- if(!c)return;
- const text=adText(c);
- try{
-  if(navigator.share){
-   const payload={title:c.name,text};
-   if(c.image&&navigator.canShare){
-    try{const response=await fetch(c.image);const blob=await response.blob();const file=new File([blob],'novabyte-anuncio.jpg',{type:'image/jpeg'});
-     if(navigator.canShare({files:[file]}))payload.files=[file];}catch{}
-   }
-   await navigator.share(payload);
-  }else await copyText(text);
- }catch(e){if(e?.name!=='AbortError')toast('Compartilhamento não disponível. Use Copiar anúncio.')}
+function imageFileFromDataUrl(dataUrl){
+ if(typeof dataUrl!=='string'||!dataUrl.startsWith('data:image/'))return null;
+ const comma=dataUrl.indexOf(',');
+ if(comma<0||!dataUrl.slice(0,comma).includes(';base64'))return null;
+ const type=dataUrl.slice(5,comma).split(';')[0];
+ if(!['image/jpeg','image/png','image/webp'].includes(type))return null;
+ const raw=atob(dataUrl.slice(comma+1)),bytes=new Uint8Array(raw.length);
+ for(let i=0;i<raw.length;i++)bytes[i]=raw.charCodeAt(i);
+ return new File([bytes],'novabyte-divulga'+(type==='image/png'?'.png':type==='image/webp'?'.webp':'.jpg'),{type});
 }
+function shareCampaign(c){
+ if(!c){toast('Selecione uma campanha antes de compartilhar.');return}
+ const content=adText(c);
+ if(!navigator.share){void copyText(content);toast('Compartilhamento Android indisponível aqui. Texto preparado para copiar.');return}
+ const payload={title:c.name,text:content};
+ if(c.image&&navigator.canShare){
+  try{
+   const file=imageFileFromDataUrl(c.image);
+   if(file&&navigator.canShare({files:[file]}))payload.files=[file];
+  }catch{}
+ }
+ // É necessário chamar share diretamente durante o toque do usuário no Android.
+ navigator.share(payload).then(()=>{
+  toast('Conteúdo enviado ao aplicativo escolhido. Confira e confirme a publicação dentro do Facebook.');
+ }).catch(error=>{
+  if(error?.name!=='AbortError')toast('Não foi possível compartilhar. Use “Copiar anúncio + abrir grupo”.');
+ });
+}
+function queuePrepareAndOpen(){
+ const q=state.queue;
+ if(!q){toast('Inicie uma fila de divulgação antes.');return}
+ const g=state.groups.find(g=>g.id===q.ids[q.index]);
+ const c=state.campaigns.find(c=>c.id===q.campaignId);
+ if(!g||!c){toast('Não foi possível localizar o grupo ou o anúncio.');return}
+ const groupUrl=escapeUrl(g.url);
+ if(!groupUrl){toast('O grupo está com link inválido. Edite o cadastro.');return}
+ const content=adText(c);
+ const status='Texto preparado. No Facebook, toque em criar publicação e cole o anúncio. Depois volte e confirme nesta central.';
+ queuePreparationNotice=status;
+ // Executa a cópia primeiro (iniciada com gesto do usuário), sem aguardar antes de abrir.
+ let copied=false;
+ try{
+  const field=document.createElement('textarea');
+  field.value=content;field.setAttribute('readonly','');
+  field.style.position='fixed';field.style.opacity='0';
+  document.body.appendChild(field);field.select();
+  copied=Boolean(document.execCommand?.('copy'));
+  field.remove();
+ }catch{}
+ if(!copied&&navigator.clipboard?.writeText){
+  navigator.clipboard.writeText(content).then(()=>{
+   queuePreparationNotice=status;toast('Anúncio copiado! Cole o texto no Facebook.');
+  }).catch(()=>{
+   queuePreparationNotice='A cópia automática foi bloqueada. Volte à central e toque em Copiar texto novamente.';
+   toast(queuePreparationNotice);
+  });
+ }else if(copied){toast('Anúncio copiado! Abrindo o grupo.');}
+ else{queuePreparationNotice='Seu navegador não permitiu copiar automaticamente. Use o botão Copiar texto novamente.';toast(queuePreparationNotice)}
+ renderQueue();
+ if(window.Capacitor?.isNativePlatform?.()&&window.Capacitor?.Plugins?.Browser?.open){
+  window.Capacitor.Plugins.Browser.open({url:groupUrl}).catch(()=>toast('Não foi possível abrir o grupo.'));
+ }else{
+  window.open(groupUrl,'_blank','noopener,noreferrer');
+ }
+}
+
 function safeFilename(){return 'novabyte-divulga-backup-'+new Date().toISOString().slice(0,10)+'.json'}
 function downloadBackup(){
  const backup={format:'novabyte-divulga-backup',version:1,exportedAt:nowISO(),data:state};
@@ -554,6 +611,12 @@ function handleAction(action,id){
  }
  if(action==='campaign-copy'){copyText(adText(state.campaigns.find(c=>c.id===id)));return}
  if(action==='start-queue'||action==='campaign-start'){startQueue(id);return}
+ if(action==='queue-prepare-open'){queuePrepareAndOpen();return}
+ if(action==='queue-copy-group-link'){
+  const q=state.queue,g=state.groups.find(g=>g.id===q?.ids[q.index]);
+  if(g)void copyText(g.url);else toast('Grupo não encontrado.');
+  return;
+ }
  if(action==='queue-copy'){
   const q=state.queue;copyText(adText(state.campaigns.find(c=>c.id===q?.campaignId)));return;
  }
