@@ -10,6 +10,7 @@ const $=id=>document.getElementById(id);
 let client=null,editing=null,items=[],busy=false,currentUpload=null,sessionUser=null;
 let libraryPage=0;
 let qualityFilter="all";
+let activityCounts=new Map(),activityLimitReached=false;
 const LIBRARY_PAGE_SIZE=48;
 
 const esc=t=>String(t??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -49,7 +50,7 @@ async function checkSession(){
  try{
   const u=await hasAdmin();
   sessionUser=u||null;
-  if(u){show("dashboard");await loadLibrary();}
+  if(u){show("dashboard");await Promise.all([loadLibrary(),loadActivity()]);}
   else if(u===false){
    const v=await client.auth.getUser();
    $("pending-email").textContent=v.data.user?.email||"Conta aguardando aprovação";
@@ -198,6 +199,31 @@ async function uploadCover(file){
  return path;
 }
 
+
+/* Métricas sem dados pessoais; play_attempt não significa reprodução confirmada. */
+async function loadActivity(){
+ if(!client||!sessionUser)return;
+ const since=new Date(Date.now()-30*86400000).toISOString();
+ const seen=new Map();let total=0;let truncated=false;
+ for(let offset=0;offset<10000;offset+=500){
+  const {data,error}=await client.from("novaplay_activity_events")
+   .select("media_id,event_type,created_at").gte("created_at",since)
+   .order("created_at",{ascending:false}).range(offset,offset+499);
+  if(error){status("activity-message","Não foi possível consultar métricas: "+errorText(error),true);return}
+  for(const event of data||[]){
+   const row=seen.get(event.media_id)||{detail:0,attempt:0};
+   if(event.event_type==="detail_open")row.detail++;
+   if(event.event_type==="play_attempt")row.attempt++;
+   seen.set(event.media_id,row);total++;
+  }
+  if(!data||data.length<500)break;
+  if(offset+500>=10000)truncated=true;
+ }
+ activityCounts=seen;activityLimitReached=truncated;
+ status("activity-message",total?("Foram registrados "+total+" eventos anônimos de interesse no período. "+(truncated?"Consulta limitada a 10 mil eventos.":"")):"Medição iniciada nesta versão. Os números anteriores à atualização não estão disponíveis.",false,true);
+ renderLibrary();
+}
+
 async function loadLibrary(){
  // Ler todas as páginas: o catálogo importado pode ter centenas de rascunhos.
  const gathered=[];
@@ -222,6 +248,11 @@ function renderLibrary(){
  if(markAll){markAll.disabled=busy||!pendingReview.length;markAll.textContent="Marcar todos como conferidos ("+pendingReview.length+")";}
  const bulk=$("bulk-publish");if(bulk){bulk.disabled=busy||!available.length;bulk.textContent="Liberar todos os conferidos ("+available.length+")";}
  const summary=$("review-summary");if(summary)summary.textContent=available.length+" prontos para publicar · "+pendingReview.length+" rascunhos ainda sem conferência";
+ const activitySummary=$("activity-summary");
+ if(activitySummary){
+  const events=[...activityCounts.values()];
+  activitySummary.textContent=events.reduce((sum,e)=>sum+e.detail,0)+" aberturas de detalhes · "+events.reduce((sum,e)=>sum+e.attempt,0)+" tentativas de reprodução nos últimos 30 dias. "+(activityLimitReached?"Leitura parcial.":"");
+ }
  const filter=$("filter-title").value.trim().toLocaleLowerCase("pt-BR");
  const statusFilter=$("library-state-filter")?.value||"all";
  const ratingFilter=qualityFilter;
@@ -263,6 +294,8 @@ function renderLibrary(){
   const item=document.createElement("article");item.className="movie-item";
   const poster=row.poster_path?client.storage.from(POSTER_BUCKET).getPublicUrl(row.poster_path).data.publicUrl:(row.youtube_id?"https://i.ytimg.com/vi/"+encodeURIComponent(row.youtube_id)+"/hqdefault.jpg":row.google_drive_id?(window.NovaPlayCover?.driveThumbnail(row.google_drive_id)||window.NovaPlayCover?.titleCard(row.title)):(window.NovaPlayCover?.titleCard(row.title)||"../assets/posters/autoral.svg"));
   const source=row.catalog_only?"Aguardando vídeo autorizado":row.youtube_id?"YouTube · Link":row.google_drive_id?"Google Drive · Link":((row.file_size_bytes||0)/(1024*1024)).toFixed(1)+" MB";
+  const engagement=activityCounts.get(row.id)||{detail:0,attempt:0};
+  const metricBadge='<small>Ficha: '+engagement.detail+' · Tentativas de assistir: '+engagement.attempt+' (30 dias)</small>';
   const review=row.genre==="Importado - revisão";
   const displayState=row.catalog_only?(row.is_published?"NA GRADE · EM BREVE":"RASCUNHO · SEM VÍDEO"):row.is_published?"PUBLICADO":row.rights_reviewed?"CONFERIDO · AGUARDA PUBLICAÇÃO":review?"RASCUNHO · REVISAR DIREITOS":"RASCUNHO";
   const grade=Number.isInteger(row.quality_score)?row.quality_score:null;
@@ -273,7 +306,7 @@ function renderLibrary(){
    '<label class="quality-select-label">Nota <select class="quality-select" aria-label="Nota de '+esc(row.title)+'">'+options+'</select></label>'+
    '<input type="text" class="quality-note" maxlength="500" placeholder="Motivo da nota (opcional)" value="'+esc(row.quality_score_note||"")+'" aria-label="Motivo da nota de '+esc(row.title)+'">'+
    '<button type="button" class="quality-save">Salvar nota</button></div>';
-  item.innerHTML='<img class="movie-thumb" alt="" loading="lazy" src="'+esc(poster)+'"><div class="movie-main"><strong>'+esc(row.title)+'</strong><small>'+esc(row.catalog_only?(row.genre==="Anime · Série"?"Anime / série":"Anime / filme"):(row.kind==="episode"?(row.series_title+" · Ep. "+row.episode_number):"Filme/curta"))+' · '+esc(source)+'</small><span class="movie-state'+(row.is_published?"":" draft")+'">'+displayState+'</span>'+gradeBadge+gradeEditor+'<div class="movie-buttons"><button class="review">'+(row.rights_reviewed?'✓ Conferido':'Marcar como conferido')+'</button><button class="edit">Editar</button><button class="publish">'+(row.is_published?"Retirar do catálogo":"Publicar")+'</button><button class="danger delete">Excluir</button></div></div>';
+  item.innerHTML='<img class="movie-thumb" alt="" loading="lazy" src="'+esc(poster)+'"><div class="movie-main"><strong>'+esc(row.title)+'</strong><small>'+esc(row.catalog_only?(row.genre==="Anime · Série"?"Anime / série":"Anime / filme"):(row.kind==="episode"?(row.series_title+" · Ep. "+row.episode_number):"Filme/curta"))+' · '+esc(source)+'</small>'+metricBadge+'<span class="movie-state'+(row.is_published?"":" draft")+'">'+displayState+'</span>'+gradeBadge+gradeEditor+'<div class="movie-buttons"><button class="review">'+(row.rights_reviewed?'✓ Conferido':'Marcar como conferido')+'</button><button class="edit">Editar</button><button class="publish">'+(row.is_published?"Retirar do catálogo":"Publicar")+'</button><button class="danger delete">Excluir</button></div></div>';
   item.querySelector(".movie-thumb").addEventListener("error",function(){
    if(this.dataset.fallbackShown)return;
    this.dataset.fallbackShown="1";
@@ -573,7 +606,7 @@ function init(){
  $("cancel-edit").onclick=()=>{resetForm();status("upload-message","Edição cancelada.")};
  $("bulk-mark-reviewed").onclick=bulkMarkReviewed;
  $("bulk-publish").onclick=bulkPublishReviewed;
- $("refresh-list").onclick=loadLibrary;$("filter-title").oninput=()=>{libraryPage=0;renderLibrary()};if($("library-state-filter"))$("library-state-filter").onchange=()=>{libraryPage=0;renderLibrary()};
+ $("refresh-list").onclick=()=>Promise.all([loadLibrary(),loadActivity()]);$("filter-title").oninput=()=>{libraryPage=0;renderLibrary()};if($("library-state-filter"))$("library-state-filter").onchange=()=>{libraryPage=0;renderLibrary()};
  $("video-file").onchange=()=>{$("video-file-label").textContent=$("video-file").files[0]?.name||"Selecionar vídeo do telefone"};
  $("poster-file").onchange=()=>{$("poster-file-label").textContent=$("poster-file").files[0]?.name||"Escolher capa (opcional)"};
  $("youtube-poster-file").onchange=()=>{$("youtube-poster-label").textContent=$("youtube-poster-file").files[0]?.name||"Adicionar capa personalizada (opcional)"};
