@@ -198,7 +198,7 @@ async function uploadCover(file){
 async function loadLibrary(){
  // Ler todas as páginas: o catálogo importado pode ter centenas de rascunhos.
  const gathered=[];
- const select="id,title,description,kind,series_title,episode_number,genre,production_year,video_path,youtube_id,google_drive_id,google_drive_resource_key,poster_path,is_published,file_size_bytes,mime_type,created_at";
+ const select="id,title,description,kind,series_title,episode_number,genre,production_year,video_path,youtube_id,google_drive_id,google_drive_resource_key,poster_path,is_published,rights_reviewed,rights_reviewed_at,file_size_bytes,mime_type,created_at";
  for(let offset=0;offset<5000;offset+=500){
   const {data,error}=await client.from("novaplay_library").select(select).order("created_at",{ascending:false}).range(offset,offset+499);
   if(error){status("upload-message","Não foi possível ler a biblioteca: "+errorText(error),true);return}
@@ -213,12 +213,16 @@ function renderLibrary(){
  $("stat-total").textContent=items.length;
  $("stat-live").textContent=items.filter(x=>x.is_published).length;
  $("stat-drafts").textContent=items.filter(x=>!x.is_published).length;
+ const available=items.filter(x=>x.rights_reviewed&&!x.is_published);
+ const bulk=$("bulk-publish");if(bulk){bulk.disabled=busy||!available.length;bulk.textContent="Liberar todos os conferidos ("+available.length+")";}
+ const summary=$("review-summary");if(summary)summary.textContent=available.length+" prontos para publicar · "+items.filter(x=>!x.is_published&&!x.rights_reviewed).length+" rascunhos ainda sem conferência";
  const filter=$("filter-title").value.trim().toLocaleLowerCase("pt-BR");
  const statusFilter=$("library-state-filter")?.value||"all";
  const shown=items.filter(x=>{
   if(!(x.title+" "+(x.series_title||"")).toLocaleLowerCase("pt-BR").includes(filter))return false;
   if(statusFilter==="imported")return x.genre==="Importado - revisão";
   if(statusFilter==="draft")return !x.is_published;
+  if(statusFilter==="reviewed")return !x.is_published&&x.rights_reviewed;
   if(statusFilter==="published")return x.is_published;
   return true;
  });
@@ -231,14 +235,15 @@ function renderLibrary(){
   const poster=row.poster_path?client.storage.from(POSTER_BUCKET).getPublicUrl(row.poster_path).data.publicUrl:(row.youtube_id?"https://i.ytimg.com/vi/"+encodeURIComponent(row.youtube_id)+"/hqdefault.jpg":row.google_drive_id?(window.NovaPlayCover?.driveThumbnail(row.google_drive_id)||window.NovaPlayCover?.titleCard(row.title)):(window.NovaPlayCover?.titleCard(row.title)||"../assets/posters/autoral.svg"));
   const source=row.youtube_id?"YouTube · Link":row.google_drive_id?"Google Drive · Link":((row.file_size_bytes||0)/(1024*1024)).toFixed(1)+" MB";
   const review=row.genre==="Importado - revisão";
-  const displayState=row.is_published?"PUBLICADO":review?"RASCUNHO · REVISAR DIREITOS":"RASCUNHO";
-  item.innerHTML='<img class="movie-thumb" alt="" loading="lazy" src="'+esc(poster)+'"><div class="movie-main"><strong>'+esc(row.title)+'</strong><small>'+esc(row.kind==="episode"?(row.series_title+" · Ep. "+row.episode_number):"Filme/curta")+' · '+esc(source)+'</small><span class="movie-state'+(row.is_published?"":" draft")+'">'+displayState+'</span><div class="movie-buttons"><button class="edit">Editar</button><button class="publish">'+(row.is_published?"Retirar do catálogo":"Publicar")+'</button><button class="danger delete">Excluir</button></div></div>';
+  const displayState=row.is_published?"PUBLICADO":row.rights_reviewed?"CONFERIDO · AGUARDA PUBLICAÇÃO":review?"RASCUNHO · REVISAR DIREITOS":"RASCUNHO";
+  item.innerHTML='<img class="movie-thumb" alt="" loading="lazy" src="'+esc(poster)+'"><div class="movie-main"><strong>'+esc(row.title)+'</strong><small>'+esc(row.kind==="episode"?(row.series_title+" · Ep. "+row.episode_number):"Filme/curta")+' · '+esc(source)+'</small><span class="movie-state'+(row.is_published?"":" draft")+'">'+displayState+'</span><div class="movie-buttons"><button class="review">'+(row.rights_reviewed?'✓ Conferido':'Marcar como conferido')+'</button><button class="edit">Editar</button><button class="publish">'+(row.is_published?"Retirar do catálogo":"Publicar")+'</button><button class="danger delete">Excluir</button></div></div>';
   item.querySelector(".movie-thumb").addEventListener("error",function(){
    if(this.dataset.fallbackShown)return;
    this.dataset.fallbackShown="1";
    this.src=window.NovaPlayCover?.titleCard(row.title)||"../assets/posters/autoral.svg";
   });
-  item.querySelector(".edit").onclick=()=>beginEdit(row);
+  item.querySelector(".review").onclick=()=>toggleReview(row);
+   item.querySelector(".edit").onclick=()=>beginEdit(row);
   item.querySelector(".publish").onclick=()=>togglePublish(row);
   item.querySelector(".delete").onclick=()=>removeItem(row);
   list.append(item);
@@ -283,13 +288,53 @@ function resetForm(){
  $("video-file-label").textContent="Selecionar vídeo do telefone";$("poster-file-label").textContent="Escolher capa (opcional)";
  $("submit-upload").textContent="Enviar para a NovaPlay";$("progress-box").hidden=true;$("publish").checked=false;
 }
+
+async function toggleReview(row){
+ if(busy)return;
+ const next=!row.rights_reviewed;
+ if(next&&!confirm("Você conferiu este filme e confirma que possui autorização de exibição pública na NovaPlay e que o link é acessível? Marcar “"+row.title+"” como conferido?"))return;
+ busy=true;renderLibrary();
+ try{
+  const stamp=next?new Date().toISOString():null;
+  const {error}=await client.from("novaplay_library").update({rights_reviewed:next,rights_reviewed_at:stamp}).eq("id",row.id);
+  if(error)throw error;
+  row.rights_reviewed=next;row.rights_reviewed_at=stamp;
+  status("bulk-message",next?"Título conferido: "+row.title:"Conferência retirada: "+row.title,false,true);
+ }catch(e){status("bulk-message","Falha ao salvar conferência: "+errorText(e),true)}
+ finally{busy=false;renderLibrary()}
+}
 async function togglePublish(row){
  if(busy)return;
  const publish=!row.is_published;
- if(publish&&!confirm("Você confirma ter os direitos de exibição pública deste filme na NovaPlay, e que o link está autorizado e funcionando? Publicar “"+row.title+"” para todos os visitantes?"))return;
- const {error}=await client.from("novaplay_library").update({is_published:publish}).eq("id",row.id);
- if(error)alert("Falha ao alterar publicação: "+errorText(error));
- else await loadLibrary();
+ if(publish&&!confirm("Confirma autorização para disponibilizar publicamente “"+row.title+"” na NovaPlay, incluindo o arquivo indicado pelo link?"))return;
+ busy=true;renderLibrary();
+ try{
+  const changes={is_published:publish};
+  if(publish&&!row.rights_reviewed){changes.rights_reviewed=true;changes.rights_reviewed_at=new Date().toISOString();}
+  const {error}=await client.from("novaplay_library").update(changes).eq("id",row.id);
+  if(error)throw error;
+  await loadLibrary();
+ }catch(e){status("bulk-message","Falha ao mudar publicação: "+errorText(e),true)}
+ finally{busy=false;renderLibrary()}
+}
+async function bulkPublishReviewed(){
+ if(busy||!sessionUser)return;
+ const ids=items.filter(x=>x.rights_reviewed&&!x.is_published).map(x=>x.id);
+ if(!ids.length){status("bulk-message","Nenhum rascunho conferido para publicar.");return}
+ if(!confirm("LIBERAR TODOS OS CONFERIDOS: serão publicados "+ids.length+" filmes. Confirma que conferiu as licenças de exibição de TODOS eles, e que quer disponibilizá-los ao público agora? Os não conferidos continuarão rascunhos."))return;
+ busy=true;renderLibrary();$("bulk-publish").disabled=true;
+ let done=0;
+ try{
+  for(let index=0;index<ids.length;index+=80){
+   status("bulk-message","Publicando conferidos... "+done+" de "+ids.length);
+   const group=ids.slice(index,index+80);
+   const {data,error}=await client.from("novaplay_library").update({is_published:true}).in("id",group).eq("is_published",false).eq("rights_reviewed",true).select("id");
+   if(error)throw error;
+   done+=(data||[]).length;
+  }
+  status("bulk-message","Concluído: "+done+" filmes conferidos foram publicados. Os demais permanecem em rascunho.",false,true);
+ }catch(err){status("bulk-message","Publicação interrompida após "+done+" filmes: "+errorText(err)+". Atualize a lista antes de repetir.",true)}
+ finally{busy=false;await loadLibrary();renderLibrary()}
 }
 async function removeItem(row){
  if(busy)return;
@@ -419,6 +464,7 @@ function init(){
  $("logout").onclick=async()=>{if(busy)return;await client.auth.signOut();sessionUser=null;show("login-view")};
  $("upload-form").onsubmit=sendForm;$("kind").onchange=setKind;$("source-type").onchange=setSourceType;setSourceType();
  $("cancel-edit").onclick=()=>{resetForm();status("upload-message","Edição cancelada.")};
+ $("bulk-publish").onclick=bulkPublishReviewed;
  $("refresh-list").onclick=loadLibrary;$("filter-title").oninput=()=>{libraryPage=0;renderLibrary()};if($("library-state-filter"))$("library-state-filter").onchange=()=>{libraryPage=0;renderLibrary()};
  $("video-file").onchange=()=>{$("video-file-label").textContent=$("video-file").files[0]?.name||"Selecionar vídeo do telefone"};
  $("poster-file").onchange=()=>{$("poster-file-label").textContent=$("poster-file").files[0]?.name||"Escolher capa (opcional)"};
