@@ -99,7 +99,7 @@ function setSourceType(){
  $("external-cover-tip").textContent=drive
   ?"Se não escolher capa, usaremos uma arte padrão da NovaPlay. JPG, PNG ou WebP, até 5 MB."
   :"Se não escolher capa, usamos a miniatura do YouTube. JPG, PNG ou WebP, até 5 MB.";
- $("submit-upload").textContent=busy?"Salvando...":editing?"Salvar alterações":external?"Cadastrar vídeo pelo link":"Enviar para a NovaPlay";
+ $("submit-upload").textContent=busy?"Salvando...":editing?.catalog_only?"Salvar e liberar para assistir":editing?"Salvar alterações":external?"Cadastrar vídeo pelo link":"Enviar para a NovaPlay";
 }
 function fileKind(file,video=true){
  const ext=(file.name.split(".").pop()||"").toLowerCase();
@@ -306,7 +306,7 @@ function renderLibrary(){
    '<label class="quality-select-label">Nota <select class="quality-select" aria-label="Nota de '+esc(row.title)+'">'+options+'</select></label>'+
    '<input type="text" class="quality-note" maxlength="500" placeholder="Motivo da nota (opcional)" value="'+esc(row.quality_score_note||"")+'" aria-label="Motivo da nota de '+esc(row.title)+'">'+
    '<button type="button" class="quality-save">Salvar nota</button></div>';
-  item.innerHTML='<img class="movie-thumb" alt="" loading="lazy" src="'+esc(poster)+'"><div class="movie-main"><strong>'+esc(row.title)+'</strong><small>'+esc(row.catalog_only?(row.genre==="Anime · Série"?"Anime / série":"Anime / filme"):(row.kind==="episode"?(row.series_title+" · Ep. "+row.episode_number):"Filme/curta"))+' · '+esc(source)+'</small>'+metricBadge+'<span class="movie-state'+(row.is_published?"":" draft")+'">'+displayState+'</span>'+gradeBadge+gradeEditor+'<div class="movie-buttons"><button class="review">'+(row.rights_reviewed?'✓ Conferido':'Marcar como conferido')+'</button><button class="edit">Editar</button><button class="publish">'+(row.is_published?"Retirar do catálogo":"Publicar")+'</button><button class="danger delete">Excluir</button></div></div>';
+  item.innerHTML='<img class="movie-thumb" alt="" loading="lazy" src="'+esc(poster)+'"><div class="movie-main"><strong>'+esc(row.title)+'</strong><small>'+esc(row.catalog_only?(row.genre==="Anime · Série"?"Anime / série":"Anime / filme"):(row.kind==="episode"?(row.series_title+" · Ep. "+row.episode_number):"Filme/curta"))+' · '+esc(source)+'</small>'+metricBadge+'<span class="movie-state'+(row.is_published?"":" draft")+'">'+displayState+'</span>'+gradeBadge+gradeEditor+'<div class="movie-buttons"><button class="review">'+(row.rights_reviewed?'✓ Conferido':'Marcar como conferido')+'</button><button class="edit">Editar</button><button class="publish">'+(row.is_published?(row.catalog_only?"Ocultar Em breve":"Retirar do catálogo"):"Publicar")+'</button><button class="danger delete">Excluir</button></div></div>';
   item.querySelector(".movie-thumb").addEventListener("error",function(){
    if(this.dataset.fallbackShown)return;
    this.dataset.fallbackShown="1";
@@ -314,7 +314,8 @@ function renderLibrary(){
   });
   item.querySelector(".quality-save").onclick=()=>saveQualityScore(row,item);
   item.querySelector(".review").onclick=()=>toggleReview(row);
-   item.querySelector(".edit").textContent=row.catalog_only?"Adicionar vídeo":"Editar";
+   item.querySelector(".edit").textContent=row.catalog_only?"Liberar para assistir":"Editar";
+  item.querySelector(".edit").classList.toggle("release",!!row.catalog_only);
   item.querySelector(".edit").onclick=()=>beginEdit(row);
   item.querySelector(".publish").onclick=()=>togglePublish(row);
   item.querySelector(".delete").onclick=()=>removeItem(row);
@@ -336,21 +337,22 @@ function setKind(){
 }
 function beginEdit(row){
  if(busy)return;
- editing=row;$("form-title").textContent="Editar conteúdo";$("cancel-edit").hidden=false;
+ const releasing=!!row.catalog_only;
+ editing=row;$("form-title").textContent=releasing?"Liberar título para assistir":"Editar conteúdo";$("cancel-edit").hidden=false;
  $("title").value=row.title;$("kind").value=row.kind;setKind();
  $("year").value=row.production_year||"";
  $("series-name").value=row.series_title||"";$("episode-number").value=row.episode_number||"";
  $("genre").value=row.genre;$("description").value=row.description||"";
- $("publish").checked=row.is_published;
- $("source-type").value=row.google_drive_id?"google-drive":row.youtube_id?"youtube":"upload";
+ $("publish").checked=releasing?true:row.is_published;
+ $("source-type").value=row.google_drive_id?"google-drive":row.youtube_id?"youtube":releasing?"google-drive":"upload";
  $("youtube-url").value=row.youtube_id?"https://youtu.be/"+row.youtube_id:"";
  $("drive-url").value=row.google_drive_id?"https://drive.google.com/file/d/"+row.google_drive_id+"/view"+(row.google_drive_resource_key?"?resourcekey="+encodeURIComponent(row.google_drive_resource_key):""):"";
  setSourceType();
  $("video-file").value="";$("poster-file").value="";$("youtube-poster-file").value="";
- $("video-file-label").textContent="Trocar vídeo (opcional)";
+ $("video-file-label").textContent=releasing?"Selecionar vídeo autorizado":"Trocar vídeo (opcional)";
  $("poster-file-label").textContent="Trocar capa (opcional)";
- $("submit-upload").textContent="Salvar alterações";
- status("upload-message",row.catalog_only?"“"+row.title+"” já aparece na grade como Em breve. Para ativar a reprodução, cadastre uma fonte autorizada de vídeo neste formulário.":"Editando “"+row.title+"”. Você pode mudar só o texto ou trocar arquivos.");
+ $("submit-upload").textContent=releasing?"Salvar e liberar para assistir":"Salvar alterações";
+ status("upload-message",releasing?"“"+row.title+"” já está na grade como Em breve. Adicione o arquivo ou link do vídeo autorizado. Ao salvar, sairá de Em breve e terá reprodução habilitada. Sem um vídeo, não será liberado.":"Editando “"+row.title+"”. Você pode mudar só o texto ou trocar arquivos.",false,releasing);
  document.querySelector(".editor").scrollIntoView({behavior:"smooth",block:"start"});
 }
 function resetForm(){
@@ -565,8 +567,9 @@ async function sendForm(e){
     if(clean.error)console.warn("Limpeza de capa antiga não concluída.");
   }
   if(file)sessionStorage.removeItem(pendingKey(file));
+  const wasCatalogOnly=!!editing?.catalog_only;
   resetForm();
-  status("upload-message","Conteúdo salvo! "+(payload.is_published?"Já está disponível na NovaPlay.":"Salvo como rascunho."),false,true);
+  status("upload-message",wasCatalogOnly?"Vídeo salvo! O título saiu de Em breve e foi liberado para assistir.":"Conteúdo salvo! "+(payload.is_published?"Já está disponível na NovaPlay.":"Salvo como rascunho."),false,true);
   await loadLibrary();
  }catch(err){
    status("upload-message","Não foi possível salvar: "+errorText(err)+". Confira as informações e tente novamente.",true);
