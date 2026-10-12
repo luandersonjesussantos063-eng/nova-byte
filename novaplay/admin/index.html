@@ -5,10 +5,10 @@
 <meta name="theme-color" content="#080e1b"><meta name="robots" content="noindex,nofollow">
 <title>NovaPlay | Painel de conteúdo</title>
 <link rel="icon" href="../assets/icon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="./admin.css?v=0.18.0">
+<link rel="stylesheet" href="./admin.css?v=0.21.0">
 </head>
 <body>
-<header class="top"><a class="brand" href="../"><span class="mark">▶</span> Nova<span>Play</span></a><div class="top-right"><strong>Painel administrativo · v0.20.0</strong><button id="logout" class="outline" hidden>Sair</button></div></header>
+<header class="top"><a class="brand" href="../"><span class="mark">▶</span> Nova<span>Play</span></a><div class="top-right"><strong>Painel administrativo · v0.21.0</strong><button id="logout" class="outline" hidden>Sair</button></div></header>
 <main class="container">
   <section id="loading" class="panel intro"><div class="spin"></div><p>Preparando seu painel...</p></section>
   <section id="login-view" class="panel login" hidden>
@@ -43,16 +43,35 @@
     <div class="panel" style="margin:16px 0 24px;padding:18px 22px;border-left:3px solid #f3b45a"><strong>Importações do Google Drive</strong><p class="muted" style="margin:8px 0 0">Títulos importados de listas externas ficam como rascunho privado. Confira a autorização de exibição pública e teste o link antes de publicar. Use a busca abaixo para localizar qualquer filme e a paginação para revisar o acervo.</p></div>
     <section class="panel featured-manager" aria-labelledby="featured-heading">
       <div class="section-title">
-        <div><span class="section-label">DESTAQUES DA PÁGINA INICIAL</span><h2 id="featured-heading">Escolha os filmes do banner principal</h2></div>
+        <div><span class="section-label">DESTAQUES DA PÁGINA INICIAL</span><h2 id="featured-heading">Escolha filmes e séries para o banner</h2></div>
         <a class="outline compact" href="../" target="_blank" rel="noopener noreferrer">Ver minha NovaPlay ↗</a>
       </div>
-      <p class="muted">Escolha até <strong>6 filmes</strong> publicados e com vídeo cadastrado. O primeiro será o destaque principal. Use as setas para mudar a ordem; as alterações são salvas automaticamente.</p>
-      <div class="featured-pick">
-        <label for="featured-film-select">Filme para destacar
-          <select id="featured-film-select" aria-label="Escolher filme do catálogo"><option value="">Carregando filmes...</option></select>
+      <p class="muted">Pesquise pelo nome, confira a capa e escolha até <strong>6 títulos</strong> publicados. O primeiro fica no banner principal. A ordem é salva automaticamente.</p>
+      <div class="featured-search-controls">
+        <label for="featured-search">Buscar filme ou série
+          <input id="featured-search" type="search" placeholder="Ex.: Arcane, Nosferatu, One Piece..." autocomplete="off" aria-controls="featured-results">
         </label>
-        <button type="button" id="featured-add" class="primary">+ Adicionar destaque</button>
+        <label for="featured-type">Mostrar
+          <select id="featured-type" aria-label="Filtrar filmes e séries">
+            <option value="all">Filmes e séries</option>
+            <option value="movie">Filmes</option>
+            <option value="series">Séries / animes</option>
+          </select>
+        </label>
       </div>
+      <p id="featured-results-count" class="featured-results-count" role="status" aria-live="polite">Carregando catálogo...</p>
+      <div id="featured-results" class="featured-results" role="group" aria-label="Resultados de filmes e séries com capas"></div>
+      <button id="featured-more" type="button" class="outline compact featured-more" hidden>Mostrar mais resultados</button>
+      <div id="featured-preview" class="featured-preview" hidden>
+        <img id="featured-preview-image" src="../assets/posters/autoral.svg" alt="Capa do título selecionado">
+        <div class="featured-preview-info">
+          <span class="section-label">PRÉVIA DA CAPA</span>
+          <h3 id="featured-preview-title"></h3>
+          <p id="featured-preview-type"></p>
+          <button type="button" id="featured-add" class="primary" disabled>+ Adicionar aos destaques</button>
+        </div>
+      </div>
+      <h3 class="featured-selected-heading">Seus destaques <span id="featured-selection-count">0/6</span></h3>
       <div id="featured-list" class="featured-list" aria-live="polite"><p class="muted">Carregando destaques...</p></div>
       <div class="featured-footer">
         <button type="button" id="featured-defaults" class="outline compact">Restaurar destaques clássicos</button>
@@ -183,7 +202,7 @@
 </main>
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.58.0/dist/umd/supabase.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/tus-js-client@4.3.1/dist/tus.min.js"></script>
-<script src="../assets/cover.js?v=0.20.0"></script>
-<script defer src="./admin.js?v=0.20.0"></script>
+<script src="../assets/cover.js?v=0.21.0"></script>
+<script defer src="./admin.js?v=0.21.0"></script>
 </body>
 </html>

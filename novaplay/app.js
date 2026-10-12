@@ -172,7 +172,7 @@ async function loadFeatured(){
    .select("film_ids").eq("id",1).maybeSingle();
   if(error)throw error;
   const films=(Array.isArray(data?.film_ids)?data.film_ids:defaultFeatured)
-   .map(id=>byId(id)).filter(x=>x&&x.kind==="film"&&!x.catalogOnly).slice(0,6);
+   .map(id=>byId(id)).filter(x=>x&&(x.kind==="film"||x.kind==="series")&&!x.catalogOnly).slice(0,6);
   featured=films.length?films:defaultFeatured.map(byId).filter(Boolean);
   updateHero(0);
  }catch(e){console.warn("NovaPlay: destaques personalizados indisponíveis.",e.message)}
@@ -182,11 +182,11 @@ function updateHero(index){
  featuredIndex=(index+featured.length)%featured.length;const x=featured[featuredIndex];
  $("hero-art").style.backgroundImage="url('"+(x.backdrop||x.cover).replace(/'/g,"%27")+"')";
  $("hero-title").textContent=x.title;
- $("hero-genre").textContent=x.uploaded?(x.category||"FILME EM DESTAQUE").toLocaleUpperCase("pt-BR"):"CINEMA CLÁSSICO";
+ $("hero-genre").textContent=x.uploaded?(x.category||"DESTAQUE NOVAPLAY").toLocaleUpperCase("pt-BR"):x.kind==="series"?"SÉRIE CLÁSSICA":"CINEMA CLÁSSICO";
  $("hero-description").textContent=x.description;
  const wrap=$("hero-metadata");wrap.replaceChildren();
  [x.year,x.duration,x.uploaded?"Disponível na NovaPlay":"Cinema clássico"].filter(Boolean).forEach(s=>{const span=document.createElement("span");span.textContent=s;wrap.append(span)});
- $("hero-play").onclick=()=>play(x);
+ $("hero-play").onclick=()=>startWatching(x);
  $("hero-info").onclick=()=>openDetails(x);
  const dots=$("hero-dots");dots.replaceChildren();
  featured.forEach((film,i)=>{const b=document.createElement("button");b.className="hero-dot"+(i===featuredIndex?" active":"");b.setAttribute("aria-label","Destacar "+film.title);b.addEventListener("click",()=>updateHero(i));dots.append(b)});

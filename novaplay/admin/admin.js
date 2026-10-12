@@ -20,6 +20,11 @@ const classicFeatureFilms=[
  {id:"caligari",title:"O Gabinete do Dr. Caligari",cover:"../assets/posters/caligari.svg"}
 ];
 let chosenFeatured=featuredDefaults.slice(),featuredBusy=false,featuredLoaded=false;
+let featuredPickedId=null,featuredResultLimit=24;
+const classicFeatureSeries=[
+ {id:"pauline",title:"Os Perigos de Pauline",cover:"../assets/posters/pauline.svg",type:"series"},
+ {id:"phantom",title:"O Império Fantasma",cover:"../assets/posters/phantom.svg",type:"series"}
+];
 
 const esc=t=>String(t??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 function status(id,message,isError=false,isSuccess=false){
@@ -233,11 +238,31 @@ async function loadActivity(){
 }
 
 
+function isFeaturedSeries(row){
+ return row.kind==="episode"||/s[eé]rie|anime/i.test(row.genre||"");
+}
+function normalizeFeaturedSearch(value){
+ return String(value||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLocaleLowerCase("pt-BR").trim();
+}
 function eligibleFeatured(){
- const entries=items.filter(x=>x.kind==="movie"&&x.is_published&&!x.catalog_only
+ const films=items.filter(x=>x.kind==="movie"&&x.is_published&&!x.catalog_only
   &&(x.video_path||x.google_drive_id||x.youtube_id))
-  .map(x=>({id:"upload-"+x.id,title:x.title,record:x}));
- return [...classicFeatureFilms,...entries.sort((a,b)=>a.title.localeCompare(b.title,"pt-BR"))];
+  .map(x=>({id:"upload-"+x.id,title:x.title,record:x,type:isFeaturedSeries(x)?"series":"movie"}));
+ const groups=new Map();
+ for(const row of items){
+  if(row.kind!=="episode"||!row.is_published||row.catalog_only||!row.series_title
+   ||!(row.video_path||row.google_drive_id||row.youtube_id))continue;
+  const key=normalizeFeaturedSearch(row.series_title);
+  if(!groups.has(key))groups.set(key,[]);
+  groups.get(key).push(row);
+ }
+ const series=[...groups.values()].map(episodes=>{
+  episodes.sort((a,b)=>(a.episode_number||0)-(b.episode_number||0));
+  const first=episodes[0];
+  return{id:"uploaded-series-"+first.id,title:first.series_title,record:first,type:"series"};
+ });
+ return [...classicFeatureFilms.map(x=>({...x,type:"movie"})),...classicFeatureSeries,
+  ...[...films,...series].sort((a,b)=>a.title.localeCompare(b.title,"pt-BR"))];
 }
 function posterOfFeatured(movie){
  if(!movie?.record)return movie?.cover||"../assets/posters/autoral.svg";
@@ -257,25 +282,74 @@ async function loadFeaturedConfig(){
  chosenFeatured=data.film_ids.slice();
  featuredLoaded=true;renderFeatured();
 }
+function selectFeaturedItem(id){
+ const candidates=eligibleFeatured();
+ if(!candidates.some(x=>x.id===id)||chosenFeatured.includes(id))return;
+ featuredPickedId=id;
+ renderFeaturedBrowser(candidates);
+}
+function renderFeaturedBrowser(candidates){
+ const itemsAvailable=candidates||eligibleFeatured();
+ const search=$("featured-search"),kind=$("featured-type"),results=$("featured-results");
+ if(!search||!kind||!results)return;
+ const query=normalizeFeaturedSearch(search.value);
+ const choices=itemsAvailable.filter(x=>!chosenFeatured.includes(x.id))
+  .filter(x=>kind.value==="all"||x.type===kind.value)
+  .filter(x=>!query||normalizeFeaturedSearch(x.title).includes(query));
+ // If someone changes the search, do not keep previewing a hidden result.
+ if(featuredPickedId&&!choices.some(x=>x.id===featuredPickedId))featuredPickedId=null;
+ const filtered=choices.slice(0,featuredResultLimit);
+ const disabled=featuredBusy||!featuredLoaded||chosenFeatured.length>=6;
+ const summary=$("featured-results-count");
+ summary.textContent=featuredLoaded
+  ? choices.length+" resultado(s) disponível(is) · "+Math.min(choices.length,featuredResultLimit)+" exibido(s)"
+  :"Carregando títulos...";
+ results.replaceChildren();
+ if(!choices.length){
+  const message=document.createElement("p");message.className="featured-empty";
+  message.textContent=query?"Nenhum título disponível com esse nome. Tente outro termo.":"Nenhum título disponível nesse filtro.";
+  results.append(message);
+ }
+ for(const film of filtered){
+  const btn=document.createElement("button");btn.type="button";
+  btn.className="featured-candidate"+(featuredPickedId===film.id?" is-selected":"");
+  btn.setAttribute("aria-pressed",String(featuredPickedId===film.id));
+  btn.disabled=disabled;btn.dataset.id=film.id;
+  const img=document.createElement("img");img.src=posterOfFeatured(film);
+  img.alt="Capa de "+film.title;img.loading="lazy";
+  img.onerror=function(){if(!this.dataset.fallback){this.dataset.fallback="1";this.src="../assets/posters/autoral.svg"}};
+  const info=document.createElement("span");info.className="featured-candidate-details";
+  const title=document.createElement("strong");title.textContent=film.title;
+  const tag=document.createElement("small");tag.textContent=film.type==="series"?"Série / anime":"Filme";
+  info.append(title,tag);
+  const check=document.createElement("span");check.className="featured-candidate-check";check.textContent=featuredPickedId===film.id?"✓":"›";
+  btn.append(img,info,check);
+  btn.onclick=()=>selectFeaturedItem(film.id);
+  results.append(btn);
+ }
+ const more=$("featured-more");
+ more.hidden=choices.length<=featuredResultLimit;
+ more.disabled=disabled;
+ more.textContent="Mostrar mais "+Math.min(24,choices.length-featuredResultLimit)+" resultados";
+ const preview=$("featured-preview");
+ const picked=choices.find(x=>x.id===featuredPickedId);
+ preview.hidden=!picked;
+ $("featured-add").disabled=disabled||!picked;
+ if(picked){
+  $("featured-preview-image").src=posterOfFeatured(picked);
+  $("featured-preview-image").alt="Capa de "+picked.title;
+  $("featured-preview-title").textContent=picked.title;
+  $("featured-preview-type").textContent=picked.type==="series"?"Série / anime · Pronto para destacar":"Filme · Pronto para destacar";
+ }
+}
 function renderFeatured(){
- const list=$("featured-list"),select=$("featured-film-select");
- if(!list||!select)return;
+ const list=$("featured-list");
+ if(!list)return;
  const available=eligibleFeatured(),byId=new Map(available.map(x=>[x.id,x]));
- const previous=select.value;
- select.replaceChildren();
- const notChosen=available.filter(x=>!chosenFeatured.includes(x.id));
- for(const film of notChosen){
-  const option=document.createElement("option");option.value=film.id;option.textContent=film.title+(film.record?" · Catálogo":" · Clássico");
-  select.append(option);
- }
- if(!notChosen.length){
-  const opt=document.createElement("option");opt.textContent="Nenhum outro filme disponível";opt.value="";select.append(opt);
- }
- if(notChosen.some(x=>x.id===previous))select.value=previous;
  const disabled=featuredBusy||!featuredLoaded;
- select.disabled=disabled||chosenFeatured.length>=6||!notChosen.length;
- $("featured-add").disabled=select.disabled;
  $("featured-defaults").disabled=disabled||chosenFeatured.join("|")===featuredDefaults.join("|");
+ $("featured-selection-count").textContent=chosenFeatured.length+"/6";
+ renderFeaturedBrowser(available);
  list.replaceChildren();
  if(!featuredLoaded){const p=document.createElement("p");p.className="muted";p.textContent="Carregando destaques...";list.append(p);return}
  for(const [index,id] of chosenFeatured.entries()){
@@ -286,8 +360,9 @@ function renderFeatured(){
   cover.alt=film?"Capa de "+film.title:"Capa indisponível";cover.loading="lazy";
   cover.onerror=function(){if(this.dataset.fallback)return;this.dataset.fallback="1";this.src="../assets/posters/autoral.svg"};
   const info=document.createElement("div");info.className="featured-entry-info";
-  const title=document.createElement("strong");title.textContent=film?.title||"Filme removido do catálogo";
-  const sub=document.createElement("small");sub.textContent=index===0?"★ Destaque principal":film?.record?"Filme cadastrado":"Filme clássico";
+  const title=document.createElement("strong");title.textContent=film?.title||"Título retirado do catálogo";
+  const sub=document.createElement("small");
+  sub.textContent=index===0?"★ Destaque principal":film?.type==="series"?"Série / anime":film?.record?"Filme cadastrado":"Filme clássico";
   info.append(title,sub);
   const actions=document.createElement("div");actions.className="featured-entry-actions";
   const up=document.createElement("button");up.type="button";up.className="outline compact";
@@ -297,7 +372,7 @@ function renderFeatured(){
   down.textContent="↓";down.title="Descer destaque";down.setAttribute("aria-label","Mover "+title.textContent+" para baixo");
   down.disabled=disabled||index===chosenFeatured.length-1;down.onclick=()=>moveFeatured(index,1);
   const remove=document.createElement("button");remove.type="button";remove.className="outline compact featured-remove";
-  remove.textContent="Retirar";remove.title="Retirar filme dos destaques";remove.disabled=disabled||chosenFeatured.length<=1;
+  remove.textContent="Retirar";remove.title="Retirar título dos destaques";remove.disabled=disabled||chosenFeatured.length<=1;
   remove.onclick=()=>saveFeatured(chosenFeatured.filter((_,i)=>i!==index));
   actions.append(up,down,remove);box.append(rank,cover,info,actions);list.append(box);
  }
@@ -319,6 +394,11 @@ async function saveFeatured(next){
    .eq("id",1).select("film_ids").single();
   if(error)throw error;
   chosenFeatured=data.film_ids.slice();
+  if(next.some(id=>!original.includes(id))){
+   featuredPickedId=null;
+   $("featured-search").value="";
+   featuredResultLimit=24;
+  }
   status("featured-message","✓ Destaques salvos! A página inicial será atualizada ao recarregar.",false,true);
  }catch(error){
   chosenFeatured=original;
@@ -326,7 +406,7 @@ async function saveFeatured(next){
  }finally{featuredBusy=false;renderFeatured()}
 }
 function addFeaturedFilm(){
- const id=$("featured-film-select").value;
+ const id=featuredPickedId;
  if(!id||chosenFeatured.includes(id)||chosenFeatured.length>=6)return;
  saveFeatured([...chosenFeatured,id]);
 }
@@ -740,6 +820,9 @@ function init(){
  $("cancel-edit").onclick=()=>{resetForm();status("upload-message","Edição cancelada.")};
  $("bulk-mark-reviewed").onclick=bulkMarkReviewed;
  $("bulk-publish").onclick=bulkPublishReviewed;
+ $("featured-search").oninput=()=>{featuredResultLimit=24;renderFeaturedBrowser()};
+ $("featured-type").onchange=()=>{featuredResultLimit=24;renderFeaturedBrowser()};
+ $("featured-more").onclick=()=>{featuredResultLimit+=24;renderFeaturedBrowser()};
  $("featured-add").onclick=addFeaturedFilm;
  $("featured-defaults").onclick=restoreFeaturedFilms;
  $("refresh-list").onclick=()=>Promise.all([loadLibrary(),loadActivity(),loadFeaturedConfig()]);$("filter-title").oninput=()=>{libraryPage=0;renderLibrary()};if($("library-state-filter"))$("library-state-filter").onchange=()=>{libraryPage=0;renderLibrary()};
