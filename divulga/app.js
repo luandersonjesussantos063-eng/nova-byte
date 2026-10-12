@@ -382,7 +382,10 @@ function handleAction(action,id){
  if(action==='queue-open'){
   const q=state.queue,g=state.groups.find(g=>g.id===q?.ids[q.index]);
   if(!g||!escapeUrl(g.url)){toast('Link inválido. Edite este grupo.');return}
-  window.open(g.url,'_blank','noopener,noreferrer');toast('Confirme a publicação no Facebook antes de marcar como feita.');return;
+  if(window.Capacitor?.isNativePlatform?.()&&window.Capacitor?.Plugins?.Browser?.open){
+   window.Capacitor.Plugins.Browser.open({url:g.url}).catch(()=>toast('Não foi possível abrir o Facebook. Tente novamente.'));
+  }else window.open(g.url,'_blank','noopener,noreferrer');
+  toast('Confirme a publicação no Facebook antes de marcar como feita.');return;
  }
  if(action==='queue-share'){shareCampaign(state.campaigns.find(c=>c.id===state.queue?.campaignId));return}
  if(action==='queue-done'){queueStep(true);return}
