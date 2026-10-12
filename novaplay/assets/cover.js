@@ -52,9 +52,24 @@ const approvedAnimePosters=Object.freeze({
  "great pretender razbliuto filme":"great-pretender",
  "jibaku shounen hanako kun dublado":"hanako"
 });
+const approvedCoversV2=Object.freeze({
+ "a vinganca perfeita":"a_vinganca_perfeita",
+ "a vizinhanca assombrada":"a_vizinhanca_assombrada",
+ "another legendado":"another_legendado",
+ "arcane legendado":"arcane_legendado",
+ "belle e sebastian a aventura continua":"belle_e_sebastian_a_aventura_continua",
+ "black clover dublado":"black_clover_dublado",
+ "castelvania dublado":"castlevania_dublado",
+ "castlevania dublado":"castlevania_dublado",
+ "date a live iv":"date_a_live_iv",
+ "great pretender razbliuto filme":"great_pretender_razbliuto_filme",
+ "jibaku shounen hanako kun dublado":"jibaku_shounen_hanako_kun_dublado"
+});
 function approvedAnimePoster(title,admin){
  const key=String(title||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"")
   .toLocaleLowerCase("pt-BR").replace(/[^a-z0-9 ]+/g," ").replace(/\s+/g," ").trim();
+ const newer=approvedCoversV2[key];
+ if(newer)return(admin?"../":"./")+"assets/approved-covers-v2/"+newer+".jpg";
  const slug=approvedAnimePosters[key];
  if(!slug)return null;
  return(admin?"../":"./")+"assets/review-covers/"+slug+".png";
