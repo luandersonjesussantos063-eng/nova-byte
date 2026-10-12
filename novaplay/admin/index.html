@@ -5,10 +5,10 @@
 <meta name="theme-color" content="#080e1b"><meta name="robots" content="noindex,nofollow">
 <title>NovaPlay | Painel de conteúdo</title>
 <link rel="icon" href="../assets/icon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="./admin.css?v=0.17.0">
+<link rel="stylesheet" href="./admin.css?v=0.18.0">
 </head>
 <body>
-<header class="top"><a class="brand" href="../"><span class="mark">▶</span> Nova<span>Play</span></a><div class="top-right"><strong>Painel administrativo · v0.17.0</strong><button id="logout" class="outline" hidden>Sair</button></div></header>
+<header class="top"><a class="brand" href="../"><span class="mark">▶</span> Nova<span>Play</span></a><div class="top-right"><strong>Painel administrativo · v0.18.0</strong><button id="logout" class="outline" hidden>Sair</button></div></header>
 <main class="container">
   <section id="loading" class="panel intro"><div class="spin"></div><p>Preparando seu painel...</p></section>
   <section id="login-view" class="panel login" hidden>
@@ -125,6 +125,12 @@
         <p id="review-summary" class="muted" style="margin:10px 0 3px">Buscando dados da biblioteca...</p>
         <p id="bulk-message" class="feedback" role="status" aria-live="polite"></p>
       </div>
+      <section class="quality-panel" aria-label="Interesse e tentativas de reprodução">
+        <h3>Audiência da NovaPlay · 30 dias</h3>
+        <p class="muted">Nova contagem por filme: aberturas da ficha e tentativas de assistir. Sem coletar nomes ou dados pessoais. <strong>Abrir um player do Drive ou YouTube não garante que o filme tenha sido reproduzido.</strong> Dados anteriores a esta versão não podem ser recuperados.</p>
+        <p id="activity-summary" class="quality-summary" role="status">Carregando métricas...</p>
+        <p id="activity-message" class="feedback" role="status" aria-live="polite"></p>
+      </section>
       <section class="quality-panel" aria-label="Curadoria de filmes">
         <h3>Curadoria do catálogo · notas de 1 a 10</h3>
         <p class="muted">Nota mínima para permanecer: <strong>6/10</strong>. Filmes sem nota aguardam avaliação; nenhum título será retirado automaticamente.</p>
@@ -150,7 +156,7 @@
 </main>
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.58.0/dist/umd/supabase.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/tus-js-client@4.3.1/dist/tus.min.js"></script>
-<script src="../assets/cover.js?v=0.17.0"></script>
-<script defer src="./admin.js?v=0.17.0"></script>
+<script src="../assets/cover.js?v=0.18.0"></script>
+<script defer src="./admin.js?v=0.18.0"></script>
 </body>
 </html>
