@@ -144,7 +144,7 @@ function renderHome(){
  '<div class="stats">'+stat('Grupos cadastrados',state.groups.length,'Links guardados no aparelho','♧')+stat('Grupos disponíveis',s.ready,'Conforme intervalo configurado','◎')+stat('Divulgações hoje',s.today,'Confirmadas por você','↗')+stat('Total registrado',s.all,'Publicações confirmadas','◷')+'</div>'+
  '<div class="grid2"><div class="card"><div class="card-header"><h2>Como começar</h2><span class="tag">3 passos</span></div>'+steps+'</div>'+
  '<div class="card"><div class="card-header"><h2>Próxima divulgação</h2><span class="tag orange">Assistida</span></div>'+
- (state.groups.length===0?empty('♧','Nenhum grupo cadastrado','Adicione o primeiro grupo de vendas para preparar sua fila.',button('group-new','Cadastrar grupo','','btn-blue')):
+ (state.groups.length===0?empty('♧','Nenhum grupo cadastrado','Adicione o primeiro grupo de vendas para preparar sua fila.',button('group-new','Cadastrar grupo','','btn-blue')+button('group-transfer','Já cadastrei no navegador','','btn-outline')):
  state.campaigns.length===0?empty('✦','Campanha necessária','Prepare um texto antes de iniciar a divulgação.',button('campaign-new','Criar campanha','','btn-blue')):
  '<p class="subhead">Você tem <strong>'+s.ready+'</strong> grupos disponíveis para organizar sua próxima divulgação.</p>'+
  '<p class="muted">A central abre cada grupo e oferece o texto pronto. Ela não envia posts sem sua confirmação.</p>'+button('start-queue','Começar agora','','btn-primary'))+
@@ -153,7 +153,7 @@ function renderHome(){
 function renderGroups(){
  const cities=[...new Set(state.groups.map(g=>g.city).filter(Boolean))].sort();
  $('#grupos').innerHTML=title('Meus grupos','Organize os grupos de compra e venda por cidade e regras.',
- button('group-import','↥ Importar links','','btn-outline')+button('group-new','＋ Novo grupo','','btn-primary'))+
+ button('group-transfer','↔ Transferir grupos','','btn-outline')+button('group-import','↥ Importar links','','btn-outline')+button('group-new','＋ Novo grupo','','btn-primary'))+
  '<div class="filters"><input id="groupSearch" class="control" type="search" placeholder="Buscar grupo ou cidade" value="'+E(searchGroups)+'" aria-label="Buscar grupos"><select id="cityFilter" class="control" aria-label="Filtrar por cidade"><option value="">Todas as cidades</option>'+selectOptions(cities,filterCity)+'</select></div>'+
  '<div id="groupList"></div>'+
  '<p class="footer-note">Adicione apenas grupos que permitam anúncios comerciais. O Facebook poderá exigir aprovação do administrador.</p>';
@@ -218,7 +218,7 @@ function renderConfig(){
  '<div class="field" style="margin-top:15px"><label for="remindersInterval">Intervalo (horas)</label><select id="remindersInterval" class="control">'+[1,2,3,4,6,12,24].map(h=>'<option value="'+h+'"'+(Number(s.intervalHours)===h?' selected':'')+'>'+h+' hora'+(h>1?'s':'')+'</option>').join('')+'</select></div>'+
  button('request-notif','Permitir avisos no Android','','btn-outline')+'</div>'+
  '<div class="card"><h2>Meus dados</h2><p class="muted">Tudo é salvo apenas no armazenamento deste navegador. Nenhum grupo, senha ou histórico é enviado para servidores da NovaByte.</p><div class="btn-row">'+button('export','↧ Exportar backup','','btn-blue')+button('import-backup','↥ Importar backup','','btn-outline')+'</div><div class="divider"></div>'+button('clear-all','Excluir todos os dados','','btn-danger')+'</div></div>'+
- '<div class="card" style="margin-top:18px"><h2>Sobre a divulgação</h2><p class="muted">O NovaByte Divulga prepara campanhas e abre grupos do Facebook, mas não faz postagem automática em grupos de terceiros. O botão de confirmação registra somente sua declaração. Respeite as regras dos grupos e evite publicações repetitivas.</p><p class="muted">Você não precisa fornecer senha ou token do Facebook. O aplicativo só abre links; o login continua no Facebook que já estiver instalado no seu aparelho.</p><p class="muted">Versão '+VERSION+' · NovaByte Soluções</p></div>';
+ '<div class="card" style="margin-top:18px"><h2>Sobre a divulgação</h2><p class="muted">O NovaByte Divulga prepara campanhas e abre grupos do Facebook, mas não faz postagem automática em grupos de terceiros. O botão de confirmação registra somente sua declaração. Respeite as regras dos grupos e evite publicações repetitivas.</p><p class="muted">Você não precisa fornecer senha ou token do Facebook. O aplicativo só abre links; o login continua no Facebook que já estiver instalado no seu aparelho.</p><p class="muted">Ambiente: '+E(isNativeApp()?'APK Android':'Navegador')+' · '+E(location.origin)+' · '+state.groups.length+' grupo(s) aqui.</p>'+button('group-transfer','↔ Transferir grupos','','btn-blue')+'<p class="muted">Versão '+VERSION+' · NovaByte Soluções</p></div>';
 }
 function render(){
  if(tab==='inicio')renderHome();
@@ -268,6 +268,54 @@ function importGroupsModal(){
  '<div class="field"><textarea required name="bulk" style="min-height:240px" placeholder="Classificados Lucas | https://www.facebook.com/groups/123456 | Lucas do Rio Verde&#10;https://www.facebook.com/groups/987654"></textarea></div>'+
  '<div class="modal-actions">'+button('modal-close','Cancelar','','btn-quiet')+'<button type="submit" class="btn btn-primary">Importar grupos</button></div></form>');
 }
+
+function isNativeApp(){
+ return Boolean(window.Capacitor?.isNativePlatform?.())||location.hostname==='localhost';
+}
+function transferCode(){
+ // Só inclui grupos, sem credenciais, campanhas ou imagens.
+ return JSON.stringify({type:'novabyte-divulga-groups',version:1,createdAt:nowISO(),
+  groups:state.groups.map(g=>({name:g.name,url:g.url,city:g.city,cooldown:g.cooldown,rules:g.rules||'',notes:g.notes||''}))});
+}
+function transferModal(){
+ const count=state.groups.length;
+ openModal('<h2>Transferir grupos entre Chrome e Android</h2>'+
+  '<p class="muted">O site e o APK guardam os grupos em locais diferentes. Use este código para levar os grupos de um para o outro sem recadastrar.</p>'+
+  '<div class="hint">Ambiente atual: <strong>'+E(isNativeApp()?'Aplicativo Android':'Navegador/site')+'</strong> · '+count+' grupo(s) · '+E(location.origin)+'</div>'+
+  '<h3 style="margin-top:20px">1. Copiar os grupos onde foram cadastrados</h3>'+
+  '<label class="field">Código dos grupos<textarea readonly id="transferExport" rows="4">'+E(transferCode())+'</textarea></label>'+
+  button('transfer-copy','⧉ Copiar código dos grupos','','btn-blue btn-block')+
+  '<div class="divider"></div><h3>2. Importar no outro aplicativo</h3>'+
+  '<p class="muted">Abra esta tela no APK Android, cole o código e toque em Importar. Grupos existentes serão preservados; repetidos não serão duplicados.</p>'+
+  '<form id="transferForm"><label class="field">Cole o código aqui<textarea name="code" required rows="4" placeholder="Cole o código copiado do site"></textarea></label>'+
+  '<div class="modal-actions">'+button('modal-close','Fechar','','btn-quiet')+'<button type="submit" class="btn btn-primary">Importar meus grupos</button></div></form>'+
+  '<p class="muted" style="font-size:12px">A transferência é manual e pontual; novas alterações não são sincronizadas automaticamente.</p>');
+}
+function importTransferCode(raw){
+ if(typeof raw!=='string'||raw.length>240000)throw Error('Código muito grande.');
+ let data;
+ try{data=JSON.parse(raw.trim())}catch{throw Error('Código inválido. Copie todo o texto do outro dispositivo.')}
+ if(data?.type!=='novabyte-divulga-groups'||data.version!==1||!Array.isArray(data.groups))throw Error('O código não contém grupos do NovaByte Divulga.');
+ if(data.groups.length>1500)throw Error('Limite de grupos excedido.');
+ const urls=new Set(state.groups.map(g=>escapeUrl(g.url)).filter(Boolean));
+ const newGroups=[];
+ let duplicate=0,invalid=0;
+ for(const item of data.groups){
+  const url=escapeUrl(item?.url),name=String(item?.name||'').trim().slice(0,130);
+  if(!url||!name){invalid++;continue}
+  if(urls.has(url)){duplicate++;continue}
+  urls.add(url);
+  newGroups.push({id:uuid(),name,url,city:String(item.city||'Lucas do Rio Verde').slice(0,90),
+   cooldown:Math.max(1,Math.min(720,Number(item.cooldown)||24)),rules:String(item.rules||'').slice(0,1200),
+   notes:String(item.notes||'').slice(0,200)});
+ }
+ if(!newGroups.length)return {added:0,duplicate,invalid};
+ const previous=state.groups;
+ state.groups=[...state.groups,...newGroups];
+ if(!save()){state.groups=previous;throw Error('Sem espaço para armazenar os grupos no aparelho.')}
+ return {added:newGroups.length,duplicate,invalid};
+}
+
 function startQueue(id){
  const campaignId=id||$('#queueCampaign')?.value||state.campaigns[0]?.id;
  if(!state.groups.length){tabTo('grupos');toast('Cadastre ao menos um grupo.');return}
@@ -363,6 +411,8 @@ function handleAction(action,id){
  if(action==='modal-close'){closeModal();return}
  if(action==='group-new'||action==='group-edit'){groupForm(id);return}
  if(action==='group-import'){importGroupsModal();return}
+ if(action==='group-transfer'){transferModal();return}
+ if(action==='transfer-copy'){copyText($('#transferExport')?.value||'');return}
  if(action==='group-delete'){
   const group=state.groups.find(g=>g.id===id);if(!group)return;
   if(!confirm('Excluir o grupo "'+group.name+'"? O histórico já registrado será mantido.'))return;
@@ -441,6 +491,15 @@ document.addEventListener('click',e=>{
 });
 $('#settingsTop').onclick=()=>tabTo('config');
 document.addEventListener('submit',e=>{
+ if(e.target.id==='transferForm'){
+  e.preventDefault();
+  try{
+   const result=importTransferCode(String(new FormData(e.target).get('code')||''));
+   closeModal();searchGroups='';filterCity='';tabTo('grupos');
+   toast(result.added+' grupo(s) transferido(s); '+result.duplicate+' repetido(s); '+result.invalid+' inválido(s).');
+  }catch(error){toast(error?.message||'Falha na importação.')}
+  return;
+ }
  if(e.target.id==='groupForm'){
   e.preventDefault();
   const f=e.target,data=new FormData(f),url=escapeUrl(data.get('url')),id=String(data.get('id')||'');
@@ -448,8 +507,10 @@ document.addEventListener('submit',e=>{
   if(state.groups.some(g=>g.url===url&&g.id!==id)){toast('Esse grupo já está cadastrado.');return}
   const group={id:id||uuid(),name:String(data.get('name')||'').trim().slice(0,130),url,city:String(data.get('city')||'').trim().slice(0,90),cooldown:Math.min(720,Math.max(1,Number(data.get('cooldown'))||24)),rules:String(data.get('rules')||'').trim().slice(0,1200),notes:String(data.get('notes')||'').trim().slice(0,200)};
   if(!group.name){toast('Informe o nome do grupo.');return}
-  if(id)state.groups=state.groups.map(g=>g.id===id?group:g);else state.groups.push(group);
-  if(save()){closeModal();tabTo('grupos');toast('Grupo salvo com sucesso.');}
+  const previous=state.groups;
+  state.groups=id?state.groups.map(g=>g.id===id?group:g):[...state.groups,group];
+  if(save()){closeModal();searchGroups='';filterCity='';tabTo('grupos');toast('Grupo salvo: '+state.groups.length+' no total.');}
+  else state.groups=previous;
  }
  if(e.target.id==='campaignForm'){
   e.preventDefault();const data=new FormData(e.target),id=String(data.get('id')||''),link=String(data.get('link')||'').trim();
@@ -471,7 +532,7 @@ document.addEventListener('submit',e=>{
    const g={id:uuid(),name:chunks.length>=2&&!chunks[0].startsWith('http')?chunks[0].slice(0,130):'Grupo '+idpart,url,city:(chunks.length>=3?chunks[2]:'Lucas do Rio Verde').slice(0,90),cooldown:24,rules:'',notes:''};
    state.groups.push(g);added++;
   }
-  if(save()){closeModal();tabTo('grupos');toast(added+' grupo(s) importado(s). '+invalid+' linha(s) inválida(s).');}
+  if(save()){closeModal();searchGroups='';filterCity='';tabTo('grupos');toast(added+' grupo(s) importado(s). '+invalid+' linha(s) inválida(s).');}
  }
 });
 document.addEventListener('input',e=>{
