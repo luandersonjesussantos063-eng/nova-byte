@@ -5,10 +5,10 @@
 <meta name="theme-color" content="#080e1b"><meta name="robots" content="noindex,nofollow">
 <title>NovaPlay | Painel de conteúdo</title>
 <link rel="icon" href="../assets/icon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="./admin.css?v=0.15.0">
+<link rel="stylesheet" href="./admin.css?v=0.16.0">
 </head>
 <body>
-<header class="top"><a class="brand" href="../"><span class="mark">▶</span> Nova<span>Play</span></a><div class="top-right"><strong>Painel administrativo · v0.15.0</strong><button id="logout" class="outline" hidden>Sair</button></div></header>
+<header class="top"><a class="brand" href="../"><span class="mark">▶</span> Nova<span>Play</span></a><div class="top-right"><strong>Painel administrativo · v0.16.0</strong><button id="logout" class="outline" hidden>Sair</button></div></header>
 <main class="container">
   <section id="loading" class="panel intro"><div class="spin"></div><p>Preparando seu painel...</p></section>
   <section id="login-view" class="panel login" hidden>
@@ -124,6 +124,13 @@
         <p id="review-summary" class="muted" style="margin:10px 0 3px">Buscando dados da biblioteca...</p>
         <p id="bulk-message" class="feedback" role="status" aria-live="polite"></p>
       </div>
+      <section class="quality-panel" aria-label="Curadoria de filmes">
+        <h3>Curadoria do catálogo · notas de 1 a 10</h3>
+        <p class="muted">Nota mínima para permanecer: <strong>6/10</strong>. Filmes sem nota aguardam avaliação; nenhum título será retirado automaticamente.</p>
+        <p id="quality-summary" class="quality-summary" role="status">Carregando as avaliações...</p>
+        <div id="quality-groups" class="quality-groups" aria-label="Filtrar por nota"></div>
+        <p id="quality-message" class="feedback" role="status" aria-live="polite"></p>
+      </section>
       <label class="search-label">Buscar no catálogo<input type="search" id="filter-title" placeholder="Buscar pelo título..."></label>
       <label class="search-label" style="display:block;margin:10px 0 16px">Exibir conteúdo
         <select id="library-state-filter" style="display:block;width:100%;margin-top:8px">
@@ -141,7 +148,7 @@
 </main>
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.58.0/dist/umd/supabase.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/tus-js-client@4.3.1/dist/tus.min.js"></script>
-<script src="../assets/cover.js?v=0.15.0"></script>
-<script defer src="./admin.js?v=0.15.0"></script>
+<script src="../assets/cover.js?v=0.16.0"></script>
+<script defer src="./admin.js?v=0.16.0"></script>
 </body>
 </html>
