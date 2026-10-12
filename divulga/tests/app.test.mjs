@@ -61,3 +61,28 @@ test('inicialização abre a página principal sem dependências externas',()=>{
  assert.match(get('#inicio').innerHTML,/Iniciar divulgação/);
  assert.match(get('#inicio').innerHTML,/0/);
 });
+
+test('links de compartilhamento do Facebook são aceitos e publicações são normalizadas para grupos',()=>{
+ const fn=app.slice(app.indexOf('function escapeUrl('),app.indexOf('\nfunction simpleUrl('));
+ const valid=new Function(fn+';return escapeUrl;')();
+ assert.equal(valid('https://www.facebook.com/share/g/AbcDef/?mibextid=xyz'),'https://www.facebook.com/share/g/AbcDef');
+ assert.equal(valid('https://m.facebook.com/groups/123/permalink/456'),'https://www.facebook.com/groups/123');
+});
+test('transferência traz grupos do navegador ao Android sem sobrescrever ou duplicar dados',()=>{
+ const urlFunction=app.slice(app.indexOf('function escapeUrl('),app.indexOf('\nfunction simpleUrl('));
+ const valid=new Function(urlFunction+';return escapeUrl;')();
+ const segment=app.slice(app.indexOf('function importTransferCode('),app.indexOf('\nfunction startQueue('));
+ const android={groups:[{id:'existing',name:'Outro grupo',url:'https://www.facebook.com/groups/77',city:'Sorriso'}],campaigns:[],history:[]};
+ let saves=0,i=0;
+ const merge=new Function('state','escapeUrl','uuid','save',segment+';return importTransferCode;')(android,valid,()=>String(++i),()=>{saves++;return true});
+ const exported=JSON.stringify({type:'novabyte-divulga-groups',version:1,groups:[
+  {name:'Novo em Lucas',url:'https://www.facebook.com/share/g/abc/?ref=share',city:'Lucas do Rio Verde'},
+  {name:'Mesmo grupo',url:'https://m.facebook.com/groups/77?ref=share',city:'Sorriso'},
+  {name:'URL não autorizada',url:'https://example.com/abc',city:'Outra'}]});
+ const result=merge(exported);
+ assert.equal(result.added,1);assert.equal(result.duplicate,1);assert.equal(result.invalid,1);
+ assert.equal(android.groups.length,2);assert.equal(android.groups[0].id,'existing');
+ assert.equal(android.groups[1].name,'Novo em Lucas');assert.equal(saves,1);
+ assert.equal(merge(exported).added,0);assert.equal(android.groups.length,2);
+ assert.throws(()=>merge('{invalid'),/Código inválido/);
+});
