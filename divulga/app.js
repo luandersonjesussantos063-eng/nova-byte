@@ -1,7 +1,7 @@
 (()=>{
 'use strict';
 const KEY='novabyte-divulga-v1';
-const VERSION='1.0.2';
+const VERSION='1.0.3';
 const CITIES=['Lucas do Rio Verde','Sorriso','Sinop','Nova Mutum','Tapurah','Cuiabá','Outra cidade'];
 const SERVICES=['Criação de sites','Landing pages','Cardápio digital','Aplicativos','Sistemas personalizados','Outro serviço'];
 const $=s=>document.querySelector(s);
@@ -32,7 +32,7 @@ function button(action,label,extra,variant){
  return '<button type="button" class="btn '+(variant||'btn-outline')+'" data-action="'+E(action)+'" '+(extra||'')+'>'+label+'</button>';
 }
 function title(name,desc,action){
- return '<div class="section-head"><div><p class="eyebrow">NOVABYTE SOLUÇÕES · DIVULGA</p><h1>'+name+'</h1><p class="muted">'+desc+'</p></div>'+(action||'')+'</div>';
+ return '<div class="section-head"><div><p class="eyebrow">NOVABYTE SOLUÇÕES · DIVULGA</p><h1>'+name+'</h1><p class="muted">'+desc+'</p></div>'+(action?'<div class="header-actions">'+action+'</div>':'')+'</div>';
 }
 function empty(icon,heading,desc,action){
  return '<div class="empty"><div class="empty-icon">'+icon+'</div><h3>'+heading+'</h3><p>'+desc+'</p>'+(action||'')+'</div>';
@@ -249,12 +249,12 @@ function groupForm(id){
  const g=state.groups.find(g=>g.id===id)||{id:'',name:'',url:'',city:'Lucas do Rio Verde',cooldown:24,rules:'',notes:''};
  openModal('<form id="groupForm"><h2>'+(g.id?'Editar grupo':'Cadastrar grupo')+'</h2><input type="hidden" name="id" value="'+E(g.id)+'">'+
  '<div class="field"><label>Nome do grupo *</label><input name="name" required maxlength="130" value="'+E(g.name)+'" placeholder="Ex.: Classificados Lucas do Rio Verde"></div>'+
- '<div class="field"><label>Link do Facebook *</label><input name="url" required type="url" value="'+E(g.url)+'" placeholder="https://www.facebook.com/groups/..."><small>Use o link direto de um grupo de compra e venda.</small></div>'+
+ '<div class="field"><label for="groupUrl">Link do Facebook *</label><div class="link-input-row"><input id="groupUrl" name="url" required type="url" inputmode="url" autocomplete="off" spellcheck="false" autocapitalize="off" value="'+E(g.url)+'" placeholder="Cole o link do grupo aqui">'+button('group-paste-link','Colar link da área de transferência','','btn-blue')+'</div><small>O link precisa aparecer dentro deste campo, não apenas na sugestão do teclado. Aceitamos links facebook.com/groups/ e facebook.com/share/g/.</small><div id="groupLinkStatus" role="status" aria-live="polite" class="field-validation"></div></div>'+
  '<div class="field-grid"><div class="field"><label>Cidade</label><input name="city" list="citiesList" value="'+E(g.city)+'" maxlength="90"><datalist id="citiesList">'+CITIES.map(c=>'<option value="'+E(c)+'">').join('')+'</datalist></div>'+
  '<div class="field"><label>Intervalo mínimo neste grupo (horas)</label><input name="cooldown" type="number" min="1" max="720" value="'+E(g.cooldown)+'"></div></div>'+
  '<div class="field"><label>Regras do grupo</label><textarea name="rules" maxlength="1200" placeholder="Ex.: Publicidade somente às sextas-feiras">'+E(g.rules||'')+'</textarea></div>'+
  '<div class="field"><label>Observações</label><input name="notes" maxlength="200" value="'+E(g.notes||'')+'" placeholder="Opcional"></div>'+
- '<div class="modal-actions">'+button('modal-close','Cancelar','','btn-quiet')+'<button type="submit" class="btn btn-primary">Salvar grupo</button></div></form>');
+ '<div id="groupFormError" class="form-error" role="alert" hidden></div><div class="modal-actions">'+button('modal-close','Cancelar','','btn-quiet')+button('group-save','Salvar grupo','','btn-primary')+'</div></form>');
 }
 function campaignForm(id){
  const c=state.campaigns.find(c=>c.id===id)||{id:'',name:'',service:'Criação de sites',text:adVariants('Criação de sites','Lucas do Rio Verde')[0],link:'https://novabytesolucoes.com.br/',image:''};
@@ -417,6 +417,36 @@ function reminderCheck(){
 function handleAction(action,id){
  if(action==='modal-close'){closeModal();return}
  if(action==='group-new'||action==='group-edit'){groupForm(id);return}
+ if(action==='group-save'){
+  const form=$('#groupForm');if(!form)return;
+  const urlField=form.elements.url;
+  const label=String(form.elements.name.value||'').trim();
+  const url=String(urlField.value||'').trim();
+  const error=$('#groupFormError');
+  if(!label||!url||!escapeUrl(url)){
+   if(error){error.hidden=false;error.textContent=!label?'Digite o nome do grupo.':!url?'O link ainda não foi colado. Toque em “Colar link” ou segure o campo e escolha “Colar”.':'O link informado não é um endereço de grupo do Facebook.';}
+   toast(!url?'Cole o link do Facebook dentro do campo antes de salvar.':'Corrija os campos destacados.');
+   (label?urlField:form.elements.name).focus();return;
+  }
+  if(error)error.hidden=true;
+  form.requestSubmit();
+  return;
+ }
+ if(action==='group-paste-link'){
+  const field=$('#groupUrl');if(!field)return;
+  if(!navigator.clipboard?.readText){
+   field.focus();toast('Toque e segure no campo e selecione “Colar”.');return;
+  }
+  navigator.clipboard.readText().then(value=>{
+   const input=String(value||'').trim();
+   if(!input){field.focus();toast('A área de transferência está vazia. Copie o link no Facebook primeiro.');return;}
+   const groupLink=escapeUrl(input);
+   if(!groupLink){field.focus();toast('O texto copiado não é um link de grupo do Facebook.');return;}
+   field.value=input;field.dispatchEvent(new Event('input',{bubbles:true}));
+   field.blur();toast('Link colado! Agora toque em Salvar grupo.');
+  }).catch(()=>{field.focus();toast('Permissão de colar indisponível. Toque e segure no campo e escolha Colar.');});
+  return;
+ }
  if(action==='groups-reload'){state=load();searchGroups='';filterCity='';tabTo('grupos');toast('Lista atualizada: '+state.groups.length+' grupo(s) salvo(s) neste navegador.');return}
  if(action==='group-import'){importGroupsModal();return}
  if(action==='group-transfer'){transferModal();return}
@@ -495,7 +525,10 @@ function handleAction(action,id){
 document.addEventListener('click',e=>{
  const nav=e.target.closest('[data-tab]');if(nav){tabTo(nav.dataset.tab);return}
  const btn=e.target.closest('[data-action]');if(btn){handleAction(btn.dataset.action,btn.dataset.id||'');return}
- if(e.target.id==='modal'){closeModal()}
+ if(e.target.id==='modal'){
+  if($('#groupForm')){toast('Para não perder o cadastro, use “Salvar grupo” ou “Cancelar”.');return;}
+  closeModal();
+}
 });
 $('#settingsTop').onclick=()=>tabTo('config');
 document.addEventListener('submit',e=>{
@@ -549,6 +582,15 @@ document.addEventListener('submit',e=>{
  }
 });
 document.addEventListener('input',e=>{
+ if(e.target.id==='groupUrl'){
+  const message=$('#groupLinkStatus');
+  if(message){
+   const val=String(e.target.value||'').trim();
+   message.textContent=!val?'Cole o endereço do grupo no campo acima.':escapeUrl(val)?'✓ Link de grupo reconhecido.':'Este endereço ainda não parece ser um grupo do Facebook.';
+   message.className='field-validation'+(val&&!escapeUrl(val)?' invalid':val?' valid':'');
+  }
+  const error=$('#groupFormError');if(error){error.hidden=true;error.textContent='';}
+ }
  if(e.target.id==='groupSearch'){searchGroups=e.target.value;showGroups()}
  if(e.target.id==='historyFilter'){filterHistory=e.target.value;renderHistory();$('#historyFilter')?.focus()}
 });
