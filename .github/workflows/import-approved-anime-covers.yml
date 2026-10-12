@@ -1,0 +1,47 @@
+name: Importar nove capas de animes aprovadas
+on:
+  push:
+    paths:
+      - .github/workflows/import-approved-anime-covers.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - name: Transferir capas aprovadas
+        shell: bash
+        env:
+          POSTERS_JSON: '[{"slug":"akudama","url":"https://media.canva.com/v2/image-resize/format:PNG/height:200/quality:100/uri:ifs%3A%2F%2FM%2F9417ab44-7c0f-4b57-adbb-f6aaabba6339/watermark:F/width:133?csig=AAAAAAAAAAAAAAAAAAAAAOVlcKACwyixQC91jeQ2HK6rTpfV3hQw6SSorMQMP6j4&exp=1791856321&osig=AAAAAAAAAAAAAAAAAAAAABeaQapIN2C_qwPY-34zmsw7LIyr0qJRYP7dZm3b36m7&signer=media-rpc&token=AAIAAU0AJDk0MTdhYjQ0LTdjMGYtNGI1Ny1hZGJiLWY2YWFhYmJhNjMzOQAAAAABoTL1oejcwXlVWeovdPvMVWjGU-WnZfbi8SR6-iX_XSMVzcAaCg&x-canva-quality=thumbnail"},{"slug":"another","url":"https://media.canva.com/v2/image-resize/format:PNG/height:200/quality:100/uri:ifs%3A%2F%2FM%2F8e0673b9-3e6d-4f27-b9b9-4d9635edf8a7/watermark:F/width:133?csig=AAAAAAAAAAAAAAAAAAAAAFjl-QbJ_GoVreSq52k0phbXp5FETlNq_Yfo3b5RQHVr&exp=1791856499&osig=AAAAAAAAAAAAAAAAAAAAAOFa7aTe34A-l-hO0hsJaiveflnZThgj1qSrdPxN4s1O&signer=media-rpc&token=AAIAAU0AJDhlMDY3M2I5LTNlNmQtNGYyNy1iOWI5LTRkOTYzNWVkZjhhNwAAAAABoTL4WTiHcJyPEUmpvpjSLy7sW86ZE5YJEEx9MtzssOYSdHL2Bg&x-canva-quality=thumbnail"},{"slug":"arcane","url":"https://media.canva.com/v2/image-resize/format:PNG/height:200/quality:100/uri:ifs%3A%2F%2FM%2Fabcc1509-cfc3-465d-b3bf-315480793125/watermark:F/width:133?csig=AAAAAAAAAAAAAAAAAAAAAH6vgMtIcOTWHMOO3eU_5lM7wia8GNoPOPkmXqjkbJwn&exp=1791855159&osig=AAAAAAAAAAAAAAAAAAAAAB4FOVQRhg5Wz76IAp9DBjmJ0U2zmZ9vmn9G4CzUUXpr&signer=media-rpc&token=AAIAAU0AJGFiY2MxNTA5LWNmYzMtNDY1ZC1iM2JmLTMxNTQ4MDc5MzEyNQAAAAABoTLj5thFA2IjyY_iqLoNtMxNAyE7nkLoeZHefTADb_ykjPW2Pw&x-canva-quality=thumbnail"},{"slug":"black-clover","url":"https://media.canva.com/v2/image-resize/format:PNG/height:200/quality:100/uri:ifs%3A%2F%2FM%2F9b5d3feb-0eba-4ee5-a3c7-488e1ad3cdd5/watermark:F/width:133?csig=AAAAAAAAAAAAAAAAAAAAAH1cyOUuF0YJceJBjllFZkMBsHYJmH6ZhzR60xqA0JDS&exp=1791853933&osig=AAAAAAAAAAAAAAAAAAAAAMN8quPbSvXWa55iV5km0fwPAApqiUrfPahHg5SyguBj&signer=media-rpc&token=AAIAAU0AJDliNWQzZmViLTBlYmEtNGVlNS1hM2M3LTQ4OGUxYWQzY2RkNQAAAAABoTLRMcgKSvAkuwKvxFep2e08bI6fO0SOfUXDgaanm-njLlssCg&x-canva-quality=thumbnail"},{"slug":"castlevania","url":"https://media.canva.com/v2/image-resize/format:PNG/height:200/quality:100/uri:ifs%3A%2F%2FM%2Fa2c83caa-c8a7-470f-9f3a-172496e16267/watermark:F/width:133?csig=AAAAAAAAAAAAAAAAAAAAAEqeMfE5cNZBiREqNUN0aiGbdse2rllVYluR-XFvmMeP&exp=1791855525&osig=AAAAAAAAAAAAAAAAAAAAAMRhkBSiI8dLhZDnuSRSqA4v5Yig8Q8X0hrUx-oXBoPf&signer=media-rpc&token=AAIAAU0AJGEyYzgzY2FhLWM4YTctNDcwZi05ZjNhLTE3MjQ5NmUxNjI2NwAAAAABoTLpfIgE_kWguAI8FY8Ag99eZJi_AJW_lME45VlDNCuocqBH5w&x-canva-quality=thumbnail"},{"slug":"chiyu","url":"https://media.canva.com/v2/image-resize/format:PNG/height:200/quality:100/uri:ifs%3A%2F%2FM%2F0253977f-4315-4489-8ace-4b1ca7747fdb/watermark:F/width:133?csig=AAAAAAAAAAAAAAAAAAAAABVIgLq3r_UDpBm9qAhg9gZA9HpJJvs8-O3OwH-eXFhI&exp=1791854387&osig=AAAAAAAAAAAAAAAAAAAAAGHvMaZK3eeOQ0t-lYSw3fb0-zAv3h0TRqRCWfk_k2LG&signer=media-rpc&token=AAIAAU0AJDAyNTM5NzdmLTQzMTUtNDQ4OS04YWNlLTRiMWNhNzc0N2ZkYgAAAAABoTLYHzhk73YthEx0RABMJ-S1b6nDcjgngNf9r5I6jIToUO984Q&x-canva-quality=thumbnail"},{"slug":"date-alive","url":"https://media.canva.com/v2/image-resize/format:PNG/height:200/quality:100/uri:ifs%3A%2F%2FM%2Fb2a50224-4514-42ac-917b-23d073b9b168/watermark:F/width:133?csig=AAAAAAAAAAAAAAAAAAAAAEWEbazfN1IPnxab2zAYmlH2PMZ_KneXMFzxyFi6rrNs&exp=1791854539&osig=AAAAAAAAAAAAAAAAAAAAAIZQ7EcjaeFrXyk67-KIsG-jDzZkYo8x6rWFD4VoBQ47&signer=media-rpc&token=AAIAAU0AJGIyYTUwMjI0LTQ1MTQtNDJhYy05MTdiLTIzZDA3M2I5YjE2OAAAAAABoTLacPjViEoDtJ49xFDwwqpoimoVM7zyr5p_s3U34ruS7b34Jw&x-canva-quality=thumbnail"},{"slug":"great-pretender","url":"https://media.canva.com/v2/image-resize/format:PNG/height:200/quality:100/uri:ifs%3A%2F%2FM%2F819d3e3a-2394-4742-b13a-9fe65307af83/watermark:F/width:133?csig=AAAAAAAAAAAAAAAAAAAAABXYJuXCRalLdpODEDDJlw6MYqP0F2cBd-ZK9cmwG6zL&exp=1791856001&osig=AAAAAAAAAAAAAAAAAAAAADt0xPrXbgoOSFAJd_Baoxo_sRFwduLFPWdfooZVeuMp&signer=media-rpc&token=AAIAAU0AJDgxOWQzZTNhLTIzOTQtNDc0Mi1iMTNhLTlmZTY1MzA3YWY4MwAAAAABoTLwv-gZBDqOjO8Cdnnjgz6HcQOrdYWtxqddWDKRW17y5GFQ5g&x-canva-quality=thumbnail"},{"slug":"hanako","url":"https://media.canva.com/v2/image-resize/format:PNG/height:200/quality:100/uri:ifs%3A%2F%2FM%2F7a2e297b-9e52-4ddf-a44d-f0981b7584af/watermark:F/width:133?csig=AAAAAAAAAAAAAAAAAAAAAJJpGOIHo4cA_1w0csUFMvwaizvoe4bIo84z0Jf7lRVk&exp=1791856946&osig=AAAAAAAAAAAAAAAAAAAAAP8FWPEN5qAbgHO7ASOwKZqei-6mZDNxj33cRWQrUtxQ&signer=media-rpc&token=AAIAAU0AJDdhMmUyOTdiLTllNTItNGRkZi1hNDRkLWYwOTgxYjc1ODRhZgAAAAABoTL_K1CptdImwvwoa01AynuAUwWZ0GUhk9Bl_cHULLhe9Mxqag&x-canva-quality=thumbnail"}]'
+        run: |
+          python3 - <<'PY'
+          import urllib.request, json, os, struct, time
+          from pathlib import Path
+          posters=json.loads(os.environ['POSTERS_JSON'])
+          folder=Path('novaplay/assets/review-covers')
+          folder.mkdir(parents=True,exist_ok=True)
+          for item in posters:
+              slug=item['slug']
+              url=item['url']
+              req=urllib.request.Request(url,headers={'User-Agent':'Mozilla/5.0 NovaPlay-Poster-Importer'})
+              with urllib.request.urlopen(req,timeout=40) as resp: data=resp.read()
+              if not data.startswith(b'\x89PNG\r\n\x1a\n'): raise ValueError('PNG inválido para '+slug)
+              if len(data)<1000: raise ValueError('Arquivo vazio para '+slug)
+              filename=folder/(slug+'.png')
+              filename.write_bytes(data)
+              print('POSTER_OK',slug,len(data),flush=True)
+          PY
+      - name: Publicar arquivos na NovaPlay
+        shell: bash
+        run: |
+          git config user.name 'NovaPlay Content Bot'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add novaplay/assets/review-covers
+          if git diff --cached --quiet; then echo 'Nenhum arquivo novo'; exit 0; fi
+          git commit -m 'assets(novaplay): adicionar capas aprovadas do lote 1 de animes'
+          git push
