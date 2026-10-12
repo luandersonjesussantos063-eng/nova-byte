@@ -1,5 +1,5 @@
-const CACHE='novabyte-divulga-v1.0.4';
-const FILES=['./','./index.html','./style.css?v=1.0.4','./app.js?v=1.0.4','./manifest.webmanifest','./icon.svg'];
+const CACHE='novabyte-divulga-v1.0.5';
+const FILES=['./','./index.html','./style.css?v=1.0.5','./app.js?v=1.0.5','./manifest.webmanifest','./icon.svg'];
 self.addEventListener('install',event=>{
  event.waitUntil((async()=>{
   const cache=await caches.open(CACHE);
