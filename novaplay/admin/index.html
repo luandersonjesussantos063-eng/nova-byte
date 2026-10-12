@@ -8,7 +8,7 @@
 <link rel="stylesheet" href="./admin.css?v=0.18.0">
 </head>
 <body>
-<header class="top"><a class="brand" href="../"><span class="mark">▶</span> Nova<span>Play</span></a><div class="top-right"><strong>Painel administrativo · v0.19.3</strong><button id="logout" class="outline" hidden>Sair</button></div></header>
+<header class="top"><a class="brand" href="../"><span class="mark">▶</span> Nova<span>Play</span></a><div class="top-right"><strong>Painel administrativo · v0.20.0</strong><button id="logout" class="outline" hidden>Sair</button></div></header>
 <main class="container">
   <section id="loading" class="panel intro"><div class="spin"></div><p>Preparando seu painel...</p></section>
   <section id="login-view" class="panel login" hidden>
@@ -41,6 +41,24 @@
     </div>
     <p id="source-summary" class="muted" role="status" style="margin:0 0 15px">Conferindo fontes de vídeo...</p>
     <div class="panel" style="margin:16px 0 24px;padding:18px 22px;border-left:3px solid #f3b45a"><strong>Importações do Google Drive</strong><p class="muted" style="margin:8px 0 0">Títulos importados de listas externas ficam como rascunho privado. Confira a autorização de exibição pública e teste o link antes de publicar. Use a busca abaixo para localizar qualquer filme e a paginação para revisar o acervo.</p></div>
+    <section class="panel featured-manager" aria-labelledby="featured-heading">
+      <div class="section-title">
+        <div><span class="section-label">DESTAQUES DA PÁGINA INICIAL</span><h2 id="featured-heading">Escolha os filmes do banner principal</h2></div>
+        <a class="outline compact" href="../" target="_blank" rel="noopener noreferrer">Ver minha NovaPlay ↗</a>
+      </div>
+      <p class="muted">Escolha até <strong>6 filmes</strong> publicados e com vídeo cadastrado. O primeiro será o destaque principal. Use as setas para mudar a ordem; as alterações são salvas automaticamente.</p>
+      <div class="featured-pick">
+        <label for="featured-film-select">Filme para destacar
+          <select id="featured-film-select" aria-label="Escolher filme do catálogo"><option value="">Carregando filmes...</option></select>
+        </label>
+        <button type="button" id="featured-add" class="primary">+ Adicionar destaque</button>
+      </div>
+      <div id="featured-list" class="featured-list" aria-live="polite"><p class="muted">Carregando destaques...</p></div>
+      <div class="featured-footer">
+        <button type="button" id="featured-defaults" class="outline compact">Restaurar destaques clássicos</button>
+        <p id="featured-message" class="feedback" role="status" aria-live="polite"></p>
+      </div>
+    </section>
     <div class="workspace">
     <section class="panel editor">
       <div class="section-title"><div><span class="section-label">NOVO CONTEÚDO</span><h2 id="form-title">Adicionar filme ou episódio</h2></div><button id="cancel-edit" class="outline compact" hidden>Cancelar edição</button></div>
@@ -158,7 +176,7 @@
 </main>
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.58.0/dist/umd/supabase.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/tus-js-client@4.3.1/dist/tus.min.js"></script>
-<script src="../assets/cover.js?v=0.19.3"></script>
-<script defer src="./admin.js?v=0.19.3"></script>
+<script src="../assets/cover.js?v=0.20.0"></script>
+<script defer src="./admin.js?v=0.20.0"></script>
 </body>
 </html>

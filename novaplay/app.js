@@ -162,15 +162,30 @@ function renderRows(){
  ];
  blocks.forEach(b=>{const row=shelf(...b);if(row)holder.append(row)});
 }
-const featured=["lostworld","nosferatu","lua","caligari"].map(byId).filter(Boolean);
+const defaultFeatured=["lostworld","nosferatu","lua","caligari"];
+let featured=defaultFeatured.map(byId).filter(Boolean);
+// Admin preferences load only after the published film catalog is available.
+async function loadFeatured(){
+ if(!remoteDb)return;
+ try{
+  const {data,error}=await remoteDb.from("novaplay_featured")
+   .select("film_ids").eq("id",1).maybeSingle();
+  if(error)throw error;
+  const films=(Array.isArray(data?.film_ids)?data.film_ids:defaultFeatured)
+   .map(id=>byId(id)).filter(x=>x&&x.kind==="film"&&!x.catalogOnly).slice(0,6);
+  featured=films.length?films:defaultFeatured.map(byId).filter(Boolean);
+  updateHero(0);
+ }catch(e){console.warn("NovaPlay: destaques personalizados indisponíveis.",e.message)}
+}
 function updateHero(index){
  if(!featured.length)return;
  featuredIndex=(index+featured.length)%featured.length;const x=featured[featuredIndex];
  $("hero-art").style.backgroundImage="url('"+(x.backdrop||x.cover).replace(/'/g,"%27")+"')";
- $("hero-title").textContent=x.title;$("hero-genre").textContent="CINEMA CLÁSSICO";
+ $("hero-title").textContent=x.title;
+ $("hero-genre").textContent=x.uploaded?(x.category||"FILME EM DESTAQUE").toLocaleUpperCase("pt-BR"):"CINEMA CLÁSSICO";
  $("hero-description").textContent=x.description;
  const wrap=$("hero-metadata");wrap.replaceChildren();
- [x.year,x.duration,"Cinema em domínio público*"].filter(Boolean).forEach(s=>{const span=document.createElement("span");span.textContent=s;wrap.append(span)});
+ [x.year,x.duration,x.uploaded?"Disponível na NovaPlay":"Cinema clássico"].filter(Boolean).forEach(s=>{const span=document.createElement("span");span.textContent=s;wrap.append(span)});
  $("hero-play").onclick=()=>play(x);
  $("hero-info").onclick=()=>openDetails(x);
  const dots=$("hero-dots");dots.replaceChildren();
@@ -564,5 +579,5 @@ if("serviceWorker" in navigator&&location.protocol==="https:"){
  window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}));
 }
 navigate((location.hash||"").slice(1)||"inicio");
-loadUploadedCatalog();
+loadUploadedCatalog().then(loadFeatured);
 })();

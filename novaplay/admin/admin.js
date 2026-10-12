@@ -12,6 +12,14 @@ let libraryPage=0;
 let qualityFilter="all";
 let activityCounts=new Map(),activityLimitReached=false;
 const LIBRARY_PAGE_SIZE=48;
+const featuredDefaults=["lostworld","nosferatu","lua","caligari"];
+const classicFeatureFilms=[
+ {id:"lostworld",title:"O Mundo Perdido",cover:"../assets/posters/lostworld.svg"},
+ {id:"nosferatu",title:"Nosferatu",cover:"../assets/posters/nosferatu.svg"},
+ {id:"lua",title:"Viagem à Lua",cover:"../assets/posters/lua.svg"},
+ {id:"caligari",title:"O Gabinete do Dr. Caligari",cover:"../assets/posters/caligari.svg"}
+];
+let chosenFeatured=featuredDefaults.slice(),featuredBusy=false,featuredLoaded=false;
 
 const esc=t=>String(t??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 function status(id,message,isError=false,isSuccess=false){
@@ -50,7 +58,7 @@ async function checkSession(){
  try{
   const u=await hasAdmin();
   sessionUser=u||null;
-  if(u){show("dashboard");await Promise.all([loadLibrary(),loadActivity()]);}
+  if(u){show("dashboard");await Promise.all([loadLibrary(),loadActivity(),loadFeaturedConfig()]);}
   else if(u===false){
    const v=await client.auth.getUser();
    $("pending-email").textContent=v.data.user?.email||"Conta aguardando aprovação";
@@ -224,6 +232,115 @@ async function loadActivity(){
  renderLibrary();
 }
 
+
+function eligibleFeatured(){
+ const entries=items.filter(x=>x.kind==="movie"&&x.is_published&&!x.catalog_only
+  &&(x.video_path||x.google_drive_id||x.youtube_id))
+  .map(x=>({id:"upload-"+x.id,title:x.title,record:x}));
+ return [...classicFeatureFilms,...entries.sort((a,b)=>a.title.localeCompare(b.title,"pt-BR"))];
+}
+function posterOfFeatured(movie){
+ if(!movie?.record)return movie?.cover||"../assets/posters/autoral.svg";
+ const r=movie.record;
+ return window.NovaPlayCover?.approvedAnimePoster?.(r.title,true)
+  ||(r.poster_path?client.storage.from(POSTER_BUCKET).getPublicUrl(r.poster_path).data.publicUrl:null)
+  ||(r.youtube_id?"https://i.ytimg.com/vi/"+encodeURIComponent(r.youtube_id)+"/hqdefault.jpg":null)
+  ||(r.google_drive_id?window.NovaPlayCover?.driveThumbnail(r.google_drive_id):null)
+  ||window.NovaPlayCover?.titleCard(r.title)||"../assets/posters/autoral.svg";
+}
+async function loadFeaturedConfig(){
+ const {data,error}=await client.from("novaplay_featured").select("film_ids").eq("id",1).maybeSingle();
+ if(error||!Array.isArray(data?.film_ids)){
+  status("featured-message","Não foi possível carregar destaques: "+errorText(error||new Error("Configuração ausente.")),true);
+  return;
+ }
+ chosenFeatured=data.film_ids.slice();
+ featuredLoaded=true;renderFeatured();
+}
+function renderFeatured(){
+ const list=$("featured-list"),select=$("featured-film-select");
+ if(!list||!select)return;
+ const available=eligibleFeatured(),byId=new Map(available.map(x=>[x.id,x]));
+ const previous=select.value;
+ select.replaceChildren();
+ const notChosen=available.filter(x=>!chosenFeatured.includes(x.id));
+ for(const film of notChosen){
+  const option=document.createElement("option");option.value=film.id;option.textContent=film.title+(film.record?" · Catálogo":" · Clássico");
+  select.append(option);
+ }
+ if(!notChosen.length){
+  const opt=document.createElement("option");opt.textContent="Nenhum outro filme disponível";opt.value="";select.append(opt);
+ }
+ if(notChosen.some(x=>x.id===previous))select.value=previous;
+ const disabled=featuredBusy||!featuredLoaded;
+ select.disabled=disabled||chosenFeatured.length>=6||!notChosen.length;
+ $("featured-add").disabled=select.disabled;
+ $("featured-defaults").disabled=disabled||chosenFeatured.join("|")===featuredDefaults.join("|");
+ list.replaceChildren();
+ if(!featuredLoaded){const p=document.createElement("p");p.className="muted";p.textContent="Carregando destaques...";list.append(p);return}
+ for(const [index,id] of chosenFeatured.entries()){
+  const film=byId.get(id);
+  const box=document.createElement("div");box.className="featured-entry";
+  const rank=document.createElement("span");rank.className="featured-rank";rank.textContent=String(index+1).padStart(2,"0");
+  const cover=document.createElement("img");cover.src=posterOfFeatured(film);
+  cover.alt=film?"Capa de "+film.title:"Capa indisponível";cover.loading="lazy";
+  cover.onerror=function(){if(this.dataset.fallback)return;this.dataset.fallback="1";this.src="../assets/posters/autoral.svg"};
+  const info=document.createElement("div");info.className="featured-entry-info";
+  const title=document.createElement("strong");title.textContent=film?.title||"Filme removido do catálogo";
+  const sub=document.createElement("small");sub.textContent=index===0?"★ Destaque principal":film?.record?"Filme cadastrado":"Filme clássico";
+  info.append(title,sub);
+  const actions=document.createElement("div");actions.className="featured-entry-actions";
+  const up=document.createElement("button");up.type="button";up.className="outline compact";
+  up.textContent="↑";up.title="Subir destaque";up.setAttribute("aria-label","Mover "+title.textContent+" para cima");
+  up.disabled=disabled||index===0;up.onclick=()=>moveFeatured(index,-1);
+  const down=document.createElement("button");down.type="button";down.className="outline compact";
+  down.textContent="↓";down.title="Descer destaque";down.setAttribute("aria-label","Mover "+title.textContent+" para baixo");
+  down.disabled=disabled||index===chosenFeatured.length-1;down.onclick=()=>moveFeatured(index,1);
+  const remove=document.createElement("button");remove.type="button";remove.className="outline compact featured-remove";
+  remove.textContent="Retirar";remove.title="Retirar filme dos destaques";remove.disabled=disabled||chosenFeatured.length<=1;
+  remove.onclick=()=>saveFeatured(chosenFeatured.filter((_,i)=>i!==index));
+  actions.append(up,down,remove);box.append(rank,cover,info,actions);list.append(box);
+ }
+}
+async function saveFeatured(next){
+ if(featuredBusy||!featuredLoaded)return;
+ if(next.length<1||next.length>6||new Set(next).size!==next.length){
+  status("featured-message","Mantenha de 1 a 6 filmes diferentes nos destaques.",true);return;
+ }
+ if(next.some(id=>!eligibleFeatured().some(x=>x.id===id))){
+  status("featured-message","Um dos filmes não está mais publicado com vídeo. Atualize a biblioteca e tente novamente.",true);return;
+ }
+ const original=chosenFeatured.slice();
+ featuredBusy=true;chosenFeatured=next.slice();renderFeatured();
+ status("featured-message","Salvando ordem dos destaques...");
+ try{
+  const {data,error}=await client.from("novaplay_featured")
+   .update({film_ids:next,updated_at:new Date().toISOString()})
+   .eq("id",1).select("film_ids").single();
+  if(error)throw error;
+  chosenFeatured=data.film_ids.slice();
+  status("featured-message","✓ Destaques salvos! A página inicial será atualizada ao recarregar.",false,true);
+ }catch(error){
+  chosenFeatured=original;
+  status("featured-message","Falha ao salvar destaques: "+errorText(error),true);
+ }finally{featuredBusy=false;renderFeatured()}
+}
+function addFeaturedFilm(){
+ const id=$("featured-film-select").value;
+ if(!id||chosenFeatured.includes(id)||chosenFeatured.length>=6)return;
+ saveFeatured([...chosenFeatured,id]);
+}
+function moveFeatured(index,offset){
+ const next=chosenFeatured.slice(),other=index+offset;
+ if(other<0||other>=next.length)return;
+ [next[index],next[other]]=[next[other],next[index]];
+ saveFeatured(next);
+}
+function restoreFeaturedFilms(){
+ if(!confirm("Restaurar os quatro filmes clássicos como destaques da página inicial?"))return;
+ saveFeatured(featuredDefaults.slice());
+}
+
 async function loadLibrary(){
  // Ler todas as páginas: o catálogo importado pode ter centenas de rascunhos.
  const gathered=[];
@@ -238,6 +355,7 @@ async function loadLibrary(){
  items=gathered.sort((a,b)=>Number(!!a.catalog_only)-Number(!!b.catalog_only));
  status("upload-message","Biblioteca atualizada: "+items.length+" registros encontrados no banco.",false,true);
  renderLibrary();
+ renderFeatured();
 }
 function renderLibrary(){
  $("stat-total").textContent=items.length;
@@ -622,7 +740,9 @@ function init(){
  $("cancel-edit").onclick=()=>{resetForm();status("upload-message","Edição cancelada.")};
  $("bulk-mark-reviewed").onclick=bulkMarkReviewed;
  $("bulk-publish").onclick=bulkPublishReviewed;
- $("refresh-list").onclick=()=>Promise.all([loadLibrary(),loadActivity()]);$("filter-title").oninput=()=>{libraryPage=0;renderLibrary()};if($("library-state-filter"))$("library-state-filter").onchange=()=>{libraryPage=0;renderLibrary()};
+ $("featured-add").onclick=addFeaturedFilm;
+ $("featured-defaults").onclick=restoreFeaturedFilms;
+ $("refresh-list").onclick=()=>Promise.all([loadLibrary(),loadActivity(),loadFeaturedConfig()]);$("filter-title").oninput=()=>{libraryPage=0;renderLibrary()};if($("library-state-filter"))$("library-state-filter").onchange=()=>{libraryPage=0;renderLibrary()};
  $("video-file").onchange=()=>{$("video-file-label").textContent=$("video-file").files[0]?.name||"Selecionar vídeo do telefone"};
  $("poster-file").onchange=()=>{$("poster-file-label").textContent=$("poster-file").files[0]?.name||"Escolher capa (opcional)"};
  $("youtube-poster-file").onchange=()=>{$("youtube-poster-label").textContent=$("youtube-poster-file").files[0]?.name||"Adicionar capa personalizada (opcional)"};
