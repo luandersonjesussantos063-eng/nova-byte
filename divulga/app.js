@@ -107,7 +107,7 @@ function adVariants(service,city){
    'Tecnologia feita para negócios reais: fale com a NovaByte Soluções e apresente sua ideia.'
   ]
  };
- return samples[service]||samples['Outro serviço'];
+ return (samples[service]||samples['Outro serviço']).map(text=>text.includes('NovaByte Soluções')?text:text+' Conheça a NovaByte Soluções.');
 }
 function adText(c){
  let text=String(c?.text||'').trim();
