@@ -13,8 +13,8 @@ for(const name of files){
  cpSync(source,join(WWW,name));
 }
 let html=readFileSync(join(WWW,'index.html'),'utf8');
-if(!html.includes('app.js?v=1.0.0'))throw Error('Versão do app não reconhecida.');
+if(!html.includes('app.js?v=1.0.1'))throw Error('Versão do app não reconhecida.');
 // O bridge do Capacitor identifica a versão nativa; os links externos são abertos fora do WebView.
-html=html.replace('<script defer src="./app.js?v=1.0.0"></script>','<script defer src="./app.js?v=1.0.0"></script>');
+html=html.replace('<script defer src="./app.js?v=1.0.1"></script>','<script defer src="./app.js?v=1.0.1"></script>');
 writeFileSync(join(WWW,'index.html'),html);
 console.log('NovaByte Divulga: recursos nativos preparados em',WWW);
