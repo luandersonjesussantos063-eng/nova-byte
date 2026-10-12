@@ -234,14 +234,26 @@ async function loadLibrary(){
   gathered.push(...(data||[]));
   if(!data||data.length<500)break;
  }
- items=gathered;
+ // Exibir primeiro os títulos com vídeo; referências Em breve aparecem por último.
+ items=gathered.sort((a,b)=>Number(!!a.catalog_only)-Number(!!b.catalog_only));
  status("upload-message","Biblioteca atualizada: "+items.length+" registros encontrados no banco.",false,true);
  renderLibrary();
 }
 function renderLibrary(){
  $("stat-total").textContent=items.length;
- $("stat-live").textContent=items.filter(x=>x.is_published).length;
- $("stat-drafts").textContent=items.filter(x=>!x.is_published).length;
+ $("stat-live").textContent=items.filter(x=>x.is_published&&!x.catalog_only).length;
+ $("stat-drafts").textContent=items.filter(x=>x.catalog_only).length;
+ const withVideo=items.filter(x=>x.is_published&&!x.catalog_only).length;
+ const comingSoon=items.filter(x=>x.catalog_only).length;
+ const info=$("source-summary");
+ if(info)info.textContent=withVideo+" títulos publicados com fonte de vídeo · "+comingSoon+" títulos Em breve sem vídeo cadastrado. Os links ainda precisam de teste de reprodução.";
+ const sourceFilter=$("library-state-filter");
+ if(sourceFilter){
+  const option=sourceFilter.querySelector('option[value="catalog_only"]');
+  if(option)option.textContent="Em breve (sem vídeo) · "+comingSoon;
+  const playable=sourceFilter.querySelector('option[value="has_video"]');
+  if(playable)playable.textContent="Com vídeo cadastrado · "+withVideo;
+ }
  const available=items.filter(x=>x.rights_reviewed&&!x.is_published);
  const pendingReview=items.filter(x=>!x.is_published&&!x.rights_reviewed);
  const markAll=$("bulk-mark-reviewed");
@@ -277,6 +289,7 @@ function renderLibrary(){
   if(!(x.title+" "+(x.series_title||"")).toLocaleLowerCase("pt-BR").includes(filter))return false;
   if(statusFilter==="imported"&&x.genre!=="Importado - revisão")return false;
   if(statusFilter==="catalog_only"&&!x.catalog_only)return false;
+  if(statusFilter==="has_video"&&(x.catalog_only||!x.is_published))return false;
   if(statusFilter==="draft"&&x.is_published)return false;
   if(statusFilter==="reviewed"&&(x.is_published||!x.rights_reviewed))return false;
   if(statusFilter==="published"&&!x.is_published)return false;
@@ -569,7 +582,7 @@ async function sendForm(e){
   if(file)sessionStorage.removeItem(pendingKey(file));
   const wasCatalogOnly=!!editing?.catalog_only;
   resetForm();
-  status("upload-message",wasCatalogOnly?"Vídeo salvo! O título saiu de Em breve e foi liberado para assistir.":"Conteúdo salvo! "+(payload.is_published?"Já está disponível na NovaPlay.":"Salvo como rascunho."),false,true);
+  status("upload-message",wasCatalogOnly?(payload.is_published?"Vídeo cadastrado! O título saiu de Em breve e está liberado para assistir.":"Vídeo cadastrado como rascunho. O título ainda não está publicado."):"Conteúdo salvo! "+(payload.is_published?"Já está disponível na NovaPlay.":"Salvo como rascunho."),false,true);
   await loadLibrary();
  }catch(err){
    status("upload-message","Não foi possível salvar: "+errorText(err)+". Confira as informações e tente novamente.",true);
