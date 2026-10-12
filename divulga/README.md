@@ -1,4 +1,4 @@
-# NovaByte Divulga — V 1.0.0
+# NovaByte Divulga — V 1.0.1
 
 Central de divulgação da NovaByte Soluções para Android (versão inicial web instalável/PWA e projeto Capacitor de teste).
 
