@@ -1,0 +1,87 @@
+name: NovaByte Divulga - Android APK de testes
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'divulga/**'
+      - '.github/workflows/divulga-android.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: novabyte-divulga-debug-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  android-debug:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - name: Preparar Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Preparar Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Testar o aplicativo
+        run: |
+          node --check divulga/app.js
+          node --check divulga/sw.js
+          node --check divulga/mobile/prepare.mjs
+          node --test divulga/tests/*.test.mjs
+      - name: Instalar dependências do Android
+        working-directory: divulga/mobile
+        run: npm install --no-audit --no-fund
+      - name: Configurar Android SDK
+        shell: bash
+        run: |
+          SDK="${ANDROID_HOME:-${ANDROID_SDK_ROOT}}"
+          test -x "$SDK/cmdline-tools/latest/bin/sdkmanager"
+          echo "$SDK/cmdline-tools/latest/bin" >> "$GITHUB_PATH"
+          yes | "$SDK/cmdline-tools/latest/bin/sdkmanager" --licenses >/dev/null || true
+          "$SDK/cmdline-tools/latest/bin/sdkmanager" "platforms;android-36" "build-tools;36.0.0"
+      - name: Preparar assets web e projeto Capacitor
+        working-directory: divulga/mobile
+        run: |
+          node prepare.mjs
+          npx cap add android
+          npx cap sync android
+      - name: Definir versão do APK de teste
+        env:
+          BUILD_NUMBER: ${{ github.run_number }}
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re,os,json
+          version=json.loads(Path('divulga/mobile/package.json').read_text())['version']
+          path=Path('divulga/mobile/android/app/build.gradle')
+          code=path.read_text()
+          code,count=re.subn(r'\bversionCode\s+\d+','versionCode '+str(100000+int(os.environ['BUILD_NUMBER'])),code,count=1)
+          if count!=1:raise SystemExit('versionCode não encontrado no projeto')
+          code,count=re.subn(r'\bversionName\s+"[^"]+"','versionName "'+version+'"',code,count=1)
+          if count!=1:raise SystemExit('versionName não encontrado no projeto')
+          path.write_text(code)
+          print('NovaByte Divulga APK de testes',version)
+          PY
+      - name: Adicionar logo NovaByte aos ícones Android
+        run: |
+          python3 -m pip install --disable-pip-version-check "cairosvg>=2.7,<3" "Pillow>=10,<12"
+          python3 divulga/mobile/create_icons.py
+      - name: Compilar APK DEBUG
+        working-directory: divulga/mobile/android
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon
+      - name: Disponibilizar APK para teste (não Play Store)
+        uses: actions/upload-artifact@v4
+        with:
+          name: novabyte-divulga-v1-android-debug
+          path: divulga/mobile/android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 14
