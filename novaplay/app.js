@@ -64,6 +64,8 @@ async function loadUploadedCatalog(){
   }
   const grouped=new Map();
   let additions=[];
+  // Em breve é só para fichas sem fonte de vídeo. Listar por último.
+  data.sort((a,b)=>Number(!!a.catalog_only)-Number(!!b.catalog_only));
   (data||[]).forEach(record=>{
    const cover=posterUrl(record.poster_path,record.youtube_id,record.title,record.google_drive_id);
    const title=record.title||"Sem título";
@@ -155,7 +157,7 @@ function renderRows(){
  ["Produções da NovaPlay",uploadedCatalog.filter(x=>!x.catalogOnly),"filmes",false],
  ["Filmes clássicos",db.films,"filmes",false],
  ["Séries clássicas",db.series,"series",false],
- ["Adicionados ao catálogo",[...db.films.slice().reverse(),...db.series],"filmes",false],
+ ["Adicionados ao catálogo",[...db.films.filter(x=>!x.catalogOnly).slice().reverse(),...db.series,...db.films.filter(x=>x.catalogOnly)],"filmes",false],
  ["Minha lista",all.filter(x=>favorite.has(x.id)),"favoritos",false]
  ];
  blocks.forEach(b=>{const row=shelf(...b);if(row)holder.append(row)});
