@@ -43,8 +43,25 @@ try{
  await page.locator('.bottom-nav [data-tab="grupos"]').click();
  assert.match(await page.locator('#groupList').innerText(),/Lucas anuncia/);
  assert.equal(await page.locator('#groupList .item').count(),1);
- assert.deepEqual(errors,[]);
- console.log('PASSOU: Chrome Android 412px — botão Salvar, confirmação, contador e persistência após recarregar.');
+ // Publicação: criação real, clique no botão, registro local e persistência após recarga.
+ await page.locator('.bottom-nav [data-tab="campanhas"]').click();
+ await page.locator('[data-action="campaign-new"]').first().click();
+ await page.locator('#campaignForm [name="name"]').fill('Sites profissionais NovaByte');
+ await page.locator('#campaignForm [name="text"]').fill('A NovaByte Soluções cria sites profissionais e personalizados para empresas em Mato Grosso.');
+ await page.locator('#campaignForm [name="link"]').fill('https://novabytesolucoes.com.br/');
+ await page.locator('[data-action="campaign-save"]').click();
+ await page.getByText('Publicação “Sites profissionais NovaByte” salva com sucesso.',{exact:false}).first().waitFor();
+ assert.match(await page.locator('#campanhas').innerText(),/1 campanha\(s\) salva\(s\)/);
+ assert.match(await page.locator('#campanhas').innerText(),/Sites profissionais NovaByte/);
+ const storedCampaign=await page.evaluate(()=>JSON.parse(localStorage.getItem('novabyte-divulga-v1')));
+ assert.equal(storedCampaign.campaigns.length,1);
+ assert.equal(storedCampaign.groups.length,1);
+ await page.reload({waitUntil:'domcontentloaded'});
+ await page.locator('.bottom-nav [data-tab="campanhas"]').click();
+ assert.match(await page.locator('#campanhas').innerText(),/Sites profissionais NovaByte/);
+ assert.equal(await page.locator('#campanhas article').count(),1);
+  assert.deepEqual(errors,[]);
+ console.log('PASSOU: Chrome Android 412px — grupo e campanha salvos, contadores corretos e persistência após recarregar.');
 }finally{
  await browser?.close();
  await new Promise(resolve=>server.close(resolve));
