@@ -17,6 +17,7 @@ if(!progress||typeof progress!=="object"||Array.isArray(progress))progress={};
 const save=(key,x)=>{try{localStorage.setItem(key,JSON.stringify(x))}catch(e){}};
 const escapeText=x=>String(x??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 let view="inicio",selected=null,featuredIndex=0,current=null,hls=null,timer=0,attempt=0,timeSaved=0,toastTimeout=null;
+let playerUiTimer=null,seekActive=false;
 let fullscreenOwned=false,closingFullscreen=false,lockedLandscape=false;
 
 function posterUrl(path,youtubeId){
@@ -271,7 +272,84 @@ document.addEventListener("webkitfullscreenchange",()=>{
 });
 window.addEventListener("resize",()=>{if(!$("player-layer").hidden)syncLandscape()});
 window.addEventListener("orientationchange",()=>{if(!$("player-layer").hidden)syncLandscape()});
+function asClock(seconds){
+ const value=Math.max(0,Math.floor(Number.isFinite(seconds)?seconds:0));
+ const hours=Math.floor(value/3600),minutes=Math.floor(value%3600/60),secs=value%60;
+ return (hours?hours+":"+String(minutes).padStart(2,"0"):String(minutes))+":"+String(secs).padStart(2,"0");
+}
+function updateCinemaControls(){
+ const v=$("video");
+ $("cinema-play").textContent=v.paused?"▶":"❚❚";
+ $("cinema-play").setAttribute("aria-label",v.paused?"Reproduzir":"Pausar");
+ $("cinema-mute").textContent=v.muted?"♪̸":"♫";
+ $("cinema-mute").setAttribute("aria-label",v.muted?"Ativar áudio":"Silenciar");
+ const duration=v.duration;
+ const seekable=Number.isFinite(duration)&&duration>0;
+ $("cinema-seek").disabled=!seekable;
+ $("cinema-duration").textContent=seekable?asClock(duration):"AO VIVO";
+ if(!seekActive){
+   const currentTime=seekable?Math.max(0,Math.min(duration,v.currentTime||0)):0;
+   $("cinema-elapsed").textContent=asClock(currentTime);
+   $("cinema-seek").value=seekable?String(currentTime/duration*100):"0";
+ }
+}
+function showCinemaUi(){
+ if($("player-layer").hidden||$("player-layer").classList.contains("youtube-active"))return;
+ $("player-layer").classList.remove("ui-idle");
+ clearTimeout(playerUiTimer);
+ if(!$("video").paused)playerUiTimer=setTimeout(()=>{
+   if(!$("player-layer").hidden&&!$("video").paused)
+     $("player-layer").classList.add("ui-idle");
+ },4200);
+}
+function resetCinemaUi(){
+ clearTimeout(playerUiTimer);playerUiTimer=null;seekActive=false;
+ $("player-layer").classList.remove("ui-idle","youtube-active","has-player-error");
+ $("cinema-controls").hidden=true;
+ $("player-status").hidden=false;
+ $("player-content-note").hidden=false;
+}
+const cinemaVideo=$("video");
+cinemaVideo.addEventListener("play",()=>{updateCinemaControls();showCinemaUi()});
+cinemaVideo.addEventListener("pause",()=>{updateCinemaControls();showCinemaUi()});
+cinemaVideo.addEventListener("timeupdate",updateCinemaControls);
+cinemaVideo.addEventListener("durationchange",updateCinemaControls);
+cinemaVideo.addEventListener("volumechange",updateCinemaControls);
+cinemaVideo.addEventListener("loadedmetadata",updateCinemaControls);
+cinemaVideo.addEventListener("pointerdown",()=>showCinemaUi());
+$("player-layer").addEventListener("pointermove",e=>{
+ if(!$("player-layer").classList.contains("youtube-active"))showCinemaUi();
+});
+$("cinema-play").onclick=()=>{
+ const v=$("video");if(v.paused)v.play().catch(()=>showCinemaUi());else v.pause();showCinemaUi()
+};
+$("cinema-rewind").onclick=()=>{const v=$("video");if(Number.isFinite(v.duration))v.currentTime=Math.max(0,v.currentTime-10);updateCinemaControls();showCinemaUi()};
+$("cinema-forward").onclick=()=>{const v=$("video");if(Number.isFinite(v.duration))v.currentTime=Math.min(v.duration,v.currentTime+10);updateCinemaControls();showCinemaUi()};
+$("cinema-mute").onclick=()=>{const v=$("video");v.muted=!v.muted;updateCinemaControls();showCinemaUi()};
+$("cinema-seek").addEventListener("input",e=>{
+ const v=$("video");if(!Number.isFinite(v.duration)||v.duration<=0)return;
+ seekActive=true;
+ const target=v.duration*Number(e.target.value)/100;
+ $("cinema-elapsed").textContent=asClock(target);
+ showCinemaUi();
+});
+$("cinema-seek").addEventListener("change",e=>{
+ const v=$("video");
+ if(Number.isFinite(v.duration)&&v.duration>0)v.currentTime=Math.min(v.duration,Math.max(0,v.duration*Number(e.target.value)/100));
+ seekActive=false;updateCinemaControls();showCinemaUi()
+});
+$("cinema-fullscreen").onclick=()=>{
+ const layer=$("player-layer");
+ if(document.fullscreenElement===layer && document.exitFullscreen){
+   document.exitFullscreen().catch(()=>{});return;
+ }
+ if(!document.fullscreenElement){
+   try{Promise.resolve(layer.requestFullscreen({navigationUI:"hide"})).catch(()=>{})}catch(e){}
+ }
+ showCinemaUi();
+};
 function stopPlayback(){
+ resetCinemaUi();
  ++attempt;clearTimeout(timer);timer=0;const video=$("video");
  video.pause();video.onerror=null;video.onplaying=null;video.onwaiting=null;video.oncanplay=null;video.onloadedmetadata=null;video.ontimeupdate=null;video.onended=null;
  if(hls){hls.destroy();hls=null}
@@ -287,6 +365,8 @@ function closePlayer(skipFullscreen=false){
 function playerStatus(msg){$("player-status").textContent=msg}
 function playbackFailed(msg,seq){
  if(seq!==attempt||$("player-layer").hidden)return;
+ $("player-layer").classList.add("has-player-error");
+ showCinemaUi();
  clearTimeout(timer);$("player-error").textContent=msg;
  playerStatus("Transmissão indisponível neste momento");
  $("retry-btn").hidden=false;$("fallback-btn").hidden=!(current&&current.item.fallbackEmbed);
@@ -326,6 +406,14 @@ function play(item,episode){
  stopPlayback();current={item,episode:episode||null};
  const media=episode||item;
  $("player-layer").hidden=false;document.body.classList.add("modal-open");
+ const yt=!!media.youtube_id;
+ $("player-layer").classList.toggle("youtube-active",yt);
+ $("cinema-controls").hidden=yt;
+ $("video").controls=false;
+ $("player-status").hidden=yt;
+ $("player-content-note").hidden=yt;
+ updateCinemaControls();
+ if(!yt)showCinemaUi();
  enterCinema();
  $("player-heading").textContent=item.title;
  $("player-title").textContent=episode?item.title+" · "+episode.label:item.title;
@@ -345,6 +433,7 @@ function play(item,episode){
  v.onerror=()=>fail("O arquivo não pôde ser reproduzido neste navegador. Tente novamente.");
  v.onplaying=()=>{
    if(seq!==attempt)return;clearTimeout(timer);
+   $("player-layer").classList.remove("has-player-error");
    $("player-error").textContent="";
    $("retry-btn").hidden=true;$("fallback-btn").hidden=true;
    playerStatus(item.kind==="tv"?"● AO VIVO — reproduzindo":"▶ Reproduzindo");
@@ -383,8 +472,10 @@ function play(item,episode){
   const frame=$("fallback-frame");frame.hidden=false;
   frame.src="https://www.youtube-nocookie.com/embed/"+encodeURIComponent(id)+"?autoplay=1&playsinline=1&rel=0";
   $("retry-btn").hidden=true;$("fallback-btn").hidden=true;
-  playerStatus("Player do YouTube carregado. Toque no ▶ se não começar sozinho.");
-  $("player-content-note").textContent="O vídeo está hospedado no YouTube e é exibido pelo player oficial dentro da NovaPlay. A plataforma pode exibir anúncios ou indisponibilizar conteúdos.";
+  // Evita o aviso permanente por cima da imagem. O player oficial
+  // continua com seus próprios controles, marca e regras de exibição.
+  $("player-status").textContent="";
+  $("player-content-note").textContent="";
  }else if(media.video_path){
   if(!remoteDb){fail("Serviço de mídia indisponível. Recarregue a página.");return}
   playerStatus("Preparando vídeo publicado...");

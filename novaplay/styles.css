@@ -277,3 +277,68 @@ svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.75;strok
  .player-layer.cinema .player-back svg{width:19px;height:19px}
  .player-layer.cinema #player-close{width:29px;height:29px}
 }
+
+
+/* V 0.9 — player cinema com controles limpos, inspirado em apps de streaming. */
+.player-layer.cinema .player-brand{display:none}
+.player-layer.cinema .player-bar-title{font-size:clamp(13px,1.4vw,18px);color:#f3f6fc;font-weight:800;flex:1;letter-spacing:-.2px;text-shadow:0 1px 4px #000}
+.player-layer.cinema .player-bar{background:linear-gradient(180deg,#000d 0%,#0007 67%,transparent);height:62px}
+.player-layer.cinema .player-info{z-index:17}
+.player-layer.cinema:not(.has-player-error) .player-info{display:none}
+.player-layer.cinema.youtube-active .player-bar{height:51px;background:linear-gradient(180deg,#000b,transparent);padding:0 12px}
+.player-layer.cinema.youtube-active .player-bar-title{font-size:13px}
+.player-layer.cinema.youtube-active:not(.has-player-error) #player-status,
+.player-layer.cinema.youtube-active #player-content-note{display:none!important}
+.player-layer.cinema.youtube-active .cinema-controls{display:none!important}
+.player-layer.cinema.ui-idle:not(.youtube-active):not(.has-player-error) .player-bar,
+.player-layer.cinema.ui-idle:not(.youtube-active):not(.has-player-error) .cinema-controls{
+  opacity:0;pointer-events:none
+}
+.player-layer.cinema .player-bar,.player-layer.cinema .cinema-controls{transition:opacity .28s ease}
+.player-layer.cinema .player-bar:focus-within,.player-layer.cinema .cinema-controls:focus-within{
+  opacity:1!important;pointer-events:auto!important
+}
+.player-layer.cinema .cinema-controls{
+  position:absolute;z-index:16;bottom:0;left:0;right:0;
+  padding:22px clamp(19px,4.3vw,66px) max(16px,env(safe-area-inset-bottom));
+  background:linear-gradient(0deg,#000f 0%,#000b 42%,transparent 100%);
+  display:flex;flex-direction:column;gap:11px;color:white;
+}
+.cinema-timeline{display:flex;align-items:center;gap:14px;color:#f5f5f5;font-size:12px;font-variant-numeric:tabular-nums;font-weight:700;text-shadow:0 2px 8px #0009}
+.cinema-timeline span{min-width:34px}
+.cinema-timeline span:last-child{text-align:right}
+.cinema-timeline input[type="range"]{
+  width:100%;flex:1;min-width:0;height:6px;appearance:none;-webkit-appearance:none;
+  margin:0;outline-offset:5px;border-radius:30px;cursor:pointer;
+  background:linear-gradient(90deg,#ff333c,#ff333c) no-repeat,#9eabbf91;
+  accent-color:#e42634
+}
+.cinema-timeline input[type="range"]::-webkit-slider-thumb{
+  appearance:none;-webkit-appearance:none;
+  width:15px;height:15px;border-radius:50%;background:#fff;
+  box-shadow:0 1px 9px #000b;border:2px solid #f63e4c
+}
+.cinema-timeline input[type="range"]::-moz-range-thumb{
+  width:13px;height:13px;border-radius:50%;background:#fff;border:2px solid #f63e4c
+}
+.cinema-timeline input:disabled{opacity:.5;cursor:default}
+.cinema-toolbar,.cinema-toolbar-group{display:flex;align-items:center;justify-content:space-between;gap:17px}
+.cinema-toolbar-group{justify-content:flex-start;gap:15px}
+.cinema-toolbar button{border:0;background:transparent;color:white;display:flex;align-items:center;justify-content:center;gap:2px;
+  min-width:36px;height:36px;padding:2px 5px;border-radius:7px;font-size:24px;font-weight:750;
+  text-shadow:0 1px 6px #000a;transition:background .2s,transform .2s}
+.cinema-toolbar button span{font-size:11px}
+.cinema-toolbar button:hover,.cinema-toolbar button:focus-visible{background:#ffffff29;transform:scale(1.06)}
+.cinema-toolbar button.cinema-control-main{font-size:29px}
+.player-layer.cinema .cinema-controls[hidden]{display:none!important}
+@media(max-width:760px){
+ .player-layer.cinema .player-bar{height:48px;padding:0 13px}
+ .player-layer.cinema .player-bar-title{font-size:12px}
+ .player-layer.cinema .cinema-controls{padding:14px max(13px,env(safe-area-inset-left)) max(8px,env(safe-area-inset-bottom));gap:7px}
+ .cinema-timeline{gap:8px;font-size:10px}
+ .cinema-timeline span{min-width:30px}
+ .cinema-toolbar-group{gap:13px}
+ .cinema-toolbar button{min-width:29px;height:30px;font-size:21px;padding:0 2px}
+ .cinema-toolbar button.cinema-control-main{font-size:25px}
+}
+@media(prefers-reduced-motion:reduce){.player-layer.cinema .player-bar,.player-layer.cinema .cinema-controls{transition:none}}
