@@ -97,6 +97,47 @@ async function uploadVideo(file,path){
   }).catch(reject);
  });
 }
+async function inspectVideo(file){
+ // Obtém a duração e, quando o navegador permite, uma miniatura sem enviar o arquivo a terceiros.
+ return new Promise(resolve=>{
+  const url=URL.createObjectURL(file),video=document.createElement("video");
+  let resolved=false,loaded=false;
+  const finish=data=>{
+   if(resolved)return;resolved=true;clearTimeout(timeout);
+   video.pause();video.removeAttribute("src");video.load();URL.revokeObjectURL(url);
+   resolve(data);
+  };
+  const timeout=setTimeout(()=>finish({duration:null,thumbnail:null}),8500);
+  function capture(){
+   if(resolved||loaded||!video.videoWidth||!video.videoHeight)return;
+   loaded=true;
+   try{
+    const canvas=document.createElement("canvas");canvas.width=480;canvas.height=720;
+    const ctx=canvas.getContext("2d",{alpha:false});
+    ctx.fillStyle="#091527";ctx.fillRect(0,0,480,720);
+    const scale=Math.max(480/video.videoWidth,720/video.videoHeight);
+    const w=video.videoWidth*scale,h=video.videoHeight*scale;
+    ctx.drawImage(video,(480-w)/2,(720-h)/2,w,h);
+    const grad=ctx.createLinearGradient(0,510,0,720);grad.addColorStop(0,"#050a1700");grad.addColorStop(1,"#050a17dd");
+    ctx.fillStyle=grad;ctx.fillRect(0,510,480,210);
+    canvas.toBlob(blob=>{
+     finish({duration:Number.isFinite(video.duration)?Math.round(video.duration):null,
+      thumbnail:blob?new File([blob],"capa-automatica.jpg",{type:"image/jpeg"}):null});
+    },"image/jpeg",.83);
+   }catch(e){finish({duration:Number.isFinite(video.duration)?Math.round(video.duration):null,thumbnail:null})}
+  }
+  video.muted=true;video.preload="auto";video.playsInline=true;
+  video.addEventListener("loadedmetadata",()=>{
+   if(Number.isFinite(video.duration)&&video.duration>1){
+    try{video.currentTime=Math.min(1.5,video.duration/4)}catch(e){}
+   }
+  });
+  video.addEventListener("loadeddata",capture,{once:true});
+  video.addEventListener("seeked",capture,{once:true});
+  video.addEventListener("error",()=>finish({duration:null,thumbnail:null}),{once:true});
+  video.src=url;video.load();
+ });
+}
 async function uploadCover(file){
  const ext=extForMime(file,false);
  const path=sessionUser.id+"/"+crypto.randomUUID()+"."+ext.ext;
@@ -201,7 +242,12 @@ async function sendForm(e){
  disable(true);status("upload-message","Iniciando upload. Mantenha esta página aberta até terminar.");
  let newVideo=null,newPoster=null;
  try{
-  if(cover){status("upload-message","Enviando capa...");newPoster=await uploadCover(cover)}
+  let generated={duration:null,thumbnail:null};
+  if(video){status("upload-message","Lendo duração e preparando capa...");generated=await inspectVideo(video);
+   if(generated.duration!==null)payload.duration_seconds=generated.duration;
+  }
+  const selectedCover=cover||generated.thumbnail;
+  if(selectedCover){status("upload-message",cover?"Enviando capa...":"Enviando capa gerada automaticamente...");newPoster=await uploadCover(selectedCover)}
   if(video){
    newVideo=createVideoPath(video);
    await uploadVideo(video,newVideo);

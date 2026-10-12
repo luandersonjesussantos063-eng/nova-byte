@@ -20,7 +20,7 @@ let view="inicio",selected=null,featuredIndex=0,current=null,hls=null,timer=0,at
 let fullscreenOwned=false,closingFullscreen=false,lockedLandscape=false;
 
 function posterUrl(path){
- if(!remoteDb||!path)return"./assets/posters/lua.svg";
+ if(!remoteDb||!path)return"./assets/posters/autoral.svg";
  return remoteDb.storage.from("novaplay-posters").getPublicUrl(path).data.publicUrl;
 }
 function durationText(seconds){
