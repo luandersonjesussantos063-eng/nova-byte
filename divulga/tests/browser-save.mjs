@@ -87,7 +87,19 @@ try{
  assert.equal(shared.published,0);
  assert.match(await page.locator('#fila').innerText(),/No Facebook, toque em criar publicação e cole o anúncio/);
 
-  assert.deepEqual(errors,[]);
+  // Transferência do grupo e anúncio pelo compartilhamento Android, para autorização no APK.
+ await page.evaluate(()=>{
+  window.__robotShare=null;
+  Object.defineProperty(navigator,'share',{configurable:true,value:payload=>{
+   window.__robotShare=payload;return Promise.resolve();
+  }});
+ });
+ await page.locator('[data-action="queue-send-robot"]').click();
+ const robotPayload=await page.evaluate(()=>window.__robotShare);
+ assert.equal(robotPayload.title,'NovaByte Robô — revisão de publicação');
+ assert.match(robotPayload.text,/^NOVABYTE_ROBO_V1\nGRUPO=https:\/\/www\.facebook\.com\/share\/g\/123456ABC\nTEXTO:\n/);
+ assert.match(robotPayload.text,/A NovaByte Soluções cria sites profissionais/);
+ assert.deepEqual(errors,[]);
  console.log('PASSOU: Chrome Android 412px — grupo e campanha salvos, fluxo de um toque com cópia e abertura do grupo, sem falsa publicação.');
 }finally{
  await browser?.close();
