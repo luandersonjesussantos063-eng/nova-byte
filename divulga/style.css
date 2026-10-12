@@ -4,3 +4,23 @@
 @media(max-width:1100px){.stats{grid-template-columns:repeat(2,minmax(0,1fr))}.sidebar{flex-basis:218px}.grid2{grid-template-columns:1fr}.main{padding:30px 24px 100px}}
 @media(max-width:760px){.topbar{height:65px;padding:0 17px}.sidebar{display:none}.main{padding:21px 15px 108px}.status-dot,.online-status{display:none}.brandmark{width:38px;height:38px;font-size:23px}.brandname strong{font-size:15px}.brandname small{font-size:10px}.bottom-nav{display:flex;position:fixed;z-index:20;bottom:0;left:0;right:0;min-height:71px;padding:7px 4px calc(5px + env(safe-area-inset-bottom));background:#0b1423f5;border-top:1px solid #34465d;justify-content:space-around;backdrop-filter:blur(12px)}.bottom-nav button{color:#9eb0c5;background:transparent;border:0;display:flex;flex-direction:column;gap:1px;align-items:center;justify-content:center;min-width:59px;font-size:20px;border-radius:9px;padding:3px 7px}.bottom-nav button small{font-size:10px;color:inherit;font-weight:800}.bottom-nav button.active{background:#193353;color:#9ccaff}.hero{padding:25px 21px;min-height:auto}.hero:after{font-size:185px;right:0;top:-45px}.hero h1{font-size:31px}.hero p{font-size:13px}.hero-actions .btn{flex:1}.stat{padding:16px}.stat strong{font-size:27px}.stat-top{font-size:11px}.card{padding:18px}.section-head{align-items:flex-start}.section-head .btn{white-space:nowrap}.item{flex-direction:column}.item-actions{align-self:stretch}.item-actions .btn{flex:1}.field-grid{grid-template-columns:1fr;gap:0}.toast{bottom:92px}.modal-panel{padding:20px}.queue-actions{grid-template-columns:1fr}.queue-actions .wide{grid-column:auto}.filters input,.filters select{max-width:none}.filters>*{width:100%}.queue-card{padding:18px}}
 @media(max-width:380px){.brandname strong{font-size:14px}.stat-icon{display:none}.bottom-nav button{min-width:52px;padding:3px 4px}.hero-actions{flex-direction:column}}
+
+/* V 1.0.3 — formulário de grupos legível no Android */
+.header-actions{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.link-input-row{display:flex;align-items:stretch;gap:9px;min-width:0}
+.link-input-row input{flex:1;min-width:0}
+.link-input-row button{flex-shrink:0;max-width:44%}
+.field-validation{font-size:12px;min-height:18px;color:#9db2ce;line-height:1.4}
+.field-validation.valid{color:#77d5b2}
+.field-validation.invalid{color:#ffb8a8}
+.form-error{padding:11px 13px;background:#42212a;border:1px solid #c15b71;color:#ffe1e7;border-radius:10px;font-size:13px;line-height:1.5;margin:12px 0}
+.form-error[hidden]{display:none}
+@media(max-width:760px){
+ .section-head{display:flex;flex-direction:column;align-items:stretch;gap:14px}
+ .section-head>div:first-child{width:100%;min-width:0}
+ .section-head .header-actions{display:flex;width:100%;gap:8px;flex-wrap:wrap}
+ .section-head .header-actions .btn{flex:1 1 auto;white-space:normal}
+ .link-input-row{flex-direction:column}
+ .link-input-row button{max-width:none;width:100%}
+ .modal-panel{overflow:auto;max-height:calc(100dvh - 30px)}
+}
