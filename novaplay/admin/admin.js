@@ -11,7 +11,7 @@ let client=null,editing=null,items=[],busy=false,currentUpload=null,sessionUser=
 let libraryPage=0;
 let qualityFilter="all";
 const LIBRARY_PAGE_SIZE=48;
-let reviewQueueItems=[],queueBusy=false;
+
 const esc=t=>String(t??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 function status(id,message,isError=false,isSuccess=false){
  const n=$(id);n.textContent=message;n.classList.toggle("error",isError);n.classList.toggle("success",isSuccess);
@@ -49,7 +49,7 @@ async function checkSession(){
  try{
   const u=await hasAdmin();
   sessionUser=u||null;
-  if(u){show("dashboard");await Promise.all([loadLibrary(),loadReviewQueue()]);}
+  if(u){show("dashboard");await loadLibrary();}
   else if(u===false){
    const v=await client.auth.getUser();
    $("pending-email").textContent=v.data.user?.email||"Conta aguardando aprovação";
@@ -198,91 +198,10 @@ async function uploadCover(file){
  return path;
 }
 
-/* Staged titles from the uploaded PDF are metadata only, never public streams. */
-async function loadReviewQueue(){
- if(!client||!sessionUser)return;
- const {data,error}=await client.from("novaplay_review_queue")
-  .select("id,title,kind,audio_version,reference_url,source_order,rights_status")
-  .order("source_order",{ascending:true}).limit(200);
- if(error){status("queue-feedback","Falha ao carregar títulos do PDF: "+errorText(error),true);return}
- reviewQueueItems=data||[];renderReviewQueue();
-}
-function renderReviewQueue(){
- const counter=$("queue-count"),list=$("queue-items");
- if(!counter||!list)return;
- const pending=reviewQueueItems.filter(x=>x.rights_status==="pending").length;
- const confirmed=reviewQueueItems.filter(x=>x.rights_status==="confirmed").length;
- const rejected=reviewQueueItems.filter(x=>x.rights_status==="rejected").length;
- counter.textContent=reviewQueueItems.length+" títulos · "+pending+" pendentes";
- const filter=($("queue-search").value||"").trim().toLocaleLowerCase("pt-BR");
- const state=$("queue-state").value;
- const rows=reviewQueueItems.filter(x=>
-  (state==="all"||x.rights_status===state)&&x.title.toLocaleLowerCase("pt-BR").includes(filter)
- );
- list.replaceChildren();
- if(!rows.length){
-  const p=document.createElement("p");p.className="muted";p.textContent="Nenhum título encontrado.";list.append(p);
- }
- for(const row of rows){
-  const box=document.createElement("article");box.className="queue-item";
-  const kind=row.kind==="movie"?"Filme":"Série / anime";
-  const audio=({subtitled:"Legendado",dubbed:"Dublado",dubbed_subbed:"Dublado e legendado",unknown:"Áudio não informado"})[row.audio_version]||"Áudio não informado";
-  const label=({pending:"Direitos pendentes",confirmed:"Direitos conferidos",rejected:"Sem autorização"})[row.rights_status]||"Pendente";
-  const heading=document.createElement("div");heading.className="queue-identifier";
-  heading.innerHTML='<span class="queue-order">#'+Number(row.source_order)+'</span><div class="queue-identity"><strong>'+esc(row.title)+'</strong><small>'+esc(kind)+" · "+esc(audio)+'</small><span class="queue-state '+esc(row.rights_status)+'">'+esc(label)+'</span></div>';
-  const actions=document.createElement("div");actions.className="queue-actions";
-  const link=document.createElement("a");link.className="outline compact";link.textContent="Ver referência ↗";
-  link.href=row.reference_url;link.target="_blank";link.rel="noopener noreferrer";link.title="Referência do PDF, não é um player ou prova de licença";
-  actions.append(link);
-  if(row.rights_status==="pending"){
-   const ok=document.createElement("button");ok.type="button";ok.className="outline compact";ok.textContent="Direitos conferidos";ok.disabled=queueBusy;
-   ok.onclick=()=>changeQueueStatus(row,"confirmed");actions.append(ok);
-   const no=document.createElement("button");no.type="button";no.className="outline compact";no.textContent="Sem autorização";no.disabled=queueBusy;
-   no.onclick=()=>changeQueueStatus(row,"rejected");actions.append(no);
-  }else{
-   const back=document.createElement("button");back.type="button";back.className="outline compact";back.textContent="Reabrir análise";back.disabled=queueBusy;
-   back.onclick=()=>changeQueueStatus(row,"pending");actions.append(back);
-  }
-  if(row.rights_status==="confirmed"){
-   const prepare=document.createElement("button");prepare.type="button";prepare.className="primary compact";
-   prepare.textContent="Preparar cadastro";prepare.disabled=queueBusy;prepare.onclick=()=>prepareQueueTitle(row);actions.append(prepare);
-  }
-  box.append(heading,actions);list.append(box);
- }
- const note=$("queue-feedback");
- if(note&&!note.classList.contains("error"))note.textContent=reviewQueueItems.length+" referências privadas · "+pending+" pendentes · "+confirmed+" conferidos · "+rejected+" sem autorização.";
-}
-async function changeQueueStatus(row,next){
- if(queueBusy)return;
- const message=next==="confirmed"?"Confirma que conferiu e possui autorização para exibir “"+row.title+"” na NovaPlay? Isto NÃO publica o filme."
-  :next==="rejected"?"Marcar este título como sem autorização?":"Reabrir a conferência deste título?";
- if(!confirm(message))return;
- queueBusy=true;
- try{
-  const {error}=await client.from("novaplay_review_queue")
-   .update({rights_status:next,checked_at:next==="pending"?null:new Date().toISOString()})
-   .eq("id",row.id);
-  if(error)throw error;
-  await loadReviewQueue();
- }catch(e){status("queue-feedback","Não foi possível salvar a revisão: "+errorText(e),true)}
- finally{queueBusy=false;renderReviewQueue()}
-}
-function prepareQueueTitle(row){
- if(busy||queueBusy||row.rights_status!=="confirmed")return;
- resetForm();
- $("title").value=row.kind==="movie"?row.title:row.title+" — Episódio";
- $("kind").value=row.kind==="movie"?"movie":"episode";
- $("genre").value="Anime";
- setKind();
- if(row.kind==="series"){$("series-name").value=row.title;$("episode-number").value=""}
- $("publish").checked=false;
- status("upload-message","Cadastro iniciado sem publicação. Informe o episódio (se for série) e escolha uma fonte de vídeo autorizada.",false,true);
- document.querySelector(".editor").scrollIntoView({behavior:"smooth",block:"start"});
-}
 async function loadLibrary(){
  // Ler todas as páginas: o catálogo importado pode ter centenas de rascunhos.
  const gathered=[];
- const select="id,title,description,kind,series_title,episode_number,genre,production_year,video_path,youtube_id,google_drive_id,google_drive_resource_key,poster_path,is_published,rights_reviewed,rights_reviewed_at,quality_score,quality_score_source,quality_score_note,quality_scored_at,file_size_bytes,mime_type,created_at";
+ const select="id,title,description,kind,series_title,episode_number,genre,production_year,video_path,youtube_id,google_drive_id,google_drive_resource_key,poster_path,is_published,rights_reviewed,rights_reviewed_at,catalog_only,review_queue_id,quality_score,quality_score_source,quality_score_note,quality_scored_at,file_size_bytes,mime_type,created_at";
  for(let offset=0;offset<5000;offset+=500){
   const {data,error}=await client.from("novaplay_library").select(select).order("created_at",{ascending:false}).range(offset,offset+499);
   if(error){status("upload-message","Não foi possível ler a biblioteca: "+errorText(error),true);return}
@@ -326,6 +245,7 @@ function renderLibrary(){
  const shown=items.filter(x=>{
   if(!(x.title+" "+(x.series_title||"")).toLocaleLowerCase("pt-BR").includes(filter))return false;
   if(statusFilter==="imported"&&x.genre!=="Importado - revisão")return false;
+  if(statusFilter==="catalog_only"&&!x.catalog_only)return false;
   if(statusFilter==="draft"&&x.is_published)return false;
   if(statusFilter==="reviewed"&&(x.is_published||!x.rights_reviewed))return false;
   if(statusFilter==="published"&&!x.is_published)return false;
@@ -342,9 +262,9 @@ function renderLibrary(){
  shown.slice(libraryPage*LIBRARY_PAGE_SIZE,(libraryPage+1)*LIBRARY_PAGE_SIZE).forEach(row=>{
   const item=document.createElement("article");item.className="movie-item";
   const poster=row.poster_path?client.storage.from(POSTER_BUCKET).getPublicUrl(row.poster_path).data.publicUrl:(row.youtube_id?"https://i.ytimg.com/vi/"+encodeURIComponent(row.youtube_id)+"/hqdefault.jpg":row.google_drive_id?(window.NovaPlayCover?.driveThumbnail(row.google_drive_id)||window.NovaPlayCover?.titleCard(row.title)):(window.NovaPlayCover?.titleCard(row.title)||"../assets/posters/autoral.svg"));
-  const source=row.youtube_id?"YouTube · Link":row.google_drive_id?"Google Drive · Link":((row.file_size_bytes||0)/(1024*1024)).toFixed(1)+" MB";
+  const source=row.catalog_only?"Aguardando vídeo autorizado":row.youtube_id?"YouTube · Link":row.google_drive_id?"Google Drive · Link":((row.file_size_bytes||0)/(1024*1024)).toFixed(1)+" MB";
   const review=row.genre==="Importado - revisão";
-  const displayState=row.is_published?"PUBLICADO":row.rights_reviewed?"CONFERIDO · AGUARDA PUBLICAÇÃO":review?"RASCUNHO · REVISAR DIREITOS":"RASCUNHO";
+  const displayState=row.catalog_only?(row.is_published?"NA GRADE · EM BREVE":"RASCUNHO · SEM VÍDEO"):row.is_published?"PUBLICADO":row.rights_reviewed?"CONFERIDO · AGUARDA PUBLICAÇÃO":review?"RASCUNHO · REVISAR DIREITOS":"RASCUNHO";
   const grade=Number.isInteger(row.quality_score)?row.quality_score:null;
   const gradeTag=grade===null?"SEM NOTA":grade<6?"NOTA "+grade+" · CANDIDATO À RETIRADA":"NOTA "+grade+" · MANTER";
   const gradeBadge='<span class="quality-status'+(grade!==null&&grade<6?" quality-below":"")+'">'+gradeTag+'</span>';
@@ -353,7 +273,7 @@ function renderLibrary(){
    '<label class="quality-select-label">Nota <select class="quality-select" aria-label="Nota de '+esc(row.title)+'">'+options+'</select></label>'+
    '<input type="text" class="quality-note" maxlength="500" placeholder="Motivo da nota (opcional)" value="'+esc(row.quality_score_note||"")+'" aria-label="Motivo da nota de '+esc(row.title)+'">'+
    '<button type="button" class="quality-save">Salvar nota</button></div>';
-  item.innerHTML='<img class="movie-thumb" alt="" loading="lazy" src="'+esc(poster)+'"><div class="movie-main"><strong>'+esc(row.title)+'</strong><small>'+esc(row.kind==="episode"?(row.series_title+" · Ep. "+row.episode_number):"Filme/curta")+' · '+esc(source)+'</small><span class="movie-state'+(row.is_published?"":" draft")+'">'+displayState+'</span>'+gradeBadge+gradeEditor+'<div class="movie-buttons"><button class="review">'+(row.rights_reviewed?'✓ Conferido':'Marcar como conferido')+'</button><button class="edit">Editar</button><button class="publish">'+(row.is_published?"Retirar do catálogo":"Publicar")+'</button><button class="danger delete">Excluir</button></div></div>';
+  item.innerHTML='<img class="movie-thumb" alt="" loading="lazy" src="'+esc(poster)+'"><div class="movie-main"><strong>'+esc(row.title)+'</strong><small>'+esc(row.catalog_only?(row.genre==="Anime · Série"?"Anime / série":"Anime / filme"):(row.kind==="episode"?(row.series_title+" · Ep. "+row.episode_number):"Filme/curta"))+' · '+esc(source)+'</small><span class="movie-state'+(row.is_published?"":" draft")+'">'+displayState+'</span>'+gradeBadge+gradeEditor+'<div class="movie-buttons"><button class="review">'+(row.rights_reviewed?'✓ Conferido':'Marcar como conferido')+'</button><button class="edit">Editar</button><button class="publish">'+(row.is_published?"Retirar do catálogo":"Publicar")+'</button><button class="danger delete">Excluir</button></div></div>';
   item.querySelector(".movie-thumb").addEventListener("error",function(){
    if(this.dataset.fallbackShown)return;
    this.dataset.fallbackShown="1";
@@ -361,7 +281,8 @@ function renderLibrary(){
   });
   item.querySelector(".quality-save").onclick=()=>saveQualityScore(row,item);
   item.querySelector(".review").onclick=()=>toggleReview(row);
-   item.querySelector(".edit").onclick=()=>beginEdit(row);
+   item.querySelector(".edit").textContent=row.catalog_only?"Adicionar vídeo":"Editar";
+  item.querySelector(".edit").onclick=()=>beginEdit(row);
   item.querySelector(".publish").onclick=()=>togglePublish(row);
   item.querySelector(".delete").onclick=()=>removeItem(row);
   list.append(item);
@@ -396,7 +317,7 @@ function beginEdit(row){
  $("video-file-label").textContent="Trocar vídeo (opcional)";
  $("poster-file-label").textContent="Trocar capa (opcional)";
  $("submit-upload").textContent="Salvar alterações";
- status("upload-message","Editando “"+row.title+"”. Você pode mudar só o texto ou trocar arquivos.");
+ status("upload-message",row.catalog_only?"“"+row.title+"” já aparece na grade como Em breve. Para ativar a reprodução, cadastre uma fonte autorizada de vídeo neste formulário.":"Editando “"+row.title+"”. Você pode mudar só o texto ou trocar arquivos.");
  document.querySelector(".editor").scrollIntoView({behavior:"smooth",block:"start"});
 }
 function resetForm(){
@@ -453,7 +374,7 @@ async function toggleReview(row){
 async function togglePublish(row){
  if(busy)return;
  const publish=!row.is_published;
- if(publish&&!confirm("Confirma autorização para disponibilizar publicamente “"+row.title+"” na NovaPlay, incluindo o arquivo indicado pelo link?"))return;
+ if(publish&&!confirm(row.catalog_only?"Exibir a ficha de “"+row.title+"” na grade como EM BREVE, sem reprodução, até cadastrar um vídeo?":"Confirma autorização para disponibilizar publicamente “"+row.title+"” na NovaPlay, incluindo o arquivo indicado pelo link?"))return;
  busy=true;renderLibrary();
  try{
   const changes={is_published:publish};
@@ -561,7 +482,8 @@ async function sendForm(e){
   episode_number:kind==="episode"?Number($("episode-number").value):null,
   production_year:$("year").value?Number($("year").value):null,
   genre:$("genre").value.trim()||"Autoral",
-  is_published:$("publish").checked
+  is_published:$("publish").checked,
+  catalog_only:false
  };
  if(payload.title.length<2){status("upload-message","Informe um título de pelo menos 2 caracteres.",true);return}
  if(kind==="episode"&&(!payload.series_title||!payload.episode_number)){status("upload-message","Informe o nome da série e o número do episódio.",true);return}
@@ -651,9 +573,7 @@ function init(){
  $("cancel-edit").onclick=()=>{resetForm();status("upload-message","Edição cancelada.")};
  $("bulk-mark-reviewed").onclick=bulkMarkReviewed;
  $("bulk-publish").onclick=bulkPublishReviewed;
- $("queue-search").oninput=renderReviewQueue;
- $("queue-state").onchange=renderReviewQueue;
- $("refresh-list").onclick=()=>Promise.all([loadLibrary(),loadReviewQueue()]);$("filter-title").oninput=()=>{libraryPage=0;renderLibrary()};if($("library-state-filter"))$("library-state-filter").onchange=()=>{libraryPage=0;renderLibrary()};
+ $("refresh-list").onclick=loadLibrary;$("filter-title").oninput=()=>{libraryPage=0;renderLibrary()};if($("library-state-filter"))$("library-state-filter").onchange=()=>{libraryPage=0;renderLibrary()};
  $("video-file").onchange=()=>{$("video-file-label").textContent=$("video-file").files[0]?.name||"Selecionar vídeo do telefone"};
  $("poster-file").onchange=()=>{$("poster-file-label").textContent=$("poster-file").files[0]?.name||"Escolher capa (opcional)"};
  $("youtube-poster-file").onchange=()=>{$("youtube-poster-label").textContent=$("youtube-poster-file").files[0]?.name||"Adicionar capa personalizada (opcional)"};
