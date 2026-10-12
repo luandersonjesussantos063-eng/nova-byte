@@ -60,8 +60,35 @@ try{
  await page.locator('.bottom-nav [data-tab="campanhas"]').click();
  assert.match(await page.locator('#campanhas').innerText(),/Sites profissionais NovaByte/);
  assert.equal(await page.locator('#campanhas article').count(),1);
+ // Um único toque prepara o conteúdo, copia e abre o grupo, sem marcar publicação como concluída.
+ await page.locator('.bottom-nav [data-tab="fila"]').click();
+ await page.locator('[data-action="start-queue"]').first().click();
+ assert.equal(await page.locator('[data-action="queue-prepare-open"]').count(),1);
+ await page.evaluate(()=>{
+  window.__openedGroup=null;window.__copiedAd=null;
+  document.execCommand=function(command){
+   if(command!=='copy')return false;
+   const field=[...document.querySelectorAll('textarea')].find(el=>el.readOnly);
+   if(field){window.__copiedAd=field.value;return true}
+   return false;
+  };
+  window.open=(url)=>{window.__openedGroup=url;return {}};
+ });
+ await page.locator('[data-action="queue-prepare-open"]').click();
+ const shared=await page.evaluate(()=>({
+  url:window.__openedGroup,ad:window.__copiedAd,
+  groupCount:JSON.parse(localStorage.getItem('novabyte-divulga-v1')).groups.length,
+  published:JSON.parse(localStorage.getItem('novabyte-divulga-v1')).history.length
+ }));
+ assert.equal(shared.url,'https://www.facebook.com/share/g/123456ABC');
+ assert.match(shared.ad,/NovaByte Soluções cria sites profissionais/);
+ assert.match(shared.ad,/https:\/\/novabytesolucoes.com.br\//);
+ assert.equal(shared.groupCount,1);
+ assert.equal(shared.published,0);
+ assert.match(await page.locator('#fila').innerText(),/No Facebook, toque em criar publicação e cole o anúncio/);
+
   assert.deepEqual(errors,[]);
- console.log('PASSOU: Chrome Android 412px — grupo e campanha salvos, contadores corretos e persistência após recarregar.');
+ console.log('PASSOU: Chrome Android 412px — grupo e campanha salvos, fluxo de um toque com cópia e abertura do grupo, sem falsa publicação.');
 }finally{
  await browser?.close();
  await new Promise(resolve=>server.close(resolve));
