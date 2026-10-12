@@ -1,0 +1,14 @@
+{
+  "appId": "br.com.novabytesolucoes.divulga",
+  "appName": "NovaByte Divulga",
+  "webDir": "www",
+  "backgroundColor": "#0b1120",
+  "server": {
+    "hostname": "localhost",
+    "androidScheme": "https",
+    "cleartext": false
+  },
+  "android": {
+    "allowMixedContent": false
+  }
+}
