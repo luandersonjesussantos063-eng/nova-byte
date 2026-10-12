@@ -24,3 +24,6 @@
  .link-input-row button{max-width:none;width:100%}
  .modal-panel{overflow:auto;max-height:calc(100dvh - 30px)}
 }
+
+/* Cadastro de grupo — confirmação permanente após salvar */
+.group-confirmation{margin-bottom:14px;padding:14px 16px;border:1px solid #277e78;background:#123c38;color:#d6fff0;border-radius:12px;font-size:14px;font-weight:800;line-height:1.6}
