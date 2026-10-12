@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="service_description">Serviço experimental ativado manualmente para abrir um grupo do Facebook, preencher um texto e tentar acionar Publicar somente após autorização explícita. Acesso restrito ao Facebook e Facebook Lite. Não coleta senhas, não envia dados a servidores e pode ser desativado a qualquer momento nas Configurações de acessibilidade.</string>
+</resources>
