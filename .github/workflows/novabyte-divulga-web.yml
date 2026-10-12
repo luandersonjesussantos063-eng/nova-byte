@@ -23,3 +23,11 @@ jobs:
           node --check divulga/sw.js
       - name: Testar exibição e persistência dos grupos
         run: node --test divulga/tests/*.test.mjs
+
+      - name: Testar cadastro no navegador real (Android mobile)
+        working-directory: divulga
+        run: |
+          npm install --no-save --no-audit --no-fund playwright-core
+          CHROME_PATH="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || true)"
+          test -n "$CHROME_PATH" || { echo "Chrome/Chromium não encontrado no GitHub runner"; exit 1; }
+          CHROME_PATH="$CHROME_PATH" node tests/browser-save.mjs
