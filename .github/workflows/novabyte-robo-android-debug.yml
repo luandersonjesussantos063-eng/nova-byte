@@ -1,6 +1,14 @@
 name: NovaByte Robo - APK experimental Android
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'divulga/robot-android/**'
+      - '.github/workflows/novabyte-robo-android-debug.yml'
+concurrency:
+  group: novabyte-robo-debug-main
+  cancel-in-progress: true
 permissions:
   contents: read
 jobs:
