@@ -3,179 +3,125 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#080e1c">
+<meta name="theme-color" content="#080d17">
 <meta name="robots" content="noindex,nofollow">
-<meta name="description" content="NovaPlay: cinema clássico em domínio público, seriados históricos e TV aberta oficial gratuita.">
+<meta name="description" content="NovaPlay: filmes clássicos, séries históricas e TV aberta grátis em uma plataforma de streaming.">
+<link rel="icon" href="./assets/icon.svg" type="image/svg+xml">
 <link rel="manifest" href="./manifest.webmanifest">
-<link rel="icon" type="image/svg+xml" href="./assets/icon.svg">
-<title>NovaPlay | TV aberta e clássicos grátis</title>
-<style>
-:root{color-scheme:dark;--bg:#080e1c;--panel:#101b30;--glass:#15243d;--stroke:#263752;--white:#f5f7fd;--muted:#9daec6;--blue:#5278ff;--sky:#49caff;--pink:#a75bff}
-*[hidden]{display:none!important}*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(circle at 77% 2%,#1b2357 0,transparent 42%),var(--bg);color:var(--white);font:15px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}button,input{font:inherit}button{cursor:pointer}button:focus-visible,input:focus-visible{outline:2px solid var(--sky);outline-offset:3px}a{color:inherit;text-decoration:none}.layout{display:grid;grid-template-columns:248px minmax(0,1fr);min-height:100vh}.sidebar{padding:29px 18px;background:#0c1527b8;border-right:1px solid #202b41;position:sticky;top:0;height:100vh;display:flex;flex-direction:column}.brand{font-size:24px;font-weight:850;display:flex;align-items:center;gap:10px;letter-spacing:-.7px}.brand b{color:#78aaff}.brand-icon{width:37px;height:37px;display:grid;place-items:center;border-radius:12px;background:linear-gradient(135deg,#526aff,#a64ffc);font-size:20px}.nav-title{font-size:10px;letter-spacing:2.2px;color:#748aa9;font-weight:800;margin:37px 12px 13px}.nav-link{border:0;color:#a1b0c9;background:transparent;display:flex;align-items:center;gap:12px;text-align:left;width:100%;padding:12px 15px;border-radius:12px;margin-bottom:5px}.nav-link.active,.nav-link:hover{background:#1a2a48;color:#fff}.nav-link .ico{font-size:20px;width:26px;text-align:center}.sidebar-bottom{margin-top:auto;background:#182643;border-radius:15px;padding:17px}.sidebar-bottom strong{display:block;margin:8px 0}.sidebar-bottom p{font-size:12px;color:var(--muted);margin:0 0 13px}.sidebar-bottom button{padding:9px 10px;width:100%;border:1px solid #5373a6;border-radius:9px;background:#172d54;color:white}.sidebar-bottom small{font-size:10px;color:#7990ae}.main{min-width:0;padding:0 36px 70px}.topbar{height:86px;display:flex;align-items:center;justify-content:space-between;gap:16px}.mobile-brand{display:none}.search{display:flex;align-items:center;gap:9px;background:#111e34;border:1px solid #243753;border-radius:12px;padding:0 14px;max-width:475px;flex:1;min-width:100px}.search input{border:0;outline:0;background:transparent;color:white;min-width:0;width:100%;padding:13px 0}.search input::placeholder{color:#8497b5}.top-actions{display:flex;align-items:center;gap:14px;white-space:nowrap}.demo{color:#99c3e6;font-size:11px;letter-spacing:.7px}.dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:#40cdf4;margin-right:8px}.ghost{border:1px solid #344667;background:#1a2842;color:#e9efff;border-radius:11px;padding:10px 15px}.avatar{border:0;background:linear-gradient(135deg,#5149e9,#9957ff);border-radius:12px;color:white;font-weight:800;padding:11px}.hero{background:radial-gradient(circle at 75% 42%,#593dab77,transparent 47%),linear-gradient(120deg,#202452,#131d3b 61%,#0c2942);min-height:295px;border:1px solid #354375;border-radius:23px;overflow:hidden;position:relative;display:flex;align-items:center;margin-bottom:24px}.hero:after{content:"▶";position:absolute;right:7%;top:5%;font-size:160px;font-weight:900;color:#8592ff12;transform:rotate(-11deg)}.hero-body{z-index:1;position:relative;padding:39px 40px;max-width:640px}.eyebrow{font-size:11px;font-weight:850;color:#a8c4ff;letter-spacing:2px}.hero h1{font-size:clamp(30px,4vw,52px);letter-spacing:-1.5px;line-height:1.12;margin:13px 0}.hero h1 em{font-style:normal;background:linear-gradient(90deg,#60c8ff,#b775ff);color:transparent;background-clip:text}.hero p{color:#b8c5e0;margin:0 0 22px;max-width:510px}.actions{display:flex;flex-wrap:wrap;gap:10px}.primary{border:0;background:linear-gradient(110deg,#4974ff,#8a56f9);color:white;font-weight:800;padding:12px 19px;border-radius:12px}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:13px;margin-bottom:32px}.stat{display:flex;gap:12px;align-items:center;background:#111d32;border:1px solid #233552;border-radius:14px;padding:17px}.stat-symbol{font-size:22px;color:#87a4ff}.stat strong{font-size:13px;display:block}.stat small{font-size:11px;color:#8fa3be;display:block}.sectiontop{display:flex;align-items:end;justify-content:space-between;gap:10px;margin:15px 0 23px}.kicker{font-size:10px;font-weight:900;color:#85a9fe;letter-spacing:2px}.sectiontop h2{margin:2px 0;font-size:29px;letter-spacing:-.7px}.sectiontop p{margin:0;color:var(--muted);font-size:13px}.filters{display:flex;gap:7px;flex-wrap:wrap}.filter{border:1px solid #354465;background:#182742;color:#a5b9d4;border-radius:10px;padding:8px 14px;font-size:12px}.filter.active{background:#41439d;color:white;border-color:#7770db}.cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}.card{min-width:0;border:1px solid #2a3b56;border-radius:18px;background:#131f35;overflow:hidden}.art{aspect-ratio:16/9;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}.art.violet{background:radial-gradient(circle at 50% 35%,#985afd,#512f99 54%,#211d55)}.art.sky{background:radial-gradient(circle at 50% 35%,#329dda,#165487 55%,#14284c)}.art.orange{background:radial-gradient(circle at 50% 35%,#f4a75d,#a64e6b 58%,#52224d)}.art>span:not(.card-tag){font-size:48px;opacity:.85;text-shadow:0 8px 25px #0004}.card-tag{position:absolute;left:13px;top:13px;background:#090f21ab;border:1px solid #ffffff27;border-radius:6px;padding:4px 8px;font-size:10px;font-weight:800}.card-play{position:absolute;bottom:12px;right:12px;border:0;border-radius:50%;height:37px;width:37px;color:#fff;background:#5476ee;font-weight:800}.card-body{padding:16px}.card-body h3{font-size:16px;margin:0 0 7px}.meta{color:#a0b3cc;font-size:11px;display:flex;gap:8px;flex-wrap:wrap}.description{font-size:12px;color:#99adc5;min-height:38px;margin:12px 0}.card-actions{display:flex;gap:8px}.watch{flex:1;background:#284dce;color:white;border:0;border-radius:9px;padding:10px;font-size:12px;font-weight:800}.favorite{width:38px;border:1px solid #46577b;border-radius:9px;background:#1b2c49;color:#f2f6ff;font-size:18px}.empty{grid-column:1/-1;background:#13213a;border:1px solid #30415e;border-radius:15px;padding:28px;color:#b0c0d9;text-align:center}.footnote{margin:34px 0 20px;padding:19px;border-radius:15px;background:#121f37;border:1px solid #293956;color:#aec1db;font-size:13px}.footnote strong{color:white}footer{font-size:11px;color:#7d91ad;padding-top:16px}.mobile-nav{display:none}.modal{position:fixed;inset:0;z-index:20;background:#040914d9;display:grid;place-items:center;padding:20px}.modal[hidden]{display:none}.dialog{width:min(100%,780px);background:#13213a;border:1px solid #425474;border-radius:18px;box-shadow:0 22px 70px #0008;overflow:hidden}.modalhead{display:flex;justify-content:space-between;align-items:center;padding:20px 23px;gap:12px}.modalhead h2{margin:0;font-size:20px}.close{background:#283754;border:1px solid #475777;color:white;border-radius:9px;width:37px;height:37px}.video-holder{background:#050811;position:relative}.video-holder video{display:block;background:#050811;width:100%;max-height:60vh;aspect-ratio:16/9}.modalfoot{padding:19px 23px;color:#adc2d8;font-size:13px}.modalfoot p{margin:0 0 12px}.modalfoot .error{color:#ffb3bf}#info-modal .dialog{max-width:485px}.info{padding:0 24px 24px;color:#c5d2e3}.info h3{color:white;margin-top:0}.info ul{padding-left:20px}.info li{margin:9px 0}.info button{margin-top:8px}
-@media(max-width:1080px){.cards{grid-template-columns:repeat(2,minmax(0,1fr))}.sidebar{width:205px}.layout{grid-template-columns:205px minmax(0,1fr)}.main{padding:0 22px 55px}}
-@media(max-width:760px){.layout{display:block}.sidebar{display:none}.main{padding:0 16px 95px}.topbar{height:73px;gap:10px}.mobile-brand{display:block;font-size:18px;font-weight:900;white-space:nowrap}.mobile-brand b{color:#76adff}.search{max-width:none}.search input{font-size:12px}.top-actions .ghost,.top-actions .demo{display:none}.top-actions{gap:0}.avatar{font-size:12px}.hero{min-height:285px}.hero-body{padding:27px 22px}.hero h1{font-size:32px}.hero p{font-size:13px}.stats{gap:7px}.stat{padding:11px 8px;gap:6px}.stat-symbol{font-size:19px}.stat strong{font-size:11px}.stat small{font-size:9px}.sectiontop{display:block}.sectiontop h2{font-size:23px}.filters{margin-top:14px}.cards{gap:10px}.card-body{padding:12px}.card-body h3{font-size:13px}.description{font-size:11px;min-height:48px}.card-tag{font-size:9px}.card-actions{gap:5px}.watch{font-size:11px;padding:9px 5px}.favorite{width:34px}.mobile-nav{display:flex;position:fixed;bottom:0;left:0;right:0;justify-content:space-around;background:#0f1b2cee;backdrop-filter:blur(12px);border-top:1px solid #2f3d59;z-index:10;padding:8px 0 calc(8px + env(safe-area-inset-bottom))}.mobile-link{border:0;background:transparent;color:#8fa4c1;font-size:11px;display:flex;align-items:center;flex-direction:column;gap:2px;min-width:55px}.mobile-link span{font-size:20px}.mobile-link.active{color:#80a7ff}}
-@media(max-width:375px){.cards{grid-template-columns:1fr}.stat{flex-wrap:wrap}.mobile-brand{font-size:15px}.hero h1{font-size:27px}}
-
-@media(max-width:760px){.card-body .description{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;min-height:50px}.card-tag{max-width:calc(100% - 20px);overflow:hidden;white-space:nowrap;text-overflow:ellipsis}.card-actions .watch{font-size:11px}}
-</style>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="stylesheet" href="./styles.css?v=0.5.0">
+<title>NovaPlay — Filmes, séries e TV ao vivo</title>
 </head>
 <body>
-<div class="layout">
-<aside class="sidebar">
-<a href="#inicio" class="brand"><span class="brand-icon">▶</span><span>Nova<b>Play</b></span></a>
-<div class="nav-title">NAVEGAR</div>
-<nav aria-label="Principal">
-<button class="nav-link active" data-page="inicio"><span class="ico">⌂</span>Início</button>
-<button class="nav-link" data-page="ao-vivo"><span class="ico">◉</span>TV ao vivo</button>
-<button class="nav-link" data-page="filmes"><span class="ico">▣</span>Filmes</button>
-<button class="nav-link" data-page="series"><span class="ico">▤</span>Séries</button>
-<button class="nav-link" data-page="favoritos"><span class="ico">♡</span>Minha lista</button>
+<svg style="position:absolute;width:0;height:0;overflow:hidden" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+<symbol id="i-home" viewBox="0 0 24 24"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1Z"/><path d="M9 21v-8h6v8"/></symbol>
+<symbol id="i-tv" viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="14" rx="2"/><path d="M8 2l4 4 4-4M8 23h8"/></symbol>
+<symbol id="i-film" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M7 3v18M17 3v18M3 8h4m-4 8h4m10-8h4m-4 8h4"/></symbol>
+<symbol id="i-series" viewBox="0 0 24 24"><rect x="5" y="4" width="16" height="16" rx="2"/><path d="M2 8V5a3 3 0 0 1 3-3h13M9 9h8M9 13h8"/></symbol>
+<symbol id="i-search" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="7.5"/><path d="m16 16 6 6"/></symbol>
+<symbol id="i-heart" viewBox="0 0 24 24"><path d="M20.8 4.8c-2-2-5.1-2-7.1 0L12 6.5l-1.7-1.7c-2-2-5.1-2-7.1 0s-2 5.1 0 7.1L12 21l8.8-9.1c2-2 2-5.1 0-7.1Z"/></symbol>
+<symbol id="i-play" viewBox="0 0 24 24"><path d="m7 3 14 9-14 9Z" stroke-linejoin="round"/></symbol>
+<symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 3v18M3 12h18"/></symbol>
+<symbol id="i-check" viewBox="0 0 24 24"><path d="m4 12 5 5L20 6"/></symbol>
+<symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 11v6M12 7h.01"/></symbol>
+<symbol id="i-close" viewBox="0 0 24 24"><path d="M4 4 20 20M20 4 4 20"/></symbol>
+<symbol id="i-arrow" viewBox="0 0 24 24"><path d="m8 4 8 8-8 8"/></symbol>
+<symbol id="i-arrow-left" viewBox="0 0 24 24"><path d="m15 4-8 8 8 8"/></symbol>
+<symbol id="i-volume" viewBox="0 0 24 24"><path d="M3 9v6h4l5 4V5L7 9H3M16 8c3 2 3 6 0 8"/></symbol>
+</svg>
+<header class="app-header" id="app-header">
+<a href="#inicio" class="brand" id="brand-link" aria-label="NovaPlay, início">
+  <span class="brand-mark">▶</span><span>Nova<span class="brand-blue">Play</span></span>
+</a>
+<nav class="desktop-nav" aria-label="Seções">
+  <button class="nav-option active" data-nav="inicio">Início</button>
+  <button class="nav-option" data-nav="tv">TV ao vivo</button>
+  <button class="nav-option" data-nav="filmes">Filmes</button>
+  <button class="nav-option" data-nav="series">Séries</button>
+  <button class="nav-option" data-nav="favoritos">Minha lista</button>
 </nav>
-<div class="nav-title">SUA CONTA</div>
-<nav aria-label="Conta">
-<button class="nav-link" data-action="plans"><span class="ico">♢</span>Planos</button>
-<button class="nav-link" data-action="about"><span class="ico">ⓘ</span>Sobre o app</button>
-</nav>
-<div class="sidebar-bottom"><strong>✦ Seu streaming, sua marca</strong><p>Uma plataforma pronta para evoluir para conteúdo licenciado e assinaturas.</p><button data-action="plans">Conhecer planos ↗</button><small>NovaPlay V 0.4.0 · HLS</small></div>
-</aside>
-<main class="main">
-<header class="topbar">
-<div class="mobile-brand">▶ Nova<b>Play</b></div>
-<label class="search">⌕ <input id="search" type="search" placeholder="Buscar canais, filmes, séries..." aria-label="Buscar conteúdo"></label>
-<div class="top-actions"><span class="demo"><span class="dot"></span>AMBIENTE DEMO</span><button class="ghost" data-action="plans">Assinatura</button><button class="avatar" data-action="account" aria-label="Minha conta">NP</button></div>
+<div class="header-actions">
+  <button class="icon-btn" id="search-trigger" aria-label="Buscar títulos"><svg><use href="#i-search"/></svg></button>
+  <span class="free-pill"><span class="live-dot"></span>GRÁTIS</span>
+  <button class="avatar" id="profile-trigger" aria-label="Sobre a NovaPlay">NP</button>
+</div>
 </header>
-<section class="hero" id="hero">
-<div class="hero-body">
-<div class="eyebrow">✦ NOVAPLAY · ACERVO GRATUITO</div>
-<h1>Cinema clássico e TV.<br><em>Dentro da NovaPlay.</em></h1>
-<p>TV aberta, cinema clássico e séries antigas. Tudo no player da NovaPlay.</p>
-<div class="actions"><button class="primary" id="hero-watch">▶ Ver um clássico</button><button class="ghost" data-action="plans">Ver planos ↗</button></div>
-</div>
-</section>
-<div class="stats" id="stats">
-<div class="stat"><span class="stat-symbol">◉</span><div><strong>TV aberta</strong><small>Canais oficiais</small></div></div>
-<div class="stat"><span class="stat-symbol">▣</span><div><strong>Clássicos</strong><small>Domínio público</small></div></div>
-<div class="stat"><span class="stat-symbol">♡</span><div><strong>Sua lista</strong><small>Favoritos locais</small></div></div>
-</div>
-<section class="sectiontop"><div><div class="kicker" id="kicker">EXPLORE</div><h2 id="heading">Em destaque ✦</h2><p id="subheading">Escolha um conteúdo e experimente nosso player.</p></div><div class="filters" id="filters"><button class="filter active" data-filter="todos">Todos</button><button class="filter" data-filter="ao-vivo">TV</button><button class="filter" data-filter="filmes">Filmes</button><button class="filter" data-filter="series">Séries</button></div></section>
-<section class="cards" id="cards" aria-live="polite"></section>
-<div class="footnote"><strong>✦ Acervo histórico e canais oficiais</strong><p>Os filmes e seriados são arquivos históricos de fontes públicas. TV Câmara, TV Brasil e TV Cultura são recebidas diretamente dos endereços oficiais de streaming HLS, sem retransmissão por nossos servidores. A disponibilidade depende das emissoras. Estes sinais de TV são gratuitos, não integram planos pagos. Algumas obras antigas são mudas e sem legendas.</p></div>
-<footer>NovaPlay V 0.4.0 · Streams HLS oficiais reproduzidos no player interno.</footer>
-</main>
-</div>
-<nav class="mobile-nav" aria-label="Menu do celular">
-<button class="mobile-link active" data-page="inicio"><span>⌂</span>Início</button>
-<button class="mobile-link" data-page="ao-vivo"><span>◉</span>TV</button>
-<button class="mobile-link" data-page="filmes"><span>▣</span>Filmes</button>
-<button class="mobile-link" data-page="series"><span>▤</span>Séries</button>
-<button class="mobile-link" data-page="favoritos"><span>♡</span>Minha lista</button>
+<nav class="mobile-chips" aria-label="Categorias rápidas">
+  <button data-nav="tv">TV aberta</button>
+  <button data-nav="filmes">Filmes</button>
+  <button data-nav="series">Séries</button>
+  <button data-nav="favoritos">Minha lista</button>
 </nav>
-<div class="modal" id="player-modal" role="dialog" aria-modal="true" aria-labelledby="player-title" hidden>
-<div class="dialog"><div class="modalhead"><h2 id="player-title">Reproduzindo</h2><button class="close" id="close-player" aria-label="Fechar">✕</button></div><div class="video-holder"><video id="video" controls playsinline preload="none"></video><iframe id="live-frame" title="Transmissão oficial" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen referrerpolicy="strict-origin-when-cross-origin" loading="lazy" hidden style="display:block;width:100%;aspect-ratio:16/9;border:0"></iframe></div><div class="modalfoot"><p id="player-desc"></p><p id="player-status" role="status" aria-live="polite" style="color:#8bcafe">Aguardando...</p><p class="error" id="video-error" role="alert"></p><div style="display:flex;gap:9px;flex-wrap:wrap;margin-top:8px"><button id="retry-stream" class="ghost" hidden>↻ Tentar novamente</button><button id="fallback-stream" class="ghost" hidden>▶ Player alternativo</button></div><a id="source-link" href="#" target="_blank" rel="noopener noreferrer" style="display:inline-flex;gap:7px;background:#2a3f65;padding:9px 13px;border-radius:8px;margin-top:7px">↗ Ver informações da fonte</a></div></div>
+<main id="main">
+  <div id="view-home" class="view">
+    <section class="hero" id="hero" aria-label="Destaque">
+      <div class="hero-art" id="hero-art"></div>
+      <div class="hero-shade"></div>
+      <div class="hero-content">
+        <div class="hero-eyebrow"><span class="brand-mini">N</span> <span>DESTAQUE DA NOVAPLAY</span></div>
+        <div class="hero-genre" id="hero-genre">CINEMA CLÁSSICO</div>
+        <h1 id="hero-title">O Mundo Perdido</h1>
+        <div class="hero-metadata" id="hero-metadata"></div>
+        <p class="hero-desc" id="hero-description"></p>
+        <div class="hero-buttons">
+          <button class="btn btn-primary" id="hero-play"><svg><use href="#i-play"/></svg> Assistir agora</button>
+          <button class="btn btn-secondary" id="hero-info"><svg><use href="#i-info"/></svg> Mais informações</button>
+        </div>
+      </div>
+      <div class="hero-dots" id="hero-dots" aria-label="Selecionar destaque"></div>
+    </section>
+    <div class="home-rows" id="home-rows"></div>
+  </div>
+  <div id="view-category" class="view" hidden>
+    <div class="category-intro"><p class="kicker" id="category-kicker">EXPLORAR</p><h1 id="category-heading"></h1><p id="category-subtitle"></p></div>
+    <div class="category-grid" id="category-grid"></div>
+  </div>
+  <div id="view-search" class="view" hidden>
+    <div class="category-intro"><p class="kicker">DESCUBRA</p><h1>O que você quer assistir?</h1></div>
+    <div class="search-input-shell"><svg><use href="#i-search"/></svg><input id="search-input" type="search" placeholder="Busque filmes, séries ou canais..." autocomplete="off" aria-label="Buscar no catálogo"></div>
+    <p id="search-summary" class="search-summary"></p>
+    <div id="search-results" class="category-grid"></div>
+  </div>
+</main>
+<nav class="mobile-nav" aria-label="Menu principal">
+  <button class="mobile-nav-item active" data-nav="inicio"><svg><use href="#i-home"/></svg><span>Início</span></button>
+  <button class="mobile-nav-item" data-nav="tv"><svg><use href="#i-tv"/></svg><span>TV</span></button>
+  <button class="mobile-nav-item" data-nav="filmes"><svg><use href="#i-film"/></svg><span>Filmes</span></button>
+  <button class="mobile-nav-item" data-nav="buscar"><svg><use href="#i-search"/></svg><span>Buscar</span></button>
+  <button class="mobile-nav-item" data-nav="favoritos"><svg><use href="#i-heart"/></svg><span>Minha lista</span></button>
+</nav>
+<div id="detail-layer" class="layer" hidden role="dialog" aria-modal="true" aria-labelledby="detail-title">
+  <div class="layer-backdrop" data-close="details"></div>
+  <section class="detail-sheet" id="detail-sheet">
+    <button class="round-close" id="close-details" aria-label="Fechar informações"><svg><use href="#i-close"/></svg></button>
+    <div class="detail-art"><img id="detail-image" alt="" loading="lazy"><div class="detail-art-shade"></div></div>
+    <div class="detail-body">
+      <span class="detail-type" id="detail-type"></span>
+      <h2 id="detail-title"></h2>
+      <p id="detail-meta" class="detail-meta"></p>
+      <div class="detail-actions">
+        <button class="btn btn-primary" id="detail-play"><svg><use href="#i-play"/></svg><span id="detail-play-label">Assistir</span></button>
+        <button class="btn btn-secondary" id="detail-favorite"><svg><use href="#i-plus"/></svg> <span>Minha lista</span></button>
+      </div>
+      <p class="detail-description" id="detail-description"></p>
+      <div id="episode-section" hidden><h3>Episódios disponíveis</h3><div id="episode-list"></div></div>
+      <p class="rights-info">Acervo clássico e transmissões gratuitas de fontes externas. Algumas versões podem ter direitos adicionais. O catálogo não inclui filmes e canais pagos sem licença.</p>
+    </div>
+  </section>
 </div>
-<div class="modal" id="info-modal" role="dialog" aria-modal="true" aria-labelledby="info-title" hidden><div class="dialog"><div class="modalhead"><h2 id="info-title">NovaPlay</h2><button class="close" id="close-info" aria-label="Fechar">✕</button></div><div class="info" id="info-body"></div></div></div>
+<div id="player-layer" class="player-layer" hidden role="dialog" aria-modal="true" aria-label="Reprodutor NovaPlay">
+  <div class="player-bar"><button id="player-back" class="player-back" aria-label="Voltar"><svg><use href="#i-arrow-left"/></svg></button><span class="player-brand">Nova<span>Play</span></span><span class="player-bar-title" id="player-heading"></span><button id="player-close" class="round-close" aria-label="Fechar vídeo"><svg><use href="#i-close"/></svg></button></div>
+  <div class="player-main">
+    <div class="video-wrap"><video id="video" controls playsinline preload="metadata" controlsList="nodownload"></video><iframe id="fallback-frame" title="Player alternativo oficial" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen hidden></iframe></div>
+    <div class="player-info"><div><h2 id="player-title"></h2><p id="player-status" role="status" aria-live="polite">Preparando reprodução...</p><p id="player-error" class="player-error" role="alert"></p></div><div class="player-options"><button class="btn btn-secondary" id="retry-btn" hidden>↻ Tentar novamente</button><button class="btn btn-secondary" id="fallback-btn" hidden>Player alternativo</button></div></div>
+    <p id="player-content-note" class="player-note"></p>
+    <a id="source-link" href="#" target="_blank" rel="noopener noreferrer" class="source-link" hidden>Ver informações da fonte original ↗</a>
+  </div>
+</div>
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+<footer class="app-footer">NovaPlay V 0.5.0 · Cinema clássico e TV aberta grátis · Artes ilustrativas da NovaPlay · O uso comercial de cada conteúdo exige verificação dos direitos.</footer>
+<script src="./catalog.js?v=0.5.0"></script>
 <script src="https://cdn.jsdelivr.net/npm/hls.js@1.7.3/dist/hls.min.js" defer></script>
-<script>
-(function () {
-"use strict";
-var catalog=[{"id":"camara","title":"TV Câmara","type":"ao-vivo","category":"Legislativo • Brasil","desc":"Transmissão direto do servidor oficial da Câmara dos Deputados, com reprodução HLS no aplicativo.","status":"AO VIVO · HLS","mode":"hls","embed":"https://www.camara.leg.br/tv/aovivo/embed","sourcePage":"https://www.camara.leg.br/tv/como-sintonizar","theme":"sky","symbol":"◉","src":"https://stream3.camara.gov.br/tv1/manifest.m3u8","fallbackEmbed":null},{"id":"brasil","title":"TV Brasil","type":"ao-vivo","category":"TV pública • Brasil","desc":"Canal público da EBC, em transmissão HLS reproduzida dentro da NovaPlay. Alguns programas podem ter restrição online.","status":"AO VIVO · HLS","mode":"hls","sourcePage":"https://aovivo.ebc.com.br/","theme":"violet","symbol":"▣","embed":"https://aovivo.ebc.com.br/embed-tvbrasil.html","src":"https://tvbrasil-stream.ebc.com.br/index.m3u8","fallbackEmbed":"https://aovivo.ebc.com.br/embed-tvbrasil.html"},{"id":"cultura","title":"TV Cultura","type":"ao-vivo","category":"Cultura • Educação","desc":"Programação ao vivo da TV Cultura, com player direto dentro da NovaPlay.","status":"AO VIVO · HLS","mode":"hls","sourcePage":"https://culturaplay.tvcultura.com.br/channels/14","theme":"orange","symbol":"✦","embed":"https://culturaplay.tvcultura.com.br/channels/14/embed","src":"https://player-tvcultura.stream.uol.com.br/live/tvcultura.m3u8","fallbackEmbed":"https://culturaplay.tvcultura.com.br/channels/14/embed"},{"id":"lua","title":"Viagem à Lua","type":"filmes","category":"Ficção científica • Mudo","desc":"Um foguete viaja até a Lua no clássico de Georges Méliès. Versão histórica sem dublagem.","year":1902,"runtime":"13 min","filename":"Le Voyage dans la Lune (1902).webm","theme":"sky","symbol":"☾","status":"DOMÍNIO PÚBLICO","mode":"video","src":"https://commons.wikimedia.org/wiki/Special:Redirect/file/Le%20Voyage%20dans%20la%20Lune%20(1902).webm","sourcePage":"https://commons.wikimedia.org/wiki/File:Le_Voyage_dans_la_Lune_(1902).webm"},{"id":"nosferatu","title":"Nosferatu","type":"filmes","category":"Terror • Mudo","desc":"O vampiro Conde Orlok chega à cidade neste clássico do expressionismo alemão. Versão histórica.","year":1922,"runtime":"61 min","filename":"Nosferatu le vampire-Film Murnau 1922.webm","theme":"violet","symbol":"☽","status":"DOMÍNIO PÚBLICO","mode":"video","src":"https://commons.wikimedia.org/wiki/Special:Redirect/file/Nosferatu%20le%20vampire-Film%20Murnau%201922.webm","sourcePage":"https://commons.wikimedia.org/wiki/File:Nosferatu_le_vampire-Film_Murnau_1922.webm"},{"id":"caligari","title":"O Gabinete do Dr. Caligari","type":"filmes","category":"Suspense • Mudo","desc":"Um hipnotizador misterioso em um dos marcos do cinema expressionista.","year":1920,"runtime":"51 min","filename":"The Cabinet of Dr. Caligari.webm","theme":"orange","symbol":"◈","status":"DOMÍNIO PÚBLICO","mode":"video","src":"https://commons.wikimedia.org/wiki/Special:Redirect/file/The%20Cabinet%20of%20Dr.%20Caligari.webm","sourcePage":"https://commons.wikimedia.org/wiki/File:The_Cabinet_of_Dr._Caligari.webm"},{"id":"lostworld","title":"O Mundo Perdido","type":"filmes","category":"Aventura • Dinossauros","desc":"Exploradores encontram criaturas pré-históricas nesta adaptação clássica de Arthur Conan Doyle.","year":1925,"runtime":"68 min","filename":"The Lost World (1925) (640x480).webm","theme":"sky","symbol":"◬","status":"DOMÍNIO PÚBLICO","mode":"video","src":"https://commons.wikimedia.org/wiki/Special:Redirect/file/The%20Lost%20World%20(1925)%20(640x480).webm","sourcePage":"https://commons.wikimedia.org/wiki/File:The_Lost_World_(1925)_(640x480).webm"},{"id":"pauline-1","title":"Pauline — Episódio 1","type":"series","category":"Aventura • Cinema seriado","desc":"Um capítulo da aventura muda estrelada por Pearl White, preservada em arquivo histórico. Original sem dublagem.","year":1914,"runtime":"29 min","filename":"Perils of Pauline Episode 1 (1914).webm","theme":"orange","symbol":"✦","status":"SÉRIE CLÁSSICA","mode":"video","src":"https://commons.wikimedia.org/wiki/Special:Redirect/file/Perils%20of%20Pauline%20Episode%201%20(1914).webm","sourcePage":"https://commons.wikimedia.org/wiki/File:Perils_of_Pauline_Episode_1_(1914).webm"},{"id":"pauline-2","title":"Pauline — Episódio 2","type":"series","category":"Aventura • Cinema seriado","desc":"Um capítulo da aventura muda estrelada por Pearl White, preservada em arquivo histórico. Original sem dublagem.","year":1914,"runtime":"25 min","filename":"THE PERILS OF PAULINE (1914) - ch.2 Pearl White 2.webm","theme":"orange","symbol":"✦","status":"SÉRIE CLÁSSICA","mode":"video","src":"https://commons.wikimedia.org/wiki/Special:Redirect/file/THE%20PERILS%20OF%20PAULINE%20(1914)%20-%20ch.2%20Pearl%20White%202.webm","sourcePage":"https://commons.wikimedia.org/wiki/File:THE_PERILS_OF_PAULINE_(1914)_-_ch.2_Pearl_White_2.webm"},{"id":"pauline-3","title":"Pauline — Episódio 3","type":"series","category":"Aventura • Cinema seriado","desc":"Um capítulo da aventura muda estrelada por Pearl White, preservada em arquivo histórico. Original sem dublagem.","year":1914,"runtime":"20 min","filename":"THE PERILS OF PAULINE (1914) - ch.3 Pearl White.webm","theme":"orange","symbol":"✦","status":"SÉRIE CLÁSSICA","mode":"video","src":"https://commons.wikimedia.org/wiki/Special:Redirect/file/THE%20PERILS%20OF%20PAULINE%20(1914)%20-%20ch.3%20Pearl%20White.webm","sourcePage":"https://commons.wikimedia.org/wiki/File:THE_PERILS_OF_PAULINE_(1914)_-_ch.3_Pearl_White.webm"},{"id":"pauline-4","title":"Pauline — Episódio 4","type":"series","category":"Aventura • Cinema seriado","desc":"Um capítulo da aventura muda estrelada por Pearl White, preservada em arquivo histórico. Original sem dublagem.","year":1914,"runtime":"9 min","filename":"THE PERILS OF PAULINE (1914) - ch.4 Pearl White.webm","theme":"orange","symbol":"✦","status":"SÉRIE CLÁSSICA","mode":"video","src":"https://commons.wikimedia.org/wiki/Special:Redirect/file/THE%20PERILS%20OF%20PAULINE%20(1914)%20-%20ch.4%20Pearl%20White.webm","sourcePage":"https://commons.wikimedia.org/wiki/File:THE_PERILS_OF_PAULINE_(1914)_-_ch.4_Pearl_White.webm"},{"id":"pauline-5","title":"Pauline — Episódio 5","type":"series","category":"Aventura • Cinema seriado","desc":"Um capítulo da aventura muda estrelada por Pearl White, preservada em arquivo histórico. Original sem dublagem.","year":1914,"runtime":"14 min","filename":"THE PERILS OF PAULINE (1914) - ch.5 Pearl White.webm","theme":"orange","symbol":"✦","status":"SÉRIE CLÁSSICA","mode":"video","src":"https://commons.wikimedia.org/wiki/Special:Redirect/file/THE%20PERILS%20OF%20PAULINE%20(1914)%20-%20ch.5%20Pearl%20White.webm","sourcePage":"https://commons.wikimedia.org/wiki/File:THE_PERILS_OF_PAULINE_(1914)_-_ch.5_Pearl_White.webm"},{"id":"pauline-6","title":"Pauline — Episódio 6","type":"series","category":"Aventura • Cinema seriado","desc":"Um capítulo da aventura muda estrelada por Pearl White, preservada em arquivo histórico. Original sem dublagem.","year":1914,"runtime":"15 min","filename":"THE PERILS OF PAULINE (1914) - ch.6 Pearl White.webm","theme":"orange","symbol":"✦","status":"SÉRIE CLÁSSICA","mode":"video","src":"https://commons.wikimedia.org/wiki/Special:Redirect/file/THE%20PERILS%20OF%20PAULINE%20(1914)%20-%20ch.6%20Pearl%20White.webm","sourcePage":"https://commons.wikimedia.org/wiki/File:THE_PERILS_OF_PAULINE_(1914)_-_ch.6_Pearl_White.webm"},{"id":"pauline-7","title":"Pauline — Episódio 7","type":"series","category":"Aventura • Cinema seriado","desc":"Um capítulo da aventura muda estrelada por Pearl White, preservada em arquivo histórico. Original sem dublagem.","year":1914,"runtime":"19 min","filename":"THE PERILS OF PAULINE (1914) - ch.7 Pearl White.webm","theme":"orange","symbol":"✦","status":"SÉRIE CLÁSSICA","mode":"video","src":"https://commons.wikimedia.org/wiki/Special:Redirect/file/THE%20PERILS%20OF%20PAULINE%20(1914)%20-%20ch.7%20Pearl%20White.webm","sourcePage":"https://commons.wikimedia.org/wiki/File:THE_PERILS_OF_PAULINE_(1914)_-_ch.7_Pearl_White.webm"},{"id":"pauline-8","title":"Pauline — Episódio 8","type":"series","category":"Aventura • Cinema seriado","desc":"Um capítulo da aventura muda estrelada por Pearl White, preservada em arquivo histórico. Original sem dublagem.","year":1914,"runtime":"18 min","filename":"THE PERILS OF PAULINE (1914) - ch.8 Pearl White.webm","theme":"orange","symbol":"✦","status":"SÉRIE CLÁSSICA","mode":"video","src":"https://commons.wikimedia.org/wiki/Special:Redirect/file/THE%20PERILS%20OF%20PAULINE%20(1914)%20-%20ch.8%20Pearl%20White.webm","sourcePage":"https://commons.wikimedia.org/wiki/File:THE_PERILS_OF_PAULINE_(1914)_-_ch.8_Pearl_White.webm"},{"id":"pauline-9","title":"Pauline — Episódio 9","type":"series","category":"Aventura • Cinema seriado","desc":"Um capítulo da aventura muda estrelada por Pearl White, preservada em arquivo histórico. Original sem dublagem.","year":1914,"runtime":"15 min","filename":"THE PERILS OF PAULINE (1914) - ch.9 Pearl White.webm","theme":"orange","symbol":"✦","status":"SÉRIE CLÁSSICA","mode":"video","src":"https://commons.wikimedia.org/wiki/Special:Redirect/file/THE%20PERILS%20OF%20PAULINE%20(1914)%20-%20ch.9%20Pearl%20White.webm","sourcePage":"https://commons.wikimedia.org/wiki/File:THE_PERILS_OF_PAULINE_(1914)_-_ch.9_Pearl_White.webm"},{"id":"phantom1","title":"O Império Fantasma — Ep. 1","type":"series","category":"Ficção científica • Faroeste","desc":"Primeiro capítulo do seriado de aventura de 1935 com Gene Autry, em versão de arquivo.","year":1935,"runtime":"30 min","filename":"The Phantom Empire, Chapter 1.ogv","theme":"violet","symbol":"✦","status":"SÉRIE CLÁSSICA","mode":"video","src":"https://commons.wikimedia.org/wiki/Special:Redirect/file/The%20Phantom%20Empire%2C%20Chapter%201.ogv","sourcePage":"https://commons.wikimedia.org/wiki/File:The_Phantom_Empire%2C_Chapter_1.ogv"}];
-var titles={inicio:["EXPLORE","Clássicos e TV grátis ✦","Filmes em domínio público, episódios antigos e canais oficiais."],"ao-vivo":["TV ABERTA","TV aberta ao vivo","Assista diretamente no nosso player de vídeo."],filmes:["CINEMA CLÁSSICO","Filmes em domínio público","Cópias históricas gratuitas, preservadas em arquivo digital."],series:["SERIADOS CLÁSSICOS","Séries antigas","Capítulos históricos disponíveis para assistir."],favoritos:["PESSOAL","Minha lista","Salvo neste aparelho."]};
-var fav;try{fav=new Set(JSON.parse(localStorage.getItem("novaplay-favorites-v1")||"[]"));}catch(e){fav=new Set();}
-var page="inicio",filter="todos",query="",hls=null;
-var get=function(id){return document.getElementById(id)};
-var safe=function(x){return String(x).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})};
-function persist(){try{localStorage.setItem("novaplay-favorites-v1",JSON.stringify(Array.from(fav)))}catch(e){}}
-function showPage(name){if(!titles[name])return;page=name;filter="todos";get("search").value="";query="";var t=titles[page];get("kicker").textContent=t[0];get("heading").textContent=t[1];get("subheading").textContent=t[2];get("hero").hidden=name!=="inicio";get("stats").hidden=name!=="inicio";get("filters").hidden=name!=="inicio";document.querySelectorAll("[data-page]").forEach(function(b){b.classList.toggle("active",b.dataset.page===page)});document.querySelectorAll("[data-filter]").forEach(function(b){b.classList.toggle("active",b.dataset.filter==="todos")});render();window.scrollTo(0,0)}
-function render(){
-var items=catalog.filter(function(x){return(page==="inicio"?(filter==="todos"||filter===x.type):page==="favoritos"?fav.has(x.id):x.type===page)&& (x.title+" "+x.desc+" "+x.category+" "+(x.year||"")).toLocaleLowerCase("pt-BR").includes(query)});
-var wrap=get("cards");wrap.replaceChildren();
-if(!items.length){wrap.innerHTML='<div class="empty">Nenhum conteúdo encontrado nesta categoria.</div>';return}
-items.forEach(function(x){
-var card=document.createElement("article");card.className="card";
-var label=x.type==="ao-vivo"?"▶ Assistir canal":"▶ Assistir";
-var meta=(x.year||"Gratuito")+" • "+(x.runtime|| (x.mode==="hls"?"Player interno":"Acervo livre"));
-card.innerHTML='<div class="art '+safe(x.theme)+'"><span>'+safe(x.symbol)+'</span><span class="card-tag">'+safe(x.status)+'</span><button class="card-play" aria-label="Abrir '+safe(x.title)+'">▶</button></div><div class="card-body"><h3>'+safe(x.title)+'</h3><div class="meta"><span>'+safe(x.category)+'</span><span>•</span><span>'+safe(meta)+'</span></div><p class="description">'+safe(x.desc)+'</p><div class="card-actions"><button class="watch">'+label+'</button><button class="favorite" aria-label="'+(fav.has(x.id)?"Remover dos favoritos":"Adicionar aos favoritos")+'">'+(fav.has(x.id)?"♥":"♡")+'</button></div></div>';
-card.querySelector(".card-play").onclick=card.querySelector(".watch").onclick=function(){play(x)};
-card.querySelector(".favorite").onclick=function(){fav.has(x.id)?fav.delete(x.id):fav.add(x.id);persist();render()};
-wrap.appendChild(card)
-})
-}
-var currentItem=null,playSeq=0,streamTimeout=null;
-function status(msg){get("player-status").textContent=msg}
-function clearStreamTimer(){if(streamTimeout){clearTimeout(streamTimeout);streamTimeout=null}}
-function destroy(){
- ++playSeq;clearStreamTimer();
- var v=get("video");v.pause();v.onerror=null;v.onplaying=null;v.onwaiting=null;v.oncanplay=null;
- if(hls){hls.destroy();hls=null}
- v.removeAttribute("src");v.load();v.hidden=false;
- var frame=get("live-frame");frame.src="about:blank";frame.hidden=true;
-}
-function closePlayer(){destroy();currentItem=null;get("player-modal").hidden=true;document.body.style.overflow=""}
-function playbackError(msg,seq){
- if(seq!==playSeq || get("player-modal").hidden)return;
- clearStreamTimer();
- get("video-error").textContent=msg||"Não foi possível reproduzir esta transmissão.";
- status("Transmissão indisponível neste momento");
- get("retry-stream").hidden=false;
- get("fallback-stream").hidden=!currentItem?.fallbackEmbed;
-}
-function useFallback(){
- if(!currentItem?.fallbackEmbed)return;
- var x=currentItem;
- destroy();currentItem=x;
- var v=get("video");v.hidden=true;
- var frame=get("live-frame");frame.hidden=false;frame.src=x.fallbackEmbed;
- get("video-error").textContent="";
- get("retry-stream").hidden=false;get("fallback-stream").hidden=true;
- status("Player alternativo oficial carregado. Se necessário, toque no ▶ dentro do vídeo.");
-}
-function play(x){
- closePlayer();currentItem=x;
- get("player-title").textContent=x.title;
- get("player-desc").textContent=x.desc+(x.year?" • "+x.year:"");
- get("video-error").textContent="";
- get("source-link").href=x.sourcePage||"#";
- get("source-link").hidden=x.type==="ao-vivo";
- get("retry-stream").hidden=true;get("fallback-stream").hidden=true;
- get("player-modal").hidden=false;document.body.style.overflow="hidden";
- status("Carregando transmissão...");
- var v=get("video"),seq=++playSeq;
- if(x.mode==="embed"){v.hidden=true;get("live-frame").hidden=false;get("live-frame").src=x.embed;status("Player oficial carregado");return}
- if(!x.src){playbackError("Não encontramos um fluxo de vídeo disponível.",seq);return}
- var failed=false;
- function fail(msg){if(failed)return;failed=true;playbackError(msg,seq)}
- v.onerror=function(){fail("O vídeo não carregou neste navegador. Confira sua conexão e tente novamente.")};
- v.onplaying=function(){if(seq===playSeq){clearStreamTimer();get("video-error").textContent="";status(x.type==="ao-vivo"?"● Transmissão ao vivo":"▶ Reproduzindo");get("retry-stream").hidden=true;get("fallback-stream").hidden=true}};
- v.onwaiting=function(){if(seq===playSeq)status("Aguardando dados do vídeo...")};
- v.oncanplay=function(){if(seq===playSeq){clearStreamTimer();status("Pronto. Toque no ▶ caso ainda não tenha começado.")}};
- if(x.type==="ao-vivo")streamTimeout=setTimeout(function(){if(seq===playSeq&&v.readyState<2)fail("O canal demorou para carregar. Tente novamente ou use o player alternativo, quando disponível.")},18000);
- if(/\.m3u8(?:\?|$)/i.test(x.src)){
-  if(v.canPlayType("application/vnd.apple.mpegurl")){v.src=x.src;v.play().catch(function(){status("Toque em ▶ no vídeo para iniciar.")})}
-  else if(window.Hls&&window.Hls.isSupported()){
-   hls=new window.Hls({enableWorker:true,lowLatencyMode:true,maxBufferLength:20});
-   hls.on(window.Hls.Events.ERROR,function(ev,data){
-    if(seq!==playSeq || !data.fatal)return;
-    fail("O servidor não enviou uma transmissão reproduzível. Tente novamente.");
-   });
-   hls.loadSource(x.src);hls.attachMedia(v);
-   hls.on(window.Hls.Events.MANIFEST_PARSED,function(){if(seq===playSeq)v.play().catch(function(){status("Toque no ▶ no vídeo para iniciar.")})})
-  }else fail("O player HLS não carregou. Verifique a internet e tente novamente.");
- }else{v.src=x.src;v.play().catch(function(){status("Toque em ▶ no vídeo para iniciar.")})}
-}
-get("retry-stream").addEventListener("click",function(){if(currentItem)play(currentItem)});
-get("fallback-stream").addEventListener("click",useFallback);
-var infos={plans:["Planos e assinaturas","Esta é uma demonstração, sem cobrança ativa.",["Os preços e planos serão definidos antes do lançamento.","Pagamentos e acesso premium exigem backend seguro e confirmação do provedor.","Conteúdos comerciais dependem de licenças de distribuição."]],account:["Minha conta","O cadastro ainda não está ativado nesta versão.",["Login e perfis serão implementados em uma etapa seguinte.","Os favoritos desta versão ficam somente neste navegador."]],about:["Sobre a NovaPlay","Protótipo web da futura plataforma de IPTV e streaming.",["Player HLS de demonstração.","Busca, navegação e favoritos locais.","Sem retransmissão de canais comerciais sem autorização."]]};
-function info(kind){var d=infos[kind];if(!d)return;get("info-title").textContent=d[0];var body=get("info-body");body.replaceChildren();var p=document.createElement("p");p.textContent=d[1];body.appendChild(p);var ul=document.createElement("ul");d[2].forEach(function(s){var li=document.createElement("li");li.textContent=s;ul.appendChild(li)});body.appendChild(ul);get("info-modal").hidden=false}
-document.querySelectorAll("[data-page]").forEach(function(b){b.addEventListener("click",function(){showPage(b.dataset.page)})});
-document.querySelectorAll("[data-filter]").forEach(function(b){b.addEventListener("click",function(){filter=b.dataset.filter;document.querySelectorAll("[data-filter]").forEach(function(el){el.classList.toggle("active",el===b)});render()})});
-document.querySelectorAll("[data-action]").forEach(function(b){b.addEventListener("click",function(){info(b.dataset.action)})});
-get("search").addEventListener("input",function(e){query=e.target.value.trim().toLocaleLowerCase("pt-BR");render()});
-get("hero-watch").onclick=function(){play(catalog.find(function(x){return x.id==='lua'}))};get("close-player").onclick=closePlayer;get("close-info").onclick=function(){get("info-modal").hidden=true};
-get("player-modal").addEventListener("click",function(e){if(e.target.id==="player-modal")closePlayer()});
-get("info-modal").addEventListener("click",function(e){if(e.target.id==="info-modal")get("info-modal").hidden=true});
-document.addEventListener("keydown",function(e){if(e.key==="Escape"){if(!get("player-modal").hidden)closePlayer();get("info-modal").hidden=true}});
-render();if("serviceWorker"in navigator && location.protocol==="https:"){window.addEventListener("load",function(){navigator.serviceWorker.register("./sw.js").catch(function(){})})}
-})();
-</script>
+<script src="./app.js?v=0.5.0" defer></script>
 </body>
 </html>

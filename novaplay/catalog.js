@@ -1,0 +1,228 @@
+/* Catálogo NovaPlay V 0.5 • conteúdos clássicos e TV aberta gratuita */
+window.NovaPlayCatalog={
+  "version": "0.5.0",
+  "channels": [
+    {
+      "id": "camara",
+      "title": "TV Câmara",
+      "kind": "tv",
+      "category": "Legislativo • Brasil",
+      "description": "Transmissão direto do servidor oficial da Câmara dos Deputados, com reprodução HLS no aplicativo.",
+      "year": null,
+      "cover": "./assets/posters/camara.svg",
+      "backdrop": "./assets/posters/camara.svg",
+      "mode": "hls",
+      "src": "https://stream3.camara.gov.br/tv1/manifest.m3u8",
+      "sourcePage": "https://www.camara.leg.br/tv/como-sintonizar",
+      "live": true
+    },
+    {
+      "id": "brasil",
+      "title": "TV Brasil",
+      "kind": "tv",
+      "category": "TV pública • Brasil",
+      "description": "Canal público da EBC, em transmissão HLS reproduzida dentro da NovaPlay. Alguns programas podem ter restrição online.",
+      "year": null,
+      "cover": "./assets/posters/brasil.svg",
+      "backdrop": "./assets/posters/brasil.svg",
+      "mode": "hls",
+      "src": "https://tvbrasil-stream.ebc.com.br/index.m3u8",
+      "sourcePage": "https://aovivo.ebc.com.br/",
+      "live": true
+    },
+    {
+      "id": "cultura",
+      "title": "TV Cultura",
+      "kind": "tv",
+      "category": "Cultura • Educação",
+      "description": "Programação ao vivo da TV Cultura, com player direto dentro da NovaPlay.",
+      "year": null,
+      "cover": "./assets/posters/cultura.svg",
+      "backdrop": "./assets/posters/cultura.svg",
+      "mode": "hls",
+      "src": "https://player-tvcultura.stream.uol.com.br/live/tvcultura.m3u8",
+      "sourcePage": "https://culturaplay.tvcultura.com.br/channels/14",
+      "live": true
+    }
+  ],
+  "films": [
+    {
+      "id": "lua",
+      "title": "Viagem à Lua",
+      "kind": "film",
+      "category": "Ficção científica • Mudo",
+      "description": "Um foguete viaja até a Lua no clássico de Georges Méliès. Versão histórica sem dublagem.",
+      "year": 1902,
+      "duration": "13 min",
+      "cover": "./assets/posters/lua.svg",
+      "backdrop": "./assets/posters/lua.svg",
+      "mode": "video",
+      "src": "https://commons.wikimedia.org/wiki/Special:Redirect/file/Le%20Voyage%20dans%20la%20Lune%20(1902).webm",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:Le_Voyage_dans_la_Lune_(1902).webm",
+      "live": false
+    },
+    {
+      "id": "nosferatu",
+      "title": "Nosferatu",
+      "kind": "film",
+      "category": "Terror • Mudo",
+      "description": "O vampiro Conde Orlok chega à cidade neste clássico do expressionismo alemão. Versão histórica.",
+      "year": 1922,
+      "duration": "61 min",
+      "cover": "./assets/posters/nosferatu.svg",
+      "backdrop": "./assets/posters/nosferatu.svg",
+      "mode": "video",
+      "src": "https://commons.wikimedia.org/wiki/Special:Redirect/file/Nosferatu%20le%20vampire-Film%20Murnau%201922.webm",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:Nosferatu_le_vampire-Film_Murnau_1922.webm",
+      "live": false
+    },
+    {
+      "id": "caligari",
+      "title": "O Gabinete do Dr. Caligari",
+      "kind": "film",
+      "category": "Suspense • Mudo",
+      "description": "Um hipnotizador misterioso em um dos marcos do cinema expressionista.",
+      "year": 1920,
+      "duration": "51 min",
+      "cover": "./assets/posters/caligari.svg",
+      "backdrop": "./assets/posters/caligari.svg",
+      "mode": "video",
+      "src": "https://commons.wikimedia.org/wiki/Special:Redirect/file/The%20Cabinet%20of%20Dr.%20Caligari.webm",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:The_Cabinet_of_Dr._Caligari.webm",
+      "live": false
+    },
+    {
+      "id": "lostworld",
+      "title": "O Mundo Perdido",
+      "kind": "film",
+      "category": "Aventura • Dinossauros",
+      "description": "Exploradores encontram criaturas pré-históricas nesta adaptação clássica de Arthur Conan Doyle.",
+      "year": 1925,
+      "duration": "68 min",
+      "cover": "./assets/posters/lostworld.svg",
+      "backdrop": "./assets/backdrops/lostworld-hero.svg",
+      "mode": "video",
+      "src": "https://commons.wikimedia.org/wiki/Special:Redirect/file/The%20Lost%20World%20(1925)%20(640x480).webm",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:The_Lost_World_(1925)_(640x480).webm",
+      "live": false
+    }
+  ],
+  "series": [
+    {
+      "id": "pauline",
+      "title": "Os Perigos de Pauline",
+      "kind": "series",
+      "category": "Aventura • Seriado mudo",
+      "description": "Uma série clássica de aventura protagonizada por Pearl White. Acompanhe as escapadas de Pauline capítulo por capítulo.",
+      "year": 1914,
+      "cover": "./assets/posters/pauline.svg",
+      "backdrop": "./assets/posters/pauline.svg",
+      "episodes": [
+        {
+          "id": "pauline-1",
+          "label": "Capítulo 1",
+          "title": "Pauline — Episódio 1",
+          "duration": "29 min",
+          "mode": "video",
+          "src": "https://commons.wikimedia.org/wiki/Special:Redirect/file/Perils%20of%20Pauline%20Episode%201%20(1914).webm",
+          "sourcePage": "https://commons.wikimedia.org/wiki/File:Perils_of_Pauline_Episode_1_(1914).webm"
+        },
+        {
+          "id": "pauline-2",
+          "label": "Capítulo 2",
+          "title": "Pauline — Episódio 2",
+          "duration": "25 min",
+          "mode": "video",
+          "src": "https://commons.wikimedia.org/wiki/Special:Redirect/file/THE%20PERILS%20OF%20PAULINE%20(1914)%20-%20ch.2%20Pearl%20White%202.webm",
+          "sourcePage": "https://commons.wikimedia.org/wiki/File:THE_PERILS_OF_PAULINE_(1914)_-_ch.2_Pearl_White_2.webm"
+        },
+        {
+          "id": "pauline-3",
+          "label": "Capítulo 3",
+          "title": "Pauline — Episódio 3",
+          "duration": "20 min",
+          "mode": "video",
+          "src": "https://commons.wikimedia.org/wiki/Special:Redirect/file/THE%20PERILS%20OF%20PAULINE%20(1914)%20-%20ch.3%20Pearl%20White.webm",
+          "sourcePage": "https://commons.wikimedia.org/wiki/File:THE_PERILS_OF_PAULINE_(1914)_-_ch.3_Pearl_White.webm"
+        },
+        {
+          "id": "pauline-4",
+          "label": "Capítulo 4",
+          "title": "Pauline — Episódio 4",
+          "duration": "9 min",
+          "mode": "video",
+          "src": "https://commons.wikimedia.org/wiki/Special:Redirect/file/THE%20PERILS%20OF%20PAULINE%20(1914)%20-%20ch.4%20Pearl%20White.webm",
+          "sourcePage": "https://commons.wikimedia.org/wiki/File:THE_PERILS_OF_PAULINE_(1914)_-_ch.4_Pearl_White.webm"
+        },
+        {
+          "id": "pauline-5",
+          "label": "Capítulo 5",
+          "title": "Pauline — Episódio 5",
+          "duration": "14 min",
+          "mode": "video",
+          "src": "https://commons.wikimedia.org/wiki/Special:Redirect/file/THE%20PERILS%20OF%20PAULINE%20(1914)%20-%20ch.5%20Pearl%20White.webm",
+          "sourcePage": "https://commons.wikimedia.org/wiki/File:THE_PERILS_OF_PAULINE_(1914)_-_ch.5_Pearl_White.webm"
+        },
+        {
+          "id": "pauline-6",
+          "label": "Capítulo 6",
+          "title": "Pauline — Episódio 6",
+          "duration": "15 min",
+          "mode": "video",
+          "src": "https://commons.wikimedia.org/wiki/Special:Redirect/file/THE%20PERILS%20OF%20PAULINE%20(1914)%20-%20ch.6%20Pearl%20White.webm",
+          "sourcePage": "https://commons.wikimedia.org/wiki/File:THE_PERILS_OF_PAULINE_(1914)_-_ch.6_Pearl_White.webm"
+        },
+        {
+          "id": "pauline-7",
+          "label": "Capítulo 7",
+          "title": "Pauline — Episódio 7",
+          "duration": "19 min",
+          "mode": "video",
+          "src": "https://commons.wikimedia.org/wiki/Special:Redirect/file/THE%20PERILS%20OF%20PAULINE%20(1914)%20-%20ch.7%20Pearl%20White.webm",
+          "sourcePage": "https://commons.wikimedia.org/wiki/File:THE_PERILS_OF_PAULINE_(1914)_-_ch.7_Pearl_White.webm"
+        },
+        {
+          "id": "pauline-8",
+          "label": "Capítulo 8",
+          "title": "Pauline — Episódio 8",
+          "duration": "18 min",
+          "mode": "video",
+          "src": "https://commons.wikimedia.org/wiki/Special:Redirect/file/THE%20PERILS%20OF%20PAULINE%20(1914)%20-%20ch.8%20Pearl%20White.webm",
+          "sourcePage": "https://commons.wikimedia.org/wiki/File:THE_PERILS_OF_PAULINE_(1914)_-_ch.8_Pearl_White.webm"
+        },
+        {
+          "id": "pauline-9",
+          "label": "Capítulo 9",
+          "title": "Pauline — Episódio 9",
+          "duration": "15 min",
+          "mode": "video",
+          "src": "https://commons.wikimedia.org/wiki/Special:Redirect/file/THE%20PERILS%20OF%20PAULINE%20(1914)%20-%20ch.9%20Pearl%20White.webm",
+          "sourcePage": "https://commons.wikimedia.org/wiki/File:THE_PERILS_OF_PAULINE_(1914)_-_ch.9_Pearl_White.webm"
+        }
+      ],
+      "live": false
+    },
+    {
+      "id": "phantom",
+      "title": "O Império Fantasma",
+      "kind": "series",
+      "category": "Faroeste • Ficção científica",
+      "description": "Aventura seriada de 1935 que mistura elementos de faroeste com ficção científica. Primeiro capítulo disponível.",
+      "year": 1935,
+      "cover": "./assets/posters/phantom.svg",
+      "backdrop": "./assets/posters/phantom.svg",
+      "episodes": [
+        {
+          "id": "phantom1",
+          "label": "Capítulo 1",
+          "title": "O Império Fantasma — Ep. 1",
+          "duration": "30 min",
+          "mode": "video",
+          "src": "https://commons.wikimedia.org/wiki/Special:Redirect/file/The%20Phantom%20Empire%2C%20Chapter%201.ogv",
+          "sourcePage": "https://commons.wikimedia.org/wiki/File:The_Phantom_Empire%2C_Chapter_1.ogv"
+        }
+      ],
+      "live": false
+    }
+  ]
+};
