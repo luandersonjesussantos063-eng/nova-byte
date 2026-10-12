@@ -206,6 +206,7 @@ async function loadLibrary(){
   if(!data||data.length<500)break;
  }
  items=gathered;
+ status("upload-message","Biblioteca atualizada: "+items.length+" registros encontrados no banco.",false,true);
  renderLibrary();
 }
 function renderLibrary(){
@@ -213,7 +214,14 @@ function renderLibrary(){
  $("stat-live").textContent=items.filter(x=>x.is_published).length;
  $("stat-drafts").textContent=items.filter(x=>!x.is_published).length;
  const filter=$("filter-title").value.trim().toLocaleLowerCase("pt-BR");
- const shown=items.filter(x=>(x.title+" "+(x.series_title||"")).toLocaleLowerCase("pt-BR").includes(filter));
+ const statusFilter=$("library-state-filter")?.value||"all";
+ const shown=items.filter(x=>{
+  if(!(x.title+" "+(x.series_title||"")).toLocaleLowerCase("pt-BR").includes(filter))return false;
+  if(statusFilter==="imported")return x.genre==="Importado - revisão";
+  if(statusFilter==="draft")return !x.is_published;
+  if(statusFilter==="published")return x.is_published;
+  return true;
+ });
  const list=$("library-list");list.replaceChildren();
  if(!shown.length){const p=document.createElement("p");p.className="muted";p.textContent=filter?"Nenhum vídeo encontrado.":"Nenhum vídeo enviado ainda. Comece pelo formulário ao lado.";list.append(p);return}
  const pageCount=Math.ceil(shown.length/LIBRARY_PAGE_SIZE);
@@ -234,7 +242,7 @@ function renderLibrary(){
   const bar=document.createElement("div");bar.style.cssText="display:flex;align-items:center;gap:12px;justify-content:space-between;margin-top:18px;flex-wrap:wrap";
   const prev=document.createElement("button");prev.type="button";prev.className="outline compact";prev.textContent="‹ Anterior";prev.disabled=libraryPage===0;
   const next=document.createElement("button");next.type="button";next.className="outline compact";next.textContent="Próxima ›";next.disabled=libraryPage>=pageCount-1;
-  const info=document.createElement("span");info.className="muted";info.textContent="Página "+(libraryPage+1)+" de "+pageCount+" · "+shown.length+" resultados";
+  const info=document.createElement("span");info.className="muted";info.textContent="Mostrando "+(libraryPage*LIBRARY_PAGE_SIZE+1)+"–"+Math.min((libraryPage+1)*LIBRARY_PAGE_SIZE,shown.length)+" de "+shown.length+" · Página "+(libraryPage+1)+" de "+pageCount;
   const change=delta=>{libraryPage+=delta;renderLibrary();document.querySelector(".library").scrollIntoView({behavior:"smooth",block:"start"})};
   prev.onclick=()=>change(-1);next.onclick=()=>change(1);bar.append(prev,info,next);list.append(bar);
  }
@@ -406,7 +414,7 @@ function init(){
  $("logout").onclick=async()=>{if(busy)return;await client.auth.signOut();sessionUser=null;show("login-view")};
  $("upload-form").onsubmit=sendForm;$("kind").onchange=setKind;$("source-type").onchange=setSourceType;setSourceType();
  $("cancel-edit").onclick=()=>{resetForm();status("upload-message","Edição cancelada.")};
- $("refresh-list").onclick=loadLibrary;$("filter-title").oninput=()=>{libraryPage=0;renderLibrary()};
+ $("refresh-list").onclick=loadLibrary;$("filter-title").oninput=()=>{libraryPage=0;renderLibrary()};if($("library-state-filter"))$("library-state-filter").onchange=()=>{libraryPage=0;renderLibrary()};
  $("video-file").onchange=()=>{$("video-file-label").textContent=$("video-file").files[0]?.name||"Selecionar vídeo do telefone"};
  $("poster-file").onchange=()=>{$("poster-file-label").textContent=$("poster-file").files[0]?.name||"Escolher capa (opcional)"};
  $("youtube-poster-file").onchange=()=>{$("youtube-poster-label").textContent=$("youtube-poster-file").files[0]?.name||"Adicionar capa personalizada (opcional)"};
