@@ -1,4 +1,4 @@
-/* NovaPlay v0.5.0 • player, catálogo e experiência de streaming */
+/* NovaPlay v0.12.0 • player, catálogo e experiência de streaming */
 (function(){
 "use strict";
 const db=window.NovaPlayCatalog;
@@ -32,10 +32,16 @@ function durationText(seconds){
 async function loadUploadedCatalog(){
  if(!remoteDb)return;
  try{
-  const {data,error}=await remoteDb.from("novaplay_library")
-   .select("id,title,description,kind,series_title,episode_number,genre,production_year,video_path,youtube_id,google_drive_id,google_drive_resource_key,poster_path,duration_seconds,created_at")
-   .eq("is_published",true).order("created_at",{ascending:false}).limit(150);
-  if(error){console.warn("NovaPlay: catálogo remoto indisponível.",error.message);return}
+  const data=[];
+  // Paginar resultados, inclusive quando o catálogo público ultrapassar 150 títulos.
+  for(let offset=0;offset<5000;offset+=500){
+   const {data:page,error}=await remoteDb.from("novaplay_library")
+    .select("id,title,description,kind,series_title,episode_number,genre,production_year,video_path,youtube_id,google_drive_id,google_drive_resource_key,poster_path,duration_seconds,created_at")
+    .eq("is_published",true).order("created_at",{ascending:false}).range(offset,offset+499);
+   if(error){console.warn("NovaPlay: catálogo remoto indisponível.",error.message);break}
+   data.push(...(page||[]));
+   if(!page||page.length<500)break;
+  }
   const grouped=new Map();
   let additions=[];
   (data||[]).forEach(record=>{
