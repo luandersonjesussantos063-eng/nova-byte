@@ -1,7 +1,7 @@
 (()=>{
 'use strict';
 const KEY='novabyte-divulga-v1';
-const VERSION='1.0.4';
+const VERSION='1.0.5';
 const CITIES=['Lucas do Rio Verde','Sorriso','Sinop','Nova Mutum','Tapurah','Cuiabá','Outra cidade'];
 const SERVICES=['Criação de sites','Landing pages','Cardápio digital','Aplicativos','Sistemas personalizados','Outro serviço'];
 const $=s=>document.querySelector(s);
@@ -14,7 +14,7 @@ const onlyDay=iso=>new Date(iso).toLocaleDateString('pt-BR');
 const hoursElapsed=iso=>(Date.now()-Date.parse(iso||0))/3600000;
 const isToday=iso=>new Date(iso).toDateString()===new Date().toDateString();
 const emptyState=()=>({groups:[],campaigns:[],history:[],queue:null,settings:{reminders:false,intervalHours:1,quietStart:'22:00',quietEnd:'08:00',lastReminder:nowISO()}});
-let state=load(),tab='inicio',filterCity='',searchGroups='',filterHistory='',imageDraft='',toaster=null,reminderTimer=null,groupSavedNotice='';
+let state=load(),tab='inicio',filterCity='',searchGroups='',filterHistory='',imageDraft='',toaster=null,reminderTimer=null,groupSavedNotice='',campaignSavedNotice='';
 function load(){
  try{
   const data=JSON.parse(localStorage.getItem(KEY));
@@ -178,6 +178,8 @@ function showGroups(){
 }
 function renderCampaigns(){
  $('#campanhas').innerHTML=title('Campanhas','Crie anúncios naturais e reutilize o texto em vários grupos.',button('campaign-new','＋ Nova campanha','','btn-primary'))+
+ (campaignSavedNotice?'<div class="group-confirmation" role="status" aria-live="polite">✓ '+E(campaignSavedNotice)+'</div>':'')+
+ '<div class="hint" style="margin:0 0 16px"><strong>'+state.campaigns.length+' campanha(s) salva(s) neste navegador.</strong> Use Nova campanha para criar o anúncio e depois Divulgar esta campanha para iniciar a fila.</div>'+
  (state.campaigns.length?'<div class="list">'+state.campaigns.map(c=>{
  return '<article class="card"><div class="card-header"><div><h2>'+E(c.name)+'</h2><span class="tag">'+E(c.service)+'</span></div><div class="toolbar">'+button('campaign-edit','Editar','data-id="'+E(c.id)+'"','btn-outline')+button('campaign-delete','Excluir','data-id="'+E(c.id)+'"','btn-quiet')+'</div></div>'+
  '<div class="preview">'+(c.image?'<img src="'+E(c.image)+'" alt="Imagem do anúncio">':'')+E(adText(c))+'</div>'+
@@ -269,7 +271,7 @@ function campaignForm(id){
  '<div class="field"><label>Link do site/contato</label><input type="url" name="link" value="'+E(c.link||'')+'" placeholder="https://novabytesolucoes.com.br/"></div>'+
  '<div class="field"><label>Imagem do anúncio (opcional)</label><input id="campaignImage" type="file" accept="image/*"><small>A imagem será reduzida para caber no armazenamento local.</small><div id="imageStatus">'+(c.image?'<img class="image-mini" alt="Prévia" src="'+E(c.image)+'">':'')+'</div>'+
  button('image-remove','Remover imagem','','btn-quiet btn-sm')+'</div>'+
- '<div class="modal-actions">'+button('modal-close','Cancelar','','btn-quiet')+'<button type="submit" class="btn btn-primary">Salvar campanha</button></div></form>');
+ '<div id="campaignFormError" role="alert" class="form-error" hidden></div><div class="modal-actions">'+button('modal-close','Cancelar','','btn-quiet')+button('campaign-save','Salvar campanha','','btn-primary')+'</div></form>');
 }
 function importGroupsModal(){
  openModal('<form id="bulkGroupForm"><h2>Importar links de grupos</h2><p class="muted">Cole um grupo por linha. Se quiser, use <strong>Nome | Link | Cidade</strong>. Links repetidos serão ignorados.</p>'+
@@ -467,6 +469,50 @@ function persistGroupFromForm(){
  }
 }
 
+function campaignFormProblem(message,field){
+ const error=$('#campaignFormError');
+ if(error){error.hidden=false;error.textContent=message;error.scrollIntoView?.({block:'nearest'});}
+ field?.focus?.();
+ toast(message);
+}
+function persistCampaignFromForm(skipImage=false){
+ const form=$('#campaignForm');
+ if(!form){toast('Não foi possível encontrar o formulário da campanha. Atualize o site.');return false}
+ const field=name=>form.querySelector('[name="'+name+'"]');
+ const name=String(field('name')?.value||'').trim().slice(0,100);
+ const text=String(field('text')?.value||'').trim().slice(0,2200);
+ const link=String(field('link')?.value||'').trim();
+ if(!name){campaignFormProblem('Escreva um nome para sua publicação.',field('name'));return false;}
+ if(text.length<15){campaignFormProblem('Escreva pelo menos 15 caracteres no texto do anúncio.',field('text'));return false;}
+ if(link&&!simpleUrl(link)){campaignFormProblem('O endereço de destino não é válido. Use https://, por exemplo https://novabytesolucoes.com.br/.',field('link'));return false;}
+ const id=String(field('id')?.value||'');
+ const campaign={id:id||uuid(),name,service:String(field('service')?.value||'Outro serviço'),
+  city:String(field('city')?.value||'').trim().slice(0,90),text,link:link?simpleUrl(link):'',
+  image:skipImage?'':imageDraft};
+ const previous=state.campaigns;
+ const all=id?previous.map(c=>c.id===id?campaign:c):[...previous,campaign];
+ try{
+  const data={...state,campaigns:all};
+  localStorage.setItem(KEY,JSON.stringify(data));
+  const saved=JSON.parse(localStorage.getItem(KEY)||'null');
+  if(!Array.isArray(saved?.campaigns)||!saved.campaigns.some(c=>c.id===campaign.id&&c.name===campaign.name&&c.text===campaign.text))
+   throw Error('O navegador não confirmou a gravação da campanha.');
+  state.campaigns=saved.campaigns;
+  campaignSavedNotice='Publicação “'+campaign.name+'” salva com sucesso. Total: '+state.campaigns.length+'.';
+  closeModal();tabTo('campanhas');toast(campaignSavedNotice);
+  return true;
+ }catch(error){
+  state.campaigns=previous;
+  const full=String(error?.message||'Falha ao gravar.');
+  const quota=/quota|space|storage|capacity|exceeded|cota|espaço/i.test(full)||error?.name==='QuotaExceededError';
+  if(imageDraft&&!skipImage&&quota){
+   campaignFormProblem('A imagem pode ter ultrapassado o espaço de armazenamento deste navegador. Toque em “Salvar sem imagem” para preservar o texto, ou reduza a imagem.',null);
+   const err=$('#campaignFormError');
+   if(err&&!err.querySelector('[data-action="campaign-save-no-image"]'))err.insertAdjacentHTML('beforeend','<div style="margin-top:12px">'+button('campaign-save-no-image','Salvar sem imagem','','btn-outline')+'</div>');
+  }else campaignFormProblem('Não foi possível salvar a publicação. '+full,null);
+  return false;
+ }
+}
 function handleAction(action,id){
  if(action==='modal-close'){closeModal();return}
  if(action==='group-new'||action==='group-edit'){groupForm(id);return}
@@ -499,6 +545,8 @@ function handleAction(action,id){
   state.groups=state.groups.filter(g=>g.id!==id);state.queue=null;save();render();toast('Grupo excluído.');return;
  }
  if(action==='campaign-new'||action==='campaign-edit'){campaignForm(id);return}
+ if(action==='campaign-save'){persistCampaignFromForm();return}
+ if(action==='campaign-save-no-image'){persistCampaignFromForm(true);return}
  if(action==='campaign-delete'){
   const campaign=state.campaigns.find(c=>c.id===id);if(!campaign)return;
   if(!confirm('Excluir a campanha "'+campaign.name+'"?'))return;
@@ -568,7 +616,7 @@ document.addEventListener('click',e=>{
  const nav=e.target.closest('[data-tab]');if(nav){tabTo(nav.dataset.tab);return}
  const btn=e.target.closest('[data-action]');if(btn){handleAction(btn.dataset.action,btn.dataset.id||'');return}
  if(e.target.id==='modal'){
-  if($('#groupForm')){toast('Para não perder o cadastro, use “Salvar grupo” ou “Cancelar”.');return;}
+  if($('#groupForm')||$('#campaignForm')){toast('Para não perder o preenchimento, use Salvar ou Cancelar.');return;}
   closeModal();
 }
 });
@@ -589,12 +637,9 @@ document.addEventListener('submit',e=>{
   return;
  }
  if(e.target.id==='campaignForm'){
-  e.preventDefault();const data=new FormData(e.target),id=String(data.get('id')||''),link=String(data.get('link')||'').trim();
-  if(link&&!simpleUrl(link)){toast('O link da campanha precisa começar com https://');return}
-  const c={id:id||uuid(),name:String(data.get('name')||'').trim().slice(0,100),service:String(data.get('service')||'Outro serviço'),city:String(data.get('city')||'').slice(0,90),text:String(data.get('text')||'').trim().slice(0,2200),link:link?simpleUrl(link):'',image:imageDraft};
-  if(!c.name||c.text.length<15){toast('Informe o nome e um anúncio com ao menos 15 caracteres.');return}
-  if(id)state.campaigns=state.campaigns.map(x=>x.id===id?c:x);else state.campaigns.push(c);
-  if(save()){closeModal();tabTo('campanhas');toast('Campanha salva.');}
+  e.preventDefault();
+  persistCampaignFromForm();
+  return;
  }
  if(e.target.id==='bulkGroupForm'){
   e.preventDefault();
@@ -617,6 +662,7 @@ document.addEventListener('submit',e=>{
  }
 });
 document.addEventListener('input',e=>{
+ if(e.target.closest?.('#campaignForm')&&e.target.name){const error=$('#campaignFormError');if(error){error.hidden=true;error.textContent='';}}
  if(e.target.id==='groupUrl'){
   const message=$('#groupLinkStatus');
   if(message){
