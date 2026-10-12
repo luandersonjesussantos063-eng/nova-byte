@@ -85,7 +85,7 @@ function adVariants(service,city){
   'Cardápio digital':[
    'Facilite o pedido dos seus clientes com um cardápio digital organizado, acessível pelo celular. A NovaByte Soluções cria soluções para restaurantes e lanchonetes.',
    'Seu cardápio pode estar a um clique do cliente. Tenha fotos, categorias e contato por WhatsApp com a NovaByte Soluções.',
-   'Para restaurantes, pizzarias e petiscarias: criamos cardápios digitais modernos que facilitam a consulta pelo telefone.',
+   'Para restaurantes, pizzarias e petiscarias: a NovaByte Soluções cria cardápios digitais modernos que facilitam a consulta pelo telefone.',
    'Atualize a apresentação de seus pratos e bebidas com um cardápio digital personalizado pela NovaByte Soluções.'
   ],
   'Aplicativos':[
