@@ -342,3 +342,11 @@ svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.75;strok
  .cinema-toolbar button.cinema-control-main{font-size:25px}
 }
 @media(prefers-reduced-motion:reduce){.player-layer.cinema .player-bar,.player-layer.cinema .cinema-controls{transition:none}}
+
+/* V 0.10 — Google Drive uses the official preview player within the same cinema frame. */
+.player-layer.cinema.drive-active .player-bar{height:51px;background:linear-gradient(180deg,#000b,transparent);padding:0 12px}
+.player-layer.cinema.drive-active .player-bar-title{font-size:13px}
+.player-layer.cinema.drive-active:not(.has-player-error) #player-status,
+.player-layer.cinema.drive-active #player-content-note,
+.player-layer.cinema.drive-active .cinema-controls{display:none!important}
+.player-layer.cinema.drive-active .video-wrap iframe{background:#000}

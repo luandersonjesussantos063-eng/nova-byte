@@ -33,7 +33,7 @@ async function loadUploadedCatalog(){
  if(!remoteDb)return;
  try{
   const {data,error}=await remoteDb.from("novaplay_library")
-   .select("id,title,description,kind,series_title,episode_number,genre,production_year,video_path,youtube_id,poster_path,duration_seconds,created_at")
+   .select("id,title,description,kind,series_title,episode_number,genre,production_year,video_path,youtube_id,google_drive_id,google_drive_resource_key,poster_path,duration_seconds,created_at")
    .eq("is_published",true).order("created_at",{ascending:false}).limit(150);
   if(error){console.warn("NovaPlay: catálogo remoto indisponível.",error.message);return}
   const grouped=new Map();
@@ -45,7 +45,7 @@ async function loadUploadedCatalog(){
    if(record.kind==="movie"){
     const film={id:"upload-"+record.id,title,kind:"film",category:record.genre||"Autoral",description:desc,
       year:record.production_year,duration:durationText(record.duration_seconds),cover,backdrop:cover,
-      mode:record.youtube_id?"youtube":"private",video_path:record.video_path,youtube_id:record.youtube_id,src:null,sourcePage:null,uploaded:true,live:false};
+      mode:record.google_drive_id?"google-drive":record.youtube_id?"youtube":"private",video_path:record.video_path,youtube_id:record.youtube_id,google_drive_id:record.google_drive_id,google_drive_resource_key:record.google_drive_resource_key,src:null,sourcePage:null,uploaded:true,live:false};
     db.films.push(film);all.push(film);map.set(film.id,film);additions.push(film);
    }else if(record.kind==="episode"&&record.series_title){
     const key=record.series_title.trim().toLocaleLowerCase("pt-BR");
@@ -60,7 +60,7 @@ async function loadUploadedCatalog(){
     category:first.genre||"Autoral",description:first.desc,year:first.production_year,cover:first.cover,
     backdrop:first.cover,uploaded:true,live:false,
     episodes:episodes.map(rec=>({id:"upload-"+rec.id,label:"Episódio "+rec.episode_number,
-      title:rec.title,duration:durationText(rec.duration_seconds),video_path:rec.video_path,youtube_id:rec.youtube_id,src:null,sourcePage:null,mode:rec.youtube_id?"youtube":"private"}))};
+      title:rec.title,duration:durationText(rec.duration_seconds),video_path:rec.video_path,youtube_id:rec.youtube_id,google_drive_id:rec.google_drive_id,google_drive_resource_key:rec.google_drive_resource_key,src:null,sourcePage:null,mode:rec.google_drive_id?"google-drive":rec.youtube_id?"youtube":"private"}))};
    db.series.push(show);all.push(show);map.set(show.id,show);additions.push(show);
    show.episodes.forEach(ep=>eps.set(ep.id,{show,ep}));
   }
@@ -294,7 +294,7 @@ function updateCinemaControls(){
  }
 }
 function showCinemaUi(){
- if($("player-layer").hidden||$("player-layer").classList.contains("youtube-active"))return;
+ if($("player-layer").hidden||$("player-layer").classList.contains("youtube-active")||$("player-layer").classList.contains("drive-active"))return;
  $("player-layer").classList.remove("ui-idle");
  clearTimeout(playerUiTimer);
  if(!$("video").paused)playerUiTimer=setTimeout(()=>{
@@ -304,7 +304,7 @@ function showCinemaUi(){
 }
 function resetCinemaUi(){
  clearTimeout(playerUiTimer);playerUiTimer=null;seekActive=false;
- $("player-layer").classList.remove("ui-idle","youtube-active","has-player-error");
+ $("player-layer").classList.remove("ui-idle","youtube-active","drive-active","has-player-error");
  $("cinema-controls").hidden=true;
  $("player-status").hidden=false;
  $("player-content-note").hidden=false;
@@ -318,7 +318,7 @@ cinemaVideo.addEventListener("volumechange",updateCinemaControls);
 cinemaVideo.addEventListener("loadedmetadata",updateCinemaControls);
 cinemaVideo.addEventListener("pointerdown",()=>showCinemaUi());
 $("player-layer").addEventListener("pointermove",e=>{
- if(!$("player-layer").classList.contains("youtube-active"))showCinemaUi();
+ if(!$("player-layer").classList.contains("youtube-active")&&!$("player-layer").classList.contains("drive-active"))showCinemaUi();
 });
 $("cinema-play").onclick=()=>{
  const v=$("video");if(v.paused)v.play().catch(()=>showCinemaUi());else v.pause();showCinemaUi()
@@ -406,14 +406,15 @@ function play(item,episode){
  stopPlayback();current={item,episode:episode||null};
  const media=episode||item;
  $("player-layer").hidden=false;document.body.classList.add("modal-open");
- const yt=!!media.youtube_id;
+ const yt=!!media.youtube_id,drive=!!media.google_drive_id,externalEmbed=yt||drive;
  $("player-layer").classList.toggle("youtube-active",yt);
- $("cinema-controls").hidden=yt;
+ $("player-layer").classList.toggle("drive-active",drive);
+ $("cinema-controls").hidden=externalEmbed;
  $("video").controls=false;
- $("player-status").hidden=yt;
- $("player-content-note").hidden=yt;
+ $("player-status").hidden=externalEmbed;
+ $("player-content-note").hidden=externalEmbed;
  updateCinemaControls();
- if(!yt)showCinemaUi();
+ if(!externalEmbed)showCinemaUi();
  enterCinema();
  $("player-heading").textContent=item.title;
  $("player-title").textContent=episode?item.title+" · "+episode.label:item.title;
@@ -474,6 +475,21 @@ function play(item,episode){
   $("retry-btn").hidden=true;$("fallback-btn").hidden=true;
   // Evita o aviso permanente por cima da imagem. O player oficial
   // continua com seus próprios controles, marca e regras de exibição.
+  $("player-status").textContent="";
+  $("player-content-note").textContent="";
+ }else if(media.google_drive_id){
+  // Google Drive's own file preview player; never attempt to extract or proxy streams.
+  const id=media.google_drive_id;
+  const key=media.google_drive_resource_key;
+  if(!/^[A-Za-z0-9_-]{12,128}$/.test(id) || (key&&!/^[A-Za-z0-9_-]{8,256}$/.test(key))){
+    fail("Link do Google Drive inválido.");return;
+  }
+  v.pause();v.hidden=true;
+  const frame=$("fallback-frame");frame.hidden=false;
+  const resource=key?"?resourcekey="+encodeURIComponent(key):"";
+  frame.src="https://drive.google.com/file/d/"+encodeURIComponent(id)+"/preview"+resource;
+  $("retry-btn").hidden=true;$("fallback-btn").hidden=true;
+  // The Google preview stays embedded; don't overlay the movie with a warning.
   $("player-status").textContent="";
   $("player-content-note").textContent="";
  }else if(media.video_path){
