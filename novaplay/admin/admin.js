@@ -228,11 +228,16 @@ function renderLibrary(){
  libraryPage=Math.max(0,Math.min(libraryPage,pageCount-1));
  shown.slice(libraryPage*LIBRARY_PAGE_SIZE,(libraryPage+1)*LIBRARY_PAGE_SIZE).forEach(row=>{
   const item=document.createElement("article");item.className="movie-item";
-  const poster=row.poster_path?client.storage.from(POSTER_BUCKET).getPublicUrl(row.poster_path).data.publicUrl:(row.youtube_id?"https://i.ytimg.com/vi/"+encodeURIComponent(row.youtube_id)+"/hqdefault.jpg":"../assets/posters/autoral.svg");
+  const poster=row.poster_path?client.storage.from(POSTER_BUCKET).getPublicUrl(row.poster_path).data.publicUrl:(row.youtube_id?"https://i.ytimg.com/vi/"+encodeURIComponent(row.youtube_id)+"/hqdefault.jpg":row.google_drive_id?(window.NovaPlayCover?.driveThumbnail(row.google_drive_id)||window.NovaPlayCover?.titleCard(row.title)):(window.NovaPlayCover?.titleCard(row.title)||"../assets/posters/autoral.svg"));
   const source=row.youtube_id?"YouTube · Link":row.google_drive_id?"Google Drive · Link":((row.file_size_bytes||0)/(1024*1024)).toFixed(1)+" MB";
   const review=row.genre==="Importado - revisão";
   const displayState=row.is_published?"PUBLICADO":review?"RASCUNHO · REVISAR DIREITOS":"RASCUNHO";
   item.innerHTML='<img class="movie-thumb" alt="" loading="lazy" src="'+esc(poster)+'"><div class="movie-main"><strong>'+esc(row.title)+'</strong><small>'+esc(row.kind==="episode"?(row.series_title+" · Ep. "+row.episode_number):"Filme/curta")+' · '+esc(source)+'</small><span class="movie-state'+(row.is_published?"":" draft")+'">'+displayState+'</span><div class="movie-buttons"><button class="edit">Editar</button><button class="publish">'+(row.is_published?"Retirar do catálogo":"Publicar")+'</button><button class="danger delete">Excluir</button></div></div>';
+  item.querySelector(".movie-thumb").addEventListener("error",function(){
+   if(this.dataset.fallbackShown)return;
+   this.dataset.fallbackShown="1";
+   this.src=window.NovaPlayCover?.titleCard(row.title)||"../assets/posters/autoral.svg";
+  });
   item.querySelector(".edit").onclick=()=>beginEdit(row);
   item.querySelector(".publish").onclick=()=>togglePublish(row);
   item.querySelector(".delete").onclick=()=>removeItem(row);
