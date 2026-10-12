@@ -1,7 +1,7 @@
 (()=>{
 'use strict';
 const KEY='novabyte-divulga-v1';
-const VERSION='1.0.0';
+const VERSION='1.0.1';
 const CITIES=['Lucas do Rio Verde','Sorriso','Sinop','Nova Mutum','Tapurah','Cuiabá','Outra cidade'];
 const SERVICES=['Criação de sites','Landing pages','Cardápio digital','Aplicativos','Sistemas personalizados','Outro serviço'];
 const $=s=>document.querySelector(s);
