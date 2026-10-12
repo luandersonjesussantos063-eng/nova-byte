@@ -38,6 +38,8 @@ let playerUiTimer=null,seekActive=false;
 let fullscreenOwned=false,closingFullscreen=false,lockedLandscape=false;
 
 function posterUrl(path,youtubeId,title,driveId){
+ const approved=window.NovaPlayCover?.approvedAnimePoster(title,false);
+ if(approved)return approved;
  if(path&&remoteDb)return remoteDb.storage.from("novaplay-posters").getPublicUrl(path).data.publicUrl;
  if(youtubeId&&/^[A-Za-z0-9_-]{11}$/.test(youtubeId))return"https://i.ytimg.com/vi/"+youtubeId+"/hqdefault.jpg";
  if(driveId)return window.NovaPlayCover?.driveThumbnail(driveId)||window.NovaPlayCover?.titleCard(title)||"./assets/posters/autoral.svg";

@@ -38,5 +38,27 @@ function driveThumbnail(id){
  if(!/^[A-Za-z0-9_-]{12,128}$/.test(String(id||"")))return null;
  return "https://drive.google.com/thumbnail?id="+encodeURIComponent(id)+"&sz=w600";
 }
-window.NovaPlayCover=Object.freeze({titleCard,driveThumbnail});
+
+const approvedAnimePosters=Object.freeze({
+ "akudama drive legendado":"akudama",
+ "another legendado":"another",
+ "arcane legendado":"arcane",
+ "arcane dublado":"arcane",
+ "black clover dublado":"black-clover",
+ "castelvania dublado":"castlevania",
+ "castlevania dublado":"castlevania",
+ "chiyu mahou no machigatta tsukaikata legendado":"chiyu",
+ "date a live iv":"date-alive",
+ "great pretender razbliuto filme":"great-pretender",
+ "jibaku shounen hanako kun dublado":"hanako"
+});
+function approvedAnimePoster(title,admin){
+ const key=String(title||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"")
+  .toLocaleLowerCase("pt-BR").replace(/[^a-z0-9 ]+/g," ").replace(/\s+/g," ").trim();
+ const slug=approvedAnimePosters[key];
+ if(!slug)return null;
+ return(admin?"../":"./")+"assets/review-covers/"+slug+".png";
+}
+
+window.NovaPlayCover=Object.freeze({titleCard,driveThumbnail,approvedAnimePoster});
 })();
