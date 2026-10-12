@@ -1,0 +1,25 @@
+name: Validar NovaByte Divulga Web
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'divulga/**'
+      - '.github/workflows/novabyte-divulga-web.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  test-web:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Conferir JavaScript e Service Worker
+        run: |
+          node --check divulga/app.js
+          node --check divulga/sw.js
+      - name: Testar exibição e persistência dos grupos
+        run: node --test divulga/tests/*.test.mjs
