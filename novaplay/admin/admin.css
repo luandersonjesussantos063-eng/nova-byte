@@ -33,3 +33,30 @@
 .quality-editor .quality-save{border:1px solid #508fe8;background:#234e9a;color:#fff;border-radius:7px;font-size:11px;padding:9px 9px;font-weight:800}
 .quality-editor .quality-save:disabled{opacity:.5}
 @media(max-width:560px){.quality-editor{grid-template-columns:100px minmax(0,1fr)}.quality-editor .quality-save{grid-column:1/-1}.quality-status{margin:5px 0 0}.quality-groups{max-height:145px}}
+
+
+/* Private rights-review intake for external PDF titles */
+.review-queue-panel{border:1px solid #365780;background:#102238;border-radius:12px;margin:8px 0 16px;overflow:hidden}
+.review-queue-panel>summary{display:flex;justify-content:space-between;align-items:center;gap:11px;padding:14px;cursor:pointer;list-style:none;background:#1b304d}
+.review-queue-panel>summary::-webkit-details-marker{display:none}
+.review-queue-panel>summary strong{font-size:13px;display:block}
+.review-queue-panel>summary small{display:block;font-size:10px;color:#a8bcd8;font-weight:400;margin-top:6px;line-height:1.5}
+.queue-count{white-space:nowrap;font-size:10px;background:#334f72;color:#e8f2ff;border-radius:30px;padding:7px 9px}
+.queue-body{padding:13px}
+.queue-body .muted{line-height:1.5}
+.queue-filter{display:grid;grid-template-columns:1.2fr 1fr;gap:8px;margin:12px 0}
+.queue-filter input,.queue-filter select{min-width:0;margin:0!important;font-size:12px}
+.queue-items{max-height:520px;overflow:auto;display:grid;gap:8px;margin-top:13px}
+.queue-item{border:1px solid #3a4c66;border-radius:10px;background:#101b2b;padding:10px}
+.queue-identifier{display:flex;align-items:start;gap:9px;min-width:0}
+.queue-order{min-width:29px;text-align:center;font-size:11px;background:#243a5b;border-radius:6px;padding:6px 3px;color:#bcd9ff}
+.queue-identity{flex:1;min-width:0;overflow-wrap:anywhere}
+.queue-identity strong{font-size:12px;line-height:1.4;display:block}
+.queue-identity small{display:block;font-size:10px;color:#9db4cd;margin:3px 0 6px}
+.queue-state{display:inline-flex;padding:4px 6px;border-radius:5px;font-size:10px;background:#4c3e22;color:#f7dda5}
+.queue-state.confirmed{background:#173c33;color:#99edcc}
+.queue-state.rejected{background:#48262b;color:#ffb6b5}
+.queue-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.queue-actions .outline,.queue-actions .primary{font-size:10px;line-height:1.1;padding:7px 9px;text-decoration:none;display:inline-flex;align-items:center}
+.queue-actions button:disabled{opacity:.5}
+@media(max-width:490px){.review-queue-panel>summary{align-items:start;flex-direction:column}.queue-filter{grid-template-columns:1fr}.queue-body{padding:10px}.queue-items{max-height:520px}}
