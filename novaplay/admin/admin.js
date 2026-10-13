@@ -62,7 +62,7 @@ async function hasAdmin(){
 }
 async function checkSession(){
  try{
-  const u=await hasAdmin();
+  const u=await Promise.race([hasAdmin(),new Promise((_,reject)=>setTimeout(()=>reject(new Error("A verificação de acesso demorou demais. Confira a conexão e tente novamente.")),12000))]);
   sessionUser=u||null;
   if(u){show("dashboard");await loadLibrary();await Promise.all([loadActivity(),loadFeaturedConfig(),loadPlaybackIssues()]);}
   else if(u===false){
