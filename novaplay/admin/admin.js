@@ -1057,6 +1057,7 @@ function init(){
   if(event==="PASSWORD_RECOVERY"){setTimeout(async()=>{const pass=prompt("Digite sua nova senha (pelo menos 8 caracteres):");if(pass&&pass.length>=8){const {error}=await client.auth.updateUser({password:pass});alert(error?errorText(error):"Senha alterada. Agora você pode entrar.")}},100)}
  });
  checkSession();
+ } catch(e) { console.error("NPlay admin initialization failed",e); show("login-view"); status("auth-message","Falha ao preparar o painel: "+errorText(e),true); }
 }
 if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",init);else init();
 })();
