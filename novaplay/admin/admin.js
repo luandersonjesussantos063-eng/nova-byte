@@ -531,7 +531,7 @@ function renderLibrary(){
  const info=$("source-summary");
  const publicados=items.filter(x=>x.is_published);
  const customCapas=publicados.filter(x=>!!x.poster_path).length;
- const capasDeArquivo=publicados.filter(x=>!x.poster_path && /^\\.\\.\\/assets\\//.test(window.NovaPlayCover?.approvedAnimePoster?.(x.title,true,x.genre)||"")).length;
+ const capasDeArquivo=publicados.filter(x=>!x.poster_path && (window.NovaPlayCover?.approvedAnimePoster?.(x.title,true,x.genre)||"").startsWith("../assets/")).length;
  const capasAutomaticas=publicados.length-customCapas-capasDeArquivo;
  if(info)info.textContent=withVideo+" títulos publicados com fonte de vídeo · "+comingSoon+" títulos Em breve sem vídeo cadastrado · CAPAS: "+customCapas+" enviadas, "+capasDeArquivo+" ilustradas locais, "+capasAutomaticas+" automáticas pendentes de arte individual. Os links de reprodução precisam de verificação independente.";
  const sourceFilter=$("library-state-filter");
