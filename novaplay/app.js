@@ -35,7 +35,7 @@ const save=(key,x)=>{try{localStorage.setItem(key,JSON.stringify(x))}catch(e){}}
 const escapeText=x=>String(x??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 let view="inicio",selected=null,featuredIndex=0,current=null,hls=null,timer=0,attempt=0,timeSaved=0,toastTimeout=null;
 let playerUiTimer=null,seekActive=false;
-let fullscreenOwned=false,closingFullscreen=false,lockedLandscape=false;
+let fullscreenOwned=false,closingFullscreen=false,lockedLandscape=false,playerClosing=false,cinemaSession=0;
 let issueReportBusy=false;
 let previewTimer=null,previewSequence=0,previewHls=null;
 
@@ -504,36 +504,56 @@ function syncLandscape(){
 }
 function enterCinema(){
  const layer=$("player-layer");
+ const session=++cinemaSession;
  layer.classList.add("cinema");fullscreenOwned=false;closingFullscreen=false;
  syncLandscape();
- // Must be initiated directly by the tap/click; otherwise Android rejects fullscreen.
+ // Fullscreen ocorre somente em resposta à ação da pessoa.
  const enter=layer.requestFullscreen?.bind(layer)||layer.webkitRequestFullscreen?.bind(layer);
  if(!enter)return;
  try{
   const result=enter({navigationUI:"hide"});
   Promise.resolve(result).then(()=>{
-   if(layer.hidden)return;
+   // Se o filme já foi fechado, desfazer uma solicitação atrasada.
+   if(session!==cinemaSession||playerClosing||layer.hidden){
+    if(document.fullscreenElement===layer||document.webkitFullscreenElement===layer){
+     try{Promise.resolve(document.exitFullscreen?document.exitFullscreen():document.webkitExitFullscreen?.()).catch(()=>{})}catch(e){}
+    }
+    return;
+   }
    fullscreenOwned=!!(document.fullscreenElement===layer||document.webkitFullscreenElement===layer);
-   if(screen.orientation&&typeof screen.orientation.lock==="function"){
+   if(fullscreenOwned&&screen.orientation&&typeof screen.orientation.lock==="function"){
     try{
-     Promise.resolve(screen.orientation.lock("landscape")).then(()=>{lockedLandscape=true;syncLandscape()}).catch(()=>{syncLandscape()});
+     Promise.resolve(screen.orientation.lock("landscape")).then(()=>{
+      if(session!==cinemaSession||playerClosing||layer.hidden){
+       try{screen.orientation.unlock?.()}catch(e){}
+       return;
+      }
+      lockedLandscape=true;syncLandscape();
+     }).catch(()=>{if(session===cinemaSession)syncLandscape()});
     }catch(e){syncLandscape()}
    }else syncLandscape();
-  }).catch(()=>{syncLandscape()});
+  }).catch(()=>{if(session===cinemaSession)syncLandscape()});
  }catch(e){syncLandscape()}
 }
 function leaveCinema(skipFullscreen=false){
  const layer=$("player-layer");
- layer.classList.remove("cinema","force-landscape");
  if(lockedLandscape&&screen.orientation&&typeof screen.orientation.unlock==="function"){
   try{screen.orientation.unlock()}catch(e){}
  }
  lockedLandscape=false;
- if(!skipFullscreen&&(document.fullscreenElement===layer||document.webkitFullscreenElement===layer)){
-  closingFullscreen=true;
-  try{Promise.resolve(document.exitFullscreen?document.exitFullscreen():document.webkitExitFullscreen?.()).catch(()=>{}).finally(()=>{closingFullscreen=false})}catch(e){closingFullscreen=false}
- }else{closingFullscreen=false}
+ const wasFullscreen=document.fullscreenElement===layer||document.webkitFullscreenElement===layer;
  fullscreenOwned=false;
+ if(skipFullscreen!==true&&wasFullscreen){
+  closingFullscreen=true;
+  let result;
+  try{
+   result=document.exitFullscreen?document.exitFullscreen():document.webkitExitFullscreen?.();
+  }catch(e){result=Promise.reject(e)}
+  // Aguardar o navegador sair do fullscreen ANTES de ocultar a janela.
+  return Promise.resolve(result).catch(()=>{}).finally(()=>{closingFullscreen=false});
+ }
+ closingFullscreen=false;
+ return Promise.resolve();
 }
 document.addEventListener("fullscreenchange",()=>{
  const layer=$("player-layer"),fs=document.fullscreenElement;
@@ -636,10 +656,21 @@ function stopPlayback(){
  $("fallback-frame").src="about:blank";$("fallback-frame").hidden=true;current=null;
 }
 function closePlayer(skipFullscreen=false){
- leaveCinema(skipFullscreen);
- stopPlayback();$("player-layer").hidden=true;document.body.classList.remove("modal-open");
- if(!$("detail-layer").hidden)closeDetails();
- if(view==="inicio")renderRows();
+ const layer=$("player-layer");
+ if(layer.hidden||playerClosing)return;
+ playerClosing=true;
+ ++cinemaSession; // Cancela solicitações de fullscreen/orientação pendentes.
+ const exitTask=leaveCinema(skipFullscreen===true);
+ stopPlayback();
+ const finish=()=>{
+  layer.classList.remove("cinema","force-landscape");
+  layer.hidden=true;
+  document.body.classList.remove("modal-open");
+  if(!$("detail-layer").hidden)closeDetails();
+  playerClosing=false;
+  if(view==="inicio")renderRows();
+ };
+ Promise.resolve(exitTask).then(finish,finish);
 }
 function playerStatus(msg){$("player-status").textContent=msg}
 function playbackFailed(msg,seq){
@@ -822,7 +853,7 @@ $("player-issue-dismiss").onclick=()=>{$("player-issue-panel").hidden=true};
 $("player-issue-retry").onclick=()=>{if(current)play(current.item,current.episode)};
 
 $("hero-preview-close").onclick=stopHeroPreview;
-$("player-back").onclick=closePlayer;$("player-close").onclick=closePlayer;
+$("player-back").onclick=()=>closePlayer();$("player-close").onclick=()=>closePlayer();
 $("retry-btn").onclick=()=>{if(current)play(current.item,current.episode)};
 $("fallback-btn").onclick=useFallback;
 $("close-details").onclick=closeDetails;
@@ -844,7 +875,7 @@ document.addEventListener("keydown",e=>{
 document.addEventListener("visibilitychange",()=>{if(document.hidden){stopHeroPreview();if(!$("player-layer").hidden)$("video").pause()}});
 window.addEventListener("scroll",()=>$("app-header").classList.toggle("is-scrolled",window.scrollY>24),{passive:true});
 if("serviceWorker" in navigator&&location.protocol==="https:"){
- window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js?v=0.38.6",{updateViaCache:"none"}).catch(()=>{}));
+ window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js?v=0.38.7",{updateViaCache:"none"}).catch(()=>{}));
 }
 navigate((location.hash||"").slice(1)||"inicio");
 loadUploadedCatalog().then(loadFeatured);
