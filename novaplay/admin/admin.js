@@ -169,6 +169,7 @@ async function testR2Upload(){
   await send("/uploads/complete",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({key,uploadId,parts})});
   uploadId=null;
   status("r2-test-status","✓ Transferência concluída! Vídeo privado salvo no R2: "+key,false,true);
+  $("r2-preview-key").value=key;
  }catch(err){
   status("r2-test-status","Falha no teste: "+(err?.message||String(err)),true);
   if(key&&uploadId&&token){
@@ -177,6 +178,22 @@ async function testR2Upload(){
  }finally{button.disabled=false;}
 }
 
+
+async function previewR2Video(){
+ const key=$("r2-preview-key").value.trim(),button=$("r2-preview-button"),video=$("r2-preview-video");
+ if(!key||!/^[0-9a-f-]{36}\/[0-9a-f-]{36}-[a-z0-9-]{8,80}\.(mp4|webm|ogv)$/i.test(key)){status("r2-preview-status","Informe uma chave R2 válida de vídeo enviado.",true);return;}
+ if(!sessionUser||!key.startsWith(sessionUser.id+"/")){status("r2-preview-status","Só é possível conferir vídeos da sua conta administrativa.",true);return;}
+ button.disabled=true;status("r2-preview-status","Buscando vídeo privado no R2...");
+ try{
+  const {data:{session}}=await client.auth.getSession();if(!session?.access_token)throw Error("Faça login novamente.");
+  const response=await fetch(R2_WORKER+"/processor/source?key="+encodeURIComponent(key),{headers:{"Authorization":"Bearer "+session.access_token}});
+  if(!response.ok)throw Error("Não foi possível recuperar o vídeo (HTTP "+response.status+").");
+  const blob=await response.blob();if(!blob.size)throw Error("Arquivo vazio.");
+  if(video.dataset.objectUrl)URL.revokeObjectURL(video.dataset.objectUrl);
+  const url=URL.createObjectURL(blob);video.dataset.objectUrl=url;video.src=url;video.style.display="block";
+  status("r2-preview-status","Vídeo privado recuperado ("+(blob.size/1048576).toFixed(2)+" MB). Aperte reproduzir.",false,true);
+ }catch(e){status("r2-preview-status",e.message||"Falha na reprodução.",true)}finally{button.disabled=false}
+}
 function fileKind(file,video=true){
  const ext=(file.name.split(".").pop()||"").toLowerCase();
  const map=video?{mp4:"video/mp4",webm:"video/webm",ogv:"video/ogg"}:{jpg:"image/jpeg",jpeg:"image/jpeg",png:"image/png",webp:"image/webp"};
@@ -971,6 +988,7 @@ async function forgot(){
 }
 function init(){
  $("r2-test-button").onclick=testR2Upload;
+ $("r2-preview-button").onclick=previewR2Video;
  if(!window.supabase?.createClient){show("login-view");status("auth-message","Não foi possível carregar a conexão de armazenamento. Confira a internet e atualize a página.",true);return}
  client=window.supabase.createClient(API_URL,PUBLIC_KEY,{auth:{autoRefreshToken:true,persistSession:true,detectSessionInUrl:true}});
  $("login-form").onsubmit=authAction;$("signup").onclick=signUp;$("forgot").onclick=forgot;
