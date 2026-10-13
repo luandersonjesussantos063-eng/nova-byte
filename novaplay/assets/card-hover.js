@@ -1,4 +1,4 @@
-/* NovaPlay v0.35.2 · Transição inteligente entre cards, com áudio sob controle. */
+/* NovaPlay v0.35.3 · Transição inteligente entre cards, com áudio sob controle. */
 (function(){
 "use strict";
 let layer=null,owner=null,timer=null,closeTimer=null,clipTimer=null,hls=null,token=0;
@@ -171,8 +171,9 @@ function pointerIsOver(card){
  if(!card.isConnected)return false;
  if(pointerX>=0&&pointerY>=0){
   const rect=card.getBoundingClientRect();
-  if(pointerX>=rect.left&&pointerX<rect.right&&pointerY>=rect.top&&pointerY<rect.bottom)
-   return hoveredCardAt(pointerX,pointerY)===card;
+  return pointerX>=rect.left&&pointerX<rect.right
+   &&pointerY>=rect.top&&pointerY<rect.bottom
+   &&hoveredCardAt(pointerX,pointerY)===card;
  }
  return card.matches(":hover");
 }
