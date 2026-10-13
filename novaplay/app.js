@@ -191,7 +191,7 @@ function shelf(title,items,key,withLive=false){
    const cardWidth=firstCard?.getBoundingClientRect().width||260;
    const amount=Math.max(cardWidth,track.clientWidth*.84);
    track.scrollBy({left:direction*amount,
-    behavior:window.matchMedia("(prefers-reduced-motion: reduce)").matches?"instant":"smooth"});
+    behavior:window.matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"});
   });
   return button;
  }
