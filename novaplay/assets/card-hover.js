@@ -1,4 +1,4 @@
-/* NovaPlay v0.38.2 · Hover mais suave e equilibrado, com áudio sob controle. */
+/* NovaPlay v0.38.3 · Ampliação progressiva a partir da capa de origem, com áudio sob controle. */
 (function(){
 "use strict";
 let layer=null,owner=null,timer=null,closeTimer=null,clipTimer=null,hls=null,token=0;
@@ -147,6 +147,13 @@ function open(card,item,settings){
  const view=document.createElement("section");
  view.className="np-hover-card";
  view.style.cssText="left:"+left+"px;top:"+top+"px;width:"+width+"px";
+ // Usar posição e dimensão REAIS da capa como início da ampliação.
+ // Com origem no canto superior esquerdo, a imagem começa exatamente
+ // sobre a miniatura e cresce até a dimensão final, sem salto.
+ const startScale=Math.min(1,rect.width/width);
+ view.style.setProperty("--np-hover-from-x",(rect.left-left).toFixed(2)+"px");
+ view.style.setProperty("--np-hover-from-y",(rect.top-top).toFixed(2)+"px");
+ view.style.setProperty("--np-hover-from-scale",startScale.toFixed(4));
  view.setAttribute("aria-label","Detalhes e prévia de "+item.title);
  view.innerHTML='<div class="np-hover-media"><img class="np-hover-poster" loading="eager" src="'+esc(item.cover||"./assets/icon.svg")+'" alt=""><button type="button" class="np-hover-sound" aria-label="Ativar áudio da prévia" aria-pressed="false" title="Ativar som" hidden></button></div>'
   +'<div class="np-hover-body"><div class="np-hover-title">'+esc(item.title)+'</div>'

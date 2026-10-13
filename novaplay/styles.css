@@ -476,13 +476,25 @@ svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.75;strok
  border-radius:13px;background:#141414;border:1px solid rgba(255,255,255,.22);
  box-shadow:0 20px 70px rgba(0,0,0,.86),0 0 0 1px rgba(255,255,255,.07);
  color:#f5f5f5;isolation:isolate;
- transform-origin:center center;
- animation:np-hover-in .32s cubic-bezier(.18,.72,.22,1) both;
+ /* Cresce a partir da posição real do pôster, não de uma janela pronta. */
+ transform-origin:top left;
+ animation:np-hover-in .38s cubic-bezier(.2,.76,.23,1) both;
+ will-change:transform,opacity;
 }
 @keyframes np-hover-in{
- from{opacity:0;transform:translateY(5px) scale(.965)}
- to{opacity:1;transform:translateY(0) scale(1)}
+ from{
+  opacity:.96;
+  transform:translate3d(var(--np-hover-from-x,0px),var(--np-hover-from-y,0px),0)
+   scale(var(--np-hover-from-scale,.72));
+ }
+ to{opacity:1;transform:translate3d(0,0,0) scale(1)}
 }
+/* Informações surgem depois que a imagem já começou a crescer. */
+.np-hover-card .np-hover-body{
+ opacity:0;
+ animation:np-hover-body-in .19s ease-out .16s both;
+}
+@keyframes np-hover-body-in{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
 /* Saída curta só da capa; vídeos e áudio são desligados imediatamente no JS. */
 .np-hover-card.np-hover-leaving{
  pointer-events:none!important;
@@ -524,7 +536,7 @@ svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.75;strok
  .np-hover-card{display:none!important}
 }
 @media(hover:none),(pointer:coarse){.np-hover-card{display:none!important}}
-@media(prefers-reduced-motion:reduce){.np-hover-card{animation:none!important}.np-hover-media video{transition:none}}
+@media(prefers-reduced-motion:reduce){.np-hover-card,.np-hover-card .np-hover-body{animation:none!important}.np-hover-card .np-hover-body{opacity:1}.np-hover-media video{transition:none}}
 
 /* NovaPlay V 0.35.1 — botão de som no canto da prévia, ao estilo streaming. */
 .np-hover-sound{
