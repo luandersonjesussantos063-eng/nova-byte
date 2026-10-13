@@ -8,7 +8,7 @@
 <link rel="stylesheet" href="./admin.css?v=0.28.2">
 </head>
 <body>
-<header class="top"><a class="brand" href="../"><span class="mark">▶</span> N<span>Play</span></a><div class="top-right"><strong>Painel administrativo · NPlay V 0.39.4</strong><button id="logout" class="outline" hidden>Sair</button></div></header>
+<header class="top"><a class="brand" href="../"><span class="mark">▶</span> N<span>Play</span></a><div class="top-right"><strong>Painel administrativo · NPlay V 0.39.5</strong><button id="logout" class="outline" hidden>Sair</button></div></header>
 <main class="container">
   <section id="loading" class="panel intro"><div class="spin"></div><p>Preparando seu painel...</p></section>
   <section id="login-view" class="panel login" hidden>
@@ -140,9 +140,11 @@
             <option value="youtube">Filme grande pelo YouTube (colar link)</option>
             <option value="google-drive">Vídeo do Google Drive (colar link)</option>
             <option value="licensed">Filme licenciado — link MP4 ou HLS (.m3u8)</option>
+            <option value="r2">Vídeo armazenado no Cloudflare R2 (rascunho)</option>
             <option value="netflix-reference">Netflix — cadastrar referência, sem publicar</option>
           </select>
         </div>
+        <div id="r2-catalog-fields" class="youtube-fields" hidden><label for="r2-catalog-key">Chave do vídeo já enviado ao R2<input id="r2-catalog-key" type="text" autocomplete="off" placeholder="Cole a chave completa do R2"></label><p class="muted">O vídeo será vinculado ao cadastro como rascunho privado. A reprodução pública só será liberada após a configuração de acesso seguro.</p><label class="publish-check"><input id="r2-rights" type="checkbox"><span>Confirmo que tenho autorização para distribuir este vídeo</span></label></div>
         <div id="youtube-fields" class="youtube-fields" hidden>
           <label for="youtube-url">Link do filme no YouTube <span class="required">*</span>
             <input id="youtube-url" type="url" inputmode="url" placeholder="https://youtu.be/xxxxxxxxxxx" autocomplete="off">
@@ -258,6 +260,6 @@
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.58.0/dist/umd/supabase.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/tus-js-client@4.3.1/dist/tus.min.js"></script>
 <script src="../assets/cover.js?v=0.39.2"></script>
-<script defer src="./admin.js?v=0.39.4"></script>
+<script defer src="./admin.js?v=0.39.5"></script>
 </body>
 </html>
