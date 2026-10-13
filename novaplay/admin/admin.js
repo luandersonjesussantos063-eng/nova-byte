@@ -869,9 +869,9 @@ async function sendForm(e){
   const ref=netflixReferenceUrl($("licensed-url").value);
   if(ref){$("netflix-url").value=ref;$("source-type").value="netflix-reference";mode="netflix-reference";setSourceType();}
  }
- const youtube=mode==="youtube",drive=mode==="google-drive",licensed=mode==="licensed",netflix=mode==="netflix-reference",external=youtube||drive||licensed||netflix;
+ const youtube=mode==="youtube",drive=mode==="google-drive",licensed=mode==="licensed",netflix=mode==="netflix-reference",r2=mode==="r2",external=youtube||drive||licensed||netflix||r2;
  const file=$("video-file").files[0]||null;
- const r2=mode==="r2",r2key=r2?$("r2-catalog-key").value.trim():null;
+ const r2key=r2?$("r2-catalog-key").value.trim():null;
  const cover=(external?$("youtube-poster-file"):$("poster-file")).files[0]||null;
  const youtubeId=youtube?extractYoutubeId($("youtube-url").value):null;
  const driveFile=drive?parseGoogleDriveLink($("drive-url").value):null;
