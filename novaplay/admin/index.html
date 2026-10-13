@@ -8,7 +8,7 @@
 <link rel="stylesheet" href="./admin.css?v=0.28.2">
 </head>
 <body>
-<header class="top"><a class="brand" href="../"><span class="mark">▶</span> N<span>Play</span></a><div class="top-right"><strong>Painel administrativo · NPlay V 0.39.3</strong><button id="logout" class="outline" hidden>Sair</button></div></header>
+<header class="top"><a class="brand" href="../"><span class="mark">▶</span> N<span>Play</span></a><div class="top-right"><strong>Painel administrativo · NPlay V 0.39.4</strong><button id="logout" class="outline" hidden>Sair</button></div></header>
 <main class="container">
   <section id="loading" class="panel intro"><div class="spin"></div><p>Preparando seu painel...</p></section>
   <section id="login-view" class="panel login" hidden>
@@ -49,6 +49,7 @@
       <input id="r2-test-file" type="file" accept=".mp4,.webm,.ogv,video/mp4,video/webm,video/ogg" style="display:block;max-width:100%;margin:12px 0">
       <button id="r2-test-button" type="button" class="primary">Enviar para Cloudflare R2</button>
       <p id="r2-test-status" class="feedback" role="status" aria-live="polite"></p>
+      <div style="margin-top:16px"><label for="r2-preview-key">Chave do vídeo privado no R2</label><input id="r2-preview-key" type="text" autocomplete="off" placeholder="Cole a chave exibida após o envio" style="display:block;width:100%;margin:8px 0"><button id="r2-preview-button" type="button" class="outline">Testar reprodução privada</button><p id="r2-preview-status" class="feedback" role="status" aria-live="polite"></p><video id="r2-preview-video" controls playsinline preload="none" style="display:none;width:100%;max-height:340px;margin-top:12px;border-radius:10px;background:#000"></video></div>
     </section>
     <section class="panel licensed-manager" aria-labelledby="licensed-heading">
       <div class="section-title">
@@ -257,6 +258,6 @@
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.58.0/dist/umd/supabase.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/tus-js-client@4.3.1/dist/tus.min.js"></script>
 <script src="../assets/cover.js?v=0.39.2"></script>
-<script defer src="./admin.js?v=0.39.3"></script>
+<script defer src="./admin.js?v=0.39.4"></script>
 </body>
 </html>
