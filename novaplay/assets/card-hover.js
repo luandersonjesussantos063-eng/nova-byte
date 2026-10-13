@@ -1,8 +1,47 @@
-/* NovaPlay v0.35.0 · Cards de paisagem com prévia silenciosa ao passar o mouse. */
+/* NovaPlay v0.35.1 · Prévias no hover com botão manual de som. */
 (function(){
 "use strict";
 let layer=null,owner=null,timer=null,closeTimer=null,clipTimer=null,hls=null,token=0;
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const MUTED_ICON='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4V5Z"/><path d="m17 9 5 6m0-6-5 6"/></svg>';
+const SOUND_ICON='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4V5Z"/><path d="M15.5 8.5a5 5 0 0 1 0 7m3-10a9 9 0 0 1 0 13"/></svg>';
+function setSoundButton(button,enabled){
+ button.setAttribute("aria-pressed",String(enabled));
+ button.setAttribute("aria-label",enabled?"Desligar áudio da prévia":"Ativar áudio da prévia");
+ button.title=enabled?"Desligar som":"Ativar som";
+ button.innerHTML=enabled?SOUND_ICON:MUTED_ICON;
+}
+function youtubeCommand(frame,func,args=[]){
+ try{frame.contentWindow?.postMessage(JSON.stringify({event:"command",func,args}),"https://www.youtube-nocookie.com")}catch(e){}
+}
+function attachSoundButton(view){
+ const area=view.querySelector(".np-hover-media");
+ const button=area.querySelector(".np-hover-sound");
+ const note=view.querySelector(".np-hover-hint");
+ button.addEventListener("click",e=>{
+  e.preventDefault();e.stopPropagation();
+  if(view!==layer)return;
+  const video=area.querySelector("video"),frame=area.querySelector("iframe");
+  if(!video&&!frame)return;
+  const enabled=button.getAttribute("aria-pressed")!=="true";
+  if(video){
+   video.muted=!enabled;
+   if(enabled){video.volume=1;video.play().catch(()=>{
+    if(view!==layer)return;
+    video.muted=true;setSoundButton(button,false);
+    note.textContent="O navegador bloqueou o áudio. Tente tocar em ativar som novamente.";
+   })}
+   note.textContent=enabled?"Áudio ativado · clique para silenciar":"Prévia sem som";
+  }else if(frame){
+   youtubeCommand(frame,enabled?"unMute":"mute");
+   if(enabled){youtubeCommand(frame,"setVolume",[100]);youtubeCommand(frame,"playVideo")}
+   note.textContent=enabled?"Som solicitado · pode depender do YouTube":"Prévia sem som";
+  }
+  setSoundButton(button,enabled);
+ });
+ setSoundButton(button,false);
+ return button;
+}
 function close(){
  token++;clearTimeout(timer);clearTimeout(closeTimer);clearTimeout(clipTimer);
  timer=null;closeTimer=null;clipTimer=null;
@@ -25,6 +64,7 @@ async function playPreview(item,view,settings,id){
  const media=item.kind==="series"?(item.episodes||[])[0]:item.kind==="episode"?(item.episode||item):item;
  if(!media)return;
  const area=view.querySelector(".np-hover-media"),note=view.querySelector(".np-hover-hint");
+ const soundButton=area.querySelector(".np-hover-sound");
  if(/^[A-Za-z0-9_-]{11}$/.test(media.youtube_id||"")){
   const frame=document.createElement("iframe");
   frame.title="Prévia silenciosa de "+item.title;
@@ -32,10 +72,11 @@ async function playPreview(item,view,settings,id){
   frame.referrerPolicy="strict-origin-when-cross-origin";
   frame.tabIndex=-1;
   frame.src="https://www.youtube-nocookie.com/embed/"+encodeURIComponent(media.youtube_id)
-   +"?autoplay=1&mute=1&controls=0&playsinline=1&rel=0&start=12&end=37";
+   +"?autoplay=1&mute=1&controls=0&playsinline=1&rel=0&start=12&end=37&enablejsapi=1&origin="+encodeURIComponent(location.origin);
   if(id!==token||layer!==view)return;
   area.append(frame);
-  note.textContent="Prévia sem som · reprodução sujeita às permissões do YouTube";
+  soundButton.hidden=false;
+  note.textContent="Prévia sem som · clique no alto-falante para ativar áudio";
  }else{
   if(media.google_drive_id){note.textContent="Capa ampliada · clique em assistir para abrir o vídeo";return}
   let src=media.licensed_stream_url||media.src||"";
@@ -59,6 +100,7 @@ async function playPreview(item,view,settings,id){
   },{once:true});
   video.addEventListener("error",()=>{if(id===token)note.textContent="Prévia indisponível para esta fonte"});
   area.append(video);
+  soundButton.hidden=false;
   if(/\.m3u8(?:\?|$)/i.test(src)&&!video.canPlayType("application/vnd.apple.mpegurl")&&window.Hls?.isSupported()){
    hls=new window.Hls({enableWorker:true,maxBufferLength:8});
    hls.loadSource(src);hls.attachMedia(video);
@@ -72,6 +114,7 @@ async function playPreview(item,view,settings,id){
   if(f){f.src="about:blank";f.remove()}
   if(hls){try{hls.destroy()}catch(e){}hls=null}
   view.classList.remove("np-is-playing");
+  soundButton.hidden=true;setSoundButton(soundButton,false);
   note.textContent="Fim da prévia · clique para assistir";
  },25000);
 }
@@ -88,13 +131,14 @@ function open(card,item,settings){
  view.className="np-hover-card";
  view.style.cssText="left:"+left+"px;top:"+top+"px;width:"+width+"px";
  view.setAttribute("aria-label","Detalhes e prévia de "+item.title);
- view.innerHTML='<div class="np-hover-media"><img class="np-hover-poster" loading="eager" src="'+esc(item.cover||"./assets/icon.svg")+'" alt=""></div>'
+ view.innerHTML='<div class="np-hover-media"><img class="np-hover-poster" loading="eager" src="'+esc(item.cover||"./assets/icon.svg")+'" alt=""><button type="button" class="np-hover-sound" aria-label="Ativar áudio da prévia" aria-pressed="false" title="Ativar som" hidden></button></div>'
   +'<div class="np-hover-body"><div class="np-hover-title">'+esc(item.title)+'</div>'
   +'<div class="np-hover-actions">'
   +(item.catalogOnly?"":'<button type="button" class="np-hover-action np-primary" aria-label="Assistir '+esc(item.title)+'" title="Assistir">▶</button>')
   +'<button type="button" class="np-hover-action np-details" aria-label="Mais informações de '+esc(item.title)+'" title="Mais informações">ⓘ</button></div>'
   +'<div class="np-hover-metadata">'+esc(item.catalogOnly?"EM BREVE":item.category||"NovaPlay")+'</div>'
   +'<div class="np-hover-hint">'+esc(item.catalogOnly?"Aguardando vídeo autorizado":"Prévia automática quando disponível")+'</div></div>';
+ attachSoundButton(view);
  const picture=view.querySelector(".np-hover-poster");
  picture.addEventListener("error",function(){
   if(this.dataset.replaced)return;this.dataset.replaced="yes";
