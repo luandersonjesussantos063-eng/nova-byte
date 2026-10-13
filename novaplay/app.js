@@ -292,10 +292,25 @@ function updateHero(index){
  featuredIndex=(index+featured.length)%featured.length;const x=featured[featuredIndex];
  $("hero-art").style.backgroundImage="url('"+(x.backdrop||x.cover).replace(/'/g,"%27")+"')";
  $("hero-title").textContent=x.title;
- $("hero-genre").textContent=x.uploaded?(x.category||"DESTAQUE NOVAPLAY").toLocaleUpperCase("pt-BR"):x.kind==="series"?"SÉRIE CLÁSSICA":"CINEMA CLÁSSICO";
- $("hero-description").textContent=x.description;
+ const normalizedTitle=String(x.title||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"")
+  .toLocaleLowerCase("pt-BR").replace(/[^a-z0-9 ]+/g," ").replace(/\s+/g," ").trim();
+ const editorialGenres={
+  "a era do gelo 4":["Aventura","Comédia"],
+  "a familia do futuro":["Ficção científica","Aventura"],
+  "a grande familia o roubo":["Humor"],
+  "a fantastica fabrica de chocolate":["Fantasia","Família"],
+  "a pequena polegar":["Fantasia","Família"]
+ };
+ const extras=editorialGenres[normalizedTitle]||[];
+ const format=normalizedTitle==="a grande familia o roubo"?"Especial":x.kind==="series"?"Série":"Filme";
+ $("hero-genre").textContent=x.kind==="series"?"SÉRIE EM DESTAQUE":"DESTAQUE DO CATÁLOGO";
+ $("hero-description").textContent=x.description||"Conheça esta história e descubra por que ela merece um lugar na sua lista.";
  const wrap=$("hero-metadata");wrap.replaceChildren();
- [x.year,x.duration,x.uploaded?"Disponível na NovaPlay":"Cinema clássico"].filter(Boolean).forEach(s=>{const span=document.createElement("span");span.textContent=s;wrap.append(span)});
+ const facts=[format,x.category&&!/^(autoral|importado|outros|sem gênero)$/i.test(x.category)?x.category:null,...extras,x.year,
+   x.duration&&!/^(produção independente|em breve|clássico)$/i.test(x.duration)?x.duration:null];
+ for(const fact of facts.filter(Boolean)){
+  const span=document.createElement("span");span.textContent=String(fact);wrap.append(span);
+ }
  $("hero-play").onclick=()=>startWatching(x);
  $("hero-preview-open").onclick=()=>openHeroPreview(x);
  $("hero-info").onclick=()=>openDetails(x);
@@ -761,7 +776,7 @@ document.addEventListener("keydown",e=>{
 document.addEventListener("visibilitychange",()=>{if(document.hidden){stopHeroPreview();if(!$("player-layer").hidden)$("video").pause()}});
 window.addEventListener("scroll",()=>$("app-header").classList.toggle("is-scrolled",window.scrollY>24),{passive:true});
 if("serviceWorker" in navigator&&location.protocol==="https:"){
- window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js?v=0.36.2",{updateViaCache:"none"}).catch(()=>{}));
+ window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js?v=0.36.3",{updateViaCache:"none"}).catch(()=>{}));
 }
 navigate((location.hash||"").slice(1)||"inicio");
 loadUploadedCatalog().then(loadFeatured);
