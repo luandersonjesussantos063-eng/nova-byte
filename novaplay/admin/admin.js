@@ -509,7 +509,7 @@ function renderPlaybackIssues(){
 async function loadLibrary(){
  // Ler todas as páginas: o catálogo importado pode ter centenas de rascunhos.
  const gathered=[];
- const select="id,title,description,kind,series_title,episode_number,genre,production_year,video_path,youtube_id,google_drive_id,google_drive_resource_key,licensed_stream_url,licensed_rights_confirmed,poster_path,is_published,rights_reviewed,rights_reviewed_at,catalog_only,review_queue_id,quality_score,quality_score_source,quality_score_note,quality_scored_at,file_size_bytes,mime_type,created_at";
+ const select="id,title,description,kind,series_title,episode_number,genre,production_year,video_path,youtube_id,google_drive_id,google_drive_resource_key,licensed_stream_url,netflix_reference_url,licensed_rights_confirmed,poster_path,is_published,rights_reviewed,rights_reviewed_at,catalog_only,review_queue_id,quality_score,quality_score_source,quality_score_note,quality_scored_at,file_size_bytes,mime_type,created_at";
  for(let offset=0;offset<5000;offset+=500){
   const {data,error}=await client.from("novaplay_library").select(select).order("created_at",{ascending:false}).range(offset,offset+499);
   if(error){status("upload-message","Não foi possível ler a biblioteca: "+errorText(error),true);return}
@@ -645,8 +645,8 @@ function beginEdit(row){
  $("source-type").value=isNetflixReference(row)?"netflix-reference":row.licensed_stream_url?"licensed":row.google_drive_id?"google-drive":row.youtube_id?"youtube":releasing?"google-drive":"upload";
  $("youtube-url").value=row.youtube_id?"https://youtu.be/"+row.youtube_id:"";
  $("drive-url").value=row.google_drive_id?"https://drive.google.com/file/d/"+row.google_drive_id+"/view"+(row.google_drive_resource_key?"?resourcekey="+encodeURIComponent(row.google_drive_resource_key):""):"";
- $("licensed-url").value=isNetflixReference(row)?"":(row.licensed_stream_url||"");
- $("netflix-url").value=isNetflixReference(row)?row.licensed_stream_url:"";
+ $("licensed-url").value=row.licensed_stream_url||"";
+ $("netflix-url").value=row.netflix_reference_url||"";
  $("licensed-rights").checked=!!row.licensed_rights_confirmed;
  setSourceType();
  $("video-file").value="";$("poster-file").value="";$("youtube-poster-file").value="";
@@ -693,7 +693,7 @@ async function saveQualityScore(row,element){
  }finally{busy=false}
 }
 
-function isNetflixReference(row){try{return new URL(row.licensed_stream_url||"").hostname.replace(/^www\./,"")==="netflix.com"}catch{return false}}
+function isNetflixReference(row){return !!row.netflix_reference_url}
 function netflixReferenceUrl(value){try{const u=new URL(value.trim());if(u.protocol!=="https:"||u.hostname.replace(/^www\./,"")!=="netflix.com"||u.username||u.password)return null;const direct=u.pathname.match(/^\/(?:title|watch)\/(\d{5,12})(?:\/|$)/);const id=direct?.[1]||u.searchParams.get("jbv");if(!id||!/^\d{5,12}$/.test(id))return null;return u.href}catch{return null}}
 async function toggleReview(row){
  if(busy)return;
@@ -835,7 +835,8 @@ async function sendForm(e){
   genre:$("genre").value.trim()||"Autoral",
   is_published:netflix?false:$("publish").checked,
   catalog_only:netflix,
-  licensed_stream_url:netflix?netflixUrl:licensed?licensedUrl:null,
+  licensed_stream_url:licensed?licensedUrl:null,
+  netflix_reference_url:netflix?netflixUrl:null,
   licensed_rights_confirmed:licensed&&$("licensed-rights").checked
  };
  if(licensed||netflix)payload.rights_reviewed=licensed&&!!payload.licensed_rights_confirmed;
@@ -861,7 +862,7 @@ async function sendForm(e){
       youtube_id:youtube?youtubeId:null,
       google_drive_id:drive?driveFile.id:null,
       google_drive_resource_key:drive?driveFile.resourceKey:null,
-      licensed_stream_url:netflix?netflixUrl:licensed?licensedUrl:null,
+      licensed_stream_url:licensed?licensedUrl:null,
       video_path:null,mime_type:null,file_size_bytes:null,duration_seconds:null
     });
   }else{
