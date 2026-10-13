@@ -1,4 +1,4 @@
-/* NovaPlay — capinhas por título + miniaturas originais do Google Drive (quando acessíveis). */
+/* NPlay — capinhas por título + miniaturas originais do Google Drive (quando acessíveis). */
 (function(){
 "use strict";
 function esc(t){return String(t||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
@@ -15,7 +15,7 @@ function paletteFor(title){
  return colors[h%colors.length];
 }
 function linesOf(raw){
- const words=String(raw||"Filme NovaPlay").trim().replace(/\s+/g," ").split(" ");
+ const words=String(raw||"Filme NPlay").trim().replace(/\s+/g," ").split(" ");
  const result=[];let current="";
  for(const word of words){
   if((current+" "+word).trim().length>17&&current){result.push(current);current=word;}
@@ -52,7 +52,7 @@ const approvedAnimePosters=Object.freeze({
  "great pretender razbliuto filme":"great-pretender",
  "jibaku shounen hanako kun dublado":"hanako"
 });
-/* Capas NovaPlay produzidas em outubro de 2026, otimizadas para carregamento rápido. */
+/* Capas NPlay produzidas em outubro de 2026, otimizadas para carregamento rápido. */
 const premiumMovieCovers=Object.freeze({
  "a era do gelo":"a_era_do_gelo.avif",
  "a era do gelo 2":"a_era_do_gelo_2.avif",
@@ -125,7 +125,7 @@ function approvedAnimePoster(title,admin,genre,knownOnly){
  return(admin?"../":"./")+"assets/review-covers/"+slug+".png";
 }
 
-/* NovaPlay Studio: cartazes vetoriais individuais, um por título, sem usar fotogramas dos vídeos. */
+/* NPlay Studio: cartazes vetoriais individuais, um por título, sem usar fotogramas dos vídeos. */
 function normalizeCoverText(v){return String(v||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLocaleLowerCase("pt-BR").trim()}
 function genrePoster(title,genre){
  const raw=String(title||"Título sem nome").replace(/\s+/g," ").trim().slice(0,140);
@@ -143,7 +143,7 @@ function genrePoster(title,genre){
  const known=category.includes("animacao")||category.includes("anime")?1:category.includes("terror")?2:category.includes("ficcao")?0:category.includes("aventura")?3:category.includes("acao")?4:category.includes("romance")?6:category.includes("comedia")?7:null;
  const colors=palettes[known??(hash%palettes.length)];
  const [dark,mid,glow]=colors;
- const label=genre&&category!=="importado - revisao"?String(genre).replace(/\s+/g," ").trim().slice(0,25).toUpperCase():"CINEMA · NOVAPLAY";
+ const label=genre&&category!=="importado - revisao"?String(genre).replace(/\s+/g," ").trim().slice(0,25).toUpperCase():"CINEMA · NPLAY";
  const symbols={
   star:'<path d="M240 126l34 103 110 1-89 65 33 105-88-65-88 65 33-105-89-65 110-1z"/>',
   mountain:'<path d="M60 370l95-158 60 78 58-123 142 203z"/>',

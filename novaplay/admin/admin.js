@@ -1,4 +1,4 @@
-/* NovaPlay — Painel de administração protegido por Supabase RLS */
+/* NPlay — Painel de administração protegido por Supabase RLS */
 (function(){
 "use strict";
 const PROJECT="vajlhodqxskozuxxlujv";
@@ -38,7 +38,7 @@ function show(id){
 function disable(submitted){
  busy=submitted;
  ["submit-upload","refresh-list","cancel-edit","video-file","poster-file","youtube-url","youtube-poster-file","source-type","drive-url","licensed-url","netflix-url","licensed-rights"].forEach(id=>$(id).disabled=submitted);
- $("submit-upload").textContent=submitted?"Enviando...":"Enviar para a NovaPlay";
+ $("submit-upload").textContent=submitted?"Enviando...":"Enviar para a NPlay";
 }
 function errorText(err){
  if(!err)return"Erro desconhecido.";
@@ -55,7 +55,7 @@ async function hasAdmin(){
  // com e-mail verificado e ID confirmado pelo Supabase Auth.
  // Não há senha de administrador no código nem acesso liberado por e-mail digitado.
  const claim=await client.rpc("novaplay_claim_owner_access");
- if(claim.error)console.warn("NovaPlay: validação de proprietário indisponível.");
+ if(claim.error)console.warn("NPlay: validação de proprietário indisponível.");
  const r=await client.from("novaplay_admins").select("user_id").eq("user_id",user.id).maybeSingle();
  if(r.error)throw r.error;
  return r.data?user:false;
@@ -126,12 +126,12 @@ function setSourceType(){
  $("youtube-url").required=youtube;
  $("drive-url").required=drive;
  $("external-cover-tip").textContent=netflix
-  ?"Capa opcional para seu controle privado. Este título não será exibido na NovaPlay."
+  ?"Capa opcional para seu controle privado. Este título não será exibido na NPlay."
   :licensed
   ?"Adicione uma capa vertical para o filme licenciado (JPG, PNG ou WebP, até 5 MB)."
-  :drive?"Se não escolher capa, usaremos uma arte padrão da NovaPlay. JPG, PNG ou WebP, até 5 MB."
+  :drive?"Se não escolher capa, usaremos uma arte padrão da NPlay. JPG, PNG ou WebP, até 5 MB."
   :"Se não escolher capa, usamos a miniatura do YouTube. JPG, PNG ou WebP, até 5 MB.";
- $("submit-upload").textContent=busy?"Salvando...":netflix?"Salvar referência / prévia":editing?.catalog_only?"Salvar e liberar para assistir":editing?"Salvar alterações":external?"Cadastrar vídeo pelo link":"Enviar para a NovaPlay";
+ $("submit-upload").textContent=busy?"Salvando...":netflix?"Salvar referência / prévia":editing?.catalog_only?"Salvar e liberar para assistir":editing?"Salvar alterações":external?"Cadastrar vídeo pelo link":"Enviar para a NPlay";
 }
 function fileKind(file,video=true){
  const ext=(file.name.split(".").pop()||"").toLowerCase();
@@ -666,7 +666,7 @@ function resetForm(){
  $("cancel-edit").hidden=true;$("series-fields").hidden=true;$("series-name").required=false;$("episode-number").required=false;
  $("source-type").value="upload";$("youtube-url").value="";$("drive-url").value="";$("licensed-url").value="";$("licensed-rights").checked=false;$("netflix-url").value="";$("youtube-poster-file").value="";setSourceType();
  $("video-file-label").textContent="Selecionar vídeo do telefone";$("poster-file-label").textContent="Escolher capa (opcional)";
- $("submit-upload").textContent="Enviar para a NovaPlay";$("progress-box").hidden=true;$("publish").checked=false;
+ $("submit-upload").textContent="Enviar para a NPlay";$("progress-box").hidden=true;$("publish").checked=false;
 }
 
 
@@ -704,7 +704,7 @@ async function toggleReview(row){
  if(busy)return;
  const next=!row.rights_reviewed;
  if(next&&isNetflixReference(row)){status("bulk-message","Este título da Netflix está apenas como referência. Substitua por um link licenciado antes de conferir.",true);return}
- if(next&&!confirm("Você conferiu este filme e confirma que possui autorização de exibição pública na NovaPlay e que o link é acessível? Marcar “"+row.title+"” como conferido?"))return;
+ if(next&&!confirm("Você conferiu este filme e confirma que possui autorização de exibição pública na NPlay e que o link é acessível? Marcar “"+row.title+"” como conferido?"))return;
  busy=true;renderLibrary();
  try{
   const stamp=next?new Date().toISOString():null;
@@ -719,7 +719,7 @@ async function togglePublish(row){
  if(busy)return;
  const publish=!row.is_published;
  if(publish&&isNetflixReference(row)&&!row.poster_path){status("bulk-message","Adicione primeiro uma capa com permissão de divulgação para exibir este título como Em breve.",true);return}
- if(publish&&!confirm(row.catalog_only?"Exibir a ficha de “"+row.title+"” na grade como EM BREVE, sem reprodução, até cadastrar um vídeo?":"Confirma autorização para disponibilizar publicamente “"+row.title+"” na NovaPlay, incluindo o arquivo indicado pelo link?"))return;
+ if(publish&&!confirm(row.catalog_only?"Exibir a ficha de “"+row.title+"” na grade como EM BREVE, sem reprodução, até cadastrar um vídeo?":"Confirma autorização para disponibilizar publicamente “"+row.title+"” na NPlay, incluindo o arquivo indicado pelo link?"))return;
  busy=true;renderLibrary();
  try{
   const changes={is_published:publish};
@@ -815,7 +815,7 @@ async function sendForm(e){
  const netflixUrl=netflix?netflixReferenceUrl($("netflix-url").value):null;
  if(netflix&&!netflixUrl){status("upload-message","Informe um link oficial Netflix /title/ID ou /browse/genre/...?...jbv=ID.",true);return}
  if(licensed&&!licensedUrl){status("upload-message","Informe um link HTTPS direto autorizado terminando em .mp4, .webm, .ogv ou .m3u8. Endereços de filmes na Netflix não funcionam aqui.",true);return}
- if(licensed&&$("publish").checked&&!$("licensed-rights").checked){status("upload-message","Para publicar este filme, confirme que já possui licença para exibição pública na NovaPlay. Enquanto aguarda, salve como rascunho.",true);return}
+ if(licensed&&$("publish").checked&&!$("licensed-rights").checked){status("upload-message","Para publicar este filme, confirme que já possui licença para exibição pública na NPlay. Enquanto aguarda, salve como rascunho.",true);return}
  if(youtube&&!youtubeId){status("upload-message","Cole um link válido do YouTube, como https://youtu.be/ID ou youtube.com/watch?v=ID.",true);return}
  if(drive&&!driveFile){status("upload-message","Cole um link de arquivo do Google Drive, como https://drive.google.com/file/d/ID/view. Links de pastas ou pesquisa Google não funcionam.",true);return}
  if(!external&&!file&&(!editing||!editing.video_path)){
@@ -895,7 +895,7 @@ async function sendForm(e){
   if(file)sessionStorage.removeItem(pendingKey(file));
   const wasCatalogOnly=!!editing?.catalog_only;
   resetForm();
-  status("upload-message",netflix?(payload.is_published?"Prévia Em breve publicada com capa e sem reprodução.":"Referência salva como rascunho privado, sem reprodução."):wasCatalogOnly?(payload.is_published?"Vídeo cadastrado! O título saiu de Em breve e está liberado para assistir.":"Vídeo cadastrado como rascunho. O título ainda não está publicado."):"Conteúdo salvo! "+(payload.is_published?"Já está disponível na NovaPlay.":"Salvo como rascunho."),false,true);
+  status("upload-message",netflix?(payload.is_published?"Prévia Em breve publicada com capa e sem reprodução.":"Referência salva como rascunho privado, sem reprodução."):wasCatalogOnly?(payload.is_published?"Vídeo cadastrado! O título saiu de Em breve e está liberado para assistir.":"Vídeo cadastrado como rascunho. O título ainda não está publicado."):"Conteúdo salvo! "+(payload.is_published?"Já está disponível na NPlay.":"Salvo como rascunho."),false,true);
   await loadLibrary();
  }catch(err){
    status("upload-message","Não foi possível salvar: "+errorText(err)+". Confira as informações e tente novamente.",true);

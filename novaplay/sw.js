@@ -1,4 +1,4 @@
-const CACHE="novaplay-v0.39.0";
+const CACHE="novaplay-v0.39.1";
 const CORE=["./","./index.html","./styles.css","./app.js","./assets/cover.js","./assets/card-hover.js","./assets/hero-scenes.js","./catalog.js","./manifest.webmanifest","./assets/icon.svg",
 "./assets/posters/autoral.svg","./assets/posters/nosferatu.svg","./assets/posters/lua.svg","./assets/posters/caligari.svg","./assets/posters/lostworld.svg",
 "./assets/posters/pauline.svg","./assets/posters/phantom.svg","./assets/posters/camara.svg","./assets/posters/brasil.svg","./assets/posters/cultura.svg","./assets/backdrops/lostworld-hero.svg"];
