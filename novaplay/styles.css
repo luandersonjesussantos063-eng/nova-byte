@@ -780,3 +780,10 @@ svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.75;strok
 @media(prefers-reduced-motion:reduce){
  .np-hover-card .np-hover-name{animation:none!important}
 }
+
+/* NovaPlay V 0.38.6: prévia visível somente depois que começar a tocar. */
+.np-hover-card .np-hover-media iframe{opacity:0;transition:opacity .25s ease}
+.np-hover-card.np-yt-is-playing .np-hover-media iframe{opacity:1}
+.np-hover-card.np-yt-is-playing .np-hover-name{opacity:0;visibility:hidden}
+.np-hover-card.np-yt-is-playing .np-hover-media:after{opacity:0}
+@media(prefers-reduced-motion:reduce){.np-hover-card .np-hover-media iframe{transition:none}}
