@@ -692,6 +692,28 @@ function useFallback(){
  $("player-error").textContent="";
  playerStatus("Player oficial alternativo. Toque em ▶ para iniciar.");
 }
+/* Disparar play no primeiro clique, com fallback silencioso se houver bloqueio. */
+function startAutoplay(video,seq){
+ if(seq!==attempt||$("player-layer").hidden||playerClosing)return;
+ const mutedFallback=()=>{
+  if(seq!==attempt||$("player-layer").hidden||playerClosing)return;
+  video.muted=true;
+  try{
+   Promise.resolve(video.play()).catch(()=>{
+    if(seq===attempt&&!$("player-layer").hidden){
+     playerStatus("Toque em ▶ para reproduzir: o navegador bloqueou o início automático.");
+     showCinemaUi();
+    }
+   });
+  }catch(e){playerStatus("Toque em ▶ para reproduzir.");showCinemaUi()}
+ };
+ try{
+  Promise.resolve(video.play()).catch(err=>{
+   if(seq!==attempt||$("player-layer").hidden||playerClosing)return;
+   if(err?.name!=="AbortError")mutedFallback();
+  });
+ }catch(e){mutedFallback()}
+}
 function setResume(video,id,seq){
  if(!id)return;
  let lastSaved=0;
@@ -730,6 +752,10 @@ function play(item,episode){
  $("player-layer").classList.toggle("drive-active",drive);
  $("cinema-controls").hidden=externalEmbed;
  $("video").controls=false;
+ $("video").autoplay=true;
+ $("video").playsInline=true;
+ $("video").preload="auto";
+ $("video").muted=false;
  $("player-status").hidden=externalEmbed;
  $("player-content-note").hidden=externalEmbed;
  updateCinemaControls();
@@ -759,7 +785,7 @@ function play(item,episode){
    playerStatus(item.kind==="tv"?"● AO VIVO — reproduzindo":"▶ Reproduzindo");
  };
  v.onwaiting=()=>{if(seq===attempt)playerStatus("Aguardando dados da transmissão...")};
- v.oncanplay=()=>{if(seq===attempt){clearTimeout(timer);playerStatus("Pronto para assistir — toque no ▶ se necessário")}};
+ v.oncanplay=()=>{if(seq===attempt){clearTimeout(timer);playerStatus(v.paused?"Preparando reprodução automática...":"▶ Reproduzindo")}};
  const progressId=item.kind==="tv"?null:episode?episode.id:item.id;
  setResume(v,progressId,seq);
  if(item.kind==="tv")timer=setTimeout(()=>{if(seq===attempt&&v.readyState<2)fail("O canal está demorando para carregar. Verifique a conexão ou tente novamente.")},22000);
@@ -768,7 +794,7 @@ function play(item,episode){
   if(!src){fail("Não foi possível localizar o arquivo de vídeo.");return}
   if(/\.m3u8(?:\?|$)/i.test(src)){
     if(v.canPlayType("application/vnd.apple.mpegurl")){
-      v.src=src;v.play().catch(()=>playerStatus("Toque no botão ▶ do vídeo para começar."));
+      v.src=src;startAutoplay(v,seq);
     }else if(window.Hls&&window.Hls.isSupported()){
       hls=new window.Hls({enableWorker:true,lowLatencyMode:true,maxBufferLength:20});
       hls.on(window.Hls.Events.ERROR,(event,data)=>{
@@ -777,11 +803,11 @@ function play(item,episode){
         fail("A transmissão interrompeu. Toque em Tentar novamente.");
       });
       hls.loadSource(src);hls.attachMedia(v);
-      hls.on(window.Hls.Events.MANIFEST_PARSED,()=>{if(seq===attempt)v.play().catch(()=>playerStatus("Toque no ▶ do vídeo para começar."))});
+      hls.on(window.Hls.Events.MANIFEST_PARSED,()=>{if(seq===attempt)startAutoplay(v,seq)});
     }else fail("Este navegador não carregou o suporte a HLS.");
   }else{
     v.src=src;
-    v.play().catch(()=>playerStatus("Toque no botão ▶ do vídeo para começar."));
+    startAutoplay(v,seq);
   }
  }
  if(media.youtube_id){
@@ -790,7 +816,8 @@ function play(item,episode){
   if(!/^[A-Za-z0-9_-]{11}$/.test(id)){fail("Endereço do vídeo inválido.");return}
   v.pause();v.hidden=true;
   const frame=$("fallback-frame");frame.hidden=false;
-  frame.src="https://www.youtube-nocookie.com/embed/"+encodeURIComponent(id)+"?autoplay=1&playsinline=1&rel=0";
+  // Autoplay sem som evita o bloqueio inicial; áudio pelo player oficial.
+  frame.src="https://www.youtube-nocookie.com/embed/"+encodeURIComponent(id)+"?autoplay=1&mute=1&playsinline=1&rel=0";
   $("retry-btn").hidden=true;$("fallback-btn").hidden=true;
   // Evita o aviso permanente por cima da imagem. O player oficial
   // continua com seus próprios controles, marca e regras de exibição.
@@ -805,8 +832,11 @@ function play(item,episode){
   }
   v.pause();v.hidden=true;
   const frame=$("fallback-frame");frame.hidden=false;
-  const resource=key?"?resourcekey="+encodeURIComponent(key):"";
-  frame.src="https://drive.google.com/file/d/"+encodeURIComponent(id)+"/preview"+resource;
+  const params=new URLSearchParams();
+  if(key)params.set("resourcekey",key);
+  // Best effort: o player externo do Google Drive pode ignorar autoplay.
+  params.set("autoplay","1");
+  frame.src="https://drive.google.com/file/d/"+encodeURIComponent(id)+"/preview?"+params.toString();
   $("retry-btn").hidden=true;$("fallback-btn").hidden=true;
   // The Google preview stays embedded; don't overlay the movie with a warning.
   $("player-status").textContent="";
@@ -875,7 +905,7 @@ document.addEventListener("keydown",e=>{
 document.addEventListener("visibilitychange",()=>{if(document.hidden){stopHeroPreview();if(!$("player-layer").hidden)$("video").pause()}});
 window.addEventListener("scroll",()=>$("app-header").classList.toggle("is-scrolled",window.scrollY>24),{passive:true});
 if("serviceWorker" in navigator&&location.protocol==="https:"){
- window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js?v=0.38.7",{updateViaCache:"none"}).catch(()=>{}));
+ window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js?v=0.38.8",{updateViaCache:"none"}).catch(()=>{}));
 }
 navigate((location.hash||"").slice(1)||"inicio");
 loadUploadedCatalog().then(loadFeatured);
