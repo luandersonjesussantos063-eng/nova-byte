@@ -1,6 +1,6 @@
-/* Catálogo NovaPlay V 0.37.2 • conteúdos clássicos e TV aberta gratuita */
+/* Catálogo NovaPlay V 0.38.0 • conteúdos clássicos e TV aberta gratuita */
 window.NovaPlayCatalog={
-  "version": "0.37.2",
+  "version": "0.38.0",
   "channels": [
       {
           "id": "camara",
@@ -45,6 +45,48 @@ window.NovaPlayCatalog={
           "src": "https://player-tvcultura.stream.uol.com.br/live/tvcultura.m3u8",
           "sourcePage": "https://culturaplay.tvcultura.com.br/channels/14",
           "brandColor": "#27355c",
+          "live": true
+      },
+      {
+          "id": "france24-en",
+          "title": "France 24 — English",
+          "kind": "tv",
+          "category": "Internacional • Notícias em inglês",
+          "description": "Notícias internacionais ao vivo da emissora pública France 24, pelo player oficial do YouTube incorporado à NovaPlay. Reprodução depende das permissões do canal.",
+          "cover": "https://commons.wikimedia.org/wiki/Special:FilePath/France_24_logo_%282013%29.svg",
+          "backdrop": "https://commons.wikimedia.org/wiki/Special:FilePath/France_24_logo_%282013%29.svg",
+          "brandColor": "#19618f",
+          "mode": "youtube",
+          "youtube_id": "Ap-UM1O9RBU",
+          "sourcePage": "https://www.youtube.com/watch?v=Ap-UM1O9RBU",
+          "live": true
+      },
+      {
+          "id": "france24-es",
+          "title": "France 24 — Español",
+          "kind": "tv",
+          "category": "Internacional • Notícias em espanhol",
+          "description": "Notícias internacionais ao vivo da France 24 em espanhol, pelo player oficial do YouTube incorporado à NovaPlay. Reprodução depende das permissões do canal.",
+          "cover": "https://commons.wikimedia.org/wiki/Special:FilePath/France_24_logo_%282013%29.svg",
+          "backdrop": "https://commons.wikimedia.org/wiki/Special:FilePath/France_24_logo_%282013%29.svg",
+          "brandColor": "#164f7b",
+          "mode": "youtube",
+          "youtube_id": "Y-IlMeCCtIg",
+          "sourcePage": "https://www.youtube.com/watch?v=Y-IlMeCCtIg",
+          "live": true
+      },
+      {
+          "id": "france24-fr",
+          "title": "France 24 — Français",
+          "kind": "tv",
+          "category": "Internacional • Notícias em francês",
+          "description": "Notícias internacionais ao vivo da France 24 em francês, pelo player oficial do YouTube incorporado à NovaPlay. Reprodução depende das permissões do canal.",
+          "cover": "https://commons.wikimedia.org/wiki/Special:FilePath/France_24_logo_%282013%29.svg",
+          "backdrop": "https://commons.wikimedia.org/wiki/Special:FilePath/France_24_logo_%282013%29.svg",
+          "brandColor": "#254f73",
+          "mode": "youtube",
+          "youtube_id": "EqC2bH0M9lM",
+          "sourcePage": "https://www.youtube.com/watch?v=EqC2bH0M9lM",
           "live": true
       }
   ],
