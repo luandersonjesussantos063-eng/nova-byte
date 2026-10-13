@@ -119,14 +119,20 @@ function card(item,channel=false){
  const isEpisode=item.kind==="episode";const cover=item.cover||"./assets/icon.svg";
  const el=document.createElement("article");el.className="poster-card"+(channel?" channel-card":"");
  el.dataset.id=item.id;
+ if(channel){
+  const color=/^#[0-9a-fA-F]{6}$/.test(item.brandColor||"")?item.brandColor:"#102a45";
+  el.style.setProperty("--channel-primary",color);
+  if(item.mode==="external")el.classList.add("channel-official-link");
+ }
  const pct=item.progress?Math.min(100,Math.max(0,Math.round(item.progress.position/item.progress.duration*100))):0;
- el.innerHTML='<div class="cover"><img loading="lazy" decoding="async" src="'+escapeText(cover)+'" alt="Capa ilustrativa: '+escapeText(item.title)+'">'
- +(channel?'<span class="onair">AO VIVO</span>':item.catalogOnly?'<span class="catalog-coming-soon">EM BREVE</span>':'')
+ const channelArt=channel&&item.customLabel?'<span class="channel-custom-label">'+escapeText(item.customLabel)+'</span>':"";
+ el.innerHTML='<div class="cover">'+(channelArt||'<img loading="lazy" decoding="async" src="'+escapeText(cover)+'" alt="'+escapeText(channel?"Logomarca de "+item.title:"Capa ilustrativa: "+item.title)+'">')
+ +(channel?'<span class="onair'+(item.mode==="external"?' official-source':'')+'">'+escapeText(item.mode==="external"?(item.externalLabel||"SITE OFICIAL"):"AO VIVO")+'</span>':item.catalogOnly?'<span class="catalog-coming-soon">EM BREVE</span>':'')
  +'<button type="button" class="cover-btn" aria-label="'+escapeText(isEpisode?"Continuar "+item.title:"Ver detalhes de "+item.title)+'"></button>'
  +(item.catalogOnly?'':'<button type="button" class="card-direct-play" aria-label="Assistir '+escapeText(item.title)+'">'+icon("play")+'</button>')
  +(pct?'<span class="card-progress"><span style="width:'+pct+'%"></span></span>':'')+'</div>'
- +'<h3>'+escapeText(item.title)+'</h3><p>'+escapeText(isEpisode?(Math.max(1,Math.round((item.progress.duration-item.progress.position)/60))+" min restantes"):(item.kind==="tv"?"TV aberta • Assista grátis":(item.catalogOnly?"Em breve":(item.year||"Clássico"))+" • "+(item.category||"Acervo clássico")))+'</p>';
- el.querySelector(".cover-btn").addEventListener("click",()=>isEpisode?play(item.show,item.episode):openDetails(item));
+ +'<h3>'+escapeText(item.title)+'</h3><p>'+escapeText(isEpisode?(Math.max(1,Math.round((item.progress.duration-item.progress.position)/60))+" min restantes"):(item.kind==="tv"?(item.mode==="external"?"Acessar transmissão no site oficial":"TV aberta • Assista grátis"):(item.catalogOnly?"Em breve":(item.year||"Clássico"))+" • "+(item.category||"Acervo clássico")))+'</p>';
+ el.querySelector(".cover-btn").addEventListener("click",()=>item.kind==="tv"&&item.mode==="external"?startWatching(item):isEpisode?play(item.show,item.episode):openDetails(item));
  el.querySelector(".card-direct-play")?.addEventListener("click",e=>{e.stopPropagation();if(isEpisode)play(item.show,item.episode);else startWatching(item)});
  el.querySelector("img").addEventListener("error",function(){
   if(this.dataset.fallbackShown)return;
@@ -150,7 +156,7 @@ function shelf(title,items,key,withLive=false){
  const section=document.createElement("section");section.className="shelf";
  const head=document.createElement("div");head.className="shelf-top";
  const h=document.createElement("h2");h.className="shelf-title";h.textContent=title;
- if(withLive){const badge=document.createElement("span");badge.className="live-label";badge.textContent="● AO VIVO";h.append(badge)}
+ if(withLive){const badge=document.createElement("span");badge.className="live-label";badge.textContent="● CANAIS GRÁTIS";h.append(badge)}
  const more=document.createElement("button");more.className="see-all";more.textContent="Ver todos ›";
  if(key==="continuar")more.hidden=true;else more.addEventListener("click",()=>navigate(key));
  head.append(h,more);
@@ -190,7 +196,7 @@ function renderRows(){
  const holder=$("home-rows");holder.replaceChildren();
  const blocks=[
  ["Continuar assistindo",continued(),"continuar",false],
- ["TV aberta",db.channels,"tv",true],
+ ["TV aberta e canais grátis",db.channels,"tv",true],
  ["Filmes licenciados",uploadedCatalog.filter(x=>x.mode==="licensed"&&!x.catalogOnly),"filmes",false],
  ["Filmes do YouTube",youtubeFilms(),"youtube",false],
  ["Animes e estreias · Em breve",upcomingFilms(),"em-breve",false],
@@ -320,7 +326,7 @@ function updateHero(index){
 }
 function youtubeFilms(){return db.films.filter(x=>!x.catalogOnly && x.mode==="youtube" && /^[A-Za-z0-9_-]{11}$/.test(x.youtube_id||""))}
 const categories={
- tv:["TV AO VIVO","Assista à TV aberta","Canais gratuitos, reproduzidos pelo player da NovaPlay.",db.channels],
+ tv:["TV AO VIVO","TV aberta e canais grátis","Canais de TV abertos no player da NovaPlay e acesso oficial à TV Senado, Justiça, Assembleia MT e Pluto TV.",db.channels],
  filmes:["NOSSO ACERVO","Filmes clássicos","Longas e curtas históricos com versões de arquivo.",db.films.filter(x=>x.mode!=="youtube")],
  youtube:["YOUTUBE · NOVAPLAY","Filmes do YouTube","Assista por meio do player oficial do YouTube. A disponibilidade depende do canal e das permissões de reprodução.",[]],
  "em-breve":["LANÇAMENTOS · NOVAPLAY","Em breve","Prévias de animes e filmes anunciados. Estes títulos ainda não têm vídeo autorizado para reprodução.",[]],
@@ -384,8 +390,18 @@ function refreshFavoriteButton(){
  const btn=$("detail-favorite");if(!selected)return;
  btn.innerHTML=icon(favorite.has(selected.id)?"check":"plus")+" <span>"+escapeText(favLabel(selected))+"</span>";
 }
+/* Pluto TV e emissoras sem stream autorizado abrem o site oficial.
+   Nenhum URL interno ou HLS de terceiros é extraído da plataforma. */
+function openOfficialChannel(item){
+ const url=item?.sourcePage;
+ if(!/^https:\/\//i.test(url||"")){toast("Link oficial indisponível.");return}
+ window.open(url,"_blank","noopener,noreferrer");
+}
 function startWatching(item){
  if(!item)return;
+ if(item.kind==="tv"&&item.mode==="external"){
+  openOfficialChannel(item);return;
+ }
  if(item.catalogOnly){toast("Este título está na grade como Em breve. O vídeo ainda não foi cadastrado.");return;}
  if(item.kind==="series"){
   const episode=item.episodes?.find(e=>progressItem(e.id))||item.episodes?.[0];
@@ -399,13 +415,13 @@ function openDetails(item){
  stopHeroPreview();
  if(!item)return;selected=item;
  registerCatalogInterest(item,"detail_open");
- $("detail-type").textContent=item.catalogOnly?(item.category==="Anime · Série"?"ANIME / SÉRIE · EM BREVE":"ANIME / FILME · EM BREVE"):item.kind==="tv"?"● TV ABERTA":item.kind==="series"?"SÉRIE CLÁSSICA":item.mode==="youtube"?"FILME · YOUTUBE":"FILME CLÁSSICO";
+ $("detail-type").textContent=item.kind==="tv"&&item.mode==="external"?"CANAL GRÁTIS · SITE OFICIAL":item.catalogOnly?(item.category==="Anime · Série"?"ANIME / SÉRIE · EM BREVE":"ANIME / FILME · EM BREVE"):item.kind==="tv"?"● TV ABERTA":item.kind==="series"?"SÉRIE CLÁSSICA":item.mode==="youtube"?"FILME · YOUTUBE":"FILME CLÁSSICO";
  $("detail-title").textContent=item.title;
  $("detail-meta").textContent=[item.year,item.duration,item.category].filter(Boolean).join("  •  ");
  $("detail-description").textContent=item.description;
  $("detail-image").src=item.kind==="tv"?item.cover:(item.backdrop||item.cover);
  $("detail-image").alt="Arte ilustrativa de "+item.title;
- $("detail-play-label").textContent=item.kind==="tv"?"Assistir ao vivo":item.kind==="series"?"Assistir à série":"Assistir filme";
+ $("detail-play-label").textContent=item.kind==="tv"&&item.mode==="external"?"Abrir no site oficial ↗":item.kind==="tv"?"Assistir ao vivo":item.kind==="series"?"Assistir à série":"Assistir filme";
  $("detail-play").hidden=!!item.catalogOnly;
  $("detail-preview-play").hidden=!!item.catalogOnly;
  $("detail-play").onclick=()=>startWatching(item);
@@ -612,6 +628,7 @@ function setResume(video,id,seq){
  video.onended=()=>{delete progress[id];save(progressKey,progress);if(view==="inicio")renderRows()};
 }
 function play(item,episode){
+ if(item?.kind==="tv"&&item.mode==="external"){openOfficialChannel(item);return}
  window.NovaPlayHeroScenes?.stop?.();
  window.NovaPlayHover?.close?.();
  stopHeroPreview();
@@ -776,7 +793,7 @@ document.addEventListener("keydown",e=>{
 document.addEventListener("visibilitychange",()=>{if(document.hidden){stopHeroPreview();if(!$("player-layer").hidden)$("video").pause()}});
 window.addEventListener("scroll",()=>$("app-header").classList.toggle("is-scrolled",window.scrollY>24),{passive:true});
 if("serviceWorker" in navigator&&location.protocol==="https:"){
- window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js?v=0.36.3",{updateViaCache:"none"}).catch(()=>{}));
+ window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js?v=0.37.0",{updateViaCache:"none"}).catch(()=>{}));
 }
 navigate((location.hash||"").slice(1)||"inicio");
 loadUploadedCatalog().then(loadFeatured);
