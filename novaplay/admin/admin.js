@@ -999,7 +999,26 @@ async function forgot(){
  const {error}=await client.auth.resetPasswordForEmail(email,{redirectTo:location.origin+location.pathname});
  status("auth-message",error?errorText(error):"Se a conta existir, enviaremos instruções de recuperação para esse e-mail.",!!error,!error);
 }
+
+async function submitMagnetImport(event){
+ event.preventDefault();
+ const button=$("magnet-submit"),title=$("magnet-title").value.trim(),magnet=$("magnet-uri").value.trim(),license=$("magnet-license").value.trim();
+ if(!sessionUser){status("magnet-status","Entre como administrador.",true);return}
+ if(!$("magnet-rights").checked){status("magnet-status","Confirme a licença de distribuição.",true);return}
+ let parsed;try{parsed=new URL(magnet)}catch(e){status("magnet-status","Link magnet inválido.",true);return}
+ const hash=parsed.searchParams.get("xt")||"";
+ if(parsed.protocol!=="magnet:"||!/^urn:btih:(?:[0-9a-f]{40}|[a-z2-7]{32})$/i.test(hash)){status("magnet-status","Informe um magnet válido com hash BTIH.",true);return}
+ if(title.length<2||license.length<5){status("magnet-status","Informe título e referência da licença.",true);return}
+ button.disabled=true;status("magnet-status","Registrando solicitação...");
+ try{
+  const {data,error}=await client.from("novaplay_magnet_imports").insert({created_by:sessionUser.id,title,magnet_uri:magnet,license_reference:license,rights_confirmed:true}).select("id,status").single();
+  if(error)throw error;
+  status("magnet-status","Importação registrada (#"+data.id.slice(0,8)+"). Aguardando conexão do processador de torrents; nenhum vídeo foi baixado ou publicado.",false,true);
+  $("magnet-import-form").reset();
+ }catch(e){status("magnet-status","Falha ao registrar importação: "+errorText(e),true)}finally{button.disabled=false}
+}
 function init(){
+ $("magnet-import-form").onsubmit=submitMagnetImport;
  $("r2-test-button").onclick=testR2Upload;
  $("r2-preview-button").onclick=previewR2Video;
  if(!window.supabase?.createClient){show("login-view");status("auth-message","Não foi possível carregar a conexão de armazenamento. Confira a internet e atualize a página.",true);return}
