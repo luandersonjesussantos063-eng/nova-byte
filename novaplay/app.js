@@ -137,6 +137,14 @@ function card(item,channel=false){
  el.querySelector("img").addEventListener("error",function(){
   if(this.dataset.fallbackShown)return;
   this.dataset.fallbackShown="1";
+  if(channel){
+   this.hidden=true;
+   const mark=document.createElement("span");
+   mark.className="channel-custom-label";
+   mark.textContent=item.title;
+   this.parentNode.insertBefore(mark,this);
+   return;
+  }
   this.src=window.NovaPlayCover?.genrePoster?.(item.title,item.category)||window.NovaPlayCover?.titleCard(item.title)||"./assets/posters/autoral.svg";
  });
  window.NovaPlayHover?.attach?.(el,item,{
