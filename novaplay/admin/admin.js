@@ -286,11 +286,10 @@ function eligibleFeatured(){
 function posterOfFeatured(movie){
  if(!movie?.record)return movie?.cover||"../assets/posters/autoral.svg";
  const r=movie.record;
- return (r.poster_path?client.storage.from(POSTER_BUCKET).getPublicUrl(r.poster_path).data.publicUrl:null)
-  ||window.NovaPlayCover?.approvedAnimePoster?.(r.title,true,r.genre)
-  ||(r.youtube_id?"https://i.ytimg.com/vi/"+encodeURIComponent(r.youtube_id)+"/hqdefault.jpg":null)
-  ||(r.google_drive_id?window.NovaPlayCover?.driveThumbnail(r.google_drive_id):null)
-  ||window.NovaPlayCover?.titleCard(r.title)||"../assets/posters/autoral.svg";
+ const custom=r.poster_path?client.storage.from(POSTER_BUCKET).getPublicUrl(r.poster_path).data.publicUrl:null;
+ return window.NovaPlayCover?.selectPoster?.(r.title,true,r.genre,custom,r.youtube_id)
+   ||window.NovaPlayCover?.genrePoster?.(r.title,r.genre)
+   ||window.NovaPlayCover?.titleCard(r.title)||"../assets/posters/autoral.svg";
 }
 async function loadFeaturedConfig(){
  const {data,error}=await client.from("novaplay_featured").select("film_ids").eq("id",1).maybeSingle();
@@ -593,9 +592,8 @@ function renderLibrary(){
  libraryPage=Math.max(0,Math.min(libraryPage,pageCount-1));
  shown.slice(libraryPage*LIBRARY_PAGE_SIZE,(libraryPage+1)*LIBRARY_PAGE_SIZE).forEach(row=>{
   const item=document.createElement("article");item.className="movie-item";
-  const poster=(row.poster_path?client.storage.from(POSTER_BUCKET).getPublicUrl(row.poster_path).data.publicUrl:null)
-   ||(row.youtube_id?"https://i.ytimg.com/vi/"+encodeURIComponent(row.youtube_id)+"/hqdefault.jpg":null)
-   ||window.NovaPlayCover?.approvedAnimePoster?.(row.title,true,row.genre)
+  const customPoster=row.poster_path?client.storage.from(POSTER_BUCKET).getPublicUrl(row.poster_path).data.publicUrl:null;
+  const poster=window.NovaPlayCover?.selectPoster?.(row.title,true,row.genre,customPoster,row.youtube_id)
    ||window.NovaPlayCover?.genrePoster?.(row.title,row.genre)
    ||window.NovaPlayCover?.titleCard(row.title)||"../assets/posters/autoral.svg";
   const source=row.catalog_only?"Aguardando vídeo autorizado":row.licensed_stream_url?"Licenciado · Streaming direto":row.youtube_id?"YouTube · Link":row.google_drive_id?"Google Drive · Link":((row.file_size_bytes||0)/(1024*1024)).toFixed(1)+" MB";
@@ -615,7 +613,7 @@ function renderLibrary(){
   item.querySelector(".movie-thumb").addEventListener("error",function(){
    if(this.dataset.fallbackShown)return;
    this.dataset.fallbackShown="1";
-   this.src=window.NovaPlayCover?.titleCard(row.title)||"../assets/posters/autoral.svg";
+   this.src=window.NovaPlayCover?.genrePoster?.(row.title,row.genre)||window.NovaPlayCover?.titleCard(row.title)||"../assets/posters/autoral.svg";
   });
   item.querySelector(".quality-save").onclick=()=>saveQualityScore(row,item);
   item.querySelector(".review").onclick=()=>toggleReview(row);

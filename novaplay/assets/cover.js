@@ -97,21 +97,21 @@ function operationCover(title,admin){
  const key=String(title||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"")
    .toLocaleLowerCase("pt-BR").replace(/[^a-z0-9 ]+/g," ").replace(/\s+/g," ").trim();
  const art=operationAnimeCovers[key];
- return art?(admin?"../":"./")+"assets/operation-covers/"+art+"?c=0.34.2":null;
+ return art?(admin?"../":"./")+"assets/operation-covers/"+art+"?c=0.34.3":null;
 }
-function approvedAnimePoster(title,admin,genre){
+function approvedAnimePoster(title,admin,genre,knownOnly){
  const key=String(title||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"")
   .toLocaleLowerCase("pt-BR").replace(/[^a-z0-9 ]+/g," ").replace(/\s+/g," ").trim();
  const premium=premiumMovieCovers[key];
  if(premium)return(admin?"../":"./")+"assets/featured-covers/"+premium;
  const operation=operationAnimeCovers[key];
- if(operation)return(admin?"../":"./")+"assets/operation-covers/"+operation+"?c=0.34.2";
+ if(operation)return(admin?"../":"./")+"assets/operation-covers/"+operation+"?c=0.34.3";
  const featured=featuredMovieCovers[key];
  if(featured)return(admin?"../":"./")+"assets/featured-covers/"+featured+".jpg";
  const newer=approvedCoversV2[key];
  if(newer)return(admin?"../":"./")+"assets/approved-covers-v2/"+newer+".jpg";
  const slug=approvedAnimePosters[key];
- if(!slug)return genrePoster(title,genre);
+ if(!slug)return knownOnly?null:genrePoster(title,genre);
  return(admin?"../":"./")+"assets/review-covers/"+slug+".png";
 }
 
@@ -179,5 +179,18 @@ function genrePoster(title,genre){
   +'<path d="M32 655H448" stroke="#fff" stroke-opacity=".21"/><text x="240" y="681" text-anchor="middle" fill="#c8d5e9" font-size="13" font-family="Arial,sans-serif" letter-spacing="3">FILMES • SÉRIES • ANIMAÇÃO</text></svg>';
  return 'data:image/svg+xml;charset=UTF-8,'+encodeURIComponent(svg);
 }
-window.NovaPlayCover=Object.freeze({titleCard,driveThumbnail,approvedAnimePoster,genrePoster,operationCover});
+/* Ordem única de prioridade para o app e painel:
+   1. Capa enviada no painel; 2. capa ilustrada local (inclusive Em breve);
+   3. miniatura YouTube somente quando NÃO houver capa personalizada;
+   4. cartaz temático individual como último recurso.
+   Google Drive nunca define capa automaticamente. */
+function selectPoster(title,admin,genre,customUrl,youtubeId){
+ if(customUrl)return customUrl;
+ const illustrated=approvedAnimePoster(title,admin,genre,true);
+ if(illustrated)return illustrated;
+ if(/^[A-Za-z0-9_-]{11}$/.test(String(youtubeId||"")))
+  return "https://i.ytimg.com/vi/"+youtubeId+"/hqdefault.jpg";
+ return genrePoster(title,genre)||titleCard(title);
+}
+window.NovaPlayCover=Object.freeze({titleCard,driveThumbnail,approvedAnimePoster,genrePoster,operationCover,selectPoster});
 })();
