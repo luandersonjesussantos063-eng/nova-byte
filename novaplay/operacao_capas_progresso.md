@@ -17,11 +17,11 @@ Commit anterior: `5254a1557fd6119aa0341cf0c3e1c9b21880c832`.
 - Carros — `assets/scene-covers/carros.svg`
 - Toy Story — `assets/scene-covers/brinquedos_imaginacao_20261013.svg`
 
-Cinco arquivos publicados no repositório e vinculados por título normalizado em `assets/cover.js`. Sintaxe de JS e resolução das cinco capas testadas. Ordem capa personalizada > local > YouTube > fallback preservada; textos de marca nas capas temáticas corrigidos para NPlay. Versão pública V 0.39.1 mantida. O novo parâmetro de cache das capas foi incluído no site principal; painel usa o arquivo atualizado pela estratégia network-first.
+Publicação: commit `7e54b71dd00a54f4f9fbd2a7a9c0d0aaac843423`, deploy GitHub Pages `38347797206` **concluído com sucesso**. A URL pública e o visual em navegador não puderam ser validados diretamente neste ambiente.\n\nCinco arquivos publicados no repositório e vinculados por título normalizado em `assets/cover.js`. Sintaxe de JS e resolução das cinco capas testadas. Ordem capa personalizada > local > YouTube > fallback preservada; textos de marca nas capas temáticas corrigidos para NPlay. Versão pública V 0.39.1 mantida. O novo parâmetro de cache das capas foi incluído no site principal; painel usa o arquivo atualizado pela estratégia network-first.
 
 **Não declarar capa premium aprovada** sem revisão visual no navegador/celular. Teste de reprodução não foi realizado. Não declarar NPlay 1.0 concluída.
 
-## Próximo lote sugerido
+**Atenção:** há dois registros com o título A Pequena Sereia no banco sem ano cadastrado; a arte oceânica genérica se aplica a ambos até distinguir as versões. Não considerar arte específica aprovada para um remake sem identificar a edição.\n\n## Próximo lote sugerido
 Ratatouille; Procurando Nemo; Shrek; Os Incríveis; Enrolados. Conferir primeiro quais títulos ainda estão publicados e se têm capa enviada manualmente.
 
 ## Regras de não regressão
