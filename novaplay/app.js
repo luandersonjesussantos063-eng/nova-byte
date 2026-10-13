@@ -181,7 +181,6 @@ function renderRows(){
  const blocks=[
  ["Continuar assistindo",continued(),"continuar",false],
  ["TV aberta",db.channels,"tv",true],
- ["Produções da NovaPlay",uploadedCatalog.filter(x=>!x.catalogOnly&&x.mode!=="youtube"),"filmes",false],
  ["Filmes licenciados",uploadedCatalog.filter(x=>x.mode==="licensed"&&!x.catalogOnly),"filmes",false],
  ["Filmes do YouTube",youtubeFilms(),"youtube",false],
  ["Filmes clássicos",db.films.filter(x=>x.mode!=="youtube"),"filmes",false],
