@@ -86,7 +86,7 @@ window.NovaPlayCatalog={
           "cover": "https://www.saganews.com.br/img/ALMT.png",
           "backdrop": "https://www.saganews.com.br/img/ALMT.png",
           "brandColor": "#30462b",
-          "customLabel": "TVAL • MATO GROSSO",
+          
           "externalLabel": "SITE OFICIAL",
           "live": true
       },
