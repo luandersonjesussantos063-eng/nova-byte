@@ -878,7 +878,7 @@ async function sendForm(e){
  const licensedUrl=licensed?parseLicensedStreamUrl($("licensed-url").value):null;
  const netflixUrl=netflix?netflixReferenceUrl($("netflix-url").value):null;
  if(r2){
-  if(!/^[0-9a-f-]{36}\\/[0-9a-f-]{36}-[a-z0-9-]{8,80}\\.(mp4|webm|ogv)$/i.test(r2key)||!r2key.startsWith(sessionUser.id+"/")){status("upload-message","Informe a chave R2 de um vídeo enviado pela sua conta.",true);return;}
+  if(!/^[0-9a-f-]{36}\/[0-9a-f-]{36}-[a-z0-9-]{8,80}\.(mp4|webm|ogv)$/i.test(r2key)||!r2key.startsWith(sessionUser.id+"/")){status("upload-message","Informe a chave R2 de um vídeo enviado pela sua conta.",true);return;}
   if(!$("r2-rights").checked){status("upload-message","Confirme os direitos de distribuição do vídeo.",true);return;}
   if($("publish").checked){status("upload-message","Vídeos R2 ainda precisam da liberação segura de reprodução pública. Salve como rascunho.",true);return;}
  }
