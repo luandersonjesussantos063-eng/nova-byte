@@ -437,3 +437,77 @@ svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.75;strok
 #player-issue-feedback{margin:12px 0 0;color:#afd7ff;font-size:12px}
 .player-layer.cinema .player-bar{z-index:20}
 @media(max-width:650px){.player-issue-trigger{font-size:10px;padding:7px 8px}.player-issue-card{max-height:80vh;overflow:auto}.player-issue-buttons{flex-direction:column}.player-issue-buttons button{width:100%}}
+
+
+/* NovaPlay V 0.35.0 — catálogo inteiro em cards paisagem, estilo streaming. */
+.poster-card,.poster-card.channel-card{flex:0 0 clamp(218px,21vw,328px)}
+.poster-card .cover,
+.poster-card.channel-card .cover,
+.poster-card:not(.channel-card) .cover,
+.category-grid .poster-card .cover,
+.category-grid .channel-card .cover{
+  width:100%;
+  height:auto;
+  aspect-ratio:16/9;
+  border-radius:9px;
+  overflow:hidden;
+}
+.poster-card .cover > img{
+  display:block;
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  object-position:center;
+}
+.poster-card:hover .cover,.poster-card:focus-within .cover{
+  transform:none;
+  border-color:rgba(174,211,255,.68);
+}
+.poster-card h3{font-size:13px;margin:9px 0 4px;white-space:nowrap}
+.poster-card p{font-size:11px}
+.category-grid{grid-template-columns:repeat(auto-fill,minmax(min(100%,230px),1fr));gap:24px 16px}
+.category-grid .channel-card{grid-column:auto}
+.poster-card .cover.cover-drive > img,.poster-card .cover.cover-youtube > img{transform:none!important}
+.shelf-track{padding-top:5px;padding-bottom:15px}
+
+/* Preview elevado fora das faixas de rolagem: não sofre recorte em overflow-x. */
+.np-hover-card{
+ position:fixed;z-index:90;display:flex;flex-direction:column;overflow:hidden;
+ border-radius:13px;background:#141414;border:1px solid rgba(255,255,255,.22);
+ box-shadow:0 20px 70px rgba(0,0,0,.86),0 0 0 1px rgba(255,255,255,.07);
+ color:#f5f5f5;isolation:isolate;animation:np-hover-in .19s cubic-bezier(.2,.8,.3,1) both;
+}
+@keyframes np-hover-in{from{opacity:0;transform:translateY(10px) scale(.91)}to{opacity:1;transform:translateY(0) scale(1)}}
+.np-hover-media{position:relative;width:100%;aspect-ratio:16/9;background:#080a0e;overflow:hidden}
+.np-hover-poster{width:100%;height:100%;display:block;object-fit:cover;object-position:center}
+.np-hover-media video,.np-hover-media iframe{
+ position:absolute;inset:0;width:100%;height:100%;border:0;object-fit:cover;
+ background:#080a0e;pointer-events:none;
+}
+.np-hover-media video{opacity:0;transition:opacity .25s}
+.np-hover-card.np-is-playing video{opacity:1}
+.np-hover-media:after{
+ content:"";position:absolute;bottom:0;left:0;right:0;height:42%;
+ pointer-events:none;background:linear-gradient(transparent,rgba(0,0,0,.5));
+}
+.np-hover-body{padding:12px 14px 15px;display:flex;flex-direction:column;gap:9px}
+.np-hover-title{font-size:16px;line-height:1.25;font-weight:850;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.np-hover-actions{display:flex;align-items:center;gap:8px}
+.np-hover-action{border:1px solid #fff7;border-radius:50%;width:34px;height:34px;color:#fff;background:#202020;display:grid;place-items:center;padding:0}
+.np-hover-action svg{width:16px;height:16px}
+.np-hover-action.np-primary{background:#fff;color:#101010;border-color:#fff}
+.np-hover-action.np-primary svg{fill:currentColor}
+.np-hover-action.np-details{margin-left:auto}
+.np-hover-action:hover{filter:brightness(1.24)}
+.np-hover-hint{color:#b9c3d0;font-size:10px;line-height:1.3;min-height:13px}
+.np-hover-metadata{font-size:11px;color:#8fc7ff;letter-spacing:.2px;font-weight:750}
+@media(max-width:760px){
+ .poster-card,.poster-card.channel-card{flex-basis:clamp(178px,62vw,248px)}
+ .category-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:19px 10px}
+ .category-grid .channel-card{grid-column:auto}
+ .poster-card .cover,.category-grid .poster-card .cover{aspect-ratio:16/9}
+ .poster-card h3{font-size:12px}
+ .np-hover-card{display:none!important}
+}
+@media(hover:none),(pointer:coarse){.np-hover-card{display:none!important}}
+@media(prefers-reduced-motion:reduce){.np-hover-card{animation:none!important}.np-hover-media video{transition:none}}
