@@ -1,5 +1,6 @@
 {
   "published_ids": [
+    "https://developer.chrome.com/blog/jpeg-xl-in-chrome?hl=en",
     "https://developer.chrome.com/blog/email-verification-october-2026?hl=en",
     "https://developer.chrome.com/blog/new-in-webgpu-155-156?hl=en",
     "2026-10-08-Added-documentation-on-the-UGC-Fresh-Data-Program",
@@ -36,6 +37,15 @@
     "tag:blogger.com,1999:blog-6755709643044947179.post-3564094472242054542"
   ],
   "posts": [
+    {
+      "slug": "shipping-jpeg-xl-in-chrome",
+      "title": "Shipping JPEG XL in Chrome",
+      "description": "Shipping JPEG XL in Chrome. Entenda a novidade e o impacto prático para empresas, sites, aplicativos e profissionais.",
+      "date": "2026-10-13",
+      "category": "Web e performance",
+      "image": "/assets/news/shipping-jpeg-xl-in-chrome.svg",
+      "source": "https://developer.chrome.com/blog/jpeg-xl-in-chrome?hl=en"
+    },
     {
       "slug": "email-verification-updates-october-2026",
       "title": "Email verification updates, October 2026",
