@@ -570,7 +570,7 @@ function renderPlaybackIssues(){
 async function loadLibrary(){
  // Ler todas as páginas: o catálogo importado pode ter centenas de rascunhos.
  const gathered=[];
- const select="id,title,description,kind,series_title,episode_number,genre,production_year,video_path,youtube_id,google_drive_id,google_drive_resource_key,licensed_stream_url,netflix_reference_url,licensed_rights_confirmed,poster_path,is_published,rights_reviewed,rights_reviewed_at,catalog_only,review_queue_id,quality_score,quality_score_source,quality_score_note,quality_scored_at,file_size_bytes,mime_type,created_at";
+ const select="r2_object_key,id,title,description,kind,series_title,episode_number,genre,production_year,video_path,youtube_id,google_drive_id,google_drive_resource_key,licensed_stream_url,netflix_reference_url,licensed_rights_confirmed,poster_path,is_published,rights_reviewed,rights_reviewed_at,catalog_only,review_queue_id,quality_score,quality_score_source,quality_score_note,quality_scored_at,file_size_bytes,mime_type,created_at";
  for(let offset=0;offset<5000;offset+=500){
   const {data,error}=await client.from("novaplay_library").select(select).order("created_at",{ascending:false}).range(offset,offset+499);
   if(error){status("upload-message","Não foi possível ler a biblioteca: "+errorText(error),true);return}
@@ -727,7 +727,7 @@ function beginEdit(row){
 function resetForm(){
  editing=null;$("upload-form").reset();$("form-title").textContent="Adicionar filme ou episódio";
  $("cancel-edit").hidden=true;$("series-fields").hidden=true;$("series-name").required=false;$("episode-number").required=false;
- $("source-type").value="upload";$("youtube-url").value="";$("drive-url").value="";$("licensed-url").value="";$("licensed-rights").checked=false;$("netflix-url").value="";$("youtube-poster-file").value="";setSourceType();
+ $("source-type").value="upload";$("r2-catalog-key").value="";$("r2-rights").checked=false;$("youtube-url").value="";$("drive-url").value="";$("licensed-url").value="";$("licensed-rights").checked=false;$("netflix-url").value="";$("youtube-poster-file").value="";setSourceType();
  $("video-file-label").textContent="Selecionar vídeo do telefone";$("poster-file-label").textContent="Escolher capa (opcional)";
  $("submit-upload").textContent="Enviar para a NPlay";$("progress-box").hidden=true;$("publish").checked=false;
 }
@@ -907,10 +907,11 @@ async function sendForm(e){
   production_year:$("year").value?Number($("year").value):null,
   genre:$("genre").value.trim()||"Autoral",
   is_published:$("publish").checked,
-  catalog_only:netflix||r2,
+  catalog_only:netflix,
+  r2_object_key:r2?r2key:null,
   licensed_stream_url:licensed?licensedUrl:null,
   netflix_reference_url:netflix?netflixUrl:null,
-  licensed_rights_confirmed:licensed&&$("licensed-rights").checked
+  licensed_rights_confirmed:(licensed&&$("licensed-rights").checked)||(r2&&$("r2-rights").checked)
  };
  if(licensed||netflix||r2)payload.rights_reviewed=licensed&&!!payload.licensed_rights_confirmed;
  if(netflix){payload.rights_reviewed_at=null;payload.licensed_rights_confirmed=false}
@@ -935,7 +936,7 @@ async function sendForm(e){
       youtube_id:youtube?youtubeId:null,
       google_drive_id:drive?driveFile.id:null,
       google_drive_resource_key:drive?driveFile.resourceKey:null,
-      licensed_stream_url:licensed?licensedUrl:r2?R2_WORKER+"/watch/"+r2key:null,
+      licensed_stream_url:licensed?licensedUrl:null,
       video_path:null,mime_type:null,file_size_bytes:null,duration_seconds:null
     });
   }else{
