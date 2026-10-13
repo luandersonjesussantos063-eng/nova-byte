@@ -1,5 +1,5 @@
 """Private NPlay magnet importer. Run only on a controlled backend server."""
-import os, time, uuid, pathlib, tempfile, logging, subprocess, argparse
+import os, time, uuid, pathlib, tempfile, logging, subprocess, argparse, shutil
 import boto3
 from dotenv import load_dotenv
 load_dotenv()
@@ -15,6 +15,8 @@ R2=boto3.client("s3",endpoint_url=f"https://{ACCOUNT}.r2.cloudflarestorage.com",
 BUCKET=os.getenv("R2_BUCKET","nplay-filmes")
 MAX_BYTES=int(os.getenv("IMPORTER_MAX_BYTES",str(8*1024**3)))
 TIMEOUT=int(os.getenv("IMPORTER_TIMEOUT_SECONDS","7200"))
+RECOVERY_DIR=pathlib.Path(os.getenv("IMPORTER_RECOVERY_DIR",str(pathlib.Path(__file__).resolve().parent/"recovery")))
+RECOVERY_DIR.mkdir(parents=True,exist_ok=True)
 VIDEO_EXT={".mp4",".webm",".ogv"}
 KNOWN_VIDEO_EXT=VIDEO_EXT|{".mkv",".avi",".mov",".m4v",".ts"}
 
@@ -28,6 +30,15 @@ def run(job):
     magnet=job["magnet_uri"]
     if not magnet.startswith("magnet:?xt=urn:btih:"):
         update(jid,status="failed",error_message="Magnet inválido")
+        return
+    # Check multipart authorization before any lengthy torrent download or transcoding.
+    try:
+        probe_key=f"_importer_checks/{uuid.uuid4()}.mp4"
+        probe=R2.create_multipart_upload(Bucket=BUCKET,Key=probe_key,ContentType="video/mp4")
+        R2.abort_multipart_upload(Bucket=BUCKET,Key=probe_key,UploadId=probe["UploadId"])
+    except Exception as exc:
+        log.error("R2 multipart preflight failed for job %s: %s",jid,exc)
+        update(jid,status="failed",error_message=("R2 multipart preflight: "+str(exc))[:500])
         return
     update(jid,status="processing",error_message=None)
     session=None
@@ -83,7 +94,13 @@ def run(job):
                     raise ValueError("Vídeo convertido excede o limite")
                 upload_source=converted
             key=f"{job['created_by']}/{uuid.uuid4()}-import-{uuid.uuid4()}{upload_source.suffix.lower()}"
-            R2.upload_file(str(upload_source),BUCKET,key,ExtraArgs={"ContentType":{".mp4":"video/mp4",".webm":"video/webm",".ogv":"video/ogg"}[upload_source.suffix.lower()]})
+            try:
+                R2.upload_file(str(upload_source),BUCKET,key,ExtraArgs={"ContentType":{".mp4":"video/mp4",".webm":"video/webm",".ogv":"video/ogg"}[upload_source.suffix.lower()]})
+            except Exception:
+                recovery=RECOVERY_DIR/f"{jid}{upload_source.suffix.lower()}"
+                shutil.copy2(upload_source,recovery)
+                log.error("Upload failed; preserved converted video at %s",recovery)
+                raise
             update(jid,status="ready",r2_object_key=key,error_message=None)
             log.info("Job %s uploaded to R2; remains unpublished",jid)
     except Exception as exc:
