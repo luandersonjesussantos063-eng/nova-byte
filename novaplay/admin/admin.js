@@ -1019,16 +1019,16 @@ async function submitMagnetImport(event){
 }
 function init(){
  try {
- $("login-form").onsubmit=function(e){e.preventDefault();status("auth-message","Inicializando autenticação...");if(!client){status("auth-message","Conexão com o Supabase indisponível. Atualize a página.",true);return;}return authAction(e)};
+ if($("login-form"))$("login-form").onsubmit=function(e){e.preventDefault();status("auth-message","Inicializando autenticação...");if(!client){status("auth-message","Conexão com o Supabase indisponível. Atualize a página.",true);return;}return authAction(e)};
  if($("magnet-import-form"))$("magnet-import-form").onsubmit=submitMagnetImport;
  if($("r2-test-button"))$("r2-test-button").onclick=testR2Upload;
  if($("r2-preview-button"))$("r2-preview-button").onclick=previewR2Video;
  if(!window.supabase?.createClient){show("login-view");status("auth-message","Não foi possível carregar a conexão de armazenamento. Confira a internet e atualize a página.",true);return}
  client=window.supabase.createClient(API_URL,PUBLIC_KEY,{auth:{autoRefreshToken:true,persistSession:true,detectSessionInUrl:true}});
- $("login-form").onsubmit=authAction;$("signup").onclick=signUp;$("forgot").onclick=forgot;
+ if($("login-form"))$("login-form").onsubmit=authAction;$("signup").onclick=signUp;$("forgot").onclick=forgot;
  $("pending-exit").onclick=async()=>{await client.auth.signOut();show("login-view")};
  $("logout").onclick=async()=>{if(busy)return;await client.auth.signOut();sessionUser=null;show("login-view")};
- $("upload-form").onsubmit=sendForm;$("kind").onchange=setKind;$("source-type").onchange=setSourceType;setSourceType();
+ if($("upload-form"))$("upload-form").onsubmit=sendForm;$("kind").onchange=setKind;$("source-type").onchange=setSourceType;setSourceType();
  $("licensed-url").addEventListener("input",()=>{const url=netflixReferenceUrl($("licensed-url").value);if(url&&$("source-type").value==="licensed"){$("netflix-url").value=url;$("source-type").value="netflix-reference";setSourceType();status("upload-message","Link da Netflix detectado: referência privada selecionada automaticamente. O filme ficará em rascunho.",false,true)}});
  $("licensed-new").onclick=()=>{
   resetForm();
