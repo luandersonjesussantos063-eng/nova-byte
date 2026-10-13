@@ -41,8 +41,8 @@ let previewTimer=null,previewSequence=0,previewHls=null;
 
 function posterUrl(path,youtubeId,title,driveId,genre){
  // O YouTube sempre utiliza a miniatura original, inclusive para vídeos antigos com capa personalizada.
- if(youtubeId&&/^[A-Za-z0-9_-]{11}$/.test(youtubeId))return"https://i.ytimg.com/vi/"+youtubeId+"/hqdefault.jpg";
  if(path&&remoteDb)return remoteDb.storage.from("novaplay-posters").getPublicUrl(path).data.publicUrl;
+ if(youtubeId&&/^[A-Za-z0-9_-]{11}$/.test(youtubeId))return"https://i.ytimg.com/vi/"+youtubeId+"/hqdefault.jpg";
  const approved=window.NovaPlayCover?.approvedAnimePoster?.(title,false,genre);
  if(approved)return approved;
  if(youtubeId&&/^[A-Za-z0-9_-]{11}$/.test(youtubeId))return"https://i.ytimg.com/vi/"+youtubeId+"/hqdefault.jpg";
