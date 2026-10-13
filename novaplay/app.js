@@ -180,6 +180,7 @@ function renderRows(){
  ["Continuar assistindo",continued(),"continuar",false],
  ["TV aberta",db.channels,"tv",true],
  ["Produções da NovaPlay",uploadedCatalog.filter(x=>!x.catalogOnly),"filmes",false],
+ ["Filmes do YouTube",youtubeFilms(),"youtube",false],
  ["Filmes clássicos",db.films,"filmes",false],
  ["Séries clássicas",db.series,"series",false],
  ...genreOrder.filter(name=>name!=="Não classificados")
@@ -287,9 +288,11 @@ function updateHero(index){
  const dots=$("hero-dots");dots.replaceChildren();
  featured.forEach((film,i)=>{const b=document.createElement("button");b.className="hero-dot"+(i===featuredIndex?" active":"");b.setAttribute("aria-label","Destacar "+film.title);b.addEventListener("click",()=>updateHero(i));dots.append(b)});
 }
+function youtubeFilms(){return db.films.filter(x=>!x.catalogOnly && x.mode==="youtube" && /^[A-Za-z0-9_-]{11}$/.test(x.youtube_id||""))}
 const categories={
  tv:["TV AO VIVO","Assista à TV aberta","Canais gratuitos, reproduzidos pelo player da NovaPlay.",db.channels],
  filmes:["NOSSO ACERVO","Filmes clássicos","Longas e curtas históricos com versões de arquivo.",db.films],
+ youtube:["YOUTUBE · NOVAPLAY","Filmes do YouTube","Assista por meio do player oficial do YouTube. A disponibilidade depende do canal e das permissões de reprodução.",[]],
  series:["CAPÍTULO POR CAPÍTULO","Séries clássicas","Escolha uma série para ver seus episódios.",db.series],
  favoritos:["SUA SELEÇÃO","Minha lista","Tudo o que você marcou como favorito.",[]]
 };
@@ -297,7 +300,7 @@ function renderCategory(kind){
  const conf=categories[kind]||categories.filmes;
  $("category-kicker").textContent=conf[0];$("category-heading").textContent=conf[1];$("category-subtitle").textContent=conf[2];
  const content=$("category-grid");content.replaceChildren();
- let list=kind==="favoritos"?all.filter(x=>favorite.has(x.id)):conf[3];
+ let list=kind==="favoritos"?all.filter(x=>favorite.has(x.id)):kind==="youtube"?youtubeFilms():conf[3];
  const filters=$("genre-filter-panel"),buttons=$("genre-filter-buttons");
  filters.hidden=kind!=="filmes";
  if(kind==="filmes"){
@@ -316,7 +319,7 @@ function renderCategory(kind){
   $("category-heading").textContent=selectedGenre==="Todos"?"Filmes por gênero":selectedGenre;
   $("genre-filter-count").textContent=list.length+" título"+(list.length===1?"":"s")+" nesta categoria";
  }
- if(!list.length)content.append(empty("Nenhum título nesta categoria","Selecione outro gênero ou classifique títulos no painel administrativo."));
+ if(!list.length)content.append(empty(kind==="youtube"?"Em breve: filmes do YouTube":"Nenhum título nesta categoria",kind==="youtube"?"Os filmes autorizados cadastrados com um link do YouTube aparecerão automaticamente aqui.":"Selecione outro gênero ou classifique títulos no painel administrativo."));
  else list.forEach(item=>content.append(card(item,item.kind==="tv")));
 }
 function renderSearch(){
@@ -361,7 +364,7 @@ function openDetails(item){
  stopHeroPreview();
  if(!item)return;selected=item;
  registerCatalogInterest(item,"detail_open");
- $("detail-type").textContent=item.catalogOnly?(item.category==="Anime · Série"?"ANIME / SÉRIE · EM BREVE":"ANIME / FILME · EM BREVE"):item.kind==="tv"?"● TV ABERTA":item.kind==="series"?"SÉRIE CLÁSSICA":"FILME CLÁSSICO";
+ $("detail-type").textContent=item.catalogOnly?(item.category==="Anime · Série"?"ANIME / SÉRIE · EM BREVE":"ANIME / FILME · EM BREVE"):item.kind==="tv"?"● TV ABERTA":item.kind==="series"?"SÉRIE CLÁSSICA":item.mode==="youtube"?"FILME · YOUTUBE":"FILME CLÁSSICO";
  $("detail-title").textContent=item.title;
  $("detail-meta").textContent=[item.year,item.duration,item.category].filter(Boolean).join("  •  ");
  $("detail-description").textContent=item.description;
@@ -736,7 +739,7 @@ document.addEventListener("keydown",e=>{
 document.addEventListener("visibilitychange",()=>{if(document.hidden){stopHeroPreview();if(!$("player-layer").hidden)$("video").pause()}});
 window.addEventListener("scroll",()=>$("app-header").classList.toggle("is-scrolled",window.scrollY>24),{passive:true});
 if("serviceWorker" in navigator&&location.protocol==="https:"){
- window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}));
+ window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js?v=0.26.1",{updateViaCache:"none"}).catch(()=>{}));
 }
 navigate((location.hash||"").slice(1)||"inicio");
 loadUploadedCatalog().then(loadFeatured);
