@@ -40,8 +40,11 @@ let issueReportBusy=false;
 let previewTimer=null,previewSequence=0,previewHls=null;
 
 function posterUrl(path,youtubeId,title,driveId,genre){
- // O YouTube sempre utiliza a miniatura original, inclusive para vídeos antigos com capa personalizada.
+ // Capa enviada pelo administrador prevalece; arte original aprovada
+ // da operação NovaPlay vem antes da miniatura automática do YouTube.
  if(path&&remoteDb)return remoteDb.storage.from("novaplay-posters").getPublicUrl(path).data.publicUrl;
+ const art=window.NovaPlayCover?.operationCover?.(title,false);
+ if(art)return art;
  if(youtubeId&&/^[A-Za-z0-9_-]{11}$/.test(youtubeId))return"https://i.ytimg.com/vi/"+youtubeId+"/hqdefault.jpg";
  const approved=window.NovaPlayCover?.approvedAnimePoster?.(title,false,genre);
  if(approved)return approved;
@@ -741,7 +744,7 @@ document.addEventListener("keydown",e=>{
 document.addEventListener("visibilitychange",()=>{if(document.hidden){stopHeroPreview();if(!$("player-layer").hidden)$("video").pause()}});
 window.addEventListener("scroll",()=>$("app-header").classList.toggle("is-scrolled",window.scrollY>24),{passive:true});
 if("serviceWorker" in navigator&&location.protocol==="https:"){
- window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js?v=0.28.2",{updateViaCache:"none"}).catch(()=>{}));
+ window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js?v=0.34.1",{updateViaCache:"none"}).catch(()=>{}));
 }
 navigate((location.hash||"").slice(1)||"inicio");
 loadUploadedCatalog().then(loadFeatured);

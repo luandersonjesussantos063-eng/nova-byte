@@ -92,6 +92,13 @@ const operationAnimeCovers=Object.freeze({
  "jibaku shounen hanako kun dublado":"jibaku_shounen_hanako_kun_dublado.avif",
  "3 palavrinhas completo":"3_palavrinhas_completo.avif"
 });
+/* Capas de animações publicadas e conferidas, preferidas à miniatura do vídeo. */
+function operationCover(title,admin){
+ const key=String(title||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"")
+   .toLocaleLowerCase("pt-BR").replace(/[^a-z0-9 ]+/g," ").replace(/\s+/g," ").trim();
+ const art=operationAnimeCovers[key];
+ return art?(admin?"../":"./")+"assets/operation-covers/"+art:null;
+}
 function approvedAnimePoster(title,admin,genre){
  const key=String(title||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"")
   .toLocaleLowerCase("pt-BR").replace(/[^a-z0-9 ]+/g," ").replace(/\s+/g," ").trim();
@@ -172,5 +179,5 @@ function genrePoster(title,genre){
   +'<path d="M32 655H448" stroke="#fff" stroke-opacity=".21"/><text x="240" y="681" text-anchor="middle" fill="#c8d5e9" font-size="13" font-family="Arial,sans-serif" letter-spacing="3">FILMES • SÉRIES • ANIMAÇÃO</text></svg>';
  return 'data:image/svg+xml;charset=UTF-8,'+encodeURIComponent(svg);
 }
-window.NovaPlayCover=Object.freeze({titleCard,driveThumbnail,approvedAnimePoster,genrePoster});
+window.NovaPlayCover=Object.freeze({titleCard,driveThumbnail,approvedAnimePoster,genrePoster,operationCover});
 })();
