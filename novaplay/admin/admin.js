@@ -1019,6 +1019,7 @@ async function submitMagnetImport(event){
 }
 function init(){
  try {
+ $("login-form").onsubmit=function(e){e.preventDefault();status("auth-message","Inicializando autenticação...");if(!client){status("auth-message","Conexão com o Supabase indisponível. Atualize a página.",true);return;}return authAction(e)};
  $("magnet-import-form").onsubmit=submitMagnetImport;
  $("r2-test-button").onclick=testR2Upload;
  $("r2-preview-button").onclick=previewR2Video;
