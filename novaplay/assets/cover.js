@@ -80,11 +80,25 @@ const approvedCoversV2=Object.freeze({
  "great pretender razbliuto filme":"great_pretender_razbliuto_filme",
  "jibaku shounen hanako kun dublado":"jibaku_shounen_hanako_kun_dublado"
 });
+/* Capas exclusivas do segundo lote de animações. */
+const operationAnimeCovers=Object.freeze({
+ "arcane legendado":"arcane_legendado.avif",
+ "another legendado":"another_legendado.avif",
+ "black clover dublado":"black_clover_dublado.avif",
+ "castelvania dublado":"castlevania_dublado.avif",
+ "castlevania dublado":"castlevania_dublado.avif",
+ "date a live iv":"date_a_live_iv.avif",
+ "great pretender razbliuto filme":"great_pretender_razbliuto_filme.avif",
+ "jibaku shounen hanako kun dublado":"jibaku_shounen_hanako_kun_dublado.avif",
+ "3 palavrinhas completo":"3_palavrinhas_completo.avif"
+});
 function approvedAnimePoster(title,admin){
  const key=String(title||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"")
   .toLocaleLowerCase("pt-BR").replace(/[^a-z0-9 ]+/g," ").replace(/\s+/g," ").trim();
  const premium=premiumMovieCovers[key];
  if(premium)return(admin?"../":"./")+"assets/featured-covers/"+premium;
+ const operation=operationAnimeCovers[key];
+ if(operation)return(admin?"../":"./")+"assets/operation-covers/"+operation;
  const featured=featuredMovieCovers[key];
  if(featured)return(admin?"../":"./")+"assets/featured-covers/"+featured+".jpg";
  const newer=approvedCoversV2[key];
@@ -94,5 +108,69 @@ function approvedAnimePoster(title,admin){
  return(admin?"../":"./")+"assets/review-covers/"+slug+".png";
 }
 
-window.NovaPlayCover=Object.freeze({titleCard,driveThumbnail,approvedAnimePoster});
+/* NovaPlay Studio: cartazes vetoriais individuais, um por título, sem usar fotogramas dos vídeos. */
+function normalizeCoverText(v){return String(v||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLocaleLowerCase("pt-BR").trim()}
+function genrePoster(title,genre){
+ const raw=String(title||"Título sem nome").replace(/\s+/g," ").trim().slice(0,140);
+ const category=normalizeCoverText(genre);
+ const normalized=normalizeCoverText(raw);
+ let hash=2166136261;
+ for(const ch of normalized){hash^=ch.codePointAt(0);hash=Math.imul(hash,16777619)}
+ hash>>>=0;
+ const palettes=[
+  ["#08172d","#174c8b","#4fd4ff"],["#1b092e","#4d2383","#e3a2ff"],
+  ["#1e0b20","#822c50","#ffab92"],["#071f26","#126b83","#76f4de"],
+  ["#221519","#8d5133","#ffdb8f"],["#091627","#263c8a","#accaff"],
+  ["#21142b","#813b8e","#f7a8e6"],["#0d2527","#427d57","#c1efa4"]
+ ];
+ const known=category.includes("animacao")||category.includes("anime")?1:category.includes("terror")?2:category.includes("ficcao")?0:category.includes("aventura")?3:category.includes("acao")?4:category.includes("romance")?6:category.includes("comedia")?7:null;
+ const colors=palettes[known??(hash%palettes.length)];
+ const [dark,mid,glow]=colors;
+ const label=genre&&category!=="importado - revisao"?String(genre).replace(/\s+/g," ").trim().slice(0,25).toUpperCase():"CINEMA · NOVAPLAY";
+ const symbols={
+  star:'<path d="M240 126l34 103 110 1-89 65 33 105-88-65-88 65 33-105-89-65 110-1z"/>',
+  mountain:'<path d="M60 370l95-158 60 78 58-123 142 203z"/>',
+  bolt:'<path d="M273 98l-124 178h89l-33 159 142-214h-93z"/>',
+  moon:'<path d="M295 115c-75 39-100 126-57 195 24 39 59 57 97 66-107 15-195-61-195-162 0-83 66-152 155-99z"/>',
+  orbit:'<circle cx="240" cy="260" r="105"/><ellipse cx="240" cy="260" rx="174" ry="43" transform="rotate(-27 240 260)"/>',
+  heart:'<path d="M240 365C198 334 113 268 113 215c0-65 82-91 127-32 45-59 127-33 127 32 0 53-85 119-127 150z"/>',
+  sun:'<circle cx="240" cy="250" r="88"/><path d="M240 100v48m0 209v55M93 250h53m188 0h53M135 147l38 38m134 128 38 38m0-204-38 38M173 313l-38 38"/>',
+  mask:'<path d="M135 145q106-64 210 0v128q0 91-105 137-105-46-105-137z"/><path d="M175 247q30-29 60 0m10 0q30-29 60 0M190 315q50 47 100 0"/>',
+  frame:'<rect x="121" y="145" width="238" height="214" rx="28"/><circle cx="240" cy="252" r="75"/><circle cx="240" cy="252" r="33"/>'
+ };
+ let symbol=category.includes("terror")?symbols.moon:category.includes("romance")?symbols.heart:category.includes("anime")||category.includes("fantasia")?symbols.star:category==="acao"?symbols.bolt:category.includes("aventura")?symbols.mountain:category.includes("ficcao")?symbols.orbit:category.includes("comedia")||category.includes("animacao")?symbols.sun:category.includes("document")?symbols.frame:[symbols.orbit,symbols.mountain,symbols.mask,symbols.star][hash%4];
+ let words=raw.split(" "), lines=[], current="";
+ for(const w of words){
+  if((current?current.length+1:0)+w.length>17&&current){lines.push(current);current=w}else current+=(current?" ":"")+w;
+  if(lines.length>=4)break;
+ }
+ if(lines.length<4&&current)lines.push(current);
+ if(words.join(" ").length>lines.join(" ").length)lines[3]=(lines[3]||"").slice(0,15).trimEnd()+"…";
+ const longest=Math.max(1,...lines.map(x=>x.length));
+ const size=longest>=21?30:longest>=18?33:longest>=15?38:43;
+ const gap=size+10;
+ const blockHeight=lines.length*gap;
+ const y0=576-blockHeight/2;
+ const titleSvg=lines.map((line,i)=>'<text x="240" y="'+Math.round(y0+i*gap)+'" text-anchor="middle" font-size="'+size+'" font-weight="900" letter-spacing="-.6" fill="#fff" stroke="#040714" stroke-width="1.2" paint-order="stroke">'+esc(line)+'</text>').join("");
+ let dots="";
+ for(let i=0;i<24;i++){
+  const x=(hash+i*137+Math.floor(i*i*2.1))%480,y=(hash*3+i*179)%435;
+  const radius=1+(i%3);
+  dots+='<circle cx="'+x+'" cy="'+y+'" r="'+radius+'" fill="#fff" opacity="'+(0.1+(i%5)*0.06)+'"/>';
+ }
+ const svg='<svg xmlns="http://www.w3.org/2000/svg" width="480" height="720" viewBox="0 0 480 720" role="img" aria-label="Capa de '+esc(raw)+'">'
+  +'<defs><linearGradient id="bg" x2="1" y2="1"><stop stop-color="'+dark+'"/><stop offset=".55" stop-color="'+mid+'"/><stop offset="1" stop-color="'+dark+'"/></linearGradient><radialGradient id="halo"><stop stop-color="'+glow+'" stop-opacity=".63"/><stop offset="1" stop-color="'+glow+'" stop-opacity="0"/></radialGradient><linearGradient id="bottom" x2="0" y2="1"><stop stop-color="#080d1b" stop-opacity=".65"/><stop offset="1" stop-color="#030612" stop-opacity=".98"/></linearGradient></defs>'
+  +'<rect width="480" height="720" fill="url(#bg)"/><circle cx="'+(200+hash%95)+'" cy="225" r="220" fill="url(#halo)"/>'
+  +'<path d="M-30 74L520-20 M-30 157L520 63 M-30 420L520 326" stroke="#fff" stroke-opacity=".11" stroke-width="2"/>'
+  +dots+'<circle cx="240" cy="249" r="160" fill="none" stroke="'+glow+'" stroke-opacity=".34" stroke-width="2"/><circle cx="240" cy="249" r="184" fill="none" stroke="#fff" stroke-opacity=".1" stroke-width="1"/>'
+  +'<g fill="'+glow+'" fill-opacity=".15" stroke="'+glow+'" stroke-width="6" stroke-linejoin="round" stroke-linecap="round" opacity=".9">'+symbol+'</g>'
+  +'<path d="M0 423L480 378V720H0Z" fill="url(#bottom)"/>'
+  +'<path d="M32 467H108" stroke="'+glow+'" stroke-width="5" stroke-linecap="round"/>'
+  +'<text x="32" y="52" fill="#fff" font-size="23" font-family="Arial,sans-serif" font-weight="900" letter-spacing="1.7">NOVA<tspan fill="'+glow+'">PLAY</tspan></text>'
+  +'<text x="32" y="494" fill="'+glow+'" font-size="13" font-weight="800" font-family="Arial,sans-serif" letter-spacing="2">'+esc(label)+'</text>'
+  +'<g font-family="Arial,Helvetica,sans-serif">'+titleSvg+'</g>'
+  +'<path d="M32 655H448" stroke="#fff" stroke-opacity=".21"/><text x="240" y="681" text-anchor="middle" fill="#c8d5e9" font-size="13" font-family="Arial,sans-serif" letter-spacing="3">FILMES • SÉRIES • ANIMAÇÃO</text></svg>';
+ return 'data:image/svg+xml;charset=UTF-8,'+encodeURIComponent(svg);
+}
+window.NovaPlayCover=Object.freeze({titleCard,driveThumbnail,approvedAnimePoster,genrePoster});
 })();
