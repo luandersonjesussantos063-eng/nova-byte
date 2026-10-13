@@ -122,7 +122,7 @@ function setSourceType(){
  $("publish").disabled=false;
  $("licensed-url").required=licensed;
  $("upload-files").hidden=external;
- $("youtube-cover-section").hidden=!external;
+ $("youtube-cover-section").hidden=!external||youtube;
  $("youtube-url").required=youtube;
  $("drive-url").required=drive;
  $("external-cover-tip").textContent=netflix
