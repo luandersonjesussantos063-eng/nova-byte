@@ -120,8 +120,8 @@ function setSourceType(){
  $("licensed-fields").hidden=!licensed;
  $("netflix-fields").hidden=!netflix;
  $("netflix-url").required=netflix;
- $("publish").disabled=r2;
- if(r2)$("publish").checked=false;
+ $("publish").disabled=r2&&!editing?.r2_object_key;
+ if(r2&&!editing?.r2_object_key)$("publish").checked=false;
  $("licensed-url").required=licensed;
  $("upload-files").hidden=external;
  $("youtube-cover-section").hidden=!external;
@@ -710,9 +710,11 @@ function beginEdit(row){
  $("series-name").value=row.series_title||"";$("episode-number").value=row.episode_number||"";
  $("genre").value=row.genre;$("description").value=row.description||"";
  $("publish").checked=releasing&&!isNetflixReference(row)?true:row.is_published;
- $("source-type").value=isNetflixReference(row)?"netflix-reference":row.licensed_stream_url?"licensed":row.google_drive_id?"google-drive":row.youtube_id?"youtube":releasing?"google-drive":"upload";
+ $("source-type").value=row.r2_object_key?"r2":isNetflixReference(row)?"netflix-reference":row.licensed_stream_url?"licensed":row.google_drive_id?"google-drive":row.youtube_id?"youtube":releasing?"google-drive":"upload";
  $("youtube-url").value=row.youtube_id?"https://youtu.be/"+row.youtube_id:"";
  $("drive-url").value=row.google_drive_id?"https://drive.google.com/file/d/"+row.google_drive_id+"/view"+(row.google_drive_resource_key?"?resourcekey="+encodeURIComponent(row.google_drive_resource_key):""):"";
+ $("r2-catalog-key").value=row.r2_object_key||"";
+ $("r2-rights").checked=!!row.licensed_rights_confirmed;
  $("licensed-url").value=row.licensed_stream_url||"";
  $("netflix-url").value=row.netflix_reference_url||"";
  $("licensed-rights").checked=!!row.licensed_rights_confirmed;
@@ -880,7 +882,8 @@ async function sendForm(e){
  if(r2){
   if(!/^[0-9a-f-]{36}\/[0-9a-f-]{36}-[a-z0-9-]{8,80}\.(mp4|webm|ogv)$/i.test(r2key)||!r2key.startsWith(sessionUser.id+"/")){status("upload-message","Informe a chave R2 de um vídeo enviado pela sua conta.",true);return;}
   if(!$("r2-rights").checked){status("upload-message","Confirme os direitos de distribuição do vídeo.",true);return;}
-  if($("publish").checked){status("upload-message","Vídeos R2 ainda precisam da liberação segura de reprodução pública. Salve como rascunho.",true);return;}
+  if($("publish").checked&&!editing?.r2_object_key){status("upload-message","Primeiro salve o vídeo R2 como rascunho para revisão.",true);return;}
+  if($("publish").checked&&!editing?.rights_reviewed){status("upload-message","Revise os direitos deste título antes de publicar. A marcação de autorização, sozinha, não é suficiente.",true);return;}
  }
  if(netflix&&!netflixUrl){status("upload-message","Informe um link oficial Netflix /title/ID ou /browse/genre/...?...jbv=ID.",true);return}
  if(licensed&&!licensedUrl){status("upload-message","Informe um link HTTPS direto autorizado terminando em .mp4, .webm, .ogv ou .m3u8. Endereços de filmes na Netflix não funcionam aqui.",true);return}
@@ -913,7 +916,7 @@ async function sendForm(e){
   netflix_reference_url:netflix?netflixUrl:null,
   licensed_rights_confirmed:(licensed&&$("licensed-rights").checked)||(r2&&$("r2-rights").checked)
  };
- if(licensed||netflix||r2)payload.rights_reviewed=licensed&&!!payload.licensed_rights_confirmed;
+ if(licensed||netflix||r2)payload.rights_reviewed=r2?!!editing?.rights_reviewed:licensed&&!!payload.licensed_rights_confirmed;
  if(netflix){payload.rights_reviewed_at=null;payload.licensed_rights_confirmed=false}
  if(payload.title.length<2){status("upload-message","Informe um título de pelo menos 2 caracteres.",true);return}
  if(kind==="episode"&&(!payload.series_title||!payload.episode_number)){status("upload-message","Informe o nome da série e o número do episódio.",true);return}
@@ -948,7 +951,7 @@ async function sendForm(e){
    }
   }
   if(newPoster)payload.poster_path=newPoster;
-  if(r2)payload.description=(payload.description?payload.description+"\n\n":"")+"[Vídeo R2 privado vinculado; aguardando liberação de reprodução pública]";
+  
   if(!editing)payload.created_by=sessionUser.id;
   status("upload-message",external?"Salvando link no catálogo...":"Salvando informações do filme...");
   const result=editing
