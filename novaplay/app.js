@@ -159,6 +159,7 @@ function card(item,channel=false){
  return el;
 }
 function empty(title,subtitle){const div=document.createElement("div");div.className="empty-state";const h=document.createElement("h3");h.textContent=title;const p=document.createElement("p");p.textContent=subtitle;div.append(h,p);return div}
+let shelfSequence=0;
 function shelf(title,items,key,withLive=false){
  if(!items.length)return null;
  const section=document.createElement("section");section.className="shelf";
@@ -168,9 +169,51 @@ function shelf(title,items,key,withLive=false){
  const more=document.createElement("button");more.className="see-all";more.textContent="Ver todos ›";
  if(key==="continuar")more.hidden=true;else more.addEventListener("click",()=>navigate(key));
  head.append(h,more);
- const track=document.createElement("div");track.className="shelf-track";track.setAttribute("aria-label",title);
+ const rail=document.createElement("div");rail.className="shelf-rail";
+ const track=document.createElement("div");
+ track.className="shelf-track";
+ track.id="shelf-track-"+(++shelfSequence);
+ track.setAttribute("aria-label",title);
+ track.tabIndex=0;
  items.forEach(item=>track.append(card(item,item.kind==="tv")));
- section.append(head,track);return section;
+ function arrow(direction){
+  const button=document.createElement("button");
+  button.type="button";
+  button.className="shelf-arrow shelf-arrow-"+(direction<0?"prev":"next");
+  button.setAttribute("aria-label",(direction<0?"Ver filmes anteriores em ":"Ver próximos filmes em ")+title);
+  button.setAttribute("aria-controls",track.id);
+  button.title=direction<0?"Voltar filmes":"Próximos filmes";
+  button.hidden=true;
+  button.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="'+(direction<0?"m15 5-7 7 7 7":"m9 5 7 7-7 7")+'"/></svg>';
+  button.addEventListener("click",()=>{
+   window.NovaPlayHover?.close?.();
+   const firstCard=track.querySelector(".poster-card");
+   const cardWidth=firstCard?.getBoundingClientRect().width||260;
+   const amount=Math.max(cardWidth,track.clientWidth*.84);
+   track.scrollBy({left:direction*amount,
+    behavior:window.matchMedia("(prefers-reduced-motion: reduce)").matches?"instant":"smooth"});
+  });
+  return button;
+ }
+ const prev=arrow(-1),next=arrow(1);
+ const refresh=()=>{
+  if(!section.isConnected)return;
+  const max=Math.max(0,track.scrollWidth-track.clientWidth);
+  prev.hidden=max<=8||track.scrollLeft<=5;
+  next.hidden=max<=8||track.scrollLeft>=max-5;
+ };
+ track.addEventListener("scroll",refresh,{passive:true});
+ rail.append(track,prev,next);
+ section.append(head,rail);
+ if("ResizeObserver" in window){
+  const observer=new ResizeObserver(refresh);
+  observer.observe(track);
+ }else{
+  // Legacy-browser fallback; all modern browsers use the observer above.
+  window.addEventListener("resize",refresh,{passive:true});
+ }
+ requestAnimationFrame(refresh);
+ return section;
 }
 
 const genreOrder=["Animação","Ação","Aventura","Comédia","Drama","Fantasia","Ficção científica","Romance","Suspense","Terror","Documentário","Não classificados"];
@@ -801,7 +844,7 @@ document.addEventListener("keydown",e=>{
 document.addEventListener("visibilitychange",()=>{if(document.hidden){stopHeroPreview();if(!$("player-layer").hidden)$("video").pause()}});
 window.addEventListener("scroll",()=>$("app-header").classList.toggle("is-scrolled",window.scrollY>24),{passive:true});
 if("serviceWorker" in navigator&&location.protocol==="https:"){
- window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js?v=0.37.0",{updateViaCache:"none"}).catch(()=>{}));
+ window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js?v=0.37.1",{updateViaCache:"none"}).catch(()=>{}));
 }
 navigate((location.hash||"").slice(1)||"inicio");
 loadUploadedCatalog().then(loadFeatured);

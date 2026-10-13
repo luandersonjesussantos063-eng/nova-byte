@@ -685,3 +685,36 @@ svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.75;strok
  }
  .channel-card .onair.official-source{font-size:8px}
 }
+
+/* NovaPlay V 0.37.1 — setas laterais de navegação em cada prateleira. */
+.shelf-rail{position:relative;min-width:0}
+.shelf-rail>.shelf-track{scroll-behavior:smooth;scroll-padding-inline:6px}
+.shelf-arrow{
+ position:absolute;z-index:96;top:43%;transform:translateY(-50%);
+ display:grid;place-items:center;
+ width:47px;height:94px;padding:0;border:1px solid rgba(255,255,255,.13);
+ background:rgba(11,15,24,.86);color:#fff;
+ box-shadow:0 6px 24px rgba(0,0,0,.52);
+ backdrop-filter:blur(9px);cursor:pointer;
+ transition:background .17s ease,box-shadow .17s ease;
+}
+.shelf-arrow[hidden]{display:none!important}
+.shelf-arrow-prev{left:0;border-radius:0 12px 12px 0}
+.shelf-arrow-next{right:0;border-radius:12px 0 0 12px}
+.shelf-arrow svg{
+ width:25px;height:25px;fill:none;stroke:currentColor;
+ stroke-width:2.8;stroke-linecap:round;stroke-linejoin:round;
+}
+.shelf-arrow:hover,.shelf-arrow:focus-visible{
+ background:rgba(40,47,62,.96);
+ box-shadow:0 8px 28px rgba(0,0,0,.74);
+}
+.shelf-arrow:focus-visible{outline:2px solid #fff;outline-offset:-3px}
+@media(max-width:760px){
+ .shelf-arrow{height:70px;width:36px;top:41%;background:rgba(11,15,24,.78)}
+ .shelf-arrow svg{width:20px;height:20px}
+}
+@media(prefers-reduced-motion:reduce){
+ .shelf-rail>.shelf-track{scroll-behavior:auto}
+ .shelf-arrow{transition:none}
+}
