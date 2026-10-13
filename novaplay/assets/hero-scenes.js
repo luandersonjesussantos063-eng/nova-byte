@@ -1,4 +1,4 @@
-/* NovaPlay V 0.36.1 — prévias curtas dos destaques, via player oficial do YouTube.
+/* NovaPlay V 0.36.2 — prévias curtas dos destaques, via player oficial do YouTube.
    Os tempos são segmentos editoriais aproximados de trailers/clipes divulgados:
    não são arquivos de filmes nem atestam ser a "cena mais engraçada".
    Fontes: promo Ice Age 4 Scrat, trailer Disney Meet the Robinsons,
@@ -16,6 +16,25 @@ const SAMPLES=Object.freeze({
 const normalize=text=>String(text||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"")
  .toLocaleLowerCase("pt-BR").replace(/[^a-z0-9 ]+/g," ").replace(/\s+/g," ").trim();
 let generation=0,player=null,apiPromise=null,retryTimer=null,visible=false,soundOn=false,lastItem=null;
+let scrollSuspended=false;
+const STOP_SCROLL_PX=150,RESUME_SCROLL_PX=70;
+/* Histerese: a cena para quando a pessoa sai do topo. Recomeça apenas
+   quando ela volta perto do início; não liga/desliga repetidamente. */
+function canPreviewInView(){
+ const home=document.getElementById("view-home");
+ return !document.hidden && !!home && !home.hidden && window.scrollY<=STOP_SCROLL_PX;
+}
+function syncScrollPlayback(){
+ if(window.scrollY>STOP_SCROLL_PX){
+  if(!scrollSuspended){
+   scrollSuspended=true;
+   teardown();
+  }
+ }else if(window.scrollY<RESUME_SCROLL_PX&&scrollSuspended){
+  scrollSuspended=false;
+  if(lastItem&&canPreviewInView())show(lastItem);
+ }
+}
 const el=id=>document.getElementById(id);
 /* O player de terceiros não obedece object-fit:cover.
    Redimensionar proporcionalmente o iframe completo para cobrir todo o hero. */
@@ -82,6 +101,7 @@ function choose(item){
 }
 async function show(item){
  teardown();lastItem=item||null;
+ if(!canPreviewInView())return;
  if(!item||item.catalogOnly||item.kind==="tv")return;
  if(!matchMedia("(hover:hover) and (pointer:fine)").matches)return;
  if(matchMedia("(prefers-reduced-motion:reduce)").matches||navigator.connection?.saveData)return;
@@ -89,7 +109,7 @@ async function show(item){
  const id=generation;
  try{
   const YT=await youtubeAPI();
-  if(id!==generation||el("view-home")?.hidden)return;
+  if(id!==generation||!canPreviewInView())return;
   const mount=el("hero-scene-player");
   if(!mount)return;
   mount.replaceChildren();
@@ -106,7 +126,7 @@ async function show(item){
    },
    events:{
     onReady(event){
-     if(id!==generation)return;
+     if(id!==generation||!canPreviewInView()){if(id===generation)teardown();return}
      try{fitHeroFrame();event.target.mute();event.target.seekTo(clip.start,true);event.target.playVideo()}catch(e){}
     },
     onStateChange(event){
@@ -137,8 +157,10 @@ function toggleSound(){
 }
 function init(){
  el("hero-scene-sound")?.addEventListener("click",toggleSound);
+ scrollSuspended=window.scrollY>STOP_SCROLL_PX;
+ window.addEventListener("scroll",syncScrollPlayback,{passive:true});
  window.addEventListener("resize",fitHeroFrame,{passive:true});
- document.addEventListener("visibilitychange",()=>{if(document.hidden)teardown();else if(lastItem&&!el("view-home")?.hidden)show(lastItem)});
+ document.addEventListener("visibilitychange",()=>{if(document.hidden)teardown();else if(lastItem&&canPreviewInView())show(lastItem)});
  window.addEventListener("pagehide",teardown);
 }
 if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",init,{once:true});else init();
