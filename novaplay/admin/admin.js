@@ -1000,6 +1000,40 @@ async function forgot(){
  status("auth-message",error?errorText(error):"Se a conta existir, enviaremos instruções de recuperação para esse e-mail.",!!error,!error);
 }
 
+async function loadMagnetApprovals(){
+ const list=$("magnet-pending-list");if(!list||!client||!sessionUser)return;
+ list.textContent="Consultando solicitações...";
+ try{
+  const {data,error}=await client.from("novaplay_magnet_imports").select("id,title,status,approved_for_processing,created_at").order("created_at",{ascending:false}).limit(20);
+  if(error)throw error;
+  list.replaceChildren();
+  if(!data?.length){list.textContent="Nenhuma solicitação encontrada.";return}
+  for(const job of data){
+   const box=document.createElement("div");box.style.cssText="border:1px solid #365075;border-radius:12px;padding:12px;margin:10px 0";
+   const title=document.createElement("strong");title.textContent=job.title+" (#"+job.id.slice(0,8)+")";box.appendChild(title);
+   const state=document.createElement("p");state.className="muted";state.textContent=job.approved_for_processing?"Autorização registrada · "+job.status:"Aguardando declaração · "+job.status;box.appendChild(state);
+   if(job.status==="pending_processor"&&!job.approved_for_processing){
+    const label=document.createElement("label");label.className="publish-check";
+    const cb=document.createElement("input");cb.type="checkbox";
+    const description=document.createElement("span");description.textContent="Declaro, sob minha responsabilidade, que tenho autorização válida para obter este arquivo por magnet e distribuí-lo pela NPlay, incluindo o uso desta fonte. Estou ciente de que a declaração não comprova a licença.";
+    label.append(cb,description);box.appendChild(label);
+    const btn=document.createElement("button");btn.type="button";btn.className="primary";btn.textContent="Estou ciente e autorizo o processamento";btn.disabled=true;
+    cb.addEventListener("change",()=>btn.disabled=!cb.checked);
+    btn.addEventListener("click",async()=>{
+     btn.disabled=true;status("magnet-approval-status","Registrando declaração...");
+     try{
+      const {data,error}=await client.rpc("novaplay_acknowledge_magnet_import",{p_job_id:job.id});
+      if(error)throw error;
+      if(!data)throw Error("A solicitação não pôde ser aprovada.");
+      status("magnet-approval-status","Declaração registrada. O processador poderá iniciar o download; o filme não será publicado automaticamente.",false,true);
+      await loadMagnetApprovals();
+     }catch(e){status("magnet-approval-status","Falha: "+errorText(e),true);btn.disabled=false}
+    });box.appendChild(btn);
+   }
+   list.appendChild(box);
+  }
+ }catch(e){list.textContent="Falha ao carregar solicitações: "+errorText(e)}
+}
 async function submitMagnetImport(event){
  event.preventDefault();
  const button=$("magnet-submit"),title=$("magnet-title").value.trim(),magnet=$("magnet-uri").value.trim(),license=$("magnet-license").value.trim();
@@ -1015,12 +1049,14 @@ async function submitMagnetImport(event){
   if(error)throw error;
   status("magnet-status","Importação registrada (#"+data.id.slice(0,8)+"). Aguardando conexão do processador de torrents; nenhum vídeo foi baixado ou publicado.",false,true);
   $("magnet-import-form").reset();
+  loadMagnetApprovals();
  }catch(e){status("magnet-status","Falha ao registrar importação: "+errorText(e),true)}finally{button.disabled=false}
 }
 function init(){
  try {
  if($("login-form"))$("login-form").onsubmit=function(e){e.preventDefault();status("auth-message","Inicializando autenticação...");if(!client){status("auth-message","Conexão com o Supabase indisponível. Atualize a página.",true);return;}return authAction(e)};
  if($("magnet-import-form"))$("magnet-import-form").onsubmit=submitMagnetImport;
+ if($("magnet-refresh"))$("magnet-refresh").onclick=loadMagnetApprovals;
  if($("r2-test-button"))$("r2-test-button").onclick=testR2Upload;
  if($("r2-preview-button"))$("r2-preview-button").onclick=previewR2Video;
  if(!window.supabase?.createClient){show("login-view");status("auth-message","Não foi possível carregar a conexão de armazenamento. Confira a internet e atualize a página.",true);return}
