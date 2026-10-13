@@ -53,6 +53,19 @@ const approvedAnimePosters=Object.freeze({
  "jibaku shounen hanako kun dublado":"hanako"
 });
 /* Capas NPlay produzidas em outubro de 2026, otimizadas para carregamento rápido. */
+/* Dez capas cinematográficas originais da NPlay em 16:9. */
+const curatedNPlayCovers=Object.freeze({
+ "10 coisas que eu odeio em voce":"10_coisas_que_eu_odeio_em_voce.jpg",
+ "10 segundos para vencer":"10_segundos_para_vencer.jpg",
+ "12 homens e outro segredo":"12_homens_e_outro_segredo.jpg",
+ "13 fantasmas":"13_fantasmas.jpg",
+ "2001 uma odisseia no espaco":"2001_uma_odisseia_no_espaco.jpg",
+ "300":"300.jpg",
+ "300 a ascensao do imperio":"300_a_ascensao_do_imperio.jpg",
+ "500 dias com ela":"500_dias_com_ela.jpg",
+ "a arvore da maldicao":"a_arvore_da_maldicao.jpg",
+ "a caminho de casa":"a_caminho_de_casa.jpg"
+});
 const premiumMovieCovers=Object.freeze({
  "a era do gelo":"a_era_do_gelo.avif",
  "a era do gelo 2":"a_era_do_gelo_2.avif",
@@ -115,6 +128,8 @@ function operationCover(title,admin){
 function approvedAnimePoster(title,admin,genre,knownOnly){
  const key=String(title||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"")
   .toLocaleLowerCase("pt-BR").replace(/[^a-z0-9 ]+/g," ").replace(/\s+/g," ").trim();
+ const nplayCover=curatedNPlayCovers[key];
+ if(nplayCover)return(admin?"../":"./")+"assets/nplay-covers/"+nplayCover+"?c=0.39.2";
  const premium=premiumMovieCovers[key];
  if(premium)return(admin?"../":"./")+"assets/featured-covers/"+premium;
  const scene=originalSceneCovers[key];
