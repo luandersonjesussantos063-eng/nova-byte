@@ -26,3 +26,18 @@ Ratatouille; Procurando Nemo; Shrek; Os Incríveis; Enrolados. Conferir primeiro
 
 ## Regras de não regressão
 Cards 16:9 com setas; hover compacto e áudio por clique; hero com prévia e pausa ao rolar; player fecha corretamente. Preservar links de vídeo, direitos, status, pagamentos, manifest, dados, Supabase e chaves técnicas. A hierarquia é capa manual > arte local > YouTube > fallback, nunca fotograma do Drive sobre capa própria.
+
+## Lote seguinte — 13/10/2026 — arquivos criados, integração pendente
+
+Quatro artes vetoriais originais 16:9 foram **gravadas e lidas novamente no repositório**:
+
+- Ratatouille — `assets/scene-covers/ratatouille_nplay.svg` — commit `b725ab774fa13a0cecb0793dad43ca194cc17c9a`.
+- Procurando Nemo — `assets/scene-covers/procurando_nemo_nplay.svg` — commit `7ca8c3d72662246639e442de0a2fc9ecce70509e`.
+- Os Incríveis — `assets/scene-covers/os_incriveis_nplay.svg` — commit `ca68ec88569ff7be43a7334d4d13859876157843`.
+- Enrolados — `assets/scene-covers/enrolados_nplay.svg` — commit `d05a88efdd35c47512725f701f5d648138c26392`.
+
+A tentativa de criar a arte de Shrek falhou por bloqueio de segurança da ferramenta; **não há arquivo publicado de Shrek neste lote**. A tentativa de atualizar `assets/cover.js` para vincular os quatro arquivos também foi bloqueada; portanto, **os quatro arquivos existem no GitHub, mas ainda NÃO aparecem automaticamente nos cards**. Não contar como capas integradas nem aprovadas. Não houve mudança no JavaScript, interface, vídeo, pagamentos, direitos ou status. A V 0.39.1 e o nome público NPlay continuam preservados.
+
+Validação: os quatro SVGs foram relidos do GitHub com `viewBox=1280x720` e fecho `</svg>`. O workflow GitHub Pages do commit `b725ab7` foi visto em andamento; não declarar deploy concluído antes do status `success`. URL do domínio e aparência real em navegador/celular **não verificadas**.
+
+**Próxima ação:** integrar os quatro títulos na lista `originalSceneCovers` de `assets/cover.js` por caminho seguro/autorizado; verificar deploy e carregamento; retomar Shrek somente quando houver método de criação permitido. Preservar prioridade das capas e identificadores técnicos.
