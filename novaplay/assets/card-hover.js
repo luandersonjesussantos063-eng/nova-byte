@@ -1,9 +1,10 @@
-/* NovaPlay v0.35.3 · Transição inteligente entre cards, com áudio sob controle. */
+/* NovaPlay v0.38.2 · Hover mais suave e equilibrado, com áudio sob controle. */
 (function(){
 "use strict";
 let layer=null,owner=null,timer=null,closeTimer=null,clipTimer=null,hls=null,token=0;
 let pendingCard=null,pointerX=-1,pointerY=-1;
-const FIRST_HOVER_MS=360,SWITCH_HOVER_MS=190,CLOSE_GRACE_MS=150;
+const FIRST_HOVER_MS=415,SWITCH_HOVER_MS=235,CLOSE_GRACE_MS=165;
+const EXIT_ANIMATION_MS=135;
 const cardSettings=new WeakMap();
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const MUTED_ICON='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4V5Z"/><path d="m17 9 5 6m0-6-5 6"/></svg>';
@@ -51,9 +52,21 @@ function close(){
  timer=null;closeTimer=null;clipTimer=null;
  if(hls){try{hls.destroy()}catch(e){}hls=null}
  if(layer){
-  const v=layer.querySelector("video");if(v){try{v.pause();v.removeAttribute("src");v.load()}catch(e){}}
-  const f=layer.querySelector("iframe");if(f)f.src="about:blank";
-  layer.remove();layer=null;
+  const outgoing=layer;
+  const v=outgoing.querySelector("video");
+  if(v){try{v.pause();v.removeAttribute("src");v.load()}catch(e){}v.remove()}
+  const f=outgoing.querySelector("iframe");
+  if(f){f.src="about:blank";f.remove()}
+  // Silenciar e interromper o conteúdo imediatamente; suavizar somente a capa.
+  layer=null;
+  if(window.matchMedia("(prefers-reduced-motion: reduce)").matches){
+   outgoing.remove();
+  }else{
+   outgoing.style.pointerEvents="none";
+   outgoing.classList.remove("np-is-playing");
+   outgoing.classList.add("np-hover-leaving");
+   setTimeout(()=>outgoing.remove(),EXIT_ANIMATION_MS+20);
+  }
  }
  owner=null;
 }
@@ -157,8 +170,8 @@ function open(card,item,settings){
  const id=token;
  playPreview(item,view,settings,id).catch(()=>{});
 }
-/* O hover anterior é retirado antes de preparar outro card.
-   Uma espera curta durante a troca evita animações sobrepostas. */
+/* Hover anterior é silenciado imediatamente e sua capa desaparece suavemente.
+   O próximo card aguarda o final dessa saída para evitar sobreposições. */
 function hoveredCardAt(x,y){
  if(x<0||y<0||!document.elementsFromPoint)return null;
  for(const element of document.elementsFromPoint(x,y)){

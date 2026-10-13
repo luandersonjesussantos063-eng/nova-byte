@@ -475,9 +475,23 @@ svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.75;strok
  position:fixed;z-index:90;display:flex;flex-direction:column;overflow:hidden;
  border-radius:13px;background:#141414;border:1px solid rgba(255,255,255,.22);
  box-shadow:0 20px 70px rgba(0,0,0,.86),0 0 0 1px rgba(255,255,255,.07);
- color:#f5f5f5;isolation:isolate;animation:np-hover-in .19s cubic-bezier(.2,.8,.3,1) both;
+ color:#f5f5f5;isolation:isolate;
+ transform-origin:center center;
+ animation:np-hover-in .32s cubic-bezier(.18,.72,.22,1) both;
 }
-@keyframes np-hover-in{from{opacity:0;transform:translateY(10px) scale(.91)}to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes np-hover-in{
+ from{opacity:0;transform:translateY(5px) scale(.965)}
+ to{opacity:1;transform:translateY(0) scale(1)}
+}
+/* Saída curta só da capa; vídeos e áudio são desligados imediatamente no JS. */
+.np-hover-card.np-hover-leaving{
+ pointer-events:none!important;
+ animation:np-hover-out .135s ease-in both!important;
+}
+@keyframes np-hover-out{
+ from{opacity:1;transform:translateY(0) scale(1)}
+ to{opacity:0;transform:translateY(3px) scale(.985)}
+}
 .np-hover-media{position:relative;width:100%;aspect-ratio:16/9;background:#080a0e;overflow:hidden}
 .np-hover-poster{width:100%;height:100%;display:block;object-fit:cover;object-position:center}
 .np-hover-media video,.np-hover-media iframe{
