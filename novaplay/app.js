@@ -43,7 +43,7 @@ function posterUrl(path,youtubeId,title,driveId){
  const approved=window.NovaPlayCover?.approvedAnimePoster?.(title,false);
  if(approved)return approved;
  if(path&&remoteDb)return remoteDb.storage.from("novaplay-posters").getPublicUrl(path).data.publicUrl;
- if(youtubeId&&/^[A-Za-z0-9_-]{11}$/.test(youtubeId))return"https://i.ytimg.com/vi/"+youtubeId+"/hqdefault.jpg";
+ if(youtubeId&&/^[A-Za-z0-9_-]{11}$/.test(youtubeId))return"https://i.ytimg.com/vi/"+youtubeId+"/mqdefault.jpg";
  if(driveId)return window.NovaPlayCover?.driveThumbnail(driveId)||window.NovaPlayCover?.titleCard(title)||"./assets/posters/autoral.svg";
  return window.NovaPlayCover?.titleCard(title)||"./assets/posters/autoral.svg";
 }
@@ -119,10 +119,12 @@ function continued(){
 function byId(id){return map.get(id)||null}
 function card(item,channel=false){
  const isEpisode=item.kind==="episode";const cover=item.cover||"./assets/icon.svg";
+ // Fotogramas de vídeo requerem recorte maior que um pôster vertical de verdade.
+ const coverKind=/^https:\/\/drive\.google\.com\/thumbnail\?/i.test(cover)?" cover-drive":/^https:\/\/i\.ytimg\.com\/vi\//i.test(cover)?" cover-youtube":"";
  const el=document.createElement("article");el.className="poster-card"+(channel?" channel-card":"");
  el.dataset.id=item.id;
  const pct=item.progress?Math.min(100,Math.max(0,Math.round(item.progress.position/item.progress.duration*100))):0;
- el.innerHTML='<div class="cover"><img loading="lazy" decoding="async" src="'+escapeText(cover)+'" alt="Capa ilustrativa: '+escapeText(item.title)+'">'
+ el.innerHTML='<div class="cover'+coverKind+'"><img loading="lazy" decoding="async" src="'+escapeText(cover)+'" alt="Capa ilustrativa: '+escapeText(item.title)+'">'
  +(channel?'<span class="onair">AO VIVO</span>':item.catalogOnly?'<span class="catalog-coming-soon">EM BREVE</span>':'')
  +'<button type="button" class="cover-btn" aria-label="'+escapeText(isEpisode?"Continuar "+item.title:"Ver detalhes de "+item.title)+'"></button>'
  +(item.catalogOnly?'':'<button type="button" class="card-direct-play" aria-label="Assistir '+escapeText(item.title)+'">'+icon("play")+'</button>')
@@ -130,11 +132,18 @@ function card(item,channel=false){
  +'<h3>'+escapeText(item.title)+'</h3><p>'+escapeText(isEpisode?(Math.max(1,Math.round((item.progress.duration-item.progress.position)/60))+" min restantes"):(item.kind==="tv"?"TV aberta • Assista grátis":(item.catalogOnly?"Em breve":(item.year||"Clássico"))+" • "+(item.category||"Acervo clássico")))+'</p>';
  el.querySelector(".cover-btn").addEventListener("click",()=>isEpisode?play(item.show,item.episode):openDetails(item));
  el.querySelector(".card-direct-play")?.addEventListener("click",e=>{e.stopPropagation();if(isEpisode)play(item.show,item.episode);else startWatching(item)});
- el.querySelector("img").addEventListener("error",function(){
-  if(this.dataset.fallbackShown)return;
-  this.dataset.fallbackShown="1";
-  this.src=window.NovaPlayCover?.titleCard(item.title)||"./assets/posters/autoral.svg";
+ const image=el.querySelector("img");
+ function showPosterFallback(){
+  if(image.dataset.fallbackShown)return;
+  image.dataset.fallbackShown="1";
+  image.parentElement.classList.remove("cover-drive","cover-youtube");
+  image.src=window.NovaPlayCover?.titleCard(item.title)||"./assets/posters/autoral.svg";
+ }
+ image.addEventListener("error",showPosterFallback);
+ image.addEventListener("load",()=>{
+  if(image.naturalWidth<48||image.naturalHeight<48)showPosterFallback();
  });
+ if(image.complete && image.naturalWidth===0)showPosterFallback();
  return el;
 }
 function empty(title,subtitle){const div=document.createElement("div");div.className="empty-state";const h=document.createElement("h3");h.textContent=title;const p=document.createElement("p");p.textContent=subtitle;div.append(h,p);return div}
@@ -739,7 +748,7 @@ document.addEventListener("keydown",e=>{
 document.addEventListener("visibilitychange",()=>{if(document.hidden){stopHeroPreview();if(!$("player-layer").hidden)$("video").pause()}});
 window.addEventListener("scroll",()=>$("app-header").classList.toggle("is-scrolled",window.scrollY>24),{passive:true});
 if("serviceWorker" in navigator&&location.protocol==="https:"){
- window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js?v=0.26.1",{updateViaCache:"none"}).catch(()=>{}));
+ window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js?v=0.27.0",{updateViaCache:"none"}).catch(()=>{}));
 }
 navigate((location.hash||"").slice(1)||"inicio");
 loadUploadedCatalog().then(loadFeatured);
