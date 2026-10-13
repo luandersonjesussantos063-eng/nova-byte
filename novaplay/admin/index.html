@@ -8,9 +8,9 @@
 <link rel="stylesheet" href="./admin.css?v=0.28.2">
 </head>
 <body>
-<header class="top"><a class="brand" href="../"><span class="mark">▶</span> N<span>Play</span></a><div class="top-right"><strong>Painel administrativo · NPlay V 0.40.2</strong><button id="logout" class="outline" hidden>Sair</button></div></header>
+<header class="top"><a class="brand" href="../"><span class="mark">▶</span> N<span>Play</span></a><div class="top-right"><strong>Painel administrativo · NPlay V 0.40.3</strong><button id="logout" class="outline" hidden>Sair</button></div></header>
 <main class="container">
-  <section id="loading" class="panel intro"><div class="spin"></div><p>Preparando seu painel...</p><p id="loading-error" class="feedback" role="status"></p><button id="loading-retry" class="outline" type="button" hidden onclick="location.reload()">Tentar novamente</button></section>
+  <section id="loading" class="panel intro"><div class="spin"></div><p>Preparando seu painel... <small>V 0.40.3</small></p><p id="loading-error" class="feedback" role="status"></p><button id="loading-retry" class="outline" type="button" hidden onclick="location.reload()">Tentar novamente</button></section>
   <section id="login-view" class="panel login" hidden>
     <div class="section-label">ACESSO RESTRITO</div>
     <h1>Gerencie sua NPlay</h1>
@@ -260,24 +260,25 @@
 </main>
 <script>
 (function(){
-  let resolved=false;
-  const fail=function(){
-    if(resolved)return;
-    const loading=document.getElementById("loading");
+  function rescue(){
+    var loading=document.getElementById("loading");
     if(!loading||loading.hidden)return;
-    const msg=document.getElementById("loading-error");
-    const retry=document.getElementById("loading-retry");
-    if(msg)msg.textContent="O painel demorou para carregar. Verifique sua conexão e tente novamente.";
+    var msg=document.getElementById("loading-error");
+    var retry=document.getElementById("loading-retry");
+    if(msg)msg.textContent="O carregamento demorou demais. Tente novamente. Se persistir, verifique a publicação da versão 0.40.3.";
     if(retry)retry.hidden=false;
-  };
-  window.addEventListener("load",function(){setTimeout(fail,15000)});
-  setTimeout(fail,20000);
-  window.addEventListener("error",function(e){if(e.target&&e.target.tagName==="SCRIPT")setTimeout(fail,200)});
+    var spin=loading.querySelector(".spin");
+    if(spin)spin.style.display="none";
+  }
+  setTimeout(rescue,10000);
+  document.addEventListener("DOMContentLoaded",function(){setTimeout(rescue,10000)});
+  window.addEventListener("error",function(e){if(e.target&&e.target.tagName==="SCRIPT")rescue()},true);
+  window.addEventListener("unhandledrejection",function(){setTimeout(rescue,300)});
 })();
 </script>
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.58.0/dist/umd/supabase.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/tus-js-client@4.3.1/dist/tus.min.js"></script>
 <script src="../assets/cover.js?v=0.39.2"></script>
-<script defer src="./admin.js?v=0.40.2"></script>
+<script defer src="./admin.js?v=0.40.3"></script>
 </body>
 </html>
