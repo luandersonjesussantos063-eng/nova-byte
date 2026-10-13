@@ -796,18 +796,16 @@ async function removeItem(row){
 }
 async function sendForm(e){
  e.preventDefault();if(busy||!sessionUser)return;
- const mode=sourceMode();
+ let mode=sourceMode();
+ if(mode==="licensed"){
+  const ref=netflixReferenceUrl($("licensed-url").value);
+  if(ref){$("netflix-url").value=ref;$("source-type").value="netflix-reference";mode="netflix-reference";setSourceType();}
+ }
  const youtube=mode==="youtube",drive=mode==="google-drive",licensed=mode==="licensed",netflix=mode==="netflix-reference",external=youtube||drive||licensed||netflix;
  const file=$("video-file").files[0]||null;
  const cover=(external?$("youtube-poster-file"):$("poster-file")).files[0]||null;
  const youtubeId=youtube?extractYoutubeId($("youtube-url").value):null;
  const driveFile=drive?parseGoogleDriveLink($("drive-url").value):null;
- if(licensed&&netflixReferenceUrl($("licensed-url").value)){
-  $("netflix-url").value=$("licensed-url").value.trim();
-  $("source-type").value="netflix-reference";setSourceType();
-  status("upload-message","Reconheci o link da Netflix e alterei para cadastro privado. Confira e clique novamente em Salvar referência privada.",false,true);
-  return;
- }
  const licensedUrl=licensed?parseLicensedStreamUrl($("licensed-url").value):null;
  const netflixUrl=netflix?netflixReferenceUrl($("netflix-url").value):null;
  if(netflix&&!netflixUrl){status("upload-message","Informe um link oficial Netflix /title/ID ou /browse/genre/...?...jbv=ID.",true);return}
