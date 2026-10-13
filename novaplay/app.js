@@ -40,9 +40,10 @@ let issueReportBusy=false;
 let previewTimer=null,previewSequence=0,previewHls=null;
 
 function posterUrl(path,youtubeId,title,driveId,genre){
+ // Uma capa enviada pelo administrador tem prioridade sobre qualquer capa automática.
+ if(path&&remoteDb)return remoteDb.storage.from("novaplay-posters").getPublicUrl(path).data.publicUrl;
  const approved=window.NovaPlayCover?.approvedAnimePoster?.(title,false,genre);
  if(approved)return approved;
- if(path&&remoteDb)return remoteDb.storage.from("novaplay-posters").getPublicUrl(path).data.publicUrl;
  if(youtubeId&&/^[A-Za-z0-9_-]{11}$/.test(youtubeId))return"https://i.ytimg.com/vi/"+youtubeId+"/hqdefault.jpg";
  if(driveId)return window.NovaPlayCover?.driveThumbnail(driveId)||window.NovaPlayCover?.titleCard(title)||"./assets/posters/autoral.svg";
  return window.NovaPlayCover?.titleCard(title)||"./assets/posters/autoral.svg";
