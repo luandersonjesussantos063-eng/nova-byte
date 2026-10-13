@@ -8,7 +8,7 @@
 <link rel="stylesheet" href="./admin.css?v=0.27.0">
 </head>
 <body>
-<header class="top"><a class="brand" href="../"><span class="mark">▶</span> Nova<span>Play</span></a><div class="top-right"><strong>Painel administrativo · v0.27.0</strong><button id="logout" class="outline" hidden>Sair</button></div></header>
+<header class="top"><a class="brand" href="../"><span class="mark">▶</span> Nova<span>Play</span></a><div class="top-right"><strong>Painel administrativo · v0.29.0</strong><button id="logout" class="outline" hidden>Sair</button></div></header>
 <main class="container">
   <section id="loading" class="panel intro"><div class="spin"></div><p>Preparando seu painel...</p></section>
   <section id="login-view" class="panel login" hidden>
@@ -130,6 +130,7 @@
             <option value="youtube">Filme grande pelo YouTube (colar link)</option>
             <option value="google-drive">Vídeo do Google Drive (colar link)</option>
             <option value="licensed">Filme licenciado — link MP4 ou HLS (.m3u8)</option>
+            <option value="netflix-reference">Netflix — cadastrar referência, sem publicar</option>
           </select>
         </div>
         <div id="youtube-fields" class="youtube-fields" hidden>
@@ -160,6 +161,13 @@
             </ol>
             <p>O vídeo abrirá dentro da NovaPlay pelo visualizador oficial do Google Drive. Pode exigir cookies de terceiros, login ou parar por limite de reproduções. O Drive não é uma hospedagem de streaming profissional.</p>
           </div>
+        </div>
+        <div id="netflix-fields" class="youtube-fields" hidden>
+          <p class="muted">Aceita também links /browse/genre/...?...jbv=ID, sem necessidade de converter o endereço.</p>
+          <label for="netflix-url">Link da página do título na Netflix <span class="required">*</span>
+            <input id="netflix-url" type="url" inputmode="url" maxlength="2048" placeholder="https://www.netflix.com/browse/genre/34399?jbv=81760229" autocomplete="off">
+          </label>
+          <div class="youtube-howto"><strong>Pré-cadastro privado, sem reprodução</strong><p>Use o link oficial apenas como referência do título. O filme ficará obrigatoriamente em rascunho, invisível ao público e sem player. A assinatura da Netflix não concede direitos de retransmissão. Quando houver contrato de distribuição, edite o título e troque a fonte para “Filme licenciado”, usando um vídeo ou HLS fornecido pelo titular dos direitos.</p></div>
         </div>
         <div id="licensed-fields" class="youtube-fields" hidden>
           <label for="licensed-url">Link direto autorizado do filme <span class="required">*</span>
@@ -240,6 +248,6 @@
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.58.0/dist/umd/supabase.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/tus-js-client@4.3.1/dist/tus.min.js"></script>
 <script src="../assets/cover.js?v=0.24.0"></script>
-<script defer src="./admin.js?v=0.27.0"></script>
+<script defer src="./admin.js?v=0.29.0"></script>
 </body>
 </html>
