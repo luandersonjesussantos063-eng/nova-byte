@@ -1,5 +1,5 @@
 """Private NPlay magnet importer. Run only on a controlled backend server."""
-import os, time, uuid, pathlib, tempfile, logging
+import os, time, uuid, pathlib, tempfile, logging, subprocess
 import boto3
 from dotenv import load_dotenv
 load_dotenv()
@@ -49,20 +49,14 @@ def run(job):
                 if relative.is_absolute() or ".." in relative.parts:
                     raise ValueError("Caminho inseguro no torrent")
                 size=files.file_size(i)
-                if pathlib.Path(relative.name).suffix.lower() in VIDEO_EXT:
+                if pathlib.Path(relative.name).suffix.lower() in KNOWN_VIDEO_EXT:
                     candidates.append((i,size,relative))
             if not candidates:
                 details=[]
                 for i in range(min(files.num_files(),20)):
                     name=pathlib.PurePosixPath(files.file_path(i)).name
-                    ext=pathlib.Path(name).suffix.lower() or "(sem extensão)"
-                    details.append(f"{name[:90]} [{ext}]")
-                log.warning("Job %s: nenhum formato aceito; arquivos encontrados: %s",jid,"; ".join(details) or "(nenhum)")
-                detected={pathlib.Path(files.file_path(i)).suffix.lower() for i in range(files.num_files())}
-                other=sorted(detected & (KNOWN_VIDEO_EXT-VIDEO_EXT))
-                if other:
-                    raise ValueError("Torrent contém vídeo em formato não aceito: "+", ".join(other)+". Formatos aceitos: "+", ".join(sorted(VIDEO_EXT)))
-                raise ValueError("Torrent sem arquivo de vídeo compatível; consulte o log para ver os arquivos encontrados")
+                    details.append(name[:90])
+                raise ValueError("Torrent sem arquivo de vídeo reconhecido. Arquivos: "+", ".join(details))
             idx,size,relative=max(candidates,key=lambda x:x[1])
             if size>MAX_BYTES:
                 raise ValueError("Vídeo maior que limite permitido")
@@ -80,8 +74,16 @@ def run(job):
                 raise ValueError("Arquivo não encontrado")
             if source.stat().st_size>MAX_BYTES:
                 raise ValueError("Arquivo excedeu o limite")
-            key=f"{job['created_by']}/{uuid.uuid4()}-import-{uuid.uuid4()}{source.suffix.lower()}"
-            R2.upload_file(str(source),BUCKET,key,ExtraArgs={"ContentType":{".mp4":"video/mp4",".webm":"video/webm",".ogv":"video/ogg"}[source.suffix.lower()]})
+            upload_source=source
+            if source.suffix.lower() not in VIDEO_EXT:
+                converted=pathlib.Path(tmp)/"nplay-converted.mp4"
+                log.info("Job %s: convertendo %s para MP4",jid,source.suffix)
+                subprocess.run(["ffmpeg","-nostdin","-y","-i",str(source),"-map","0:v:0","-map","0:a:0?","-c:v","libx264","-preset","veryfast","-crf","23","-c:a","aac","-b:a","160k","-movflags","+faststart",str(converted)],check=True,timeout=TIMEOUT)
+                if converted.stat().st_size>MAX_BYTES:
+                    raise ValueError("Vídeo convertido excede o limite")
+                upload_source=converted
+            key=f"{job['created_by']}/{uuid.uuid4()}-import-{uuid.uuid4()}{upload_source.suffix.lower()}"
+            R2.upload_file(str(upload_source),BUCKET,key,ExtraArgs={"ContentType":{".mp4":"video/mp4",".webm":"video/webm",".ogv":"video/ogg"}[upload_source.suffix.lower()]})
             update(jid,status="ready",r2_object_key=key,error_message=None)
             log.info("Job %s uploaded to R2; remains unpublished",jid)
     except Exception as exc:
