@@ -8,9 +8,9 @@
 <link rel="stylesheet" href="./admin.css?v=0.28.2">
 </head>
 <body>
-<header class="top"><a class="brand" href="../"><span class="mark">▶</span> N<span>Play</span></a><div class="top-right"><strong>Painel administrativo · NPlay V 0.41.0</strong><button id="logout" class="outline" hidden>Sair</button></div></header>
+<header class="top"><a class="brand" href="../"><span class="mark">▶</span> N<span>Play</span></a><div class="top-right"><strong>Painel administrativo · NPlay V 0.41.1</strong><button id="logout" class="outline" hidden>Sair</button></div></header>
 <main class="container">
-  <section id="loading" class="panel intro" hidden><div class="spin"></div><p>Preparando seu painel... <small>V 0.41.0</small></p><p id="loading-error" class="feedback" role="status"></p><button id="loading-retry" class="outline" type="button" hidden onclick="location.reload()">Tentar novamente</button></section>
+  <section id="loading" class="panel intro" hidden><div class="spin"></div><p>Preparando seu painel... <small>V 0.41.1</small></p><p id="loading-error" class="feedback" role="status"></p><button id="loading-retry" class="outline" type="button" hidden onclick="location.reload()">Tentar novamente</button></section>
   <section id="login-view" class="panel login">
     <div class="section-label">ACESSO RESTRITO</div>
     <h1>Gerencie sua NPlay</h1>
@@ -144,7 +144,6 @@
             <option value="netflix-reference">Netflix — cadastrar referência, sem publicar</option>
           </select>
         </div>
-        <section class="panel" aria-labelledby="magnet-import-heading" style="margin:18px 0"><div class="section-label">IMPORTAÇÃO LICENCIADA · TORRENT</div><h2 id="magnet-import-heading">Importar filme por magnet</h2><p class="muted">Cadastre o magnet e a licença para preparar a importação. O arquivo não é baixado automaticamente até que o processador de torrents esteja conectado.</p><form id="magnet-import-form"><label for="magnet-title">Título do filme<input id="magnet-title" required minlength="2" maxlength="140" placeholder="Nome do filme"></label><label for="magnet-uri">Link magnet<textarea id="magnet-uri" required rows="3" maxlength="8192" placeholder="magnet:?xt=urn:btih:..."></textarea></label><label for="magnet-license">Referência da licença / contrato<input id="magnet-license" required minlength="5" maxlength="500" placeholder="Número do contrato ou documento de autorização"></label><label class="publish-check"><input id="magnet-rights" type="checkbox" required><span><strong>Confirmo que possuo autorização válida para obter e distribuir este filme pela NPlay</strong><small>A confirmação não publica o filme; a licença ainda precisa ser verificada.</small></span></label><button type="submit" id="magnet-submit" class="primary">Cadastrar importação por magnet</button><p id="magnet-status" class="feedback" role="status" aria-live="polite"></p></form></section>
         <div id="r2-catalog-fields" class="youtube-fields" hidden><label for="r2-catalog-key">Chave do vídeo já enviado ao R2<input id="r2-catalog-key" type="text" autocomplete="off" placeholder="Cole a chave completa do R2"></label><p class="muted">Primeiro salve como rascunho. Após revisão dos direitos, edite o cadastro para publicar.</p><label class="publish-check"><input id="r2-rights" type="checkbox"><span>Confirmo que tenho autorização para distribuir este vídeo</span></label></div>
         <div id="youtube-fields" class="youtube-fields" hidden>
           <label for="youtube-url">Link do filme no YouTube <span class="required">*</span>
@@ -206,6 +205,7 @@
         <button type="submit" id="submit-upload" class="primary wide">Enviar para a NPlay</button>
         <p class="fineprint">Envie apenas material próprio ou que você tenha autorização para distribuir. O envio direto (até 50 MB) fica em armazenamento privado e só aparece após publicação. YouTube e Google Drive são reproduzidos pelos players oficiais dos próprios serviços e podem ter restrições. Cadastre apenas seus vídeos ou obras que você tenha autorização para exibir.</p>
       </form>
+        <section class="panel" aria-labelledby="magnet-import-heading" style="margin:18px 0"><div class="section-label">IMPORTAÇÃO LICENCIADA · TORRENT</div><h2 id="magnet-import-heading">Importar filme por magnet</h2><p class="muted">Cadastre o magnet e a licença para preparar a importação. O arquivo não é baixado automaticamente até que o processador de torrents esteja conectado.</p><form id="magnet-import-form"><label for="magnet-title">Título do filme<input id="magnet-title" required minlength="2" maxlength="140" placeholder="Nome do filme"></label><label for="magnet-uri">Link magnet<textarea id="magnet-uri" required rows="3" maxlength="8192" placeholder="magnet:?xt=urn:btih:..."></textarea></label><label for="magnet-license">Referência da licença / contrato<input id="magnet-license" required minlength="5" maxlength="500" placeholder="Número do contrato ou documento de autorização"></label><label class="publish-check"><input id="magnet-rights" type="checkbox" required><span><strong>Confirmo que possuo autorização válida para obter e distribuir este filme pela NPlay</strong><small>A confirmação não publica o filme; a licença ainda precisa ser verificada.</small></span></label><button type="submit" id="magnet-submit" class="primary">Cadastrar importação por magnet</button><p id="magnet-status" class="feedback" role="status" aria-live="polite"></p></form></section>
     </section>
     <section class="panel library">
       <div class="section-title"><div><span class="section-label">BIBLIOTECA</span><h2>Seus uploads</h2></div><button id="refresh-list" class="outline compact">Atualizar</button></div>
@@ -265,7 +265,7 @@
     if(!loading||loading.hidden)return;
     var msg=document.getElementById("loading-error");
     var retry=document.getElementById("loading-retry");
-    if(msg)msg.textContent="O carregamento demorou demais. Tente novamente. Se persistir, verifique a publicação da versão 0.41.0.";
+    if(msg)msg.textContent="O carregamento demorou demais. Tente novamente. Se persistir, verifique a publicação da versão 0.41.1.";
     if(retry)retry.hidden=false;
     var spin=loading.querySelector(".spin");
     if(spin)spin.style.display="none";
@@ -334,7 +334,7 @@
  }
  function startAdmin(){
   if(!window.supabase||typeof window.supabase.createClient!=="function"){fail();return}
-  load("./admin.js?v=0.41.0",function(){},function(){if(msg)msg.textContent="Falha ao carregar o módulo administrativo. Atualize a página."});
+  load("./admin.js?v=0.41.1",function(){},function(){if(msg)msg.textContent="Falha ao carregar o módulo administrativo. Atualize a página."});
  }
  function fail(){if(msg)msg.textContent="Não foi possível carregar a biblioteca de autenticação. Confira a conexão e tente novamente.";}
  function attempt(i){
