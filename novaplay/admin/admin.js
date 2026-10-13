@@ -593,7 +593,8 @@ function renderLibrary(){
  libraryPage=Math.max(0,Math.min(libraryPage,pageCount-1));
  shown.slice(libraryPage*LIBRARY_PAGE_SIZE,(libraryPage+1)*LIBRARY_PAGE_SIZE).forEach(row=>{
   const item=document.createElement("article");item.className="movie-item";
-  const poster=(row.poster_path?client.storage.from(POSTER_BUCKET).getPublicUrl(row.poster_path).data.publicUrl:null)
+  const poster=(row.youtube_id?"https://i.ytimg.com/vi/"+encodeURIComponent(row.youtube_id)+"/hqdefault.jpg":null)
+   ||(row.poster_path?client.storage.from(POSTER_BUCKET).getPublicUrl(row.poster_path).data.publicUrl:null)
    ||window.NovaPlayCover?.approvedAnimePoster?.(row.title,true,row.genre)
    ||window.NovaPlayCover?.genrePoster?.(row.title,row.genre)
    ||window.NovaPlayCover?.titleCard(row.title)||"../assets/posters/autoral.svg";
@@ -857,7 +858,7 @@ async function sendForm(e){
    generated=await inspectVideo(file);
    if(generated.duration!==null)payload.duration_seconds=generated.duration;
   }
-  const chosenCover=cover||generated.thumbnail;
+  const chosenCover=youtube?null:(cover||generated.thumbnail);
   if(chosenCover){
     status("upload-message","Enviando capa...");
     newPoster=await uploadCover(chosenCover);
@@ -878,7 +879,8 @@ async function sendForm(e){
      Object.assign(payload,{video_path:newVideo,mime_type:extForMime(file).mime,file_size_bytes:file.size});
    }
   }
-  if(newPoster)payload.poster_path=newPoster;
+  if(youtube)payload.poster_path=null;
+  else if(newPoster)payload.poster_path=newPoster;
   if(!editing)payload.created_by=sessionUser.id;
   status("upload-message",external?"Salvando link no catálogo...":"Salvando informações do filme...");
   const result=editing
