@@ -1018,6 +1018,7 @@ async function submitMagnetImport(event){
  }catch(e){status("magnet-status","Falha ao registrar importação: "+errorText(e),true)}finally{button.disabled=false}
 }
 function init(){
+ try {
  $("magnet-import-form").onsubmit=submitMagnetImport;
  $("r2-test-button").onclick=testR2Upload;
  $("r2-preview-button").onclick=previewR2Video;
