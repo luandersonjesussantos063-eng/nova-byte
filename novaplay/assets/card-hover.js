@@ -1,4 +1,4 @@
-/* NovaPlay v0.38.3 · Ampliação progressiva a partir da capa de origem, com áudio sob controle. */
+/* NovaPlay v0.38.4 · Ampliação compacta e progressiva a partir da capa de origem, com áudio sob controle. */
 (function(){
 "use strict";
 let layer=null,owner=null,timer=null,closeTimer=null,clipTimer=null,hls=null,token=0;
@@ -140,8 +140,10 @@ function open(card,item,settings){
  close();
  const rect=card.querySelector(".cover").getBoundingClientRect();
  if(!rect.width)return;
- const width=Math.min(438,Math.max(290,Math.round(rect.width*1.38)));
- const height=Math.round(width*9/16)+142;
+ // Prévia mais compacta, sem cobrir tantos títulos vizinhos.
+ // Aumento leve em relação à miniatura e limite de 365 px.
+ const width=Math.max(180,Math.min(innerWidth-18,365,Math.max(260,Math.round(rect.width*1.15))));
+ const height=Math.round(width*9/16)+126;
  const left=Math.round(Math.max(9,Math.min(innerWidth-width-9,rect.left-(width-rect.width)/2)));
  const top=Math.round(Math.max(80,Math.min(innerHeight-height-9,rect.top-35)));
  const view=document.createElement("section");

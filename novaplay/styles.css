@@ -744,3 +744,12 @@ svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.75;strok
  .shelf-rail>.shelf-track{scroll-behavior:auto}
  .shelf-arrow{transition:none}
 }
+
+/* NovaPlay V 0.38.4 — painel hover compacto, sem perder legibilidade. */
+.np-hover-card .np-hover-body{padding:10px 12px 11px;gap:7px}
+.np-hover-card .np-hover-title{font-size:15px;line-height:1.22}
+.np-hover-card .np-hover-actions{gap:7px}
+.np-hover-card .np-hover-action{width:33px;height:33px}
+.np-hover-card .np-hover-hint{font-size:10px;line-height:1.23}
+.np-hover-card .np-hover-metadata{font-size:10px}
+.np-hover-card .np-hover-sound{width:34px;height:34px;right:10px;bottom:10px}
