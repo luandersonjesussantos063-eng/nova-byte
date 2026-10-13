@@ -529,7 +529,11 @@ function renderLibrary(){
  const withVideo=items.filter(x=>x.is_published&&!x.catalog_only).length;
  const comingSoon=items.filter(x=>x.catalog_only).length;
  const info=$("source-summary");
- if(info)info.textContent=withVideo+" títulos publicados com fonte de vídeo · "+comingSoon+" títulos Em breve sem vídeo cadastrado. Os links ainda precisam de teste de reprodução.";
+ const publicados=items.filter(x=>x.is_published);
+ const customCapas=publicados.filter(x=>!!x.poster_path).length;
+ const capasDeArquivo=publicados.filter(x=>!x.poster_path && /^\\.\\.\\/assets\\//.test(window.NovaPlayCover?.approvedAnimePoster?.(x.title,true,x.genre)||"")).length;
+ const capasAutomaticas=publicados.length-customCapas-capasDeArquivo;
+ if(info)info.textContent=withVideo+" títulos publicados com fonte de vídeo · "+comingSoon+" títulos Em breve sem vídeo cadastrado · CAPAS: "+customCapas+" enviadas, "+capasDeArquivo+" ilustradas locais, "+capasAutomaticas+" automáticas pendentes de arte individual. Os links de reprodução precisam de verificação independente.";
  const sourceFilter=$("library-state-filter");
  if(sourceFilter){
   const option=sourceFilter.querySelector('option[value="catalog_only"]');
