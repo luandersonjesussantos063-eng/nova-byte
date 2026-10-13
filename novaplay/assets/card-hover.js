@@ -1,7 +1,10 @@
-/* NovaPlay v0.35.1 · Prévias no hover com botão manual de som. */
+/* NovaPlay v0.35.2 · Transição inteligente entre cards, com áudio sob controle. */
 (function(){
 "use strict";
 let layer=null,owner=null,timer=null,closeTimer=null,clipTimer=null,hls=null,token=0;
+let pendingCard=null,pointerX=-1,pointerY=-1;
+const FIRST_HOVER_MS=360,SWITCH_HOVER_MS=190,CLOSE_GRACE_MS=150;
+const cardSettings=new WeakMap();
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const MUTED_ICON='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4V5Z"/><path d="m17 9 5 6m0-6-5 6"/></svg>';
 const SOUND_ICON='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4V5Z"/><path d="M15.5 8.5a5 5 0 0 1 0 7m3-10a9 9 0 0 1 0 13"/></svg>';
@@ -44,6 +47,7 @@ function attachSoundButton(view){
 }
 function close(){
  token++;clearTimeout(timer);clearTimeout(closeTimer);clearTimeout(clipTimer);
+ pendingCard=null;
  timer=null;closeTimer=null;clipTimer=null;
  if(hls){try{hls.destroy()}catch(e){}hls=null}
  if(layer){
@@ -57,7 +61,7 @@ function maybeClose(card){
  clearTimeout(closeTimer);
  closeTimer=setTimeout(()=>{
   if(owner===card&&!card.matches(":hover")&&!layer?.matches(":hover"))close();
- },190);
+ },CLOSE_GRACE_MS);
 }
 async function playPreview(item,view,settings,id){
  if(item.catalogOnly||item.kind==="tv"||navigator.connection?.saveData||matchMedia("(prefers-reduced-motion: reduce)").matches)return;
@@ -119,7 +123,7 @@ async function playPreview(item,view,settings,id){
  },25000);
 }
 function open(card,item,settings){
- if(!card.isConnected||!card.matches(":hover"))return;
+ if(!card.isConnected||!pointerIsOver(card))return;
  close();
  const rect=card.querySelector(".cover").getBoundingClientRect();
  if(!rect.width)return;
@@ -153,18 +157,60 @@ function open(card,item,settings){
  const id=token;
  playPreview(item,view,settings,id).catch(()=>{});
 }
+/* O hover anterior é retirado antes de preparar outro card.
+   Uma espera curta durante a troca evita animações sobrepostas. */
+function hoveredCardAt(x,y){
+ if(x<0||y<0||!document.elementsFromPoint)return null;
+ for(const element of document.elementsFromPoint(x,y)){
+  const card=element.closest?.(".poster-card");
+  if(card&&cardSettings.has(card))return card;
+ }
+ return null;
+}
+function pointerIsOver(card){
+ if(!card.isConnected)return false;
+ if(pointerX>=0&&pointerY>=0){
+  const rect=card.getBoundingClientRect();
+  if(pointerX>=rect.left&&pointerX<rect.right&&pointerY>=rect.top&&pointerY<rect.bottom)
+   return hoveredCardAt(pointerX,pointerY)===card;
+ }
+ return card.matches(":hover");
+}
+function requestHover(card){
+ const settings=cardSettings.get(card);
+ if(!settings||!card.isConnected)return;
+ if(card===owner&&layer){clearTimeout(closeTimer);return}
+ if(card===pendingCard)return;
+ const changing=!!(layer||pendingCard);
+ // Eliminar a prévia velha imediatamente, incluindo som e vídeo.
+ if(layer){close()}else{clearTimeout(timer);timer=null}
+ pendingCard=card;
+ timer=setTimeout(()=>{
+  if(pendingCard!==card)return;
+  pendingCard=null;timer=null;
+  if(pointerIsOver(card))open(card,settings.item,settings);
+ },changing?SWITCH_HOVER_MS:FIRST_HOVER_MS);
+}
 function attach(card,item,settings){
  if(!window.matchMedia?.("(hover:hover) and (pointer:fine)").matches)return;
- card.addEventListener("mouseenter",()=>{
-  clearTimeout(timer);clearTimeout(closeTimer);
-  if(owner===card)return;
-  timer=setTimeout(()=>{if(card.matches(":hover"))open(card,item,settings)},460);
- });
+ cardSettings.set(card,{item,...settings});
+ card.addEventListener("mouseenter",()=>requestHover(card));
  card.addEventListener("mouseleave",()=>{
-  clearTimeout(timer);
+  if(pendingCard===card){clearTimeout(timer);timer=null;pendingCard=null}
   if(owner===card)maybeClose(card);
  });
 }
+/* Uma prévia ampliada pode cobrir o card vizinho: localizar o card
+   fisicamente sob o cursor, mesmo com o painel em primeiro plano. */
+document.addEventListener("pointermove",event=>{
+ if(event.pointerType!=="mouse")return;
+ pointerX=event.clientX;pointerY=event.clientY;
+ if(!layer&&!pendingCard)return;
+ // Ao usar ações ou som, manter o card atual aberto.
+ if(event.target?.closest?.(".np-hover-body, .np-hover-sound"))return;
+ const underneath=hoveredCardAt(pointerX,pointerY);
+ if(underneath&&underneath!==owner)requestHover(underneath);
+},{passive:true});
 document.addEventListener("scroll",()=>{if(layer)close()},true);
 window.addEventListener("resize",()=>{if(layer)close()});
 document.addEventListener("visibilitychange",()=>{if(document.hidden)close()});
