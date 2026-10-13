@@ -113,13 +113,15 @@ function parseLicensedStreamUrl(raw){
 function sourceMode(){return $("source-type").value}
 function setSourceType(){
  const mode=sourceMode();
- const youtube=mode==="youtube",drive=mode==="google-drive",licensed=mode==="licensed",netflix=mode==="netflix-reference",external=youtube||drive||licensed||netflix;
+ const youtube=mode==="youtube",drive=mode==="google-drive",licensed=mode==="licensed",netflix=mode==="netflix-reference",r2=mode==="r2",external=youtube||drive||licensed||netflix||r2;
+ $("r2-catalog-fields").hidden=!r2;
  $("youtube-fields").hidden=!youtube;
  $("drive-fields").hidden=!drive;
  $("licensed-fields").hidden=!licensed;
  $("netflix-fields").hidden=!netflix;
  $("netflix-url").required=netflix;
- $("publish").disabled=false;
+ $("publish").disabled=r2;
+ if(r2)$("publish").checked=false;
  $("licensed-url").required=licensed;
  $("upload-files").hidden=external;
  $("youtube-cover-section").hidden=!external;
@@ -869,11 +871,17 @@ async function sendForm(e){
  }
  const youtube=mode==="youtube",drive=mode==="google-drive",licensed=mode==="licensed",netflix=mode==="netflix-reference",external=youtube||drive||licensed||netflix;
  const file=$("video-file").files[0]||null;
+ const r2=mode==="r2",r2key=r2?$("r2-catalog-key").value.trim():null;
  const cover=(external?$("youtube-poster-file"):$("poster-file")).files[0]||null;
  const youtubeId=youtube?extractYoutubeId($("youtube-url").value):null;
  const driveFile=drive?parseGoogleDriveLink($("drive-url").value):null;
  const licensedUrl=licensed?parseLicensedStreamUrl($("licensed-url").value):null;
  const netflixUrl=netflix?netflixReferenceUrl($("netflix-url").value):null;
+ if(r2){
+  if(!/^[0-9a-f-]{36}\\/[0-9a-f-]{36}-[a-z0-9-]{8,80}\\.(mp4|webm|ogv)$/i.test(r2key)||!r2key.startsWith(sessionUser.id+"/")){status("upload-message","Informe a chave R2 de um vídeo enviado pela sua conta.",true);return;}
+  if(!$("r2-rights").checked){status("upload-message","Confirme os direitos de distribuição do vídeo.",true);return;}
+  if($("publish").checked){status("upload-message","Vídeos R2 ainda precisam da liberação segura de reprodução pública. Salve como rascunho.",true);return;}
+ }
  if(netflix&&!netflixUrl){status("upload-message","Informe um link oficial Netflix /title/ID ou /browse/genre/...?...jbv=ID.",true);return}
  if(licensed&&!licensedUrl){status("upload-message","Informe um link HTTPS direto autorizado terminando em .mp4, .webm, .ogv ou .m3u8. Endereços de filmes na Netflix não funcionam aqui.",true);return}
  if(licensed&&$("publish").checked&&!$("licensed-rights").checked){status("upload-message","Para publicar este filme, confirme que já possui licença para exibição pública na NPlay. Enquanto aguarda, salve como rascunho.",true);return}
@@ -899,12 +907,12 @@ async function sendForm(e){
   production_year:$("year").value?Number($("year").value):null,
   genre:$("genre").value.trim()||"Autoral",
   is_published:$("publish").checked,
-  catalog_only:netflix,
+  catalog_only:netflix||r2,
   licensed_stream_url:licensed?licensedUrl:null,
   netflix_reference_url:netflix?netflixUrl:null,
   licensed_rights_confirmed:licensed&&$("licensed-rights").checked
  };
- if(licensed||netflix)payload.rights_reviewed=licensed&&!!payload.licensed_rights_confirmed;
+ if(licensed||netflix||r2)payload.rights_reviewed=licensed&&!!payload.licensed_rights_confirmed;
  if(netflix){payload.rights_reviewed_at=null;payload.licensed_rights_confirmed=false}
  if(payload.title.length<2){status("upload-message","Informe um título de pelo menos 2 caracteres.",true);return}
  if(kind==="episode"&&(!payload.series_title||!payload.episode_number)){status("upload-message","Informe o nome da série e o número do episódio.",true);return}
@@ -927,7 +935,7 @@ async function sendForm(e){
       youtube_id:youtube?youtubeId:null,
       google_drive_id:drive?driveFile.id:null,
       google_drive_resource_key:drive?driveFile.resourceKey:null,
-      licensed_stream_url:licensed?licensedUrl:null,
+      licensed_stream_url:licensed?licensedUrl:r2?R2_WORKER+"/watch/"+r2key:null,
       video_path:null,mime_type:null,file_size_bytes:null,duration_seconds:null
     });
   }else{
@@ -939,6 +947,7 @@ async function sendForm(e){
    }
   }
   if(newPoster)payload.poster_path=newPoster;
+  if(r2)payload.description=(payload.description?payload.description+"\n\n":"")+"[Vídeo R2 privado vinculado; aguardando liberação de reprodução pública]";
   if(!editing)payload.created_by=sessionUser.id;
   status("upload-message",external?"Salvando link no catálogo...":"Salvando informações do filme...");
   const result=editing
