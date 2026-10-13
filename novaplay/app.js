@@ -165,7 +165,7 @@ function shelf(title,items,key,withLive=false){
  const section=document.createElement("section");section.className="shelf";
  const head=document.createElement("div");head.className="shelf-top";
  const h=document.createElement("h2");h.className="shelf-title";h.textContent=title;
- if(withLive){const badge=document.createElement("span");badge.className="live-label";badge.textContent="● CANAIS GRÁTIS";h.append(badge)}
+ if(withLive){const badge=document.createElement("span");badge.className="live-label";badge.textContent="● AO VIVO";h.append(badge)}
  const more=document.createElement("button");more.className="see-all";more.textContent="Ver todos ›";
  if(key==="continuar")more.hidden=true;else more.addEventListener("click",()=>navigate(key));
  head.append(h,more);
@@ -247,7 +247,7 @@ function renderRows(){
  const holder=$("home-rows");holder.replaceChildren();
  const blocks=[
  ["Continuar assistindo",continued(),"continuar",false],
- ["TV aberta e canais grátis",db.channels,"tv",true],
+ ["TV aberta",db.channels,"tv",true],
  ["Filmes licenciados",uploadedCatalog.filter(x=>x.mode==="licensed"&&!x.catalogOnly),"filmes",false],
  ["Filmes do YouTube",youtubeFilms(),"youtube",false],
  ["Animes e estreias · Em breve",upcomingFilms(),"em-breve",false],
@@ -377,7 +377,7 @@ function updateHero(index){
 }
 function youtubeFilms(){return db.films.filter(x=>!x.catalogOnly && x.mode==="youtube" && /^[A-Za-z0-9_-]{11}$/.test(x.youtube_id||""))}
 const categories={
- tv:["TV AO VIVO","TV aberta e canais grátis","Canais de TV abertos no player da NovaPlay e acesso oficial à TV Senado, Justiça, Assembleia MT e Pluto TV.",db.channels],
+ tv:["TV AO VIVO","Assista à TV aberta","Transmissões gratuitas com player dentro da NovaPlay. A disponibilidade depende do sinal das emissoras.",db.channels],
  filmes:["NOSSO ACERVO","Filmes clássicos","Longas e curtas históricos com versões de arquivo.",db.films.filter(x=>x.mode!=="youtube")],
  youtube:["YOUTUBE · NOVAPLAY","Filmes do YouTube","Assista por meio do player oficial do YouTube. A disponibilidade depende do canal e das permissões de reprodução.",[]],
  "em-breve":["LANÇAMENTOS · NOVAPLAY","Em breve","Prévias de animes e filmes anunciados. Estes títulos ainda não têm vídeo autorizado para reprodução.",[]],
@@ -844,7 +844,7 @@ document.addEventListener("keydown",e=>{
 document.addEventListener("visibilitychange",()=>{if(document.hidden){stopHeroPreview();if(!$("player-layer").hidden)$("video").pause()}});
 window.addEventListener("scroll",()=>$("app-header").classList.toggle("is-scrolled",window.scrollY>24),{passive:true});
 if("serviceWorker" in navigator&&location.protocol==="https:"){
- window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js?v=0.37.1",{updateViaCache:"none"}).catch(()=>{}));
+ window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js?v=0.37.2",{updateViaCache:"none"}).catch(()=>{}));
 }
 navigate((location.hash||"").slice(1)||"inicio");
 loadUploadedCatalog().then(loadFeatured);

@@ -1,6 +1,6 @@
-/* Catálogo NovaPlay V 0.37.0 • conteúdos clássicos e TV aberta gratuita */
+/* Catálogo NovaPlay V 0.37.2 • conteúdos clássicos e TV aberta gratuita */
 window.NovaPlayCatalog={
-  "version": "0.37.0",
+  "version": "0.37.2",
   "channels": [
       {
           "id": "camara",
@@ -46,63 +46,6 @@ window.NovaPlayCatalog={
           "sourcePage": "https://culturaplay.tvcultura.com.br/channels/14",
           "brandColor": "#27355c",
           "live": true
-      },
-      {
-          "id": "senado",
-          "title": "TV Senado",
-          "kind": "tv",
-          "category": "Legislativo • Brasil",
-          "description": "Acompanhe gratuitamente a programação da TV Senado pelo site oficial do Senado Federal.",
-          "mode": "external",
-          "sourcePage": "https://www12.senado.leg.br/tv/programas/ao-vivo/2026",
-          "cover": "https://commons.wikimedia.org/wiki/Special:FilePath/TV%20Senado%20(Brasil)%20logo.svg",
-          "backdrop": "https://commons.wikimedia.org/wiki/Special:FilePath/TV%20Senado%20(Brasil)%20logo.svg",
-          "brandColor": "#16384f",
-          "externalLabel": "SITE OFICIAL",
-          "live": true
-      },
-      {
-          "id": "justica",
-          "title": "TV Justiça",
-          "kind": "tv",
-          "category": "Justiça • Brasil",
-          "description": "Acompanhe a programação da TV Justiça pelo portal oficial da emissora.",
-          "mode": "external",
-          "sourcePage": "https://radioetvjustica.jus.br/",
-          "cover": "https://commons.wikimedia.org/wiki/Special:FilePath/TV%20Justi%C3%A7a%20logo.png",
-          "backdrop": "https://commons.wikimedia.org/wiki/Special:FilePath/TV%20Justi%C3%A7a%20logo.png",
-          "brandColor": "#172d51",
-          "externalLabel": "SITE OFICIAL",
-          "live": true
-      },
-      {
-          "id": "assembleia-mt",
-          "title": "TV Assembleia MT",
-          "kind": "tv",
-          "category": "Mato Grosso • Legislativo",
-          "description": "Programação da TV Assembleia Legislativa de Mato Grosso (TVAL), disponível no portal da ALMT.",
-          "mode": "external",
-          "sourcePage": "https://www.al.mt.gov.br/institucional/tv",
-          "cover": "https://www.saganews.com.br/img/ALMT.png",
-          "backdrop": "https://www.saganews.com.br/img/ALMT.png",
-          "brandColor": "#30462b",
-          
-          "externalLabel": "SITE OFICIAL",
-          "live": true
-      },
-      {
-          "id": "plutotv",
-          "title": "Pluto TV — canais grátis",
-          "kind": "tv",
-          "category": "Filmes • Séries • Infantil • Notícias",
-          "description": "Explore os canais gratuitos e a programação sob demanda na plataforma oficial da Pluto TV. O conteúdo é reproduzido no site da Pluto TV, não dentro da NovaPlay.",
-          "mode": "external",
-          "sourcePage": "https://pluto.tv/br/live-tv",
-          "cover": "https://commons.wikimedia.org/wiki/Special:FilePath/Pluto%20TV%20logo%202024.svg",
-          "backdrop": "https://commons.wikimedia.org/wiki/Special:FilePath/Pluto%20TV%20logo%202024.svg",
-          "brandColor": "#2a2350",
-          "externalLabel": "ABRIR PLUTO TV",
-          "live": false
       }
   ],
 
