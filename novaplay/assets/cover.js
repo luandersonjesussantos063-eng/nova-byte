@@ -31,7 +31,7 @@ function titleCard(title){
  const [a,b,light]=paletteFor(title);
  const lines=linesOf(title);
  const body=lines.map((line,i)=>'<text x="32" y="'+(435+i*54)+'" font-family="Arial,Helvetica,sans-serif" font-size="'+(line.length>17?29:37)+'" font-weight="800" fill="#ffffff">'+esc(line)+'</text>').join("");
- const svg='<svg xmlns="http://www.w3.org/2000/svg" width="480" height="720" viewBox="0 0 480 720" role="img" aria-label="'+esc(title)+'"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop stop-color="'+a+'"/><stop offset=".75" stop-color="'+b+'"/><stop offset="1" stop-color="'+a+'"/></linearGradient><radialGradient id="shine"><stop stop-color="'+light+'" stop-opacity=".6"/><stop offset="1" stop-color="'+light+'" stop-opacity="0"/></radialGradient></defs><rect width="480" height="720" fill="url(#g)"/><circle cx="330" cy="210" r="230" fill="url(#shine)"/><path d="M-70 160 L550 70 M-50 250 L520 165 M-50 335 L520 250" stroke="#ffffff" stroke-opacity=".1" stroke-width="2"/><circle cx="280" cy="237" r="120" fill="#ffffff" fill-opacity=".06" stroke="#ffffff" stroke-opacity=".25" stroke-width="2"/><path d="M255 175 L345 237 L255 299Z" fill="#ffffff" fill-opacity=".35"/><rect x="0" y="370" width="480" height="350" fill="#050d1b" fill-opacity=".58"/><text x="32" y="62" font-family="Arial,Helvetica,sans-serif" font-size="27" font-weight="900" letter-spacing="2" fill="#ffffff">NOVA<tspan fill="'+light+'">PLAY</tspan></text>'+body+'<text x="32" y="683" font-family="Arial,Helvetica,sans-serif" font-size="17" font-weight="700" letter-spacing="2" fill="#d9ecff">CATÁLOGO DE FILMES</text></svg>';
+ const svg='<svg xmlns="http://www.w3.org/2000/svg" width="480" height="720" viewBox="0 0 480 720" role="img" aria-label="'+esc(title)+'"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop stop-color="'+a+'"/><stop offset=".75" stop-color="'+b+'"/><stop offset="1" stop-color="'+a+'"/></linearGradient><radialGradient id="shine"><stop stop-color="'+light+'" stop-opacity=".6"/><stop offset="1" stop-color="'+light+'" stop-opacity="0"/></radialGradient></defs><rect width="480" height="720" fill="url(#g)"/><circle cx="330" cy="210" r="230" fill="url(#shine)"/><path d="M-70 160 L550 70 M-50 250 L520 165 M-50 335 L520 250" stroke="#ffffff" stroke-opacity=".1" stroke-width="2"/><circle cx="280" cy="237" r="120" fill="#ffffff" fill-opacity=".06" stroke="#ffffff" stroke-opacity=".25" stroke-width="2"/><path d="M255 175 L345 237 L255 299Z" fill="#ffffff" fill-opacity=".35"/><rect x="0" y="370" width="480" height="350" fill="#050d1b" fill-opacity=".58"/><text x="32" y="62" font-family="Arial,Helvetica,sans-serif" font-size="27" font-weight="900" letter-spacing="2" fill="#ffffff">N<tspan fill="'+light+'">PLAY</tspan></text>'+body+'<text x="32" y="683" font-family="Arial,Helvetica,sans-serif" font-size="17" font-weight="700" letter-spacing="2" fill="#d9ecff">CATÁLOGO DE FILMES</text></svg>';
  return "data:image/svg+xml;charset=UTF-8,"+encodeURIComponent(svg);
 }
 function driveThumbnail(id){
@@ -98,7 +98,12 @@ const originalSceneCovers=Object.freeze({
  "a dama e o vagabundo":"a_dama_e_o_vagabundo.png",
  "a fuga das galinhas":"a_fuga_das_galinhas.png",
  "a lenda dos guardioes":"a_lenda_dos_guardioes.png",
- "a nova onda do imperador":"a_nova_onda_do_imperador.png"
+ "a nova onda do imperador":"a_nova_onda_do_imperador.png",
+ "a origem dos guardioes":"a_origem_dos_guardioes.svg",
+ "a pequena sereia":"fantasia_oceano_20261013.svg",
+ "a princesa e o sapo":"fantasia_pantano_20261013.svg",
+ "carros":"carros.svg",
+ "toy story":"brinquedos_imaginacao_20261013.svg"
 });
 /* Capas de animações publicadas e conferidas, preferidas à miniatura do vídeo. */
 function operationCover(title,admin){
@@ -113,7 +118,7 @@ function approvedAnimePoster(title,admin,genre,knownOnly){
  const premium=premiumMovieCovers[key];
  if(premium)return(admin?"../":"./")+"assets/featured-covers/"+premium;
  const scene=originalSceneCovers[key];
- if(scene)return(admin?"../":"./")+"assets/scene-covers/"+scene+"?c=0.35.3";
+ if(scene)return(admin?"../":"./")+"assets/scene-covers/"+scene+"?c=0.39.1-covers2";
  const operation=operationAnimeCovers[key];
  if(operation)return(admin?"../":"./")+"assets/operation-covers/"+operation+"?c=0.34.3";
  const featured=featuredMovieCovers[key];
@@ -183,7 +188,7 @@ function genrePoster(title,genre){
   +'<g fill="'+glow+'" fill-opacity=".15" stroke="'+glow+'" stroke-width="6" stroke-linejoin="round" stroke-linecap="round" opacity=".9">'+symbol+'</g>'
   +'<path d="M0 423L480 378V720H0Z" fill="url(#bottom)"/>'
   +'<path d="M32 467H108" stroke="'+glow+'" stroke-width="5" stroke-linecap="round"/>'
-  +'<text x="32" y="52" fill="#fff" font-size="23" font-family="Arial,sans-serif" font-weight="900" letter-spacing="1.7">NOVA<tspan fill="'+glow+'">PLAY</tspan></text>'
+  +'<text x="32" y="52" fill="#fff" font-size="23" font-family="Arial,sans-serif" font-weight="900" letter-spacing="1.7">N<tspan fill="'+glow+'">PLAY</tspan></text>'
   +'<text x="32" y="494" fill="'+glow+'" font-size="13" font-weight="800" font-family="Arial,sans-serif" letter-spacing="2">'+esc(label)+'</text>'
   +'<g font-family="Arial,Helvetica,sans-serif">'+titleSvg+'</g>'
   +'<path d="M32 655H448" stroke="#fff" stroke-opacity=".21"/><text x="240" y="681" text-anchor="middle" fill="#c8d5e9" font-size="13" font-family="Arial,sans-serif" letter-spacing="3">FILMES • SÉRIES • ANIMAÇÃO</text></svg>';
