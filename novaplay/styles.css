@@ -386,23 +386,44 @@ svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.75;strok
 }
 
 
-/* NovaPlay v0.24.1 — capas sempre preenchem os cartões (sem letterbox).
-   A posição absoluta evita que a altura percentual do <img> dependa
-   da altura intrínseca do arquivo (miniaturas horizontais/verticais). */
-.poster-card .cover{width:100%;aspect-ratio:2/3;isolation:isolate}
+/* NovaPlay V 0.27.0 — capas sempre inteiras nas grades horizontais e verticais. */
+.poster-card .cover{
+  position:relative;
+  display:block;
+  width:100%;
+  height:auto;
+  aspect-ratio:2/3;
+  overflow:hidden;
+  isolation:isolate;
+  background:#14213a;
+}
 .poster-card .cover > img{
   position:absolute;
   inset:0;
+  display:block;
   width:100%;
   height:100%;
+  min-width:100%;
+  min-height:100%;
   max-width:none;
   max-height:none;
-  display:block;
   object-fit:cover;
   object-position:center;
+  image-rendering:auto;
+}
+/* Miniaturas de vídeos, diferentemente de cartazes, podem conter barras
+   pretas dentro da própria imagem. O zoom só afeta esses fotogramas. */
+.poster-card:not(.channel-card) .cover.cover-drive > img{
+  transform:scale(1.23);
+  transform-origin:center;
+}
+.poster-card:not(.channel-card) .cover.cover-youtube > img{
+  transform:scale(1.08);
+  transform-origin:center;
 }
 .poster-card.channel-card .cover{aspect-ratio:16/9}
-
+.category-grid .poster-card .cover{width:100%;aspect-ratio:2/3}
+.category-grid .channel-card .cover{aspect-ratio:16/9}
 
 /* NovaPlay v0.25.0 - problema no vídeo: sobreposição discreta no player oficial */
 .player-issue-trigger{border:1px solid rgba(255,197,119,.55);background:rgba(18,27,43,.89);color:#ffe7ba;font-weight:750;font-size:11px;border-radius:22px;padding:8px 11px;cursor:pointer;margin-left:auto;flex:none;z-index:25}
