@@ -37,7 +37,7 @@ function show(id){
 }
 function disable(submitted){
  busy=submitted;
- ["submit-upload","refresh-list","cancel-edit","video-file","poster-file","youtube-url","youtube-poster-file","source-type","drive-url"].forEach(id=>$(id).disabled=submitted);
+ ["submit-upload","refresh-list","cancel-edit","video-file","poster-file","youtube-url","youtube-poster-file","source-type","drive-url","licensed-url","licensed-rights"].forEach(id=>$(id).disabled=submitted);
  $("submit-upload").textContent=submitted?"Enviando...":"Enviar para a NovaPlay";
 }
 function errorText(err){
@@ -100,18 +100,31 @@ function parseGoogleDriveLink(raw){
  if(rawResourceKey && !/^[A-Za-z0-9_-]{8,256}$/.test(rawResourceKey))return null;
  return {id,resourceKey:rawResourceKey||null};
 }
+function parseLicensedStreamUrl(raw){
+ const str=String(raw||"").trim();
+ if(str.length<18||str.length>2048)return null;
+ let url;try{url=new URL(str)}catch(e){return null}
+ if(url.protocol!=="https:"||url.username||url.password||url.hash)return null;
+ const host=url.hostname.toLowerCase();
+ if(!/^[a-z0-9][a-z0-9.-]+\.[a-z]{2,}$/.test(host)||/(^|\.)netflix\.com$|(^|\.)nflxvideo\.net$|(^|\.)nflximg\.net$/.test(host))return null;
+ if(!/\.(mp4|webm|ogv|m3u8)$/i.test(url.pathname))return null;
+ return url.href;
+}
 function sourceMode(){return $("source-type").value}
 function setSourceType(){
  const mode=sourceMode();
- const youtube=mode==="youtube",drive=mode==="google-drive",external=youtube||drive;
+ const youtube=mode==="youtube",drive=mode==="google-drive",licensed=mode==="licensed",external=youtube||drive||licensed;
  $("youtube-fields").hidden=!youtube;
  $("drive-fields").hidden=!drive;
+ $("licensed-fields").hidden=!licensed;
+ $("licensed-url").required=licensed;
  $("upload-files").hidden=external;
  $("youtube-cover-section").hidden=!external;
  $("youtube-url").required=youtube;
  $("drive-url").required=drive;
- $("external-cover-tip").textContent=drive
-  ?"Se não escolher capa, usaremos uma arte padrão da NovaPlay. JPG, PNG ou WebP, até 5 MB."
+ $("external-cover-tip").textContent=licensed
+  ?"Adicione uma capa vertical para o filme licenciado (JPG, PNG ou WebP, até 5 MB)."
+  :drive?"Se não escolher capa, usaremos uma arte padrão da NovaPlay. JPG, PNG ou WebP, até 5 MB."
   :"Se não escolher capa, usamos a miniatura do YouTube. JPG, PNG ou WebP, até 5 MB.";
  $("submit-upload").textContent=busy?"Salvando...":editing?.catalog_only?"Salvar e liberar para assistir":editing?"Salvar alterações":external?"Cadastrar vídeo pelo link":"Enviar para a NovaPlay";
 }
@@ -247,12 +260,12 @@ function normalizeFeaturedSearch(value){
 }
 function eligibleFeatured(){
  const films=items.filter(x=>x.kind==="movie"&&x.is_published&&!x.catalog_only
-  &&(x.video_path||x.google_drive_id||x.youtube_id))
+  &&(x.video_path||x.google_drive_id||x.youtube_id||x.licensed_stream_url))
   .map(x=>({id:"upload-"+x.id,title:x.title,record:x,type:isFeaturedSeries(x)?"series":"movie"}));
  const groups=new Map();
  for(const row of items){
   if(row.kind!=="episode"||!row.is_published||row.catalog_only||!row.series_title
-   ||!(row.video_path||row.google_drive_id||row.youtube_id))continue;
+   ||!(row.video_path||row.google_drive_id||row.youtube_id||row.licensed_stream_url))continue;
   const key=normalizeFeaturedSearch(row.series_title);
   if(!groups.has(key))groups.set(key,[]);
   groups.get(key).push(row);
@@ -454,12 +467,12 @@ function renderPlaybackIssues(){
   subtitle.textContent=issue.report_count+" aviso(s) · Último: "+new Date(issue.last_reported_at).toLocaleString("pt-BR");
   info.append(title,subtitle);
   const controls=document.createElement("div");controls.className="issue-controls";
-  if(movie?.google_drive_id||movie?.youtube_id){
+  if(movie?.google_drive_id||movie?.youtube_id||movie?.licensed_stream_url){
    const open=document.createElement("a");open.className="outline compact";
    open.textContent="Testar link ↗";open.target="_blank";open.rel="noopener noreferrer";
-   open.href=movie.google_drive_id
+   open.href=movie.licensed_stream_url|| (movie.google_drive_id
     ? "https://drive.google.com/file/d/"+encodeURIComponent(movie.google_drive_id)+"/view"+(movie.google_drive_resource_key?"?resourcekey="+encodeURIComponent(movie.google_drive_resource_key):"")
-    : "https://www.youtube.com/watch?v="+encodeURIComponent(movie.youtube_id);
+    : "https://www.youtube.com/watch?v="+encodeURIComponent(movie.youtube_id));
    controls.append(open);
   }
   if(movie){
@@ -490,7 +503,7 @@ function renderPlaybackIssues(){
 async function loadLibrary(){
  // Ler todas as páginas: o catálogo importado pode ter centenas de rascunhos.
  const gathered=[];
- const select="id,title,description,kind,series_title,episode_number,genre,production_year,video_path,youtube_id,google_drive_id,google_drive_resource_key,poster_path,is_published,rights_reviewed,rights_reviewed_at,catalog_only,review_queue_id,quality_score,quality_score_source,quality_score_note,quality_scored_at,file_size_bytes,mime_type,created_at";
+ const select="id,title,description,kind,series_title,episode_number,genre,production_year,video_path,youtube_id,google_drive_id,google_drive_resource_key,licensed_stream_url,licensed_rights_confirmed,poster_path,is_published,rights_reviewed,rights_reviewed_at,catalog_only,review_queue_id,quality_score,quality_score_source,quality_score_note,quality_scored_at,file_size_bytes,mime_type,created_at";
  for(let offset=0;offset<5000;offset+=500){
   const {data,error}=await client.from("novaplay_library").select(select).order("created_at",{ascending:false}).range(offset,offset+499);
   if(error){status("upload-message","Não foi possível ler a biblioteca: "+errorText(error),true);return}
@@ -553,6 +566,7 @@ function renderLibrary(){
  const shown=items.filter(x=>{
   if(!(x.title+" "+(x.series_title||"")).toLocaleLowerCase("pt-BR").includes(filter))return false;
   if(statusFilter==="imported"&&x.genre!=="Importado - revisão")return false;
+  if(statusFilter==="licensed"&&!x.licensed_stream_url)return false;
   if(statusFilter==="catalog_only"&&!x.catalog_only)return false;
   if(statusFilter==="has_video"&&(x.catalog_only||!x.is_published))return false;
   if(statusFilter==="draft"&&x.is_published)return false;
@@ -571,7 +585,7 @@ function renderLibrary(){
  shown.slice(libraryPage*LIBRARY_PAGE_SIZE,(libraryPage+1)*LIBRARY_PAGE_SIZE).forEach(row=>{
   const item=document.createElement("article");item.className="movie-item";
   const poster=window.NovaPlayCover?.approvedAnimePoster?.(row.title,true)||(row.poster_path?client.storage.from(POSTER_BUCKET).getPublicUrl(row.poster_path).data.publicUrl:(row.youtube_id?"https://i.ytimg.com/vi/"+encodeURIComponent(row.youtube_id)+"/hqdefault.jpg":row.google_drive_id?(window.NovaPlayCover?.driveThumbnail(row.google_drive_id)||window.NovaPlayCover?.titleCard(row.title)):(window.NovaPlayCover?.titleCard(row.title)||"../assets/posters/autoral.svg")));
-  const source=row.catalog_only?"Aguardando vídeo autorizado":row.youtube_id?"YouTube · Link":row.google_drive_id?"Google Drive · Link":((row.file_size_bytes||0)/(1024*1024)).toFixed(1)+" MB";
+  const source=row.catalog_only?"Aguardando vídeo autorizado":row.licensed_stream_url?"Licenciado · Streaming direto":row.youtube_id?"YouTube · Link":row.google_drive_id?"Google Drive · Link":((row.file_size_bytes||0)/(1024*1024)).toFixed(1)+" MB";
   const engagement=activityCounts.get(row.id)||{detail:0,attempt:0};
   const metricBadge='<small>Ficha: '+engagement.detail+' · Tentativas de assistir: '+engagement.attempt+' (30 dias)</small>';
   const review=row.genre==="Importado - revisão";
@@ -622,9 +636,11 @@ function beginEdit(row){
  $("series-name").value=row.series_title||"";$("episode-number").value=row.episode_number||"";
  $("genre").value=row.genre;$("description").value=row.description||"";
  $("publish").checked=releasing?true:row.is_published;
- $("source-type").value=row.google_drive_id?"google-drive":row.youtube_id?"youtube":releasing?"google-drive":"upload";
+ $("source-type").value=row.licensed_stream_url?"licensed":row.google_drive_id?"google-drive":row.youtube_id?"youtube":releasing?"google-drive":"upload";
  $("youtube-url").value=row.youtube_id?"https://youtu.be/"+row.youtube_id:"";
  $("drive-url").value=row.google_drive_id?"https://drive.google.com/file/d/"+row.google_drive_id+"/view"+(row.google_drive_resource_key?"?resourcekey="+encodeURIComponent(row.google_drive_resource_key):""):"";
+ $("licensed-url").value=row.licensed_stream_url||"";
+ $("licensed-rights").checked=!!row.licensed_rights_confirmed;
  setSourceType();
  $("video-file").value="";$("poster-file").value="";$("youtube-poster-file").value="";
  $("video-file-label").textContent=releasing?"Selecionar vídeo autorizado":"Trocar vídeo (opcional)";
@@ -636,7 +652,7 @@ function beginEdit(row){
 function resetForm(){
  editing=null;$("upload-form").reset();$("form-title").textContent="Adicionar filme ou episódio";
  $("cancel-edit").hidden=true;$("series-fields").hidden=true;$("series-name").required=false;$("episode-number").required=false;
- $("source-type").value="upload";$("youtube-url").value="";$("drive-url").value="";$("youtube-poster-file").value="";setSourceType();
+ $("source-type").value="upload";$("youtube-url").value="";$("drive-url").value="";$("licensed-url").value="";$("licensed-rights").checked=false;$("youtube-poster-file").value="";setSourceType();
  $("video-file-label").textContent="Selecionar vídeo do telefone";$("poster-file-label").textContent="Escolher capa (opcional)";
  $("submit-upload").textContent="Enviar para a NovaPlay";$("progress-box").hidden=true;$("publish").checked=false;
 }
@@ -770,11 +786,14 @@ async function removeItem(row){
 async function sendForm(e){
  e.preventDefault();if(busy||!sessionUser)return;
  const mode=sourceMode();
- const youtube=mode==="youtube",drive=mode==="google-drive",external=youtube||drive;
+ const youtube=mode==="youtube",drive=mode==="google-drive",licensed=mode==="licensed",external=youtube||drive||licensed;
  const file=$("video-file").files[0]||null;
  const cover=(external?$("youtube-poster-file"):$("poster-file")).files[0]||null;
  const youtubeId=youtube?extractYoutubeId($("youtube-url").value):null;
  const driveFile=drive?parseGoogleDriveLink($("drive-url").value):null;
+ const licensedUrl=licensed?parseLicensedStreamUrl($("licensed-url").value):null;
+ if(licensed&&!licensedUrl){status("upload-message","Informe um link HTTPS direto autorizado terminando em .mp4, .webm, .ogv ou .m3u8. Endereços de filmes na Netflix não funcionam aqui.",true);return}
+ if(licensed&&$("publish").checked&&!$("licensed-rights").checked){status("upload-message","Para publicar este filme, confirme que já possui licença para exibição pública na NovaPlay. Enquanto aguarda, salve como rascunho.",true);return}
  if(youtube&&!youtubeId){status("upload-message","Cole um link válido do YouTube, como https://youtu.be/ID ou youtube.com/watch?v=ID.",true);return}
  if(drive&&!driveFile){status("upload-message","Cole um link de arquivo do Google Drive, como https://drive.google.com/file/d/ID/view. Links de pastas ou pesquisa Google não funcionam.",true);return}
  if(!external&&!file&&(!editing||!editing.video_path)){
@@ -796,8 +815,11 @@ async function sendForm(e){
   production_year:$("year").value?Number($("year").value):null,
   genre:$("genre").value.trim()||"Autoral",
   is_published:$("publish").checked,
-  catalog_only:false
+  catalog_only:false,
+  licensed_stream_url:licensed?licensedUrl:null,
+  licensed_rights_confirmed:licensed&&$("licensed-rights").checked
  };
+ if(licensed)payload.rights_reviewed=!!payload.licensed_rights_confirmed;
  if(payload.title.length<2){status("upload-message","Informe um título de pelo menos 2 caracteres.",true);return}
  if(kind==="episode"&&(!payload.series_title||!payload.episode_number)){status("upload-message","Informe o nome da série e o número do episódio.",true);return}
  disable(true);status("upload-message",external?"Preparando vídeo pelo link...":"Preparando envio do vídeo...");
@@ -819,6 +841,7 @@ async function sendForm(e){
       youtube_id:youtube?youtubeId:null,
       google_drive_id:drive?driveFile.id:null,
       google_drive_resource_key:drive?driveFile.resourceKey:null,
+      licensed_stream_url:licensed?licensedUrl:null,
       video_path:null,mime_type:null,file_size_bytes:null,duration_seconds:null
     });
   }else{
@@ -884,6 +907,16 @@ function init(){
  $("pending-exit").onclick=async()=>{await client.auth.signOut();show("login-view")};
  $("logout").onclick=async()=>{if(busy)return;await client.auth.signOut();sessionUser=null;show("login-view")};
  $("upload-form").onsubmit=sendForm;$("kind").onchange=setKind;$("source-type").onchange=setSourceType;setSourceType();
+ $("licensed-new").onclick=()=>{
+  resetForm();
+  $("kind").value="movie";setKind();
+  $("source-type").value="licensed";setSourceType();
+  $("publish").checked=false;
+  $("form-title").textContent="Adicionar filme licenciado";
+  status("upload-message","Cole o link de vídeo fornecido pelo licenciador. Salve como rascunho até ter os direitos confirmados.",false,true);
+  document.querySelector(".editor").scrollIntoView({behavior:"smooth",block:"start"});
+  $("title").focus();
+ };
  $("cancel-edit").onclick=()=>{resetForm();status("upload-message","Edição cancelada.")};
  $("bulk-mark-reviewed").onclick=bulkMarkReviewed;
  $("bulk-publish").onclick=bulkPublishReviewed;

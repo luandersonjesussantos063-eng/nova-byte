@@ -142,3 +142,13 @@
 .issue-controls{display:flex;gap:6px;flex-wrap:wrap}
 .issue-controls a,.issue-controls button{display:inline-flex;align-items:center;font-size:11px;padding:8px 9px}
 @media(max-width:700px){.issue-item{align-items:stretch;flex-direction:column}.issue-controls{justify-content:flex-start}.issue-manager{padding:12px}}
+
+
+/* NovaPlay v0.26.0: legal licensed-stream intake */
+.licensed-manager{margin:0 0 20px;padding:20px 22px;border:1px solid #3b689c;background:linear-gradient(120deg,#152c50,#0d1c33);border-radius:14px}
+.licensed-manager .section-title{align-items:center}
+.licensed-manager .section-title h2{font-size:19px;margin:5px 0 0}
+.licensed-manager>p{font-size:12px;line-height:1.65;margin:10px 0 0}
+.licensed-manager code{overflow-wrap:anywhere;color:#b8d4fb;background:#0b1931;border-radius:5px;padding:2px 4px}
+#licensed-fields .publish-check{margin:12px 0}
+@media(max-width:680px){.licensed-manager{padding:14px}.licensed-manager .section-title{flex-direction:column;align-items:stretch;gap:12px}.licensed-manager .section-title button{width:100%}}

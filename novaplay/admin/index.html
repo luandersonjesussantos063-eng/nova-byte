@@ -5,10 +5,10 @@
 <meta name="theme-color" content="#080e1b"><meta name="robots" content="noindex,nofollow">
 <title>NovaPlay | Painel de conteúdo</title>
 <link rel="icon" href="../assets/icon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="./admin.css?v=0.25.0">
+<link rel="stylesheet" href="./admin.css?v=0.27.0">
 </head>
 <body>
-<header class="top"><a class="brand" href="../"><span class="mark">▶</span> Nova<span>Play</span></a><div class="top-right"><strong>Painel administrativo · v0.25.0</strong><button id="logout" class="outline" hidden>Sair</button></div></header>
+<header class="top"><a class="brand" href="../"><span class="mark">▶</span> Nova<span>Play</span></a><div class="top-right"><strong>Painel administrativo · v0.27.0</strong><button id="logout" class="outline" hidden>Sair</button></div></header>
 <main class="container">
   <section id="loading" class="panel intro"><div class="spin"></div><p>Preparando seu painel...</p></section>
   <section id="login-view" class="panel login" hidden>
@@ -41,6 +41,14 @@
     </div>
     <p id="source-summary" class="muted" role="status" style="margin:0 0 15px">Conferindo fontes de vídeo...</p>
     <div class="panel" style="margin:16px 0 24px;padding:18px 22px;border-left:3px solid #f3b45a"><strong>Importações do Google Drive</strong><p class="muted" style="margin:8px 0 0">Títulos importados de listas externas ficam como rascunho privado. Confira a autorização de exibição pública e teste o link antes de publicar. Use a busca abaixo para localizar qualquer filme e a paginação para revisar o acervo.</p></div>
+    <section class="panel licensed-manager" aria-labelledby="licensed-heading">
+      <div class="section-title">
+        <div><span class="section-label">CATÁLOGO LICENCIADO</span><h2 id="licensed-heading">Adicionar filmes licenciados por link</h2></div>
+        <button type="button" id="licensed-new" class="primary">+ Novo filme licenciado</button>
+      </div>
+      <p class="muted">Prepare cada filme separadamente com título, sinopse, capa e URL de vídeo fornecida pelo distribuidor. Salve como <strong>rascunho</strong> enquanto os direitos estiverem pendentes. Quando tiver autorização para exibição pública na NovaPlay, confirme a licença e publique.</p>
+      <p class="muted"><strong>Importante:</strong> links como <code>netflix.com/watch/...</code> não reproduzem filmes fora da Netflix. A fonte precisa ser um endereço direto autorizado de vídeo MP4/WebM ou streaming HLS (.m3u8), sem DRM e com permissão de reprodução em outro site.</p>
+    </section>
     <section class="panel issue-manager" aria-labelledby="issue-heading">
       <div class="section-title">
         <div><span class="section-label">SAÚDE DOS LINKS</span><h2 id="issue-heading">Vídeos com problemas relatados <span id="issue-total">0</span></h2></div>
@@ -121,6 +129,7 @@
             <option value="upload">Enviar arquivo do celular (até 50 MB)</option>
             <option value="youtube">Filme grande pelo YouTube (colar link)</option>
             <option value="google-drive">Vídeo do Google Drive (colar link)</option>
+            <option value="licensed">Filme licenciado — link MP4 ou HLS (.m3u8)</option>
           </select>
         </div>
         <div id="youtube-fields" class="youtube-fields" hidden>
@@ -151,6 +160,17 @@
             </ol>
             <p>O vídeo abrirá dentro da NovaPlay pelo visualizador oficial do Google Drive. Pode exigir cookies de terceiros, login ou parar por limite de reproduções. O Drive não é uma hospedagem de streaming profissional.</p>
           </div>
+        </div>
+        <div id="licensed-fields" class="youtube-fields" hidden>
+          <label for="licensed-url">Link direto autorizado do filme <span class="required">*</span>
+            <input id="licensed-url" type="url" inputmode="url" maxlength="2048" placeholder="https://cdn.distribuidor.com/filmes/titulo/master.m3u8" autocomplete="off">
+          </label>
+          <div class="youtube-howto">
+            <strong>Como funciona a inclusão de filmes licenciados:</strong>
+            <p>Solicite ao detentor dos direitos um link <b>HTTPS direto</b> para arquivo <b>.mp4, .webm, .ogv</b> ou transmissão <b>.m3u8</b> compatível com o player NovaPlay. O link deve permitir execução pública no seu domínio, sem autenticação privada, DRM ou bloqueio de CORS.</p>
+            <p>O link de visualização de um filme na Netflix, mesmo com uma assinatura, <b>não serve</b>. Para conteúdo originalmente da Netflix, é necessário um acordo de distribuição específico e uma fonte aprovada pelo licenciador.</p>
+          </div>
+          <label class="publish-check"><input id="licensed-rights" type="checkbox"><span><strong>Confirmo que possuo autorização para exibir este título ao público na NovaPlay</strong><small>Somente marque após obter o contrato ou documento de licenciamento. É obrigatório para publicar; sem marcar, o filme fica apenas como rascunho.</small></span></label>
         </div>
         <div class="drop-grid" id="upload-files">
           <label class="file-box" for="video-file"><span class="file-symbol">▶</span><strong id="video-file-label">Selecionar vídeo do telefone</strong><small>MP4, WebM ou OGV · até 50 MB neste plano</small><input id="video-file" type="file" accept=".mp4,.webm,.ogv,video/mp4,video/webm,video/ogg"></label>
@@ -209,6 +229,7 @@
           <option value="draft">Aguardando publicação (rascunhos)</option>
           <option value="reviewed">Conferidos e prontos para liberar</option>
           <option value="published">Publicados</option>
+          <option value="licensed">Filmes com link licenciado</option>
         </select>
       </label>
       <div id="library-list" class="library-list"><p class="muted">Nenhum vídeo enviado ainda.</p></div>
@@ -218,7 +239,7 @@
 </main>
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.58.0/dist/umd/supabase.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/tus-js-client@4.3.1/dist/tus.min.js"></script>
-<script src="../assets/cover.js?v=0.27.2"></script>
-<script defer src="./admin.js?v=0.25.0"></script>
+<script src="../assets/cover.js?v=0.24.0"></script>
+<script defer src="./admin.js?v=0.27.0"></script>
 </body>
 </html>

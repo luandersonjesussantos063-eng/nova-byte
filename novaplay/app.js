@@ -43,7 +43,7 @@ function posterUrl(path,youtubeId,title,driveId){
  const approved=window.NovaPlayCover?.approvedAnimePoster?.(title,false);
  if(approved)return approved;
  if(path&&remoteDb)return remoteDb.storage.from("novaplay-posters").getPublicUrl(path).data.publicUrl;
- if(youtubeId&&/^[A-Za-z0-9_-]{11}$/.test(youtubeId))return"https://i.ytimg.com/vi/"+youtubeId+"/mqdefault.jpg";
+ if(youtubeId&&/^[A-Za-z0-9_-]{11}$/.test(youtubeId))return"https://i.ytimg.com/vi/"+youtubeId+"/hqdefault.jpg";
  if(driveId)return window.NovaPlayCover?.driveThumbnail(driveId)||window.NovaPlayCover?.titleCard(title)||"./assets/posters/autoral.svg";
  return window.NovaPlayCover?.titleCard(title)||"./assets/posters/autoral.svg";
 }
@@ -58,7 +58,7 @@ async function loadUploadedCatalog(){
   // Paginar resultados, inclusive quando o catálogo público ultrapassar 150 títulos.
   for(let offset=0;offset<5000;offset+=500){
    const {data:page,error}=await remoteDb.from("novaplay_library")
-    .select("id,title,description,kind,series_title,episode_number,genre,production_year,video_path,youtube_id,google_drive_id,google_drive_resource_key,poster_path,duration_seconds,created_at,catalog_only")
+    .select("id,title,description,kind,series_title,episode_number,genre,production_year,video_path,youtube_id,google_drive_id,google_drive_resource_key,licensed_stream_url,poster_path,duration_seconds,created_at,catalog_only")
     .eq("is_published",true).order("created_at",{ascending:false}).range(offset,offset+499);
    if(error){console.warn("NovaPlay: catálogo remoto indisponível.",error.message);break}
    data.push(...(page||[]));
@@ -75,7 +75,7 @@ async function loadUploadedCatalog(){
    if(record.kind==="movie"){
     const film={id:"upload-"+record.id,title,kind:"film",category:record.genre||"Autoral",description:desc,
       year:record.production_year,duration:record.catalog_only?"Em breve":durationText(record.duration_seconds),cover,backdrop:cover,catalogOnly:!!record.catalog_only,
-      mode:record.catalog_only?"catalog-only":record.google_drive_id?"google-drive":record.youtube_id?"youtube":"private",video_path:record.video_path,youtube_id:record.youtube_id,google_drive_id:record.google_drive_id,google_drive_resource_key:record.google_drive_resource_key,src:null,sourcePage:null,uploaded:true,live:false};
+      mode:record.catalog_only?"catalog-only":record.licensed_stream_url?"licensed":record.google_drive_id?"google-drive":record.youtube_id?"youtube":"private",video_path:record.video_path,youtube_id:record.youtube_id,google_drive_id:record.google_drive_id,google_drive_resource_key:record.google_drive_resource_key,licensed_stream_url:record.licensed_stream_url,src:null,sourcePage:null,uploaded:true,live:false};
     db.films.push(film);all.push(film);map.set(film.id,film);additions.push(film);
    }else if(record.kind==="episode"&&record.series_title){
     const key=record.series_title.trim().toLocaleLowerCase("pt-BR");
@@ -90,7 +90,7 @@ async function loadUploadedCatalog(){
     category:first.genre||"Autoral",description:first.desc,year:first.production_year,cover:first.cover,
     backdrop:first.cover,uploaded:true,live:false,
     episodes:episodes.map(rec=>({id:"upload-"+rec.id,label:"Episódio "+rec.episode_number,
-      title:rec.title,duration:durationText(rec.duration_seconds),video_path:rec.video_path,youtube_id:rec.youtube_id,google_drive_id:rec.google_drive_id,google_drive_resource_key:rec.google_drive_resource_key,src:null,sourcePage:null,mode:rec.google_drive_id?"google-drive":rec.youtube_id?"youtube":"private"}))};
+      title:rec.title,duration:durationText(rec.duration_seconds),video_path:rec.video_path,youtube_id:rec.youtube_id,google_drive_id:rec.google_drive_id,google_drive_resource_key:rec.google_drive_resource_key,licensed_stream_url:rec.licensed_stream_url,src:null,sourcePage:null,mode:rec.licensed_stream_url?"licensed":rec.google_drive_id?"google-drive":rec.youtube_id?"youtube":"private"}))};
    db.series.push(show);all.push(show);map.set(show.id,show);additions.push(show);
    show.episodes.forEach(ep=>eps.set(ep.id,{show,ep}));
   }
@@ -119,12 +119,10 @@ function continued(){
 function byId(id){return map.get(id)||null}
 function card(item,channel=false){
  const isEpisode=item.kind==="episode";const cover=item.cover||"./assets/icon.svg";
- // Fotogramas de vídeo requerem recorte maior que um pôster vertical de verdade.
- const coverKind=/^https:\/\/drive\.google\.com\/thumbnail\?/i.test(cover)?" cover-drive":/^https:\/\/i\.ytimg\.com\/vi\//i.test(cover)?" cover-youtube":"";
  const el=document.createElement("article");el.className="poster-card"+(channel?" channel-card":"");
  el.dataset.id=item.id;
  const pct=item.progress?Math.min(100,Math.max(0,Math.round(item.progress.position/item.progress.duration*100))):0;
- el.innerHTML='<div class="cover'+coverKind+'"><img loading="lazy" decoding="async" src="'+escapeText(cover)+'" alt="Capa ilustrativa: '+escapeText(item.title)+'">'
+ el.innerHTML='<div class="cover"><img loading="lazy" decoding="async" src="'+escapeText(cover)+'" alt="Capa ilustrativa: '+escapeText(item.title)+'">'
  +(channel?'<span class="onair">AO VIVO</span>':item.catalogOnly?'<span class="catalog-coming-soon">EM BREVE</span>':'')
  +'<button type="button" class="cover-btn" aria-label="'+escapeText(isEpisode?"Continuar "+item.title:"Ver detalhes de "+item.title)+'"></button>'
  +(item.catalogOnly?'':'<button type="button" class="card-direct-play" aria-label="Assistir '+escapeText(item.title)+'">'+icon("play")+'</button>')
@@ -132,18 +130,11 @@ function card(item,channel=false){
  +'<h3>'+escapeText(item.title)+'</h3><p>'+escapeText(isEpisode?(Math.max(1,Math.round((item.progress.duration-item.progress.position)/60))+" min restantes"):(item.kind==="tv"?"TV aberta • Assista grátis":(item.catalogOnly?"Em breve":(item.year||"Clássico"))+" • "+(item.category||"Acervo clássico")))+'</p>';
  el.querySelector(".cover-btn").addEventListener("click",()=>isEpisode?play(item.show,item.episode):openDetails(item));
  el.querySelector(".card-direct-play")?.addEventListener("click",e=>{e.stopPropagation();if(isEpisode)play(item.show,item.episode);else startWatching(item)});
- const image=el.querySelector("img");
- function showPosterFallback(){
-  if(image.dataset.fallbackShown)return;
-  image.dataset.fallbackShown="1";
-  image.parentElement.classList.remove("cover-drive","cover-youtube");
-  image.src=window.NovaPlayCover?.titleCard(item.title)||"./assets/posters/autoral.svg";
- }
- image.addEventListener("error",showPosterFallback);
- image.addEventListener("load",()=>{
-  if(image.naturalWidth<48||image.naturalHeight<48)showPosterFallback();
+ el.querySelector("img").addEventListener("error",function(){
+  if(this.dataset.fallbackShown)return;
+  this.dataset.fallbackShown="1";
+  this.src=window.NovaPlayCover?.titleCard(item.title)||"./assets/posters/autoral.svg";
  });
- if(image.complete && image.naturalWidth===0)showPosterFallback();
  return el;
 }
 function empty(title,subtitle){const div=document.createElement("div");div.className="empty-state";const h=document.createElement("h3");h.textContent=title;const p=document.createElement("p");p.textContent=subtitle;div.append(h,p);return div}
@@ -189,6 +180,7 @@ function renderRows(){
  ["Continuar assistindo",continued(),"continuar",false],
  ["TV aberta",db.channels,"tv",true],
  ["Produções da NovaPlay",uploadedCatalog.filter(x=>!x.catalogOnly),"filmes",false],
+ ["Filmes licenciados",uploadedCatalog.filter(x=>x.mode==="licensed"&&!x.catalogOnly),"filmes",false],
  ["Filmes do YouTube",youtubeFilms(),"youtube",false],
  ["Filmes clássicos",db.films,"filmes",false],
  ["Séries clássicas",db.series,"series",false],
@@ -260,7 +252,7 @@ async function openHeroPreview(item){
   beginTimer();
  }else{
   video.hidden=false;frame.hidden=true;video.muted=false;video.volume=1;
-  let source=media.src;
+  let source=media.licensed_stream_url||media.src;
   if(media.video_path){
    if(!remoteDb){message.textContent="Serviço de vídeos indisponível";return}
    const response=await remoteDb.storage.from("novaplay-videos").createSignedUrl(media.video_path,120);
@@ -620,7 +612,7 @@ function play(item,episode){
  $("player-main")?.scrollTo?.(0,0);
  const v=$("video");v.hidden=false;
  const seq=++attempt;
- let src=media.src;
+ let src=media.licensed_stream_url||media.src;
  let hasFailed=false;
  const fail=msg=>{if(!hasFailed){hasFailed=true;playbackFailed(msg,seq)}};
  v.onerror=()=>fail("O arquivo não pôde ser reproduzido neste navegador. Tente novamente.");
@@ -748,7 +740,7 @@ document.addEventListener("keydown",e=>{
 document.addEventListener("visibilitychange",()=>{if(document.hidden){stopHeroPreview();if(!$("player-layer").hidden)$("video").pause()}});
 window.addEventListener("scroll",()=>$("app-header").classList.toggle("is-scrolled",window.scrollY>24),{passive:true});
 if("serviceWorker" in navigator&&location.protocol==="https:"){
- window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js?v=0.27.2",{updateViaCache:"none"}).catch(()=>{}));
+ window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js?v=0.26.1",{updateViaCache:"none"}).catch(()=>{}));
 }
 navigate((location.hash||"").slice(1)||"inicio");
 loadUploadedCatalog().then(loadFeatured);
