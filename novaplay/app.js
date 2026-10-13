@@ -232,6 +232,7 @@ function stopHeroPreview(){
  $("hero-preview-feedback").textContent="";
 }
 async function openHeroPreview(item){
+ window.NovaPlayHeroScenes?.stop?.();
  if(!item||item.catalogOnly){toast("Este título ainda não tem um vídeo para prévia.");return}
  stopHeroPreview();
  const seq=previewSequence;
@@ -300,6 +301,7 @@ function updateHero(index){
  $("hero-info").onclick=()=>openDetails(x);
  const dots=$("hero-dots");dots.replaceChildren();
  featured.forEach((film,i)=>{const b=document.createElement("button");b.className="hero-dot"+(i===featuredIndex?" active":"");b.setAttribute("aria-label","Destacar "+film.title);b.addEventListener("click",()=>updateHero(i));dots.append(b)});
+ window.NovaPlayHeroScenes?.show?.(x);
 }
 function youtubeFilms(){return db.films.filter(x=>!x.catalogOnly && x.mode==="youtube" && /^[A-Za-z0-9_-]{11}$/.test(x.youtube_id||""))}
 const categories={
@@ -345,6 +347,7 @@ function renderSearch(){
  else list.forEach(x=>results.append(card(x,x.kind==="tv")));
 }
 function navigate(page){
+ window.NovaPlayHeroScenes?.stop?.();
  window.NovaPlayHover?.close?.();
  stopHeroPreview();
  const genreLink=typeof page==="string"&&page.startsWith("genero:");
@@ -376,6 +379,7 @@ function startWatching(item){
  }else play(item);
 }
 function openDetails(item){
+ window.NovaPlayHeroScenes?.stop?.();
  window.NovaPlayHover?.close?.();
  stopHeroPreview();
  if(!item)return;selected=item;
@@ -593,6 +597,7 @@ function setResume(video,id,seq){
  video.onended=()=>{delete progress[id];save(progressKey,progress);if(view==="inicio")renderRows()};
 }
 function play(item,episode){
+ window.NovaPlayHeroScenes?.stop?.();
  window.NovaPlayHover?.close?.();
  stopHeroPreview();
  if(!item)return;
@@ -756,7 +761,7 @@ document.addEventListener("keydown",e=>{
 document.addEventListener("visibilitychange",()=>{if(document.hidden){stopHeroPreview();if(!$("player-layer").hidden)$("video").pause()}});
 window.addEventListener("scroll",()=>$("app-header").classList.toggle("is-scrolled",window.scrollY>24),{passive:true});
 if("serviceWorker" in navigator&&location.protocol==="https:"){
- window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js?v=0.35.3",{updateViaCache:"none"}).catch(()=>{}));
+ window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js?v=0.36.0",{updateViaCache:"none"}).catch(()=>{}));
 }
 navigate((location.hash||"").slice(1)||"inicio");
 loadUploadedCatalog().then(loadFeatured);
