@@ -1,5 +1,5 @@
 """Private NPlay magnet importer. Run only on a controlled backend server."""
-import os, time, uuid, pathlib, tempfile, logging, subprocess
+import os, time, uuid, pathlib, tempfile, logging, subprocess, argparse
 import boto3
 from dotenv import load_dotenv
 load_dotenv()
@@ -94,7 +94,24 @@ def run(job):
             try: session.pause()
             except Exception: pass
 
+def retry_failed():
+    """Requeue approved failed jobs without requiring new magnet submissions."""
+    jobs=DB.table("novaplay_magnet_imports").select("id,title,rights_confirmed,approved_for_processing,license_reference").eq("status","failed").eq("approved_for_processing",True).execute().data or []
+    count=0
+    for job in jobs:
+        if job.get("rights_confirmed") and job.get("license_reference"):
+            update(job["id"],status="pending_processor",error_message=None)
+            log.info("Requeued: %s (%s)",job.get("title"),job["id"])
+            count+=1
+    log.info("Requeued %d approved failed jobs",count)
+
 def main():
+    parser=argparse.ArgumentParser(description="NPlay magnet processor")
+    parser.add_argument("--retry-failed",action="store_true",help="Requeue approved failed jobs and exit")
+    args=parser.parse_args()
+    if args.retry_failed:
+        retry_failed()
+        return
     log.info("NPlay magnet processor started")
     while True:
         try:
