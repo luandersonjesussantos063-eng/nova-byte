@@ -92,7 +92,7 @@ const operationAnimeCovers=Object.freeze({
  "jibaku shounen hanako kun dublado":"jibaku_shounen_hanako_kun_dublado.avif",
  "3 palavrinhas completo":"3_palavrinhas_completo.avif"
 });
-function approvedAnimePoster(title,admin){
+function approvedAnimePoster(title,admin,genre){
  const key=String(title||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"")
   .toLocaleLowerCase("pt-BR").replace(/[^a-z0-9 ]+/g," ").replace(/\s+/g," ").trim();
  const premium=premiumMovieCovers[key];
@@ -104,7 +104,7 @@ function approvedAnimePoster(title,admin){
  const newer=approvedCoversV2[key];
  if(newer)return(admin?"../":"./")+"assets/approved-covers-v2/"+newer+".jpg";
  const slug=approvedAnimePosters[key];
- if(!slug)return genrePoster(title);
+ if(!slug)return genrePoster(title,genre);
  return(admin?"../":"./")+"assets/review-covers/"+slug+".png";
 }
 
