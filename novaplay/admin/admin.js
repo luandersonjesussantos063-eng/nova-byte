@@ -133,6 +133,50 @@ function setSourceType(){
   :"Se não escolher capa, usamos a miniatura do YouTube. JPG, PNG ou WebP, até 5 MB.";
  $("submit-upload").textContent=busy?"Salvando...":netflix?"Salvar referência / prévia":editing?.catalog_only?"Salvar e liberar para assistir":editing?"Salvar alterações":external?"Cadastrar vídeo pelo link":"Enviar para a NPlay";
 }
+const R2_WORKER="https://nplay-r2-api.luandersonjesussantos063.workers.dev";
+async function testR2Upload(){
+ const file=$("r2-test-file")?.files?.[0],button=$("r2-test-button");
+ if(!file){status("r2-test-status","Escolha um vídeo antes de enviar.",true);return;}
+ if(!fileKind(file,true)){status("r2-test-status","Use MP4, WebM ou OGV.",true);return;}
+ if(file.size>100*1024*1024){status("r2-test-status","Para este teste, use um vídeo de até 100 MB.",true);return;}
+ if(!sessionUser){status("r2-test-status","Entre como administrador.",true);return;}
+ button.disabled=true;
+ let uploadId=null,key=null,token=null;
+ try{
+  const {data:{session},error}=await client.auth.getSession();
+  if(error||!session?.access_token)throw Error("Sessão expirada. Entre novamente.");
+  token=session.access_token;
+  const headers={"Authorization":"Bearer "+token};
+  const send=async(route,options={})=>{
+   const response=await fetch(R2_WORKER+route,{...options,headers:{...headers,...options.headers}});
+   const payload=await response.json().catch(()=>({}));
+   if(!response.ok)throw Error(payload.error||"Erro HTTP "+response.status);
+   return payload;
+  };
+  const ext=extForMime(file).ext;
+  const filename="teste-"+crypto.randomUUID()+"."+ext;
+  status("r2-test-status","Iniciando transferência segura...");
+  const start=await send("/uploads/start",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({filename})});
+  key=start.key;uploadId=start.uploadId;
+  const chunkSize=5*1024*1024,parts=[];
+  for(let offset=0,n=1;offset<file.size;offset+=chunkSize,n++){
+   const blob=file.slice(offset,Math.min(offset+chunkSize,file.size));
+   const params=new URLSearchParams({key,uploadId,part:String(n)});
+   const part=await send("/uploads/part?"+params,{method:"PUT",headers:{"Content-Type":"application/octet-stream"},body:blob});
+   parts.push({partNumber:part.partNumber,etag:part.etag});
+   status("r2-test-status","Transferindo: "+Math.round(Math.min(100,(offset+blob.size)/file.size*100))+"%");
+  }
+  await send("/uploads/complete",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({key,uploadId,parts})});
+  uploadId=null;
+  status("r2-test-status","✓ Transferência concluída! Vídeo privado salvo no R2: "+key,false,true);
+ }catch(err){
+  status("r2-test-status","Falha no teste: "+(err?.message||String(err)),true);
+  if(key&&uploadId&&token){
+   fetch(R2_WORKER+"/uploads/abort",{method:"POST",headers:{"Authorization":"Bearer "+token,"Content-Type":"application/json"},body:JSON.stringify({key,uploadId})}).catch(()=>{});
+  }
+ }finally{button.disabled=false;}
+}
+
 function fileKind(file,video=true){
  const ext=(file.name.split(".").pop()||"").toLowerCase();
  const map=video?{mp4:"video/mp4",webm:"video/webm",ogv:"video/ogg"}:{jpg:"image/jpeg",jpeg:"image/jpeg",png:"image/png",webp:"image/webp"};
@@ -926,6 +970,7 @@ async function forgot(){
  status("auth-message",error?errorText(error):"Se a conta existir, enviaremos instruções de recuperação para esse e-mail.",!!error,!error);
 }
 function init(){
+ $("r2-test-button").onclick=testR2Upload;
  if(!window.supabase?.createClient){show("login-view");status("auth-message","Não foi possível carregar a conexão de armazenamento. Confira a internet e atualize a página.",true);return}
  client=window.supabase.createClient(API_URL,PUBLIC_KEY,{auth:{autoRefreshToken:true,persistSession:true,detectSessionInUrl:true}});
  $("login-form").onsubmit=authAction;$("signup").onclick=signUp;$("forgot").onclick=forgot;
