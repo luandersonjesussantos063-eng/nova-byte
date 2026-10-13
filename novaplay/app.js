@@ -56,7 +56,7 @@ async function loadUploadedCatalog(){
   // Paginar resultados, inclusive quando o catálogo público ultrapassar 150 títulos.
   for(let offset=0;offset<5000;offset+=500){
    const {data:page,error}=await remoteDb.from("novaplay_library")
-    .select("id,title,description,kind,series_title,episode_number,genre,production_year,video_path,youtube_id,google_drive_id,google_drive_resource_key,licensed_stream_url,poster_path,duration_seconds,created_at,catalog_only")
+    .select("id,title,description,kind,series_title,episode_number,genre,production_year,video_path,r2_object_key,youtube_id,google_drive_id,google_drive_resource_key,licensed_stream_url,poster_path,duration_seconds,created_at,catalog_only")
     .eq("is_published",true).order("created_at",{ascending:false}).range(offset,offset+499);
    if(error){console.warn("NPlay: catálogo remoto indisponível.",error.message);break}
    data.push(...(page||[]));
@@ -73,7 +73,7 @@ async function loadUploadedCatalog(){
    if(record.kind==="movie"){
     const film={id:"upload-"+record.id,title,kind:"film",category:record.genre||"Autoral",description:desc,
       year:record.production_year,duration:record.catalog_only?"Em breve":durationText(record.duration_seconds),cover,backdrop:cover,catalogOnly:!!record.catalog_only,
-      mode:record.catalog_only?"catalog-only":record.licensed_stream_url?"licensed":record.google_drive_id?"google-drive":record.youtube_id?"youtube":"private",video_path:record.video_path,youtube_id:record.youtube_id,google_drive_id:record.google_drive_id,google_drive_resource_key:record.google_drive_resource_key,licensed_stream_url:record.licensed_stream_url,src:null,sourcePage:null,uploaded:true,live:false};
+      mode:record.catalog_only?"catalog-only":record.r2_object_key?"r2":record.licensed_stream_url?"licensed":record.google_drive_id?"google-drive":record.youtube_id?"youtube":"private",video_path:record.video_path,r2_object_key:record.r2_object_key,youtube_id:record.youtube_id,google_drive_id:record.google_drive_id,google_drive_resource_key:record.google_drive_resource_key,licensed_stream_url:record.licensed_stream_url,src:null,sourcePage:null,uploaded:true,live:false};
     db.films.push(film);all.push(film);map.set(film.id,film);additions.push(film);
    }else if(record.kind==="episode"&&record.series_title){
     const key=record.series_title.trim().toLocaleLowerCase("pt-BR");
@@ -88,7 +88,7 @@ async function loadUploadedCatalog(){
     category:first.genre||"Autoral",description:first.desc,year:first.production_year,cover:first.cover,
     backdrop:first.cover,uploaded:true,live:false,
     episodes:episodes.map(rec=>({id:"upload-"+rec.id,label:"Episódio "+rec.episode_number,
-      title:rec.title,duration:durationText(rec.duration_seconds),video_path:rec.video_path,youtube_id:rec.youtube_id,google_drive_id:rec.google_drive_id,google_drive_resource_key:rec.google_drive_resource_key,licensed_stream_url:rec.licensed_stream_url,src:null,sourcePage:null,mode:rec.licensed_stream_url?"licensed":rec.google_drive_id?"google-drive":rec.youtube_id?"youtube":"private"}))};
+      title:rec.title,duration:durationText(rec.duration_seconds),video_path:rec.video_path,r2_object_key:rec.r2_object_key,youtube_id:rec.youtube_id,google_drive_id:rec.google_drive_id,google_drive_resource_key:rec.google_drive_resource_key,licensed_stream_url:rec.licensed_stream_url,src:null,sourcePage:null,mode:rec.r2_object_key?"r2":rec.licensed_stream_url?"licensed":rec.google_drive_id?"google-drive":rec.youtube_id?"youtube":"private"}))};
    db.series.push(show);all.push(show);map.set(show.id,show);additions.push(show);
    show.episodes.forEach(ep=>eps.set(ep.id,{show,ep}));
   }
@@ -841,6 +841,10 @@ function play(item,episode){
   // The Google preview stays embedded; don't overlay the movie with a warning.
   $("player-status").textContent="";
   $("player-content-note").textContent="";
+ }else if(media.r2_object_key){
+  playerStatus("Preparando vídeo R2 autorizado...");
+  src="https://nplay-r2-api.luandersonjesussantos063.workers.dev/watch/"+encodeURIComponent((episode?.id||item.id).replace(/^upload-/,""));
+  startSource();
  }else if(media.video_path){
   if(!remoteDb){fail("Serviço de mídia indisponível. Recarregue a página.");return}
   playerStatus("Preparando vídeo publicado...");
