@@ -12,6 +12,16 @@ if not exist ".env" (
  pause
  exit /b 1
 )
+".venv\Scripts\python.exe" -c "import libtorrent; print('libtorrent OK')" >nul 2>&1
+if errorlevel 1 (
+ echo ERRO: o Windows nao conseguiu carregar a DLL do libtorrent.
+ echo Instale o Microsoft Visual C++ Redistributable x64:
+ echo https://aka.ms/vs/17/release/vc_redist.x64.exe
+ echo Depois reinicie o computador e tente novamente.
+ echo Se continuar, envie a mensagem do erro, sem mostrar o arquivo .env.
+ pause
+ exit /b 1
+)
 echo NPlay: iniciando importador local...
 echo Mantenha esta janela aberta enquanto importa.
 ".venv\Scripts\python.exe" worker.py
