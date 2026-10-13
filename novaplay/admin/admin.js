@@ -286,7 +286,7 @@ function eligibleFeatured(){
 function posterOfFeatured(movie){
  if(!movie?.record)return movie?.cover||"../assets/posters/autoral.svg";
  const r=movie.record;
- return window.NovaPlayCover?.approvedAnimePoster?.(r.title,true)
+ return window.NovaPlayCover?.approvedAnimePoster?.(r.title,true,r.genre)
   ||(r.poster_path?client.storage.from(POSTER_BUCKET).getPublicUrl(r.poster_path).data.publicUrl:null)
   ||(r.youtube_id?"https://i.ytimg.com/vi/"+encodeURIComponent(r.youtube_id)+"/hqdefault.jpg":null)
   ||(r.google_drive_id?window.NovaPlayCover?.driveThumbnail(r.google_drive_id):null)
@@ -589,7 +589,7 @@ function renderLibrary(){
  libraryPage=Math.max(0,Math.min(libraryPage,pageCount-1));
  shown.slice(libraryPage*LIBRARY_PAGE_SIZE,(libraryPage+1)*LIBRARY_PAGE_SIZE).forEach(row=>{
   const item=document.createElement("article");item.className="movie-item";
-  const poster=window.NovaPlayCover?.approvedAnimePoster?.(row.title,true)||(row.poster_path?client.storage.from(POSTER_BUCKET).getPublicUrl(row.poster_path).data.publicUrl:(row.youtube_id?"https://i.ytimg.com/vi/"+encodeURIComponent(row.youtube_id)+"/hqdefault.jpg":row.google_drive_id?(window.NovaPlayCover?.driveThumbnail(row.google_drive_id)||window.NovaPlayCover?.titleCard(row.title)):(window.NovaPlayCover?.titleCard(row.title)||"../assets/posters/autoral.svg")));
+  const poster=window.NovaPlayCover?.approvedAnimePoster?.(row.title,true,row.genre)||(row.poster_path?client.storage.from(POSTER_BUCKET).getPublicUrl(row.poster_path).data.publicUrl:(row.youtube_id?"https://i.ytimg.com/vi/"+encodeURIComponent(row.youtube_id)+"/hqdefault.jpg":row.google_drive_id?(window.NovaPlayCover?.driveThumbnail(row.google_drive_id)||window.NovaPlayCover?.titleCard(row.title)):(window.NovaPlayCover?.titleCard(row.title)||"../assets/posters/autoral.svg")));
   const source=row.catalog_only?"Aguardando vídeo autorizado":row.licensed_stream_url?"Licenciado · Streaming direto":row.youtube_id?"YouTube · Link":row.google_drive_id?"Google Drive · Link":((row.file_size_bytes||0)/(1024*1024)).toFixed(1)+" MB";
   const engagement=activityCounts.get(row.id)||{detail:0,attempt:0};
   const metricBadge='<small>Ficha: '+engagement.detail+' · Tentativas de assistir: '+engagement.attempt+' (30 dias)</small>';
