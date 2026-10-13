@@ -98,7 +98,7 @@ function approvedAnimePoster(title,admin){
  const premium=premiumMovieCovers[key];
  if(premium)return(admin?"../":"./")+"assets/featured-covers/"+premium;
  const operation=operationAnimeCovers[key];
- // Arte nova pendente: continuar usando capa anterior ou gerador temático.
+ if(operation)return(admin?"../":"./")+"assets/operation-covers/"+operation;
  const featured=featuredMovieCovers[key];
  if(featured)return(admin?"../":"./")+"assets/featured-covers/"+featured+".jpg";
  const newer=approvedCoversV2[key];
