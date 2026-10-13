@@ -92,6 +92,14 @@ const operationAnimeCovers=Object.freeze({
  "jibaku shounen hanako kun dublado":"jibaku_shounen_hanako_kun_dublado.avif",
  "3 palavrinhas completo":"3_palavrinhas_completo.avif"
 });
+/* Lote original em PNG 16:9, ilustrações autorais sem imagens oficiais. */
+const originalSceneCovers=Object.freeze({
+ "a casa monstro":"a_casa_monstro.png",
+ "a dama e o vagabundo":"a_dama_e_o_vagabundo.png",
+ "a fuga das galinhas":"a_fuga_das_galinhas.png",
+ "a lenda dos guardioes":"a_lenda_dos_guardioes.png",
+ "a nova onda do imperador":"a_nova_onda_do_imperador.png"
+});
 /* Capas de animações publicadas e conferidas, preferidas à miniatura do vídeo. */
 function operationCover(title,admin){
  const key=String(title||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"")
@@ -104,6 +112,8 @@ function approvedAnimePoster(title,admin,genre,knownOnly){
   .toLocaleLowerCase("pt-BR").replace(/[^a-z0-9 ]+/g," ").replace(/\s+/g," ").trim();
  const premium=premiumMovieCovers[key];
  if(premium)return(admin?"../":"./")+"assets/featured-covers/"+premium;
+ const scene=originalSceneCovers[key];
+ if(scene)return(admin?"../":"./")+"assets/scene-covers/"+scene+"?c=0.35.3";
  const operation=operationAnimeCovers[key];
  if(operation)return(admin?"../":"./")+"assets/operation-covers/"+operation+"?c=0.34.3";
  const featured=featuredMovieCovers[key];
