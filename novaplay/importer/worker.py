@@ -1,6 +1,8 @@
 """Private NPlay magnet importer. Run only on a controlled backend server."""
 import os, time, uuid, pathlib, tempfile, logging
 import boto3
+from dotenv import load_dotenv
+load_dotenv()
 import libtorrent as lt
 from supabase import create_client
 
