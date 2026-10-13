@@ -1,4 +1,4 @@
-/* NovaPlay v0.38.4 · Ampliação compacta e progressiva a partir da capa de origem, com áudio sob controle. */
+/* NovaPlay v0.38.5 · Hover cinematográfico limpo: pôster sem player YouTube embutido e controles mínimos. */
 (function(){
 "use strict";
 let layer=null,owner=null,timer=null,closeTimer=null,clipTimer=null,hls=null,token=0;
@@ -15,31 +15,22 @@ function setSoundButton(button,enabled){
  button.title=enabled?"Desligar som":"Ativar som";
  button.innerHTML=enabled?SOUND_ICON:MUTED_ICON;
 }
-function youtubeCommand(frame,func,args=[]){
- try{frame.contentWindow?.postMessage(JSON.stringify({event:"command",func,args}),"https://www.youtube-nocookie.com")}catch(e){}
-}
 function attachSoundButton(view){
  const area=view.querySelector(".np-hover-media");
  const button=area.querySelector(".np-hover-sound");
- const note=view.querySelector(".np-hover-hint");
  button.addEventListener("click",e=>{
   e.preventDefault();e.stopPropagation();
   if(view!==layer)return;
-  const video=area.querySelector("video"),frame=area.querySelector("iframe");
-  if(!video&&!frame)return;
+  const video=area.querySelector("video");
+  if(!video)return;
   const enabled=button.getAttribute("aria-pressed")!=="true";
-  if(video){
-   video.muted=!enabled;
-   if(enabled){video.volume=1;video.play().catch(()=>{
+  video.muted=!enabled;
+  if(enabled){
+   video.volume=1;
+   video.play().catch(()=>{
     if(view!==layer)return;
     video.muted=true;setSoundButton(button,false);
-    note.textContent="O navegador bloqueou o áudio. Tente tocar em ativar som novamente.";
-   })}
-   note.textContent=enabled?"Áudio ativado · clique para silenciar":"Prévia sem som";
-  }else if(frame){
-   youtubeCommand(frame,enabled?"unMute":"mute");
-   if(enabled){youtubeCommand(frame,"setVolume",[100]);youtubeCommand(frame,"playVideo")}
-   note.textContent=enabled?"Som solicitado · pode depender do YouTube":"Prévia sem som";
+   });
   }
   setSoundButton(button,enabled);
  });
@@ -77,62 +68,53 @@ function maybeClose(card){
  },CLOSE_GRACE_MS);
 }
 async function playPreview(item,view,settings,id){
- if(item.catalogOnly||item.kind==="tv"||navigator.connection?.saveData||matchMedia("(prefers-reduced-motion: reduce)").matches)return;
+ if(item.catalogOnly||item.kind==="tv"||navigator.connection?.saveData||
+    matchMedia("(prefers-reduced-motion: reduce)").matches)return;
  const media=item.kind==="series"?(item.episodes||[])[0]:item.kind==="episode"?(item.episode||item):item;
  if(!media)return;
- const area=view.querySelector(".np-hover-media"),note=view.querySelector(".np-hover-hint");
+ const area=view.querySelector(".np-hover-media");
  const soundButton=area.querySelector(".np-hover-sound");
- if(/^[A-Za-z0-9_-]{11}$/.test(media.youtube_id||"")){
-  const frame=document.createElement("iframe");
-  frame.title="Prévia silenciosa de "+item.title;
-  frame.allow="autoplay; encrypted-media; picture-in-picture";
-  frame.referrerPolicy="strict-origin-when-cross-origin";
-  frame.tabIndex=-1;
-  frame.src="https://www.youtube-nocookie.com/embed/"+encodeURIComponent(media.youtube_id)
-   +"?autoplay=1&mute=1&controls=0&playsinline=1&rel=0&start=12&end=37&enablejsapi=1&origin="+encodeURIComponent(location.origin);
+ // O player oficial do YouTube exibe títulos, pausa, logos e recomendações.
+ // Nunca escondê-los por cima de um iframe. No hover, manter a capa limpa;
+ // ao tocar em Assistir, abrir o YouTube oficial dentro do player principal.
+ if(/^[A-Za-z0-9_-]{11}$/.test(media.youtube_id||"")||media.google_drive_id)return;
+ let src=media.licensed_stream_url||media.src||"";
+ if(media.video_path){
+  try{src=await settings.signedUrl(media.video_path)||""}catch(e){src=""}
   if(id!==token||layer!==view)return;
-  area.append(frame);
-  soundButton.hidden=false;
-  note.textContent="Prévia sem som · clique no alto-falante para ativar áudio";
- }else{
-  if(media.google_drive_id){note.textContent="Capa ampliada · clique em assistir para abrir o vídeo";return}
-  let src=media.licensed_stream_url||media.src||"";
-  if(media.video_path){
-   try{src=await settings.signedUrl(media.video_path)||""}catch(e){src=""}
-   if(id!==token||layer!==view)return;
-  }
-  if(!/^https:\/\//i.test(src))return;
-  const video=document.createElement("video");
-  video.muted=true;video.defaultMuted=true;video.autoplay=true;video.playsInline=true;
-  video.preload="metadata";video.controls=false;
-  video.setAttribute("aria-label","Prévia sem áudio de "+item.title);
-  video.addEventListener("playing",()=>{
-   if(id!==token||layer!==view)return;
-   view.classList.add("np-is-playing");
-   note.textContent="Prévia sem som · clique para assistir";
-  });
-  video.addEventListener("loadedmetadata",()=>{
-   if(id!==token||layer!==view||!Number.isFinite(video.duration)||video.duration<=28)return;
-   try{video.currentTime=Math.min(12,video.duration-25)}catch(e){}
-  },{once:true});
-  video.addEventListener("error",()=>{if(id===token)note.textContent="Prévia indisponível para esta fonte"});
-  area.append(video);
-  soundButton.hidden=false;
-  if(/\.m3u8(?:\?|$)/i.test(src)&&!video.canPlayType("application/vnd.apple.mpegurl")&&window.Hls?.isSupported()){
-   hls=new window.Hls({enableWorker:true,maxBufferLength:8});
-   hls.loadSource(src);hls.attachMedia(video);
-   hls.on(window.Hls.Events.MANIFEST_PARSED,()=>{if(id===token)video.play().catch(()=>{})});
-  }else{video.src=src;video.play().catch(()=>{})}
  }
+ if(!/^https:\/\//i.test(src))return;
+ const video=document.createElement("video");
+ video.muted=true;video.defaultMuted=true;video.autoplay=true;video.playsInline=true;
+ video.preload="metadata";video.controls=false;
+ video.setAttribute("aria-label","Prévia sem áudio de "+item.title);
+ video.addEventListener("playing",()=>{
+  if(id!==token||layer!==view)return;
+  view.classList.add("np-is-playing");
+  soundButton.hidden=false;
+ });
+ video.addEventListener("loadedmetadata",()=>{
+  if(id!==token||layer!==view||!Number.isFinite(video.duration)||video.duration<=28)return;
+  try{video.currentTime=Math.min(12,video.duration-25)}catch(e){}
+ },{once:true});
+ video.addEventListener("error",()=>{
+  if(id!==token||layer!==view)return;
+  view.classList.remove("np-is-playing");
+  soundButton.hidden=true;
+ });
+ area.append(video);
+ if(/\.m3u8(?:\?|$)/i.test(src)&&!video.canPlayType("application/vnd.apple.mpegurl")&&window.Hls?.isSupported()){
+  hls=new window.Hls({enableWorker:true,maxBufferLength:8});
+  hls.loadSource(src);hls.attachMedia(video);
+  hls.on(window.Hls.Events.MANIFEST_PARSED,()=>{if(id===token)video.play().catch(()=>{})});
+ }else{video.src=src;video.play().catch(()=>{})}
  clipTimer=setTimeout(()=>{
   if(id!==token||view!==layer)return;
-  const v=area.querySelector("video"),f=area.querySelector("iframe");
-  if(v){v.pause();v.removeAttribute("src");v.load()}
-  if(f){f.src="about:blank";f.remove()}
+  const v=area.querySelector("video");
+  if(v){v.pause();v.removeAttribute("src");v.load();v.remove()}
   if(hls){try{hls.destroy()}catch(e){}hls=null}
   view.classList.remove("np-is-playing");
   soundButton.hidden=true;setSoundButton(soundButton,false);
-  note.textContent="Fim da prévia · clique para assistir";
  },25000);
 }
 function open(card,item,settings){
@@ -143,7 +125,7 @@ function open(card,item,settings){
  // Prévia mais compacta, sem cobrir tantos títulos vizinhos.
  // Aumento leve em relação à miniatura e limite de 365 px.
  const width=Math.max(180,Math.min(innerWidth-18,365,Math.max(260,Math.round(rect.width*1.15))));
- const height=Math.round(width*9/16)+126;
+ const height=Math.round(width*9/16)+64;
  const left=Math.round(Math.max(9,Math.min(innerWidth-width-9,rect.left-(width-rect.width)/2)));
  const top=Math.round(Math.max(80,Math.min(innerHeight-height-9,rect.top-35)));
  const view=document.createElement("section");
@@ -157,13 +139,12 @@ function open(card,item,settings){
  view.style.setProperty("--np-hover-from-y",(rect.top-top).toFixed(2)+"px");
  view.style.setProperty("--np-hover-from-scale",startScale.toFixed(4));
  view.setAttribute("aria-label","Detalhes e prévia de "+item.title);
- view.innerHTML='<div class="np-hover-media"><img class="np-hover-poster" loading="eager" src="'+esc(item.cover||"./assets/icon.svg")+'" alt=""><button type="button" class="np-hover-sound" aria-label="Ativar áudio da prévia" aria-pressed="false" title="Ativar som" hidden></button></div>'
-  +'<div class="np-hover-body"><div class="np-hover-title">'+esc(item.title)+'</div>'
-  +'<div class="np-hover-actions">'
+ view.innerHTML='<div class="np-hover-media"><img class="np-hover-poster" loading="eager" src="'+esc(item.cover||"./assets/icon.svg")+'" alt="">'
+  +'<div class="np-hover-name">'+esc(item.title)+'</div>'
+  +'<button type="button" class="np-hover-sound" aria-label="Ativar áudio da prévia" aria-pressed="false" title="Ativar som" hidden></button></div>'
+  +'<div class="np-hover-body"><div class="np-hover-actions">'
   +(item.catalogOnly?"":'<button type="button" class="np-hover-action np-primary" aria-label="Assistir '+esc(item.title)+'" title="Assistir">▶</button>')
-  +'<button type="button" class="np-hover-action np-details" aria-label="Mais informações de '+esc(item.title)+'" title="Mais informações">ⓘ</button></div>'
-  +'<div class="np-hover-metadata">'+esc(item.catalogOnly?"EM BREVE":item.category||"NovaPlay")+'</div>'
-  +'<div class="np-hover-hint">'+esc(item.catalogOnly?"Aguardando vídeo autorizado":"Prévia automática quando disponível")+'</div></div>';
+  +'<button type="button" class="np-hover-action np-details" aria-label="Mais informações de '+esc(item.title)+'" title="Mais informações">ⓘ</button></div></div>';
  attachSoundButton(view);
  const picture=view.querySelector(".np-hover-poster");
  picture.addEventListener("error",function(){
