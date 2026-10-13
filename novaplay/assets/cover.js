@@ -97,7 +97,7 @@ function operationCover(title,admin){
  const key=String(title||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"")
    .toLocaleLowerCase("pt-BR").replace(/[^a-z0-9 ]+/g," ").replace(/\s+/g," ").trim();
  const art=operationAnimeCovers[key];
- return art?(admin?"../":"./")+"assets/operation-covers/"+art:null;
+ return art?(admin?"../":"./")+"assets/operation-covers/"+art+"?c=0.34.2":null;
 }
 function approvedAnimePoster(title,admin,genre){
  const key=String(title||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"")
@@ -105,7 +105,7 @@ function approvedAnimePoster(title,admin,genre){
  const premium=premiumMovieCovers[key];
  if(premium)return(admin?"../":"./")+"assets/featured-covers/"+premium;
  const operation=operationAnimeCovers[key];
- if(operation)return(admin?"../":"./")+"assets/operation-covers/"+operation;
+ if(operation)return(admin?"../":"./")+"assets/operation-covers/"+operation+"?c=0.34.2";
  const featured=featuredMovieCovers[key];
  if(featured)return(admin?"../":"./")+"assets/featured-covers/"+featured+".jpg";
  const newer=approvedCoversV2[key];

@@ -179,6 +179,11 @@ function genreGroups(){
   groups.get(primaryGenre(item)).push(item);
  return groups;
 }
+function upcomingFilms(){
+ const upcoming=db.films.filter(x=>x.catalogOnly);
+ const premium=x=>!!window.NovaPlayCover?.operationCover?.(x.title,false);
+ return upcoming.sort((a,b)=>Number(premium(b))-Number(premium(a))||a.title.localeCompare(b.title,"pt-BR"));
+}
 function renderRows(){
  const holder=$("home-rows");holder.replaceChildren();
  const blocks=[
@@ -186,6 +191,7 @@ function renderRows(){
  ["TV aberta",db.channels,"tv",true],
  ["Filmes licenciados",uploadedCatalog.filter(x=>x.mode==="licensed"&&!x.catalogOnly),"filmes",false],
  ["Filmes do YouTube",youtubeFilms(),"youtube",false],
+ ["Animes e estreias · Em breve",upcomingFilms(),"em-breve",false],
  ["Filmes clássicos",db.films.filter(x=>x.mode!=="youtube"),"filmes",false],
  ["Séries clássicas",db.series,"series",false],
  ...genreOrder.filter(name=>name!=="Não classificados")
@@ -298,6 +304,7 @@ const categories={
  tv:["TV AO VIVO","Assista à TV aberta","Canais gratuitos, reproduzidos pelo player da NovaPlay.",db.channels],
  filmes:["NOSSO ACERVO","Filmes clássicos","Longas e curtas históricos com versões de arquivo.",db.films.filter(x=>x.mode!=="youtube")],
  youtube:["YOUTUBE · NOVAPLAY","Filmes do YouTube","Assista por meio do player oficial do YouTube. A disponibilidade depende do canal e das permissões de reprodução.",[]],
+ "em-breve":["LANÇAMENTOS · NOVAPLAY","Em breve","Prévias de animes e filmes anunciados. Estes títulos ainda não têm vídeo autorizado para reprodução.",[]],
  series:["CAPÍTULO POR CAPÍTULO","Séries clássicas","Escolha uma série para ver seus episódios.",db.series],
  favoritos:["SUA SELEÇÃO","Minha lista","Tudo o que você marcou como favorito.",[]]
 };
@@ -305,7 +312,7 @@ function renderCategory(kind){
  const conf=categories[kind]||categories.filmes;
  $("category-kicker").textContent=conf[0];$("category-heading").textContent=conf[1];$("category-subtitle").textContent=conf[2];
  const content=$("category-grid");content.replaceChildren();
- let list=kind==="favoritos"?all.filter(x=>favorite.has(x.id)):kind==="youtube"?youtubeFilms():conf[3];
+ let list=kind==="favoritos"?all.filter(x=>favorite.has(x.id)):kind==="youtube"?youtubeFilms():kind==="em-breve"?upcomingFilms():conf[3];
  const filters=$("genre-filter-panel"),buttons=$("genre-filter-buttons");
  filters.hidden=kind!=="filmes";
  if(kind==="filmes"){
@@ -744,7 +751,7 @@ document.addEventListener("keydown",e=>{
 document.addEventListener("visibilitychange",()=>{if(document.hidden){stopHeroPreview();if(!$("player-layer").hidden)$("video").pause()}});
 window.addEventListener("scroll",()=>$("app-header").classList.toggle("is-scrolled",window.scrollY>24),{passive:true});
 if("serviceWorker" in navigator&&location.protocol==="https:"){
- window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js?v=0.34.1",{updateViaCache:"none"}).catch(()=>{}));
+ window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js?v=0.34.2",{updateViaCache:"none"}).catch(()=>{}));
 }
 navigate((location.hash||"").slice(1)||"inicio");
 loadUploadedCatalog().then(loadFeatured);
