@@ -104,7 +104,7 @@ function approvedAnimePoster(title,admin){
  const newer=approvedCoversV2[key];
  if(newer)return(admin?"../":"./")+"assets/approved-covers-v2/"+newer+".jpg";
  const slug=approvedAnimePosters[key];
- if(!slug)return null;
+ if(!slug)return genrePoster(title);
  return(admin?"../":"./")+"assets/review-covers/"+slug+".png";
 }
 
