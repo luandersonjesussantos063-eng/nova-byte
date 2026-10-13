@@ -37,7 +37,7 @@ function show(id){
 }
 function disable(submitted){
  busy=submitted;
- ["submit-upload","refresh-list","cancel-edit","video-file","poster-file","youtube-url","youtube-poster-file","source-type","drive-url","licensed-url","licensed-rights"].forEach(id=>$(id).disabled=submitted);
+ ["submit-upload","refresh-list","cancel-edit","video-file","poster-file","youtube-url","youtube-poster-file","source-type","drive-url","licensed-url","netflix-url","licensed-rights"].forEach(id=>$(id).disabled=submitted);
  $("submit-upload").textContent=submitted?"Enviando...":"Enviar para a NovaPlay";
 }
 function errorText(err){
@@ -113,20 +113,26 @@ function parseLicensedStreamUrl(raw){
 function sourceMode(){return $("source-type").value}
 function setSourceType(){
  const mode=sourceMode();
- const youtube=mode==="youtube",drive=mode==="google-drive",licensed=mode==="licensed",external=youtube||drive||licensed;
+ const youtube=mode==="youtube",drive=mode==="google-drive",licensed=mode==="licensed",netflix=mode==="netflix-reference",external=youtube||drive||licensed||netflix;
  $("youtube-fields").hidden=!youtube;
  $("drive-fields").hidden=!drive;
  $("licensed-fields").hidden=!licensed;
+ $("netflix-fields").hidden=!netflix;
+ $("netflix-url").required=netflix;
+ $("publish").disabled=netflix;
+ if(netflix)$("publish").checked=false;
  $("licensed-url").required=licensed;
  $("upload-files").hidden=external;
  $("youtube-cover-section").hidden=!external;
  $("youtube-url").required=youtube;
  $("drive-url").required=drive;
- $("external-cover-tip").textContent=licensed
+ $("external-cover-tip").textContent=netflix
+  ?"Capa opcional para seu controle privado. Este título não será exibido na NovaPlay."
+  :licensed
   ?"Adicione uma capa vertical para o filme licenciado (JPG, PNG ou WebP, até 5 MB)."
   :drive?"Se não escolher capa, usaremos uma arte padrão da NovaPlay. JPG, PNG ou WebP, até 5 MB."
   :"Se não escolher capa, usamos a miniatura do YouTube. JPG, PNG ou WebP, até 5 MB.";
- $("submit-upload").textContent=busy?"Salvando...":editing?.catalog_only?"Salvar e liberar para assistir":editing?"Salvar alterações":external?"Cadastrar vídeo pelo link":"Enviar para a NovaPlay";
+ $("submit-upload").textContent=busy?"Salvando...":netflix?"Salvar referência privada":editing?.catalog_only?"Salvar e liberar para assistir":editing?"Salvar alterações":external?"Cadastrar vídeo pelo link":"Enviar para a NovaPlay";
 }
 function fileKind(file,video=true){
  const ext=(file.name.split(".").pop()||"").toLowerCase();
@@ -532,7 +538,7 @@ function renderLibrary(){
   const playable=sourceFilter.querySelector('option[value="has_video"]');
   if(playable)playable.textContent="Com vídeo cadastrado · "+withVideo;
  }
- const available=items.filter(x=>x.rights_reviewed&&!x.is_published);
+ const available=items.filter(x=>x.rights_reviewed&&!x.is_published&&!isNetflixReference(x));
  const pendingReview=items.filter(x=>!x.is_published&&!x.rights_reviewed);
  const markAll=$("bulk-mark-reviewed");
  if(markAll){markAll.disabled=busy||!pendingReview.length;markAll.textContent="Marcar todos como conferidos ("+pendingReview.length+")";}
@@ -635,24 +641,25 @@ function beginEdit(row){
  $("year").value=row.production_year||"";
  $("series-name").value=row.series_title||"";$("episode-number").value=row.episode_number||"";
  $("genre").value=row.genre;$("description").value=row.description||"";
- $("publish").checked=releasing?true:row.is_published;
- $("source-type").value=row.licensed_stream_url?"licensed":row.google_drive_id?"google-drive":row.youtube_id?"youtube":releasing?"google-drive":"upload";
+ $("publish").checked=releasing&&!isNetflixReference(row)?true:row.is_published;
+ $("source-type").value=isNetflixReference(row)?"netflix-reference":row.licensed_stream_url?"licensed":row.google_drive_id?"google-drive":row.youtube_id?"youtube":releasing?"google-drive":"upload";
  $("youtube-url").value=row.youtube_id?"https://youtu.be/"+row.youtube_id:"";
  $("drive-url").value=row.google_drive_id?"https://drive.google.com/file/d/"+row.google_drive_id+"/view"+(row.google_drive_resource_key?"?resourcekey="+encodeURIComponent(row.google_drive_resource_key):""):"";
- $("licensed-url").value=row.licensed_stream_url||"";
+ $("licensed-url").value=isNetflixReference(row)?"":(row.licensed_stream_url||"");
+ $("netflix-url").value=isNetflixReference(row)?row.licensed_stream_url:"";
  $("licensed-rights").checked=!!row.licensed_rights_confirmed;
  setSourceType();
  $("video-file").value="";$("poster-file").value="";$("youtube-poster-file").value="";
  $("video-file-label").textContent=releasing?"Selecionar vídeo autorizado":"Trocar vídeo (opcional)";
  $("poster-file-label").textContent="Trocar capa (opcional)";
- $("submit-upload").textContent=releasing?"Salvar e liberar para assistir":"Salvar alterações";
+ $("submit-upload").textContent=isNetflixReference(row)?"Salvar referência privada":releasing?"Salvar e liberar para assistir":"Salvar alterações";
  status("upload-message",releasing?"“"+row.title+"” já está na grade como Em breve. Adicione o arquivo ou link do vídeo autorizado. Ao salvar, sairá de Em breve e terá reprodução habilitada. Sem um vídeo, não será liberado.":"Editando “"+row.title+"”. Você pode mudar só o texto ou trocar arquivos.",false,releasing);
  document.querySelector(".editor").scrollIntoView({behavior:"smooth",block:"start"});
 }
 function resetForm(){
  editing=null;$("upload-form").reset();$("form-title").textContent="Adicionar filme ou episódio";
  $("cancel-edit").hidden=true;$("series-fields").hidden=true;$("series-name").required=false;$("episode-number").required=false;
- $("source-type").value="upload";$("youtube-url").value="";$("drive-url").value="";$("licensed-url").value="";$("licensed-rights").checked=false;$("youtube-poster-file").value="";setSourceType();
+ $("source-type").value="upload";$("youtube-url").value="";$("drive-url").value="";$("licensed-url").value="";$("licensed-rights").checked=false;$("netflix-url").value="";$("youtube-poster-file").value="";setSourceType();
  $("video-file-label").textContent="Selecionar vídeo do telefone";$("poster-file-label").textContent="Escolher capa (opcional)";
  $("submit-upload").textContent="Enviar para a NovaPlay";$("progress-box").hidden=true;$("publish").checked=false;
 }
@@ -686,9 +693,12 @@ async function saveQualityScore(row,element){
  }finally{busy=false}
 }
 
+function isNetflixReference(row){try{return new URL(row.licensed_stream_url||"").hostname.replace(/^www\./,"")==="netflix.com"}catch{return false}}
+function netflixReferenceUrl(value){try{const u=new URL(value.trim());if(u.protocol!=="https:"||u.hostname.replace(/^www\./,"")!=="netflix.com"||u.username||u.password)return null;const direct=u.pathname.match(/^\/(?:title|watch)\/(\d{5,12})(?:\/|$)/);const id=direct?.[1]||u.searchParams.get("jbv");if(!id||!/^\d{5,12}$/.test(id))return null;return u.href}catch{return null}}
 async function toggleReview(row){
  if(busy)return;
  const next=!row.rights_reviewed;
+ if(next&&isNetflixReference(row)){status("bulk-message","Este título da Netflix está apenas como referência. Substitua por um link licenciado antes de conferir.",true);return}
  if(next&&!confirm("Você conferiu este filme e confirma que possui autorização de exibição pública na NovaPlay e que o link é acessível? Marcar “"+row.title+"” como conferido?"))return;
  busy=true;renderLibrary();
  try{
@@ -703,6 +713,7 @@ async function toggleReview(row){
 async function togglePublish(row){
  if(busy)return;
  const publish=!row.is_published;
+ if(publish&&isNetflixReference(row)){status("bulk-message","Título da Netflix bloqueado como rascunho. Edite e substitua pelo vídeo licenciado para liberar.",true);return}
  if(publish&&!confirm(row.catalog_only?"Exibir a ficha de “"+row.title+"” na grade como EM BREVE, sem reprodução, até cadastrar um vídeo?":"Confirma autorização para disponibilizar publicamente “"+row.title+"” na NovaPlay, incluindo o arquivo indicado pelo link?"))return;
  busy=true;renderLibrary();
  try{
@@ -717,7 +728,7 @@ async function togglePublish(row){
 async function bulkMarkReviewed(){
  if(busy||!sessionUser)return;
  // Usa todos os rascunhos, independentemente da página ou filtro ativo.
- const ids=items.filter(x=>!x.is_published&&!x.rights_reviewed).map(x=>x.id);
+ const ids=items.filter(x=>!x.is_published&&!x.rights_reviewed&&!isNetflixReference(x)).map(x=>x.id);
  if(!ids.length){
   status("bulk-message","Não há rascunhos pendentes de conferência.",false,true);
   return;
@@ -754,7 +765,7 @@ async function bulkMarkReviewed(){
 
 async function bulkPublishReviewed(){
  if(busy||!sessionUser)return;
- const ids=items.filter(x=>x.rights_reviewed&&!x.is_published).map(x=>x.id);
+ const ids=items.filter(x=>x.rights_reviewed&&!x.is_published&&!isNetflixReference(x)).map(x=>x.id);
  if(!ids.length){status("bulk-message","Nenhum rascunho conferido para publicar.");return}
  if(!confirm("LIBERAR TODOS OS CONFERIDOS: serão publicados "+ids.length+" filmes. Confirma que conferiu as licenças de exibição de TODOS eles, e que quer disponibilizá-los ao público agora? Os não conferidos continuarão rascunhos."))return;
  busy=true;renderLibrary();$("bulk-publish").disabled=true;
@@ -786,12 +797,20 @@ async function removeItem(row){
 async function sendForm(e){
  e.preventDefault();if(busy||!sessionUser)return;
  const mode=sourceMode();
- const youtube=mode==="youtube",drive=mode==="google-drive",licensed=mode==="licensed",external=youtube||drive||licensed;
+ const youtube=mode==="youtube",drive=mode==="google-drive",licensed=mode==="licensed",netflix=mode==="netflix-reference",external=youtube||drive||licensed||netflix;
  const file=$("video-file").files[0]||null;
  const cover=(external?$("youtube-poster-file"):$("poster-file")).files[0]||null;
  const youtubeId=youtube?extractYoutubeId($("youtube-url").value):null;
  const driveFile=drive?parseGoogleDriveLink($("drive-url").value):null;
+ if(licensed&&netflixReferenceUrl($("licensed-url").value)){
+  $("netflix-url").value=$("licensed-url").value.trim();
+  $("source-type").value="netflix-reference";setSourceType();
+  status("upload-message","Reconheci o link da Netflix e alterei para cadastro privado. Confira e clique novamente em Salvar referência privada.",false,true);
+  return;
+ }
  const licensedUrl=licensed?parseLicensedStreamUrl($("licensed-url").value):null;
+ const netflixUrl=netflix?netflixReferenceUrl($("netflix-url").value):null;
+ if(netflix&&!netflixUrl){status("upload-message","Informe um link oficial Netflix /title/ID ou /browse/genre/...?...jbv=ID.",true);return}
  if(licensed&&!licensedUrl){status("upload-message","Informe um link HTTPS direto autorizado terminando em .mp4, .webm, .ogv ou .m3u8. Endereços de filmes na Netflix não funcionam aqui.",true);return}
  if(licensed&&$("publish").checked&&!$("licensed-rights").checked){status("upload-message","Para publicar este filme, confirme que já possui licença para exibição pública na NovaPlay. Enquanto aguarda, salve como rascunho.",true);return}
  if(youtube&&!youtubeId){status("upload-message","Cole um link válido do YouTube, como https://youtu.be/ID ou youtube.com/watch?v=ID.",true);return}
@@ -814,12 +833,13 @@ async function sendForm(e){
   episode_number:kind==="episode"?Number($("episode-number").value):null,
   production_year:$("year").value?Number($("year").value):null,
   genre:$("genre").value.trim()||"Autoral",
-  is_published:$("publish").checked,
-  catalog_only:false,
-  licensed_stream_url:licensed?licensedUrl:null,
+  is_published:netflix?false:$("publish").checked,
+  catalog_only:netflix,
+  licensed_stream_url:netflix?netflixUrl:licensed?licensedUrl:null,
   licensed_rights_confirmed:licensed&&$("licensed-rights").checked
  };
- if(licensed)payload.rights_reviewed=!!payload.licensed_rights_confirmed;
+ if(licensed||netflix)payload.rights_reviewed=licensed&&!!payload.licensed_rights_confirmed;
+ if(netflix){payload.rights_reviewed_at=null;payload.licensed_rights_confirmed=false}
  if(payload.title.length<2){status("upload-message","Informe um título de pelo menos 2 caracteres.",true);return}
  if(kind==="episode"&&(!payload.series_title||!payload.episode_number)){status("upload-message","Informe o nome da série e o número do episódio.",true);return}
  disable(true);status("upload-message",external?"Preparando vídeo pelo link...":"Preparando envio do vídeo...");
@@ -841,7 +861,7 @@ async function sendForm(e){
       youtube_id:youtube?youtubeId:null,
       google_drive_id:drive?driveFile.id:null,
       google_drive_resource_key:drive?driveFile.resourceKey:null,
-      licensed_stream_url:licensed?licensedUrl:null,
+      licensed_stream_url:netflix?netflixUrl:licensed?licensedUrl:null,
       video_path:null,mime_type:null,file_size_bytes:null,duration_seconds:null
     });
   }else{
@@ -870,7 +890,7 @@ async function sendForm(e){
   if(file)sessionStorage.removeItem(pendingKey(file));
   const wasCatalogOnly=!!editing?.catalog_only;
   resetForm();
-  status("upload-message",wasCatalogOnly?(payload.is_published?"Vídeo cadastrado! O título saiu de Em breve e está liberado para assistir.":"Vídeo cadastrado como rascunho. O título ainda não está publicado."):"Conteúdo salvo! "+(payload.is_published?"Já está disponível na NovaPlay.":"Salvo como rascunho."),false,true);
+  status("upload-message",netflix?"Referência da Netflix salva como rascunho privado. Sem reprodução e sem publicação.":wasCatalogOnly?(payload.is_published?"Vídeo cadastrado! O título saiu de Em breve e está liberado para assistir.":"Vídeo cadastrado como rascunho. O título ainda não está publicado."):"Conteúdo salvo! "+(payload.is_published?"Já está disponível na NovaPlay.":"Salvo como rascunho."),false,true);
   await loadLibrary();
  }catch(err){
    status("upload-message","Não foi possível salvar: "+errorText(err)+". Confira as informações e tente novamente.",true);
@@ -907,6 +927,7 @@ function init(){
  $("pending-exit").onclick=async()=>{await client.auth.signOut();show("login-view")};
  $("logout").onclick=async()=>{if(busy)return;await client.auth.signOut();sessionUser=null;show("login-view")};
  $("upload-form").onsubmit=sendForm;$("kind").onchange=setKind;$("source-type").onchange=setSourceType;setSourceType();
+ $("licensed-url").addEventListener("input",()=>{const url=netflixReferenceUrl($("licensed-url").value);if(url&&$("source-type").value==="licensed"){$("netflix-url").value=url;$("source-type").value="netflix-reference";setSourceType();status("upload-message","Link da Netflix detectado: referência privada selecionada automaticamente. O filme ficará em rascunho.",false,true)}});
  $("licensed-new").onclick=()=>{
   resetForm();
   $("kind").value="movie";setKind();
