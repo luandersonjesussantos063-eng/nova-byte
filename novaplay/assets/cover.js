@@ -52,6 +52,14 @@ const approvedAnimePosters=Object.freeze({
  "great pretender razbliuto filme":"great-pretender",
  "jibaku shounen hanako kun dublado":"hanako"
 });
+/* Capas NovaPlay produzidas em outubro de 2026, otimizadas para carregamento rápido. */
+const premiumMovieCovers=Object.freeze({
+ "a era do gelo":"a_era_do_gelo.avif",
+ "a era do gelo 2":"a_era_do_gelo_2.avif",
+ "a era do gelo 3":"a_era_do_gelo_3.avif",
+ "a era do gelo 4":"a_era_do_gelo_4.avif",
+ "a familia do futuro":"a_familia_do_futuro.avif"
+});
 const featuredMovieCovers=Object.freeze({
  "a era do gelo":"a_era_do_gelo",
  "a era do gelo 4":"a_era_do_gelo_4",
@@ -75,6 +83,8 @@ const approvedCoversV2=Object.freeze({
 function approvedAnimePoster(title,admin){
  const key=String(title||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"")
   .toLocaleLowerCase("pt-BR").replace(/[^a-z0-9 ]+/g," ").replace(/\s+/g," ").trim();
+ const premium=premiumMovieCovers[key];
+ if(premium)return(admin?"../":"./")+"assets/featured-covers/"+premium;
  const featured=featuredMovieCovers[key];
  if(featured)return(admin?"../":"./")+"assets/featured-covers/"+featured+".jpg";
  const newer=approvedCoversV2[key];
