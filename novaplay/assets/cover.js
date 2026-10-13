@@ -57,8 +57,8 @@ const premiumMovieCovers=Object.freeze({
  "a era do gelo":"a_era_do_gelo.avif",
  "a era do gelo 2":"a_era_do_gelo_2.avif",
  "a era do gelo 3":"a_era_do_gelo_3.avif",
- "a era do gelo 4":"a_era_do_gelo_4.avif",
- "a familia do futuro":"a_familia_do_futuro.avif"
+ "a era do gelo 4":"a_era_do_gelo_4_v2.avif",
+ "a familia do futuro":"a_familia_do_futuro_v2.avif"
 });
 const featuredMovieCovers=Object.freeze({
  "a era do gelo":"a_era_do_gelo",
