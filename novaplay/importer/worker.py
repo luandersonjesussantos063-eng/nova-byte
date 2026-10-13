@@ -16,6 +16,7 @@ BUCKET=os.getenv("R2_BUCKET","nplay-filmes")
 MAX_BYTES=int(os.getenv("IMPORTER_MAX_BYTES",str(8*1024**3)))
 TIMEOUT=int(os.getenv("IMPORTER_TIMEOUT_SECONDS","7200"))
 VIDEO_EXT={".mp4",".webm",".ogv"}
+KNOWN_VIDEO_EXT=VIDEO_EXT|{".mkv",".avi",".mov",".m4v",".ts"}
 
 def update(job_id,**fields):
     DB.table("novaplay_magnet_imports").update(fields).eq("id",job_id).execute()
@@ -41,6 +42,7 @@ def run(job):
                 time.sleep(2)
             info=handle.get_torrent_info()
             files=info.files()
+            log.info("Job %s: metadados recebidos; %d arquivos no torrent",jid,files.num_files())
             candidates=[]
             for i in range(files.num_files()):
                 relative=pathlib.PurePosixPath(files.file_path(i))
@@ -50,7 +52,17 @@ def run(job):
                 if pathlib.Path(relative.name).suffix.lower() in VIDEO_EXT:
                     candidates.append((i,size,relative))
             if not candidates:
-                raise ValueError("Torrent sem arquivo de vídeo compatível")
+                details=[]
+                for i in range(min(files.num_files(),20)):
+                    name=pathlib.PurePosixPath(files.file_path(i)).name
+                    ext=pathlib.Path(name).suffix.lower() or "(sem extensão)"
+                    details.append(f"{name[:90]} [{ext}]")
+                log.warning("Job %s: nenhum formato aceito; arquivos encontrados: %s",jid,"; ".join(details) or "(nenhum)")
+                detected={pathlib.Path(files.file_path(i)).suffix.lower() for i in range(files.num_files())}
+                other=sorted(detected & (KNOWN_VIDEO_EXT-VIDEO_EXT))
+                if other:
+                    raise ValueError("Torrent contém vídeo em formato não aceito: "+", ".join(other)+". Formatos aceitos: "+", ".join(sorted(VIDEO_EXT)))
+                raise ValueError("Torrent sem arquivo de vídeo compatível; consulte o log para ver os arquivos encontrados")
             idx,size,relative=max(candidates,key=lambda x:x[1])
             if size>MAX_BYTES:
                 raise ValueError("Vídeo maior que limite permitido")
