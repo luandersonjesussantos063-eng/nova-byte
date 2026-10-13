@@ -20,8 +20,8 @@ if errorlevel 1 goto failed
 ".venv\Scripts\python.exe" -c "import libtorrent as lt; print('LIBTORRENT OK:', lt.version)"
 if not errorlevel 1 goto success
 echo.
-echo A DLL continua falhando. Tentando a versao alternativa 2.0.10...
-".venv\Scripts\python.exe" -m pip install --force-reinstall --no-cache-dir --only-binary=:all: libtorrent==2.0.10
+echo A DLL continua falhando. Tentando a versao alternativa 2.0.15...
+".venv\Scripts\python.exe" -m pip install --force-reinstall --no-cache-dir --only-binary=:all: libtorrent==2.0.15
 if errorlevel 1 goto failed
 ".venv\Scripts\python.exe" -c "import libtorrent as lt; print('LIBTORRENT OK:', lt.version)"
 if not errorlevel 1 goto success
