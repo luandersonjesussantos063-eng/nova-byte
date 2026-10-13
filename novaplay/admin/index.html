@@ -8,9 +8,9 @@
 <link rel="stylesheet" href="./admin.css?v=0.28.2">
 </head>
 <body>
-<header class="top"><a class="brand" href="../"><span class="mark">▶</span> N<span>Play</span></a><div class="top-right"><strong>Painel administrativo · NPlay V 0.40.6</strong><button id="logout" class="outline" hidden>Sair</button></div></header>
+<header class="top"><a class="brand" href="../"><span class="mark">▶</span> N<span>Play</span></a><div class="top-right"><strong>Painel administrativo · NPlay V 0.40.7</strong><button id="logout" class="outline" hidden>Sair</button></div></header>
 <main class="container">
-  <section id="loading" class="panel intro" hidden><div class="spin"></div><p>Preparando seu painel... <small>V 0.40.6</small></p><p id="loading-error" class="feedback" role="status"></p><button id="loading-retry" class="outline" type="button" hidden onclick="location.reload()">Tentar novamente</button></section>
+  <section id="loading" class="panel intro" hidden><div class="spin"></div><p>Preparando seu painel... <small>V 0.40.7</small></p><p id="loading-error" class="feedback" role="status"></p><button id="loading-retry" class="outline" type="button" hidden onclick="location.reload()">Tentar novamente</button></section>
   <section id="login-view" class="panel login">
     <div class="section-label">ACESSO RESTRITO</div>
     <h1>Gerencie sua NPlay</h1>
@@ -265,7 +265,7 @@
     if(!loading||loading.hidden)return;
     var msg=document.getElementById("loading-error");
     var retry=document.getElementById("loading-retry");
-    if(msg)msg.textContent="O carregamento demorou demais. Tente novamente. Se persistir, verifique a publicação da versão 0.40.6.";
+    if(msg)msg.textContent="O carregamento demorou demais. Tente novamente. Se persistir, verifique a publicação da versão 0.40.7.";
     if(retry)retry.hidden=false;
     var spin=loading.querySelector(".spin");
     if(spin)spin.style.display="none";
@@ -294,6 +294,33 @@
   });
 })();
 </script>
-<script defer src="./admin.js?v=0.40.6"></script>
+<script>
+(function(){
+  var form=document.getElementById("login-form"),msg=document.getElementById("auth-message");
+  if(!form)return;
+  form.addEventListener("submit",async function(e){
+    if(typeof form.onsubmit==="function")return;
+    e.preventDefault();
+    var btn=document.getElementById("sign-in");
+    if(btn)btn.disabled=true;
+    if(msg)msg.textContent="Conectando ao serviço de autenticação...";
+    try{
+      if(!window.supabase||!window.supabase.createClient)throw Error("Biblioteca Supabase não carregou. Verifique a conexão e tente novamente.");
+      var c=window.supabase.createClient("https://vajlhodqxskozuxxlujv.supabase.co","sb_publishable_uT0b4y0Bex1k1QWZoyIfKg_K0pm-yS3",{auth:{persistSession:true,autoRefreshToken:true}});
+      var result=await c.auth.signInWithPassword({email:document.getElementById("email").value.trim(),password:document.getElementById("password").value});
+      if(result.error)throw result.error;
+      if(msg)msg.textContent="Autenticado. Verificando permissão administrativa...";
+      var user=result.data.user;
+      var access=await c.from("novaplay_admins").select("user_id").eq("user_id",user.id).maybeSingle();
+      if(access.error)throw access.error;
+      if(!access.data)throw Error("Esta conta não tem acesso administrativo.");
+      if(msg)msg.textContent="Acesso confirmado. Recarregando painel...";
+      location.reload();
+    }catch(err){if(msg)msg.textContent="Falha no login: "+String(err.message||err).slice(0,220);}
+    finally{if(btn)btn.disabled=false;}
+  });
+})();
+</script>
+<script defer src="./admin.js?v=0.40.7"></script>
 </body>
 </html>
