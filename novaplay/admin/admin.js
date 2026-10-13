@@ -1020,9 +1020,9 @@ async function submitMagnetImport(event){
 function init(){
  try {
  $("login-form").onsubmit=function(e){e.preventDefault();status("auth-message","Inicializando autenticação...");if(!client){status("auth-message","Conexão com o Supabase indisponível. Atualize a página.",true);return;}return authAction(e)};
- $("magnet-import-form").onsubmit=submitMagnetImport;
- $("r2-test-button").onclick=testR2Upload;
- $("r2-preview-button").onclick=previewR2Video;
+ if($("magnet-import-form"))$("magnet-import-form").onsubmit=submitMagnetImport;
+ if($("r2-test-button"))$("r2-test-button").onclick=testR2Upload;
+ if($("r2-preview-button"))$("r2-preview-button").onclick=previewR2Video;
  if(!window.supabase?.createClient){show("login-view");status("auth-message","Não foi possível carregar a conexão de armazenamento. Confira a internet e atualize a página.",true);return}
  client=window.supabase.createClient(API_URL,PUBLIC_KEY,{auth:{autoRefreshToken:true,persistSession:true,detectSessionInUrl:true}});
  $("login-form").onsubmit=authAction;$("signup").onclick=signUp;$("forgot").onclick=forgot;
