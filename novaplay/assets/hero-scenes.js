@@ -1,4 +1,4 @@
-/* NovaPlay V 0.36.0 — prévias curtas dos destaques, via player oficial do YouTube.
+/* NovaPlay V 0.36.1 — prévias curtas dos destaques, via player oficial do YouTube.
    Os tempos são segmentos editoriais aproximados de trailers/clipes divulgados:
    não são arquivos de filmes nem atestam ser a "cena mais engraçada".
    Fontes: promo Ice Age 4 Scrat, trailer Disney Meet the Robinsons,
@@ -17,6 +17,24 @@ const normalize=text=>String(text||"").normalize("NFD").replace(/[\u0300-\u036f]
  .toLocaleLowerCase("pt-BR").replace(/[^a-z0-9 ]+/g," ").replace(/\s+/g," ").trim();
 let generation=0,player=null,apiPromise=null,retryTimer=null,visible=false,soundOn=false,lastItem=null;
 const el=id=>document.getElementById(id);
+/* O player de terceiros não obedece object-fit:cover.
+   Redimensionar proporcionalmente o iframe completo para cobrir todo o hero. */
+function fitHeroFrame(){
+ const hero=el("hero"),iframe=player?.getIframe?.();
+ if(!hero||!iframe)return;
+ const w=hero.clientWidth,h=hero.clientHeight;
+ if(!w||!h)return;
+ const width=Math.ceil(Math.max(w,h*16/9)*1.12);
+ const height=Math.ceil(width*9/16);
+ iframe.style.width=width+"px";
+ iframe.style.height=height+"px";
+ iframe.style.maxWidth="none";
+ iframe.style.position="absolute";
+ iframe.style.left="50%";
+ iframe.style.top="50%";
+ iframe.style.transform="translate(-50%,-50%)";
+}
+
 function soundButton(){
  const button=el("hero-scene-sound");
  if(!button)return;
@@ -89,7 +107,7 @@ async function show(item){
    events:{
     onReady(event){
      if(id!==generation)return;
-     try{event.target.mute();event.target.seekTo(clip.start,true);event.target.playVideo()}catch(e){}
+     try{fitHeroFrame();event.target.mute();event.target.seekTo(clip.start,true);event.target.playVideo()}catch(e){}
     },
     onStateChange(event){
      if(id!==generation)return;
@@ -119,6 +137,7 @@ function toggleSound(){
 }
 function init(){
  el("hero-scene-sound")?.addEventListener("click",toggleSound);
+ window.addEventListener("resize",fitHeroFrame,{passive:true});
  document.addEventListener("visibilitychange",()=>{if(document.hidden)teardown();else if(lastItem&&!el("view-home")?.hidden)show(lastItem)});
  window.addEventListener("pagehide",teardown);
 }
