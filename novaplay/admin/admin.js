@@ -119,8 +119,7 @@ function setSourceType(){
  $("licensed-fields").hidden=!licensed;
  $("netflix-fields").hidden=!netflix;
  $("netflix-url").required=netflix;
- $("publish").disabled=netflix;
- if(netflix)$("publish").checked=false;
+ $("publish").disabled=false;
  $("licensed-url").required=licensed;
  $("upload-files").hidden=external;
  $("youtube-cover-section").hidden=!external;
@@ -132,7 +131,7 @@ function setSourceType(){
   ?"Adicione uma capa vertical para o filme licenciado (JPG, PNG ou WebP, até 5 MB)."
   :drive?"Se não escolher capa, usaremos uma arte padrão da NovaPlay. JPG, PNG ou WebP, até 5 MB."
   :"Se não escolher capa, usamos a miniatura do YouTube. JPG, PNG ou WebP, até 5 MB.";
- $("submit-upload").textContent=busy?"Salvando...":netflix?"Salvar referência privada":editing?.catalog_only?"Salvar e liberar para assistir":editing?"Salvar alterações":external?"Cadastrar vídeo pelo link":"Enviar para a NovaPlay";
+ $("submit-upload").textContent=busy?"Salvando...":netflix?"Salvar referência / prévia":editing?.catalog_only?"Salvar e liberar para assistir":editing?"Salvar alterações":external?"Cadastrar vídeo pelo link":"Enviar para a NovaPlay";
 }
 function fileKind(file,video=true){
  const ext=(file.name.split(".").pop()||"").toLowerCase();
@@ -713,12 +712,12 @@ async function toggleReview(row){
 async function togglePublish(row){
  if(busy)return;
  const publish=!row.is_published;
- if(publish&&isNetflixReference(row)){status("bulk-message","Título da Netflix bloqueado como rascunho. Edite e substitua pelo vídeo licenciado para liberar.",true);return}
+ if(publish&&isNetflixReference(row)&&!row.poster_path){status("bulk-message","Adicione primeiro uma capa com permissão de divulgação para exibir este título como Em breve.",true);return}
  if(publish&&!confirm(row.catalog_only?"Exibir a ficha de “"+row.title+"” na grade como EM BREVE, sem reprodução, até cadastrar um vídeo?":"Confirma autorização para disponibilizar publicamente “"+row.title+"” na NovaPlay, incluindo o arquivo indicado pelo link?"))return;
  busy=true;renderLibrary();
  try{
   const changes={is_published:publish};
-  if(publish&&!row.rights_reviewed){changes.rights_reviewed=true;changes.rights_reviewed_at=new Date().toISOString();}
+  if(publish&&!row.rights_reviewed&&!row.catalog_only){changes.rights_reviewed=true;changes.rights_reviewed_at=new Date().toISOString();}
   const {error}=await client.from("novaplay_library").update(changes).eq("id",row.id);
   if(error)throw error;
   await loadLibrary();
@@ -822,6 +821,7 @@ async function sendForm(e){
   if(file.size<1){status("upload-message","O vídeo está vazio.",true);return}
  }
  if(cover&&(!fileKind(cover,false)||cover.size>MAX_POSTER)){status("upload-message","Capa inválida. Use JPG, PNG ou WebP com até 5 MB.",true);return}
+ if(netflix&&$("publish").checked&&!cover&&!editing?.poster_path){status("upload-message","Para exibir Em breve, adicione uma capa que você tem permissão para divulgar.",true);return}
  const kind=$("kind").value;
  const payload={
   title:$("title").value.trim(),
@@ -831,7 +831,7 @@ async function sendForm(e){
   episode_number:kind==="episode"?Number($("episode-number").value):null,
   production_year:$("year").value?Number($("year").value):null,
   genre:$("genre").value.trim()||"Autoral",
-  is_published:netflix?false:$("publish").checked,
+  is_published:$("publish").checked,
   catalog_only:netflix,
   licensed_stream_url:licensed?licensedUrl:null,
   netflix_reference_url:netflix?netflixUrl:null,
@@ -889,7 +889,7 @@ async function sendForm(e){
   if(file)sessionStorage.removeItem(pendingKey(file));
   const wasCatalogOnly=!!editing?.catalog_only;
   resetForm();
-  status("upload-message",netflix?"Referência da Netflix salva como rascunho privado. Sem reprodução e sem publicação.":wasCatalogOnly?(payload.is_published?"Vídeo cadastrado! O título saiu de Em breve e está liberado para assistir.":"Vídeo cadastrado como rascunho. O título ainda não está publicado."):"Conteúdo salvo! "+(payload.is_published?"Já está disponível na NovaPlay.":"Salvo como rascunho."),false,true);
+  status("upload-message",netflix?(payload.is_published?"Prévia Em breve publicada com capa e sem reprodução.":"Referência salva como rascunho privado, sem reprodução."):wasCatalogOnly?(payload.is_published?"Vídeo cadastrado! O título saiu de Em breve e está liberado para assistir.":"Vídeo cadastrado como rascunho. O título ainda não está publicado."):"Conteúdo salvo! "+(payload.is_published?"Já está disponível na NovaPlay.":"Salvo como rascunho."),false,true);
   await loadLibrary();
  }catch(err){
    status("upload-message","Não foi possível salvar: "+errorText(err)+". Confira as informações e tente novamente.",true);
