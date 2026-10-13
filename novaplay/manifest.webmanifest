@@ -1,7 +1,7 @@
 {
   "id": "./index.html",
-  "name": "NovaPlay — TV, filmes e séries clássicos",
-  "short_name": "NovaPlay",
+  "name": "NPlay — TV, filmes e séries clássicos",
+  "short_name": "NPlay",
   "description": "Plataforma grátis com TV aberta ao vivo, cinema clássico, favoritos e continuar assistindo.",
   "start_url": "./index.html",
   "scope": "./",

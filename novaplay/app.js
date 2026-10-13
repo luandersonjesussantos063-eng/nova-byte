@@ -1,4 +1,4 @@
-/* NovaPlay v0.12.0 • player, catálogo e experiência de streaming */
+/* NPlay v0.12.0 • player, catálogo e experiência de streaming */
 (function(){
 "use strict";
 const db=window.NovaPlayCatalog;
@@ -24,7 +24,7 @@ function registerCatalogInterest(item,eventType){
   sessionStorage.setItem(key,String(Date.now()));
  }catch(e){}
  remoteDb.from("novaplay_activity_events").insert({media_id:mediaId,event_type:eventType})
-  .then(({error})=>{if(error)console.warn("Medição NovaPlay indisponível:",error.message)})
+  .then(({error})=>{if(error)console.warn("Medição NPlay indisponível:",error.message)})
   .catch(()=>{});
 }
 function read(key,fallback){try{const x=JSON.parse(localStorage.getItem(key));return x??fallback}catch(e){return fallback}}
@@ -58,7 +58,7 @@ async function loadUploadedCatalog(){
    const {data:page,error}=await remoteDb.from("novaplay_library")
     .select("id,title,description,kind,series_title,episode_number,genre,production_year,video_path,youtube_id,google_drive_id,google_drive_resource_key,licensed_stream_url,poster_path,duration_seconds,created_at,catalog_only")
     .eq("is_published",true).order("created_at",{ascending:false}).range(offset,offset+499);
-   if(error){console.warn("NovaPlay: catálogo remoto indisponível.",error.message);break}
+   if(error){console.warn("NPlay: catálogo remoto indisponível.",error.message);break}
    data.push(...(page||[]));
    if(!page||page.length<500)break;
   }
@@ -69,7 +69,7 @@ async function loadUploadedCatalog(){
   (data||[]).forEach(record=>{
    const cover=posterUrl(record.poster_path,record.youtube_id,record.title,record.google_drive_id,record.genre);
    const title=record.title||"Sem título";
-   const desc=record.description||(record.catalog_only?"Título confirmado na NovaPlay. Aguardando inclusão de vídeo autorizado.":"Conteúdo disponível na NovaPlay.");
+   const desc=record.description||(record.catalog_only?"Título confirmado na NPlay. Aguardando inclusão de vídeo autorizado.":"Conteúdo disponível na NPlay.");
    if(record.kind==="movie"){
     const film={id:"upload-"+record.id,title,kind:"film",category:record.genre||"Autoral",description:desc,
       year:record.production_year,duration:record.catalog_only?"Em breve":durationText(record.duration_seconds),cover,backdrop:cover,catalogOnly:!!record.catalog_only,
@@ -96,7 +96,7 @@ async function loadUploadedCatalog(){
   if(view==="inicio")renderRows();
   else if(view==="buscar")renderSearch();
   else if(categories[view])renderCategory(view);
- }catch(err){console.warn("NovaPlay: não foi possível obter novos conteúdos.",String(err))}
+ }catch(err){console.warn("NPlay: não foi possível obter novos conteúdos.",String(err))}
 }
 
 function icon(id){return '<svg aria-hidden="true"><use href="#i-'+id+'"></use></svg>'}
@@ -274,7 +274,7 @@ async function loadFeatured(){
    .map(id=>byId(id)).filter(x=>x&&(x.kind==="film"||x.kind==="series")&&!x.catalogOnly).slice(0,6);
   featured=films.length?films:defaultFeatured.map(byId).filter(Boolean);
   updateHero(0);
- }catch(e){console.warn("NovaPlay: destaques personalizados indisponíveis.",e.message)}
+ }catch(e){console.warn("NPlay: destaques personalizados indisponíveis.",e.message)}
 }
 
 function stopHeroPreview(){
@@ -377,10 +377,10 @@ function updateHero(index){
 }
 function youtubeFilms(){return db.films.filter(x=>!x.catalogOnly && x.mode==="youtube" && /^[A-Za-z0-9_-]{11}$/.test(x.youtube_id||""))}
 const categories={
- tv:["TV AO VIVO","TV aberta","Canais gratuitos com reprodução configurada dentro da NovaPlay. A disponibilidade depende das emissoras.",db.channels],
+ tv:["TV AO VIVO","TV aberta","Canais gratuitos com reprodução configurada dentro da NPlay. A disponibilidade depende das emissoras.",db.channels],
  filmes:["NOSSO ACERVO","Filmes clássicos","Longas e curtas históricos com versões de arquivo.",db.films.filter(x=>x.mode!=="youtube")],
- youtube:["YOUTUBE · NOVAPLAY","Filmes do YouTube","Assista por meio do player oficial do YouTube. A disponibilidade depende do canal e das permissões de reprodução.",[]],
- "em-breve":["LANÇAMENTOS · NOVAPLAY","Em breve","Prévias de animes e filmes anunciados. Estes títulos ainda não têm vídeo autorizado para reprodução.",[]],
+ youtube:["YOUTUBE · NPLAY","Filmes do YouTube","Assista por meio do player oficial do YouTube. A disponibilidade depende do canal e das permissões de reprodução.",[]],
+ "em-breve":["LANÇAMENTOS · NPLAY","Em breve","Prévias de animes e filmes anunciados. Estes títulos ainda não têm vídeo autorizado para reprodução.",[]],
  series:["CAPÍTULO POR CAPÍTULO","Séries clássicas","Escolha uma série para ver seus episódios.",db.series],
  favoritos:["SUA SELEÇÃO","Minha lista","Tudo o que você marcou como favorito.",[]]
 };
@@ -811,7 +811,7 @@ function play(item,episode){
   }
  }
  if(media.youtube_id){
-  // The official YouTube player runs INSIDE NovaPlay; do not bypass YouTube's restrictions.
+  // The official YouTube player runs INSIDE NPlay; do not bypass YouTube's restrictions.
   const id=media.youtube_id;
   if(!/^[A-Za-z0-9_-]{11}$/.test(id)){fail("Endereço do vídeo inválido.");return}
   v.pause();v.hidden=true;
@@ -905,7 +905,7 @@ document.addEventListener("keydown",e=>{
 document.addEventListener("visibilitychange",()=>{if(document.hidden){stopHeroPreview();if(!$("player-layer").hidden)$("video").pause()}});
 window.addEventListener("scroll",()=>$("app-header").classList.toggle("is-scrolled",window.scrollY>24),{passive:true});
 if("serviceWorker" in navigator&&location.protocol==="https:"){
- window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js?v=0.38.8",{updateViaCache:"none"}).catch(()=>{}));
+ window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js?v=0.39.0",{updateViaCache:"none"}).catch(()=>{}));
 }
 navigate((location.hash||"").slice(1)||"inicio");
 loadUploadedCatalog().then(loadFeatured);

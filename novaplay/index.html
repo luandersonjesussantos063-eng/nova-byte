@@ -5,12 +5,12 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#080d17">
 <meta name="robots" content="noindex,nofollow">
-<meta name="description" content="NovaPlay: filmes clássicos, séries históricas e TV aberta grátis em uma plataforma de streaming.">
+<meta name="description" content="NPlay: filmes clássicos, séries históricas e TV aberta grátis em uma plataforma de streaming.">
 <link rel="icon" href="./assets/icon.svg" type="image/svg+xml">
-<link rel="manifest" href="./manifest.webmanifest">
+<link rel="manifest" href="./manifest.webmanifest?v=0.39.0">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
-<link rel="stylesheet" href="./styles.css?v=0.38.8">
-<title>NovaPlay — Filmes, séries e TV ao vivo</title>
+<link rel="stylesheet" href="./styles.css?v=0.39.0">
+<title>NPlay — Filmes, séries e TV ao vivo</title>
 </head>
 <body>
 <svg style="position:absolute;width:0;height:0;overflow:hidden" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
@@ -30,8 +30,8 @@
 <symbol id="i-volume" viewBox="0 0 24 24"><path d="M3 9v6h4l5 4V5L7 9H3M16 8c3 2 3 6 0 8"/></symbol>
 </svg>
 <header class="app-header" id="app-header">
-<a href="#inicio" class="brand" id="brand-link" aria-label="NovaPlay, início">
-  <span class="brand-mark">▶</span><span>Nova<span class="brand-blue">Play</span></span>
+<a href="#inicio" class="brand" id="brand-link" aria-label="NPlay, início">
+  <span class="brand-mark">▶</span><span>N<span class="brand-blue">Play</span></span>
 </a>
 <nav class="desktop-nav" aria-label="Seções">
   <button class="nav-option active" data-nav="inicio">Início</button>
@@ -64,7 +64,7 @@
       <div class="hero-shade"></div>
       <button type="button" id="hero-scene-sound" class="hero-scene-sound" aria-label="Ativar som da cena" aria-pressed="false" title="Ativar som da cena" hidden>🔇</button>
       <div class="hero-content">
-        <div class="hero-eyebrow"><span class="brand-mini">N</span> <span>DESTAQUE DA NOVAPLAY</span></div>
+        <div class="hero-eyebrow"><span class="brand-mini">N</span> <span>DESTAQUE DA NPLAY</span></div>
         <div class="hero-genre" id="hero-genre">CINEMA CLÁSSICO</div>
         <h1 id="hero-title">O Mundo Perdido</h1>
         <div class="hero-metadata" id="hero-metadata"></div>
@@ -77,7 +77,7 @@
       </div>
       <section id="hero-preview-panel" class="hero-preview-panel" hidden role="dialog" aria-label="Prévia do destaque">
         <div class="hero-preview-top">
-          <div><span class="hero-preview-eyebrow">NOVA PLAY · PRÉVIA COM SOM</span><h2 id="hero-preview-heading">Prévia</h2></div>
+          <div><span class="hero-preview-eyebrow">NPLAY · PRÉVIA COM SOM</span><h2 id="hero-preview-heading">Prévia</h2></div>
           <button type="button" id="hero-preview-close" class="hero-preview-close" aria-label="Fechar prévia">✕ Fechar</button>
         </div>
         <div class="hero-preview-video">
@@ -136,8 +136,8 @@
     </div>
   </section>
 </div>
-<div id="player-layer" class="player-layer" hidden role="dialog" aria-modal="true" aria-label="Reprodutor NovaPlay">
-  <div class="player-bar"><button id="player-back" class="player-back" aria-label="Voltar"><svg><use href="#i-arrow-left"/></svg></button><span class="player-brand">Nova<span>Play</span></span><span class="player-bar-title" id="player-heading"></span><button type="button" id="player-issue-open" class="player-issue-trigger" hidden aria-label="Informar problema com este vídeo">⚠ Problema no vídeo?</button><button id="player-close" class="round-close" aria-label="Fechar vídeo"><svg><use href="#i-close"/></svg></button></div>
+<div id="player-layer" class="player-layer" hidden role="dialog" aria-modal="true" aria-label="Reprodutor NPlay">
+  <div class="player-bar"><button id="player-back" class="player-back" aria-label="Voltar"><svg><use href="#i-arrow-left"/></svg></button><span class="player-brand">N<span>Play</span></span><span class="player-bar-title" id="player-heading"></span><button type="button" id="player-issue-open" class="player-issue-trigger" hidden aria-label="Informar problema com este vídeo">⚠ Problema no vídeo?</button><button id="player-close" class="round-close" aria-label="Fechar vídeo"><svg><use href="#i-close"/></svg></button></div>
   <div id="player-issue-panel" class="player-issue-panel" hidden role="dialog" aria-label="Problema ao assistir">
     <div class="player-issue-card">
       <h2>Não conseguiu assistir?</h2>
@@ -176,13 +176,13 @@
   </div>
 </div>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
-<footer class="app-footer"><a href="./admin/" style="display:inline-block;color:#a6c8ff;font-weight:750;padding:7px 0;text-decoration:underline">Painel do criador ↗</a><div>NovaPlay V 0.38.8 · Cinema clássico e TV aberta grátis · Artes ilustrativas da NovaPlay · O uso comercial de cada conteúdo exige verificação dos direitos.</div></footer>
-<script src="./assets/cover.js?v=0.38.8"></script>
-<script src="./assets/card-hover.js?v=0.38.8"></script>
-<script src="./assets/hero-scenes.js?v=0.38.8"></script>
-<script src="./catalog.js?v=0.38.8"></script>
+<footer class="app-footer"><a href="./admin/" style="display:inline-block;color:#a6c8ff;font-weight:750;padding:7px 0;text-decoration:underline">Painel do criador ↗</a><div>NPlay V 0.39.0 · Cinema clássico e TV aberta grátis · Artes ilustrativas da NPlay · O uso comercial de cada conteúdo exige verificação dos direitos.</div></footer>
+<script src="./assets/cover.js?v=0.39.0"></script>
+<script src="./assets/card-hover.js?v=0.39.0"></script>
+<script src="./assets/hero-scenes.js?v=0.39.0"></script>
+<script src="./catalog.js?v=0.39.0"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.58.0/dist/umd/supabase.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/hls.js@1.7.3/dist/hls.min.js"></script>
-<script src="./app.js?v=0.38.8" defer></script>
+<script src="./app.js?v=0.39.0" defer></script>
 </body>
 </html>
