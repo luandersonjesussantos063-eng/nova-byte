@@ -39,8 +39,8 @@ let fullscreenOwned=false,closingFullscreen=false,lockedLandscape=false;
 let issueReportBusy=false;
 let previewTimer=null,previewSequence=0,previewHls=null;
 
-function posterUrl(path,youtubeId,title,driveId){
- const approved=window.NovaPlayCover?.approvedAnimePoster?.(title,false);
+function posterUrl(path,youtubeId,title,driveId,genre){
+ const approved=window.NovaPlayCover?.approvedAnimePoster?.(title,false,genre);
  if(approved)return approved;
  if(path&&remoteDb)return remoteDb.storage.from("novaplay-posters").getPublicUrl(path).data.publicUrl;
  if(youtubeId&&/^[A-Za-z0-9_-]{11}$/.test(youtubeId))return"https://i.ytimg.com/vi/"+youtubeId+"/hqdefault.jpg";
@@ -69,7 +69,7 @@ async function loadUploadedCatalog(){
   // Em breve é só para fichas sem fonte de vídeo. Listar por último.
   data.sort((a,b)=>Number(!!a.catalog_only)-Number(!!b.catalog_only));
   (data||[]).forEach(record=>{
-   const cover=posterUrl(record.poster_path,record.youtube_id,record.title,record.google_drive_id);
+   const cover=posterUrl(record.poster_path,record.youtube_id,record.title,record.google_drive_id,record.genre);
    const title=record.title||"Sem título";
    const desc=record.description||(record.catalog_only?"Título confirmado na NovaPlay. Aguardando inclusão de vídeo autorizado.":"Conteúdo disponível na NovaPlay.");
    if(record.kind==="movie"){
@@ -740,7 +740,7 @@ document.addEventListener("keydown",e=>{
 document.addEventListener("visibilitychange",()=>{if(document.hidden){stopHeroPreview();if(!$("player-layer").hidden)$("video").pause()}});
 window.addEventListener("scroll",()=>$("app-header").classList.toggle("is-scrolled",window.scrollY>24),{passive:true});
 if("serviceWorker" in navigator&&location.protocol==="https:"){
- window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js?v=0.26.1",{updateViaCache:"none"}).catch(()=>{}));
+ window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js?v=0.28.1",{updateViaCache:"none"}).catch(()=>{}));
 }
 navigate((location.hash||"").slice(1)||"inicio");
 loadUploadedCatalog().then(loadFeatured);
