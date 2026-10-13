@@ -8,9 +8,9 @@
 <link rel="stylesheet" href="./admin.css?v=0.28.2">
 </head>
 <body>
-<header class="top"><a class="brand" href="../"><span class="mark">▶</span> N<span>Play</span></a><div class="top-right"><strong>Painel administrativo · NPlay V 0.40.9</strong><button id="logout" class="outline" hidden>Sair</button></div></header>
+<header class="top"><a class="brand" href="../"><span class="mark">▶</span> N<span>Play</span></a><div class="top-right"><strong>Painel administrativo · NPlay V 0.41.0</strong><button id="logout" class="outline" hidden>Sair</button></div></header>
 <main class="container">
-  <section id="loading" class="panel intro" hidden><div class="spin"></div><p>Preparando seu painel... <small>V 0.40.9</small></p><p id="loading-error" class="feedback" role="status"></p><button id="loading-retry" class="outline" type="button" hidden onclick="location.reload()">Tentar novamente</button></section>
+  <section id="loading" class="panel intro" hidden><div class="spin"></div><p>Preparando seu painel... <small>V 0.41.0</small></p><p id="loading-error" class="feedback" role="status"></p><button id="loading-retry" class="outline" type="button" hidden onclick="location.reload()">Tentar novamente</button></section>
   <section id="login-view" class="panel login">
     <div class="section-label">ACESSO RESTRITO</div>
     <h1>Gerencie sua NPlay</h1>
@@ -265,7 +265,7 @@
     if(!loading||loading.hidden)return;
     var msg=document.getElementById("loading-error");
     var retry=document.getElementById("loading-retry");
-    if(msg)msg.textContent="O carregamento demorou demais. Tente novamente. Se persistir, verifique a publicação da versão 0.40.9.";
+    if(msg)msg.textContent="O carregamento demorou demais. Tente novamente. Se persistir, verifique a publicação da versão 0.41.0.";
     if(retry)retry.hidden=false;
     var spin=loading.querySelector(".spin");
     if(spin)spin.style.display="none";
@@ -277,7 +277,7 @@
   window.addEventListener("unhandledrejection",function(){setTimeout(rescue,300)});
 })();
 </script>
-<script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.58.0/dist/umd/supabase.min.js"></script>
+
 <script defer src="https://cdn.jsdelivr.net/npm/tus-js-client@4.3.1/dist/tus.min.js"></script>
 <script src="../assets/cover.js?v=0.39.2"></script>
 <script>
@@ -321,6 +321,29 @@
   });
 })();
 </script>
-<script defer src="./admin.js?v=0.40.9"></script>
+<script>
+(function(){
+ var sources=[
+  "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.58.0/dist/umd/supabase.min.js",
+  "https://unpkg.com/@supabase/supabase-js@2.58.0/dist/umd/supabase.js"
+ ];
+ var msg=document.getElementById("auth-message");
+ function load(url,onSuccess,onFailure){
+  var el=document.createElement("script");el.src=url;el.async=true;
+  el.onload=onSuccess;el.onerror=onFailure;document.body.appendChild(el);
+ }
+ function startAdmin(){
+  if(!window.supabase||typeof window.supabase.createClient!=="function"){fail();return}
+  load("./admin.js?v=0.41.0",function(){},function(){if(msg)msg.textContent="Falha ao carregar o módulo administrativo. Atualize a página."});
+ }
+ function fail(){if(msg)msg.textContent="Não foi possível carregar a biblioteca de autenticação. Confira a conexão e tente novamente.";}
+ function attempt(i){
+  if(window.supabase&&window.supabase.createClient){startAdmin();return}
+  if(i>=sources.length){fail();return}
+  load(sources[i],function(){if(window.supabase&&window.supabase.createClient)startAdmin();else attempt(i+1)},function(){attempt(i+1)});
+ }
+ attempt(0);
+})();
+</script>
 </body>
 </html>
