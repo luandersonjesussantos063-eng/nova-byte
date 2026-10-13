@@ -28,6 +28,16 @@ if not exist ".venv\Scripts\python.exe" (
 if errorlevel 1 goto error
 ".venv\Scripts\python.exe" -m pip install -r requirements.txt
 if errorlevel 1 goto error
+".venv\Scripts\python.exe" -c "import libtorrent; print('libtorrent OK')"
+if errorlevel 1 (
+ echo.
+ echo ATENCAO: Falta uma DLL nativa para o libtorrent.
+ echo Instale Microsoft Visual C++ Redistributable x64:
+ echo https://aka.ms/vs/17/release/vc_redist.x64.exe
+ echo Reinicie o Windows e execute novamente este instalador.
+ pause
+ exit /b 1
+)
 if not exist ".env" (
  copy /y ".env.example" ".env" >nul
  echo.
