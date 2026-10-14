@@ -4,7 +4,7 @@ const client=()=>window.supabase.createClient("https://vajlhodqxskozuxxlujv.supa
 let db, testedUrl=null, testPassed=false;
 const SPTV_HTTP_ORIGIN="http://95.211.149.215:8081/look/sptv/playlist.m3u8";
 const SPTV_HTTPS_PROXY="https://nplay-sptv-hls.luandersonjesussantos063.workers.dev/look/sptv/playlist.m3u8";
-function playableUrl(url){if(url.startsWith("https://"))return url;if(url===SPTV_HTTP_ORIGIN)return SPTV_HTTPS_PROXY;throw Error("Link HTTP aceito, mas ainda não há um gateway HTTPS configurado para este servidor. Navegadores bloqueiam testes HTTP diretos em páginas HTTPS.");}
+function playableUrl(url){const u=new URL(url);if(u.protocol==="https:")return u.href;if(u.hostname==="95.211.149.215"&&u.port==="8081"&&u.pathname.replace(/\/$/,"")==="/look/sptv/playlist.m3u8")return SPTV_HTTPS_PROXY+u.search;throw Error("Este servidor HTTP ainda não tem gateway HTTPS para testar o sinal. Use um link HTTPS ou configure um gateway autorizado.");}
 const isHls=u=>/\.m3u8(?:\?|$)/i.test(u);
 function testStatus(msg){const el=$("live-test-message");if(el)el.textContent=msg;}
 async function testLink(){
@@ -42,7 +42,7 @@ async function testLink(){
  finally{clearTimeout(timeout)}
 }
 
-function parse(raw){const m=raw.match(/<iframe[^>]+src=["']([^"']+)/i);const u=new URL(m?m[1]:raw.trim());if(!["http:","https:"].includes(u.protocol))throw Error("Use um endereço HTTP ou HTTPS.");if(u.username||u.password)throw Error("Endereços com usuário ou senha não são aceitos.");return u.href}
+function parse(raw){const m=raw.match(/<iframe[^>]+src=["']([^"']+)/i);const found=raw.match(/https?:\/\/[^\s<>|)\]]+/i);const u=new URL(m?m[1]:found?found[0]:raw.trim());if(!["http:","https:"].includes(u.protocol))throw Error("Use HTTP ou HTTPS.");if(u.username||u.password)throw Error("URL com senha não é aceita.");return u.href}
 async function refresh(){
 const list=$("live-embed-list");if(!list)return;
 const {data,error}=await db.from("novaplay_live_embeds").select("*").order("created_at",{ascending:false});
