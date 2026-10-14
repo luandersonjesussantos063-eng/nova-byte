@@ -58,7 +58,7 @@ async function loadUploadedCatalog(){
    const {data:page,error}=await remoteDb.from("novaplay_library")
     .select("id,title,description,kind,series_title,episode_number,genre,production_year,video_path,r2_object_key,youtube_id,google_drive_id,google_drive_resource_key,licensed_stream_url,poster_path,duration_seconds,created_at,catalog_only")
     .eq("is_published",true).order("created_at",{ascending:false}).range(offset,offset+499);
-   if(error){console.warn("NPlay: catálogo remoto indisponível.",error.message);break}
+   if(error){console.error("NPlay: catálogo público não carregou:",error.message); if(offset===0){setTimeout(loadUploadedCatalog,15000);return;}break}
    data.push(...(page||[]));
    if(!page||page.length<500)break;
   }
@@ -249,6 +249,7 @@ function renderRows(){
  ["Continuar assistindo",continued(),"continuar",false],
  ["TV aberta",db.channels,"tv",true],
  ["Filmes licenciados",uploadedCatalog.filter(x=>x.mode==="licensed"&&!x.catalogOnly),"filmes",false],
+ ["Filmes do Cloudflare R2",uploadedCatalog.filter(x=>x.kind==="film"&&x.mode==="r2"&&!x.catalogOnly),"filmes",false],
  ["Filmes do YouTube",youtubeFilms(),"youtube",false],
  ["Animes e estreias · Em breve",upcomingFilms(),"em-breve",false],
  ["Filmes clássicos",db.films.filter(x=>x.mode!=="youtube"),"filmes",false],
