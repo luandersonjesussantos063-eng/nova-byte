@@ -2,7 +2,7 @@
 "use strict";
 const $=id=>document.getElementById(id);
 const PROVIDER="https://rdcanais.org/premiereclubes";
-let currentUrl="",currentTitle="";
+let currentUrl="",currentTitle="",experimental=false;
 const player=()=>$("iframe-channel-player");
 function note(message){const el=$("nplay-channel-notice");if(el)el.textContent=message}
 function closeChannel(){
@@ -11,15 +11,16 @@ function closeChannel(){
  $("iframe-channel-viewer").hidden=true;
  note("");
 }
-function openChannel(url,title){
+function openChannel(url,title,mode=experimental){
  let parsed;
  try{parsed=new URL(url);if(parsed.protocol!=="https:")throw Error("HTTPS necessário")}catch(e){note("Endereço do canal inválido.");return}
- currentUrl=parsed.href;currentTitle=title;
+ currentUrl=parsed.href;currentTitle=title;experimental=Boolean(mode);
  const el=player();el.replaceChildren();
  const frame=document.createElement("iframe");
  frame.src=currentUrl;frame.title=title;
  frame.allow="autoplay; encrypted-media; picture-in-picture; fullscreen";
  frame.allowFullscreen=true;
+ if(experimental)frame.setAttribute("sandbox","allow-scripts allow-same-origin allow-forms allow-presentation");
  frame.loading="eager";
  frame.referrerPolicy="strict-origin-when-cross-origin";
  frame.style.cssText="display:block;width:100%;height:100%;border:0;background:#000";
@@ -27,7 +28,8 @@ function openChannel(url,title){
  el.append(frame);
  $("iframe-channel-heading").textContent=title;
  $("iframe-channel-viewer").hidden=false;
- note("Transmissão incorporada. Anúncios e janelas do site externo podem aparecer; a NPlay não controla o conteúdo do fornecedor.");
+ note(experimental?"MODO EXPERIMENTAL: novas abas bloqueadas pelo navegador. Se o fornecedor bloquear o vídeo, clique em ‘Voltar ao normal’.":"Modo normal: o fornecedor pode abrir anúncios em novas abas.");
+ const modeButton=$("nplay-channel-experiment");if(modeButton)modeButton.textContent=experimental?"↩ Voltar ao normal":"🛡 Testar bloqueio de abas";
  $("iframe-channel-viewer").scrollIntoView({behavior:"smooth",block:"start"});
 }
 async function load(){
@@ -59,6 +61,8 @@ function init(){
  const mobile=$("iframe-channels-open-mobile");if(mobile)mobile.onclick=()=>button.click();
  button.onclick=()=>{$("iframe-channels-panel").hidden=false;$("iframe-channels-panel").scrollIntoView({behavior:"smooth"});load()};
  $("iframe-channel-close").onclick=closeChannel;
+ const experiment=$("nplay-channel-experiment");
+ if(experiment)experiment.onclick=()=>{if(currentUrl)openChannel(currentUrl,currentTitle,!experimental)};
  const reload=$("nplay-channel-reload");
  if(reload)reload.onclick=()=>{if(currentUrl)openChannel(currentUrl,currentTitle)};
  const fullscreen=$("nplay-channel-fullscreen");
