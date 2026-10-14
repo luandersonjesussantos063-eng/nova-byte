@@ -733,6 +733,8 @@ function beginEdit(row){
  if(busy){status("upload-message","Aguarde a operação atual terminar antes de editar.",true);return;}
  // O formulário fica oculto na aba Importações; abrir a aba antes de rolar.
  document.querySelector('[data-admin-tab="importacoes"]')?.click();
+ document.getElementById("legacy-upload-options").hidden=false;
+ document.getElementById("magnet-import-form").parentElement.hidden=true;
  const releasing=!!row.catalog_only;
  editing=row;$("form-title").textContent=releasing?"Liberar título para assistir":"Editar conteúdo";$("cancel-edit").hidden=false;
  $("title").value=row.title;$("kind").value=row.kind;setKind();
@@ -758,6 +760,8 @@ function beginEdit(row){
  status("upload-message","Editando “"+row.title+"”. Altere nome, capa ou outros dados e clique em Salvar alterações.");
 }
 function resetForm(){
+ document.getElementById("legacy-upload-options").hidden=true;
+ document.getElementById("magnet-import-form").parentElement.hidden=false;
  editing=null;$("upload-form").reset();$("form-title").textContent="Adicionar filme ou episódio";
  $("cancel-edit").hidden=true;$("series-fields").hidden=true;$("series-name").required=false;$("episode-number").required=false;
  $("source-type").value="upload";$("r2-catalog-key").value="";$("r2-rights").checked=false;$("youtube-url").value="";$("drive-url").value="";$("licensed-url").value="";$("licensed-rights").checked=false;$("netflix-url").value="";$("youtube-poster-file").value="";setSourceType();
