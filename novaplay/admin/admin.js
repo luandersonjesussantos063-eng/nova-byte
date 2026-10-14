@@ -121,8 +121,7 @@ function setSourceType(){
  $("licensed-fields").hidden=!licensed;
  $("netflix-fields").hidden=!netflix;
  $("netflix-url").required=netflix;
- $("publish").disabled=r2&&!editing?.r2_object_key;
- if(r2&&!editing?.r2_object_key)$("publish").checked=false;
+ $("publish").disabled=false;
  $("licensed-url").required=licensed;
  $("upload-files").hidden=external;
  $("youtube-cover-section").hidden=!external;
@@ -631,12 +630,12 @@ function renderLibrary(){
   const playable=sourceFilter.querySelector('option[value="has_video"]');
   if(playable)playable.textContent="Com vídeo cadastrado · "+withVideo;
  }
- const available=items.filter(x=>x.rights_reviewed&&!x.is_published&&!isNetflixReference(x));
- const pendingReview=items.filter(x=>!x.is_published&&!x.rights_reviewed);
+ const available=items.filter(x=>hasPublicationAuthorization(x)&&!x.is_published&&!isNetflixReference(x));
+ const pendingReview=items.filter(x=>!x.is_published&&!hasPublicationAuthorization(x));
  const markAll=$("bulk-mark-reviewed");
  if(markAll){markAll.disabled=busy||!pendingReview.length;markAll.textContent="Marcar todos como conferidos ("+pendingReview.length+")";}
- const bulk=$("bulk-publish");if(bulk){bulk.disabled=busy||!available.length;bulk.textContent="Liberar todos os conferidos ("+available.length+")";}
- const summary=$("review-summary");if(summary)summary.textContent=available.length+" prontos para publicar · "+pendingReview.length+" rascunhos ainda sem conferência";
+ const bulk=$("bulk-publish");if(bulk){bulk.disabled=busy||!available.length;bulk.textContent="Publicar autorizados ("+available.length+")";}
+ const summary=$("review-summary");if(summary)summary.textContent=available.length+" prontos para publicar · "+pendingReview.length+" rascunhos sem autorização registrada";
  const activitySummary=$("activity-summary");
  if(activitySummary){
   const events=[...activityCounts.values()];
@@ -669,7 +668,7 @@ function renderLibrary(){
   if(statusFilter==="catalog_only"&&!x.catalog_only)return false;
   if(statusFilter==="has_video"&&(x.catalog_only||!x.is_published))return false;
   if(statusFilter==="draft"&&x.is_published)return false;
-  if(statusFilter==="reviewed"&&(x.is_published||!x.rights_reviewed))return false;
+  if(statusFilter==="reviewed"&&(x.is_published||!hasPublicationAuthorization(x)))return false;
   if(statusFilter==="published"&&!x.is_published)return false;
   if(ratingFilter==="pending"&&x.quality_score!==null)return false;
   if(ratingFilter==="passing"&&!(x.quality_score>=6))return false;
@@ -692,7 +691,7 @@ function renderLibrary(){
   const metricBadge='<small>Ficha: '+engagement.detail+' · Tentativas de assistir: '+engagement.attempt+' (30 dias)</small>';
   const validationBadge=row.r2_object_key?"<small>"+(row.media_validated_at?"Vídeo validado":"Validação técnica pendente")+(row.auto_publish?" · Publicação automática ativada":"")+"</small>":"";
   const review=row.genre==="Importado - revisão";
-  const displayState=row.catalog_only?(row.is_published?"NA GRADE · EM BREVE":"RASCUNHO · SEM VÍDEO"):row.is_published?"PUBLICADO":row.rights_reviewed?"CONFERIDO · AGUARDA PUBLICAÇÃO":review?"RASCUNHO · REVISAR DIREITOS":"RASCUNHO";
+  const displayState=row.catalog_only?(row.is_published?"NA GRADE · EM BREVE":"RASCUNHO · SEM VÍDEO"):row.is_published?"PUBLICADO":hasPublicationAuthorization(row)?"AUTORIZADO · AGUARDA PUBLICAÇÃO":review?"RASCUNHO · REVISAR DIREITOS":"RASCUNHO";
   const grade=Number.isInteger(row.quality_score)?row.quality_score:null;
   const gradeTag=grade===null?"SEM NOTA":grade<6?"NOTA "+grade+" · CANDIDATO À RETIRADA":"NOTA "+grade+" · MANTER";
   const gradeBadge='<span class="quality-status'+(grade!==null&&grade<6?" quality-below":"")+'">'+gradeTag+'</span>';
@@ -709,6 +708,7 @@ function renderLibrary(){
   });
   item.querySelector(".quality-save").onclick=()=>saveQualityScore(row,item);
   item.querySelector(".review").onclick=()=>toggleReview(row);
+  if(row.licensed_rights_confirmed&&(row.r2_object_key||row.licensed_stream_url)){item.querySelector(".review").disabled=true;item.querySelector(".review").textContent="✓ Autorização registrada";}
    item.querySelector(".edit").textContent=row.catalog_only?"Liberar para assistir":"Editar";
   item.querySelector(".edit").classList.toggle("release",!!row.catalog_only);
   item.querySelector(".edit").onclick=()=>beginEdit(row);
@@ -848,17 +848,20 @@ function autoGenreForm(){
  else status("upload-message","Não foi possível determinar o gênero com segurança. Selecione manualmente antes de publicar.",true);
 }
 
+function hasPublicationAuthorization(row){
+ return !!(row.rights_reviewed || (row.licensed_rights_confirmed && (row.r2_object_key || row.licensed_stream_url)));
+}
 async function togglePublish(row){
  if(busy)return;
  const publish=!row.is_published;
  if(publish&&isNetflixReference(row)&&!row.poster_path){status("bulk-message","Adicione primeiro uma capa com permissão de divulgação para exibir este título como Em breve.",true);return}
- if(publish&&!confirm(row.catalog_only?"Exibir a ficha de “"+row.title+"” na grade como EM BREVE, sem reprodução, até cadastrar um vídeo?":"Confirma autorização para disponibilizar publicamente “"+row.title+"” na NPlay, incluindo o arquivo indicado pelo link?"))return;
+ if(publish&&!confirm(row.catalog_only?"Exibir a ficha de “"+row.title+"” na grade como EM BREVE, sem reprodução, até cadastrar um vídeo?":"Publicar “"+row.title+"” no catálogo da NPlay?"))return;
  busy=true;renderLibrary();
  try{
   const changes={is_published:publish};
   if(!publish)changes.auto_publish=false;
   if(publish){const g=genreForPublication(row.title,row.description,row.genre);if(!g)throw Error("Gênero não identificado. Abra Editar e escolha o gênero antes de publicar.");changes.genre=g;}
-  if(publish&&!row.rights_reviewed&&!row.catalog_only)throw Error("Confira os direitos deste título antes de publicar.");
+  if(publish&&!hasPublicationAuthorization(row)&&!row.catalog_only)throw Error("Confira os direitos deste título antes de publicar.");
   const {error}=await client.from("novaplay_library").update(changes).eq("id",row.id);
   if(error)throw error;
   await loadLibrary();
@@ -868,7 +871,7 @@ async function togglePublish(row){
 async function bulkMarkReviewed(){
  if(busy||!sessionUser)return;
  // Usa todos os rascunhos, independentemente da página ou filtro ativo.
- const ids=items.filter(x=>!x.is_published&&!x.rights_reviewed&&!isNetflixReference(x)).map(x=>x.id);
+ const ids=items.filter(x=>!x.is_published&&!hasPublicationAuthorization(x)&&!isNetflixReference(x)).map(x=>x.id);
  if(!ids.length){
   status("bulk-message","Não há rascunhos pendentes de conferência.",false,true);
   return;
@@ -905,9 +908,9 @@ async function bulkMarkReviewed(){
 
 async function bulkPublishReviewed(){
  if(busy||!sessionUser)return;
- const ids=items.filter(x=>x.rights_reviewed&&!x.is_published&&!isNetflixReference(x)).map(x=>x.id);
+ const ids=items.filter(x=>hasPublicationAuthorization(x)&&!x.is_published&&!isNetflixReference(x)).map(x=>x.id);
  if(!ids.length){status("bulk-message","Nenhum rascunho conferido para publicar.");return}
- if(!confirm("LIBERAR TODOS OS CONFERIDOS: serão publicados "+ids.length+" filmes. Confirma que conferiu as licenças de exibição de TODOS eles, e que quer disponibilizá-los ao público agora? Os não conferidos continuarão rascunhos."))return;
+ if(!confirm("PUBLICAR AUTORIZADOS: serão publicados "+ids.length+" filmes. Deseja disponibilizá-los ao público agora? Os demais continuarão rascunhos."))return;
  busy=true;renderLibrary();$("bulk-publish").disabled=true;
  let done=0;
  try{
@@ -916,7 +919,7 @@ async function bulkPublishReviewed(){
    const group=ids.slice(index,index+80).filter(id=>{const row=items.find(x=>x.id===id);return row&&genreForPublication(row.title,row.description,row.genre)});
    for(const id of group){const row=items.find(x=>x.id===id),g=genreForPublication(row.title,row.description,row.genre);if(g!==row.genre){const {error:ge}=await client.from("novaplay_library").update({genre:g}).eq("id",id);if(ge)throw ge}}
    if(!group.length)continue;
-   const {data,error}=await client.from("novaplay_library").update({is_published:true}).in("id",group).eq("is_published",false).eq("rights_reviewed",true).select("id");
+   const {data,error}=await client.from("novaplay_library").update({is_published:true}).in("id",group).eq("is_published",false).or("rights_reviewed.eq.true,licensed_rights_confirmed.eq.true").select("id");
    if(error)throw error;
    done+=(data||[]).length;
   }
@@ -954,8 +957,6 @@ async function sendForm(e){
  if(r2){
   if(!/^[0-9a-f-]{36}\/[0-9a-f-]{36}-[a-z0-9-]{8,80}\.(mp4|webm|ogv)$/i.test(r2key)||!r2key.startsWith(sessionUser.id+"/")){status("upload-message","Informe a chave R2 de um vídeo enviado pela sua conta.",true);return;}
   if(!$("r2-rights").checked){status("upload-message","Confirme os direitos de distribuição do vídeo.",true);return;}
-  if($("publish").checked&&!editing?.r2_object_key){status("upload-message","Primeiro salve o vídeo R2 como rascunho para revisão.",true);return;}
-  if($("publish").checked&&!editing?.rights_reviewed){status("upload-message","Revise os direitos deste título antes de publicar. A marcação de autorização, sozinha, não é suficiente.",true);return;}
  }
  if(netflix&&!netflixUrl){status("upload-message","Informe um link oficial Netflix /title/ID ou /browse/genre/...?...jbv=ID.",true);return}
  if(licensed&&!licensedUrl){status("upload-message","Informe um link HTTPS direto autorizado terminando em .mp4, .webm, .ogv ou .m3u8. Endereços de filmes na Netflix não funcionam aqui.",true);return}
@@ -989,7 +990,7 @@ async function sendForm(e){
   licensed_rights_confirmed:(licensed&&$("licensed-rights").checked)||(r2&&$("r2-rights").checked)
  };
  if(editing?.is_published&&!payload.is_published)payload.auto_publish=false;
- if(licensed||netflix||r2)payload.rights_reviewed=r2?!!editing?.rights_reviewed:licensed&&!!payload.licensed_rights_confirmed;
+ if(licensed||netflix||r2)payload.rights_reviewed=(r2||licensed)&&!!payload.licensed_rights_confirmed;
  if(netflix){payload.rights_reviewed_at=null;payload.licensed_rights_confirmed=false}
  if(payload.is_published&&payload.genre==="Autoral"){status("upload-message","Escolha um gênero antes de publicar. O leitor automático não encontrou uma classificação confiável.",true);return}
  if(payload.title.length<2){status("upload-message","Informe um título de pelo menos 2 caracteres.",true);return}
@@ -1087,11 +1088,11 @@ function openReadyMagnetInCatalog(job){
  $("title").value=job.title||"";
  $("r2-catalog-key").value=job.r2_object_key||"";
  $("publish").checked=false;
- $("r2-rights").checked=false;
+ $("r2-rights").checked=!!job.rights_confirmed;
  const magnetPanel=$("magnet-import-heading")?.closest("section");
  if(magnetPanel)magnetPanel.hidden=true;
  const title=$("form-title");if(title)title.textContent="Cadastrar filme importado no catálogo";
- status("upload-message","Vídeo recebido do R2. Confira os direitos, complete gênero, sinopse e capa e salve como rascunho. A publicação requer revisão posterior.");
+ status("upload-message","Vídeo recebido do R2. A autorização registrada na importação foi mantida. Complete gênero, sinopse e capa para publicar.");
  document.querySelector('[data-admin-tab="importacoes"]')?.click();
  requestAnimationFrame(()=>document.querySelector(".editor")?.scrollIntoView({behavior:"smooth",block:"start"}));
 }
