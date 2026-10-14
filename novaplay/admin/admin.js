@@ -730,7 +730,9 @@ function setKind(){
  $("series-name").required=isEpisode;$("episode-number").required=isEpisode;
 }
 function beginEdit(row){
- if(busy)return;
+ if(busy){status("upload-message","Aguarde a operação atual terminar antes de editar.",true);return;}
+ // O formulário fica oculto na aba Importações; abrir a aba antes de rolar.
+ document.querySelector('[data-admin-tab="importacoes"]')?.click();
  const releasing=!!row.catalog_only;
  editing=row;$("form-title").textContent=releasing?"Liberar título para assistir":"Editar conteúdo";$("cancel-edit").hidden=false;
  $("title").value=row.title;$("kind").value=row.kind;setKind();
@@ -752,7 +754,8 @@ function beginEdit(row){
  $("poster-file-label").textContent="Trocar capa (opcional)";
  $("submit-upload").textContent=isNetflixReference(row)?"Salvar referência privada":releasing?"Salvar e liberar para assistir":"Salvar alterações";
  status("upload-message",releasing?"“"+row.title+"” já está na grade como Em breve. Adicione o arquivo ou link do vídeo autorizado. Ao salvar, sairá de Em breve e terá reprodução habilitada. Sem um vídeo, não será liberado.":"Editando “"+row.title+"”. Você pode mudar só o texto ou trocar arquivos.",false,releasing);
- document.querySelector(".editor").scrollIntoView({behavior:"smooth",block:"start"});
+ requestAnimationFrame(()=>document.querySelector(".editor")?.scrollIntoView({behavior:"smooth",block:"start"}));
+ status("upload-message","Editando “"+row.title+"”. Altere nome, capa ou outros dados e clique em Salvar alterações.");
 }
 function resetForm(){
  editing=null;$("upload-form").reset();$("form-title").textContent="Adicionar filme ou episódio";
