@@ -47,12 +47,31 @@ async function load(){
    }
   }catch(e){note("Alguns canais cadastrados não puderam ser carregados. O Premiere Clubes continua disponível.")}
  }
+
  for(const item of channels){
+  const isPremiere=item.embed_url===PROVIDER;
+  const card=document.createElement("article");
+  card.className="nplay-live-card";
   const button=document.createElement("button");
-  button.type="button";button.textContent="📺 "+item.title;
-  button.style.cssText="border:1px solid #365075;border-radius:12px;background:#14243c;color:white;padding:16px;text-align:left;cursor:pointer";
+  button.type="button";button.className="nplay-live-cover";
+  button.setAttribute("aria-label","Assistir "+item.title);
+  const art=document.createElement("span");
+  art.className="nplay-live-art"+(isPremiere?" nplay-premiere-art":"");
+  if(isPremiere){
+   const emblem=document.createElement("span");emblem.className="nplay-premiere-emblem";emblem.textContent="P";
+   const brand=document.createElement("span");brand.className="nplay-premiere-brand";brand.textContent="PREMIERE";
+   art.append(emblem,brand);
+  }else{
+   const tv=document.createElement("span");tv.className="nplay-generic-channel";tv.textContent="TV";
+   art.append(tv);
+  }
+  const badge=document.createElement("span");badge.className="nplay-live-badge";badge.textContent="● AO VIVO";
+  const play=document.createElement("span");play.className="nplay-live-play";play.textContent="▶";
+  button.append(art,badge,play);
+  const title=document.createElement("strong");title.className="nplay-live-title";title.textContent=item.title;
+  const subtitle=document.createElement("span");subtitle.className="nplay-live-subtitle";subtitle.textContent="Canal ao vivo · Assistir agora";
   button.onclick=()=>openChannel(item.embed_url,item.title);
-  list.append(button);
+  card.append(button,title,subtitle);list.append(card);
  }
 }
 function init(){
