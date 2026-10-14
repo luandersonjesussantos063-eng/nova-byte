@@ -13,7 +13,7 @@ function shakaReady(){
 }
 async function playDash(){
  await stopDash();const player=$("iframe-channel-player");player.replaceChildren();
- const video=document.createElement("video");video.controls=true;video.autoplay=true;video.playsInline=true;
+ const video=document.createElement("video");video.controls=true;video.autoplay=true;video.playsInline=true;video.muted=true;
  video.style.cssText="width:100%;height:100%;background:#000;object-fit:contain";
  const status=document.createElement("p");status.style.cssText="color:#fff;padding:8px;font-size:13px";
  status.textContent="Conectando ao sinal DASH autorizado...";
@@ -25,10 +25,12 @@ async function playDash(){
  if(!window.shaka.Player.isBrowserSupported())throw Error("Este navegador não suporta reprodução DASH");
  const instance=new window.shaka.Player();dashPlayer=instance;
  await instance.attach(video);
- instance.addEventListener("error",event=>{status.textContent="Falha de reprodução: "+(event.detail?.code||"sinal indisponível")});
+ instance.addEventListener("error",event=>{status.textContent="Falha na reprodução DASH (código "+(event.detail?.code||"desconhecido")+"). Pode haver DRM, codec incompatível ou segmentos indisponíveis."});
  await instance.load(DASH_URL);
+ const tracks=instance.getVariantTracks();
+ if(!tracks.length){status.textContent="Manifesto recebido, mas nenhuma faixa de vídeo compatível foi encontrada. Pode haver codec incompatível ou DRM.";return}
  status.textContent="Sinal carregado. Use o botão de reprodução se necessário.";
- try{await video.play();status.textContent=""}catch(e){status.textContent="Toque em reproduzir para iniciar o canal."}
+ try{await video.play();status.textContent="Aguardando imagem do canal...";setTimeout(()=>{if(dashPlayer===instance&&video.currentTime===0)status.textContent="Manifesto recebido, mas sem imagem. Possível bloqueio dos segmentos, codec incompatível ou DRM. O player incorporado continua disponível.";else if(dashPlayer===instance)status.textContent=""},12000)}catch(e){status.textContent="Clique em reproduzir para iniciar o canal (teste inicialmente sem áudio)."}
  }catch(e){status.textContent="Não foi possível reproduzir o sinal diretamente ("+(e.code||e.message||"erro desconhecido")+"). Utilize a opção de incorporação original."}
 }
 async function load(){
