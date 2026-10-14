@@ -1007,6 +1007,7 @@ async function sendForm(e){
   resetForm();
   status("upload-message",netflix?(payload.is_published?"Prévia Em breve publicada com capa e sem reprodução.":"Referência salva como rascunho privado, sem reprodução."):wasCatalogOnly?(payload.is_published?"Vídeo cadastrado! O título saiu de Em breve e está liberado para assistir.":"Vídeo cadastrado como rascunho. O título ainda não está publicado."):"Conteúdo salvo! "+(payload.is_published?"Já está disponível na NPlay.":"Salvo como rascunho."),false,true);
   await loadLibrary();
+  await loadMagnetApprovals();
  }catch(err){
    status("upload-message","Não foi possível salvar: "+errorText(err)+". Confira as informações e tente novamente.",true);
  }finally{disable(false);setSourceType()}
@@ -1061,13 +1062,17 @@ async function loadMagnetApprovals(){
  try{
   const {data,error}=await client.from("novaplay_magnet_imports").select("id,title,status,approved_for_processing,created_at,r2_object_key").order("created_at",{ascending:false}).limit(20);
   if(error)throw error;
+  const {data:catalog,error:catalogError}=await client.from("novaplay_library").select("id,title,r2_object_key").not("r2_object_key","is",null);
+  if(catalogError)throw catalogError;
+  const registeredByKey=new Map((catalog||[]).filter(x=>x.r2_object_key).map(x=>[x.r2_object_key,x]));
   list.replaceChildren();
   if(!data?.length){list.textContent="Nenhuma solicitação encontrada.";return}
   for(const job of data){
+   const registered=job.r2_object_key?registeredByKey.get(job.r2_object_key):null;
    const box=document.createElement("div");box.style.cssText="border:1px solid #365075;border-radius:12px;padding:12px;margin:10px 0";
    const title=document.createElement("strong");title.textContent=job.title+" (#"+job.id.slice(0,8)+")";box.appendChild(title);
-   const state=document.createElement("p");state.className="muted";state.textContent=job.status==="ready"?"Vídeo enviado ao R2 · aguardando cadastro no catálogo":job.approved_for_processing?"Autorização registrada · "+job.status:"Aguardando declaração · "+job.status;box.appendChild(state);
-    if(job.status==="ready"&&job.r2_object_key){const btn=document.createElement("button");btn.type="button";btn.className="primary";btn.textContent="Cadastrar no catálogo";btn.addEventListener("click",()=>openReadyMagnetInCatalog(job));box.appendChild(btn);}
+   const state=document.createElement("p");state.className="muted";state.textContent=registered?"✓ Já cadastrado no catálogo: "+registered.title:job.status==="ready"?"Vídeo enviado ao R2 · aguardando cadastro no catálogo":job.approved_for_processing?"Autorização registrada · "+job.status:"Aguardando declaração · "+job.status;box.appendChild(state);
+    if(job.status==="ready"&&job.r2_object_key&&!registered){const btn=document.createElement("button");btn.type="button";btn.className="primary";btn.textContent="Cadastrar no catálogo";btn.addEventListener("click",()=>openReadyMagnetInCatalog(job));box.appendChild(btn);}
    if(job.status==="pending_processor"&&!job.approved_for_processing){
     const label=document.createElement("label");label.className="publish-check";
     const cb=document.createElement("input");cb.type="checkbox";
