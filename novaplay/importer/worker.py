@@ -13,7 +13,7 @@ DB=create_client(URL,os.environ["SUPABASE_SERVICE_ROLE_KEY"])
 ACCOUNT=os.environ["R2_ACCOUNT_ID"]
 R2=boto3.client("s3",endpoint_url=f"https://{ACCOUNT}.r2.cloudflarestorage.com",aws_access_key_id=os.environ["R2_ACCESS_KEY_ID"],aws_secret_access_key=os.environ["R2_SECRET_ACCESS_KEY"],region_name="auto")
 BUCKET=os.getenv("R2_BUCKET","nplay-filmes")
-MAX_BYTES=int(os.getenv("IMPORTER_MAX_BYTES",str(8*1024**3)))
+MAX_BYTES=int(os.getenv("IMPORTER_MAX_BYTES",str(500*1024**3)))
 TIMEOUT=int(os.getenv("IMPORTER_TIMEOUT_SECONDS","7200"))
 RECOVERY_DIR=pathlib.Path(os.getenv("IMPORTER_RECOVERY_DIR",str(pathlib.Path(__file__).resolve().parent/"recovery")))
 RECOVERY_DIR.mkdir(parents=True,exist_ok=True)
