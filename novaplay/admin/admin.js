@@ -1067,6 +1067,11 @@ async function loadMagnetApprovals(){
   const registeredByKey=new Map((catalog||[]).filter(x=>x.r2_object_key).map(x=>[x.r2_object_key,x]));
   list.replaceChildren();
   if(!data?.length){list.textContent="Nenhuma solicitação encontrada.";return}
+  const groups=[
+   {id:"awaiting",label:"Aguardando liberação",items:[]},
+   {id:"processing",label:"Em processo",items:[]},
+   {id:"released",label:"Já liberados / cadastrados",items:[]}
+  ];
   for(const job of data){
    const registered=job.r2_object_key?registeredByKey.get(job.r2_object_key):null;
    const box=document.createElement("div");box.style.cssText="border:1px solid #365075;border-radius:12px;padding:12px;margin:10px 0";
@@ -1091,7 +1096,20 @@ async function loadMagnetApprovals(){
      }catch(e){status("magnet-approval-status","Falha: "+errorText(e),true);btn.disabled=false}
     });box.appendChild(btn);
    }
-   list.appendChild(box);
+   const target=registered?"released":job.status==="ready"?"awaiting":job.status==="pending_processor"&&!job.approved_for_processing?"awaiting":"processing";
+   groups.find(g=>g.id===target).items.push(box);
+  }
+  const order=["awaiting","processing","released"];
+  for(const id of order){
+   const group=groups.find(g=>g.id===id);
+   const details=document.createElement("details");details.style.cssText="border:1px solid #365075;border-radius:12px;margin:10px 0;background:#101f36";
+   details.open=id==="awaiting"&&group.items.length>0;
+   const summary=document.createElement("summary");summary.style.cssText="cursor:pointer;padding:14px 16px;font-weight:750;color:#e7f0ff";
+   summary.textContent=group.label+" ("+group.items.length+")";details.appendChild(summary);
+   const body=document.createElement("div");body.style.cssText="padding:0 12px 10px";
+   if(group.items.length)body.append(...group.items);
+   else{const empty=document.createElement("p");empty.className="muted";empty.textContent="Nenhuma importação nesta etapa.";body.appendChild(empty)}
+   details.appendChild(body);list.appendChild(details);
   }
  }catch(e){list.textContent="Falha ao carregar solicitações: "+errorText(e)}
 }
