@@ -354,7 +354,7 @@ function isFeaturedSeries(row){
 function normalizeFeaturedSearch(value){
  return String(value||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLocaleLowerCase("pt-BR").trim();
 }
-function isPlayableFeatured(x){const r=x?.record;return !r||(r.is_published&&!r.catalog_only&&!!(r.video_path||r.google_drive_id||r.youtube_id||r.licensed_stream_url));}
+function isPlayableFeatured(x){const r=x?.record;return !r||(r.is_published&&!r.catalog_only&&!!(r.video_path||r.google_drive_id||r.youtube_id||r.licensed_stream_url||r.r2_object_key));}
 function eligibleFeatured(){
  const films=items.filter(x=>x.kind==="movie"&&(x.is_published||x.catalog_only))
   .map(x=>({id:"upload-"+x.id,title:x.title,record:x,type:isFeaturedSeries(x)?"series":"movie"}));
@@ -428,7 +428,7 @@ function renderFeaturedBrowser(candidates){
   img.onerror=function(){if(!this.dataset.fallback){this.dataset.fallback="1";this.src="../assets/posters/autoral.svg"}};
   const info=document.createElement("span");info.className="featured-candidate-details";
   const title=document.createElement("strong");title.textContent=film.title;
-  const tag=document.createElement("small");tag.textContent=(film.type==="series"?"Série / anime":"Filme")+(!isPlayableFeatured(film)?" · Em breve (indisponível)":"");
+  const tag=document.createElement("small");tag.textContent=(film.type==="series"?"Série / anime":"Filme")+(film.record?.catalog_only?" · Em breve":!isPlayableFeatured(film)?" · Sem vídeo cadastrado":"");
   info.append(title,tag);
   const check=document.createElement("span");check.className="featured-candidate-check";check.textContent=featuredPickedId===film.id?"✓":"›";
   btn.append(img,info,check);
@@ -447,7 +447,7 @@ function renderFeaturedBrowser(candidates){
   $("featured-preview-image").src=posterOfFeatured(picked);
   $("featured-preview-image").alt="Capa de "+picked.title;
   $("featured-preview-title").textContent=picked.title;
-  $("featured-preview-type").textContent=(picked.type==="series"?"Série / anime":"Filme")+(!isPlayableFeatured(picked)?" · Em breve (aguardando publicação)":" · Pronto para destacar");
+  $("featured-preview-type").textContent=(picked.type==="series"?"Série / anime":"Filme")+(picked.record?.catalog_only?" · Em breve":!isPlayableFeatured(picked)?" · Sem vídeo cadastrado":" · Publicado com vídeo cadastrado");
  }
 }
 function renderFeatured(){
