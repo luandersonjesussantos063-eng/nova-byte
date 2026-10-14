@@ -1060,8 +1060,18 @@ async function loadMagnetApprovals(){
  const list=$("magnet-pending-list");if(!list||!client||!sessionUser)return;
  list.textContent="Consultando solicitações...";
  try{
-  const {data,error}=await client.from("novaplay_magnet_imports").select("id,title,status,approved_for_processing,created_at,r2_object_key").order("created_at",{ascending:false}).limit(20);
-  if(error)throw error;
+  // Buscar em páginas: limit(20) fazia os contadores pararem em 20.
+  const data=[];
+  const pageSize=500;
+  for(let offset=0;offset<50000;offset+=pageSize){
+   const {data:page,error}=await client.from("novaplay_magnet_imports")
+    .select("id,title,status,approved_for_processing,created_at,r2_object_key")
+    .order("created_at",{ascending:false}).range(offset,offset+pageSize-1);
+   if(error)throw error;
+   data.push(...(page||[]));
+   if(!page||page.length<pageSize)break;
+   if(offset+pageSize>=50000)throw Error("Limite de 50 mil importações atingido; amplie a paginação.");
+  }
   const {data:catalog,error:catalogError}=await client.from("novaplay_library").select("id,title,r2_object_key").not("r2_object_key","is",null);
   if(catalogError)throw catalogError;
   const registeredByKey=new Map((catalog||[]).filter(x=>x.r2_object_key).map(x=>[x.r2_object_key,x]));
