@@ -410,7 +410,7 @@ function renderCategory(kind){
   };
   if(remoteDb)remoteDb.from("novaplay_live_embeds").select("id,title,embed_url").eq("is_published",true).order("created_at",{ascending:false}).then(({data,error})=>{
    if(!section.isConnected)return;
-   embeds.replaceChildren();
+   embeds.replaceChildren(sptv);
    if(error){const msg=document.createElement("p");msg.textContent="Não foi possível carregar os canais incorporados.";embeds.append(msg);return}
    if(!data?.length){const msg=document.createElement("p");msg.textContent="Nenhum canal incorporado publicado.";embeds.append(msg);return}
    for(const channel of data){
