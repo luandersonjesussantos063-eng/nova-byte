@@ -162,7 +162,13 @@ def download(job,max_bytes,timeout):
     params.flags |= lt.torrent_flags.upload_mode
     params.flags &= ~lt.torrent_flags.auto_managed
     params.flags &= ~lt.torrent_flags.paused
-    session=lt.session({'listen_interfaces':'0.0.0.0:0','enable_dht':True,'dht_bootstrap_nodes':DHT_BOOTSTRAP,'enable_lsd':False,'enable_upnp':False,'enable_natpmp':False})
+    # Peer discovery on local networks and router port mapping can improve reachability.
+    # All settings are optional; no download is started outside the manual worker.
+    session=lt.session({'listen_interfaces':os.getenv('IMPORTER_LISTEN_INTERFACES','0.0.0.0:6881'),
+                        'enable_dht':True,'dht_bootstrap_nodes':DHT_BOOTSTRAP,
+                        'enable_lsd':os.getenv('IMPORTER_ENABLE_LSD','1')=='1',
+                        'enable_upnp':os.getenv('IMPORTER_ENABLE_UPNP','1')=='1',
+                        'enable_natpmp':os.getenv('IMPORTER_ENABLE_NATPMP','1')=='1'})
     handle=session.add_torrent(params)
     started=time.monotonic()
     metadata_timeout=max(30,int(os.getenv('IMPORTER_METADATA_TIMEOUT_SECONDS','120')))
