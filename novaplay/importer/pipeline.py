@@ -373,7 +373,11 @@ def retry_delay(attempts):
 def failure_state(exc, attempts):
     if isinstance(exc,CapacityRequired):return 'needs_review','capacity',False
     if isinstance(exc,ReviewRequired):return 'needs_review','selection',False
-    if isinstance(exc,MetadataUnavailable):return 'queued','retry_wait',True
+    if isinstance(exc,MetadataUnavailable):
+        # After repeated metadata failures, quarantine the source rather than
+        # recycling it forever. Other queued imports can proceed.
+        if attempts>=3:return 'needs_review','source_unavailable',False
+        return 'queued','retry_wait',True
     if isinstance(exc,PermanentError):return 'failed','failed',False
     if transient_error(exc):return 'queued','retry_wait',True
     if attempts<3:return 'queued','retry_wait',True
