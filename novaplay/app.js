@@ -390,6 +390,34 @@ function renderCategory(kind){
  $("category-kicker").textContent=conf[0];$("category-heading").textContent=conf[1];$("category-subtitle").textContent=conf[2];
  const content=$("category-grid");content.replaceChildren();
  let list=kind==="favoritos"?all.filter(x=>favorite.has(x.id)):kind==="youtube"?youtubeFilms():kind==="em-breve"?upcomingFilms():conf[3];
+ if(kind==="tv"){
+  const section=document.createElement("section");section.id="tv-iframe-grid";section.style.cssText="grid-column:1/-1;margin-bottom:20px";
+  const heading=document.createElement("h2");heading.textContent="Canais ao vivo incorporados";section.append(heading);
+  const embeds=document.createElement("div");embeds.id="tv-iframe-cards";embeds.style.cssText="display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:14px";
+  const loading=document.createElement("p");loading.textContent="Carregando canais...";embeds.append(loading);
+  section.append(embeds);content.append(section);
+  if(remoteDb)remoteDb.from("novaplay_live_embeds").select("id,title,embed_url").eq("is_published",true).order("created_at",{ascending:false}).then(({data,error})=>{
+   if(!section.isConnected)return;
+   embeds.replaceChildren();
+   if(error){const msg=document.createElement("p");msg.textContent="Não foi possível carregar os canais incorporados.";embeds.append(msg);return}
+   if(!data?.length){const msg=document.createElement("p");msg.textContent="Nenhum canal incorporado publicado.";embeds.append(msg);return}
+   for(const channel of data){
+    const button=document.createElement("button");button.type="button";button.className="poster-card channel-card";button.style.cssText="background:#12223b;color:#fff;border:1px solid #375075;border-radius:14px;min-height:170px;padding:18px;cursor:pointer;text-align:center";
+    const icon=document.createElement("div");icon.textContent="📺";icon.style.fontSize="42px";
+    const label=document.createElement("strong");label.textContent=channel.title;
+    const live=document.createElement("p");live.textContent="● AO VIVO";live.style.color="#fb5b68";
+    button.append(icon,label,live);
+    button.onclick=()=>{
+     const panel=$("iframe-channels-panel"),viewer=$("iframe-channel-viewer"),player=$("iframe-channel-player");
+     if(!panel||!viewer||!player)return;
+     let url;try{url=new URL(channel.embed_url);if(url.protocol!=="https:")return}catch(e){return}
+     player.replaceChildren();const frame=document.createElement("iframe");frame.src=url.href;frame.title=channel.title;frame.allow="autoplay; encrypted-media; picture-in-picture; fullscreen";frame.allowFullscreen=true;frame.style.cssText="width:100%;height:100%;border:0";player.append(frame);
+     $("iframe-channel-heading").textContent=channel.title;panel.hidden=false;viewer.hidden=false;viewer.scrollIntoView({behavior:"smooth",block:"start"});
+    };
+    embeds.append(button)
+   }
+  });
+ }
  const filters=$("genre-filter-panel"),buttons=$("genre-filter-buttons");
  filters.hidden=kind!=="filmes";
  if(kind==="filmes"){
