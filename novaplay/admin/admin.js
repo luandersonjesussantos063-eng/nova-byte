@@ -1113,7 +1113,8 @@ function importDiagnosticLines(job){
  if(Number.isFinite(d.bytes_total))lines.push('Transferido: '+bytes(d.bytes_done||0)+' de '+bytes(d.bytes_total));
  if(job.stage==='metadata')lines.push('Limite de espera por tentativa: '+Math.round((d.timeout_seconds||600)/60)+' minutos. Se a fonte não responder, a fila segue e o motivo aparece no cartão.');
  if(job.status==='processing'&&job.worker_id&&!Object.keys(d).length)lines.push('Este processador ainda não enviou métricas detalhadas desta etapa.');
- lines.push('Tentativa: '+(job.attempts||0)+' de 3');
+ lines.push('Tentativas iniciadas: '+(job.attempts||0));
+ if(job.status==='queued'&&job.next_retry_at)lines.push('Retomada automática agendada. Falhas de conexão usam intervalos de até 15 minutos; fontes sem resposta após três tentativas são verificadas novamente após uma hora.');
  if(job.heartbeat_at)lines.push('Última comunicação: '+new Date(job.heartbeat_at).toLocaleString('pt-BR'));
  if(job.error_message)lines.push('Último aviso: '+importFailureMessage(job));
  return lines;

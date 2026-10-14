@@ -65,18 +65,28 @@ class PipelineTest(unittest.TestCase):
             self.assertNotIn('peers',d)
             self.assertEqual(d['stage'],'uploading')
 
-    def test_unavailable_source_stops_repeating_after_three_attempts(self):
+    def test_unavailable_source_remains_automatically_retryable(self):
         from pipeline import failure_state,MetadataUnavailable
         self.assertEqual(failure_state(MetadataUnavailable(),1),('queued','retry_wait',True))
-        self.assertEqual(failure_state(MetadataUnavailable(),3),('needs_review','source_unavailable',False))
+        self.assertEqual(failure_state(MetadataUnavailable(),3),('queued','retry_wait',True))
     def test_capacity_requires_action_instead_of_blind_retry(self):
         from pipeline import failure_state,CapacityRequired
         self.assertEqual(failure_state(CapacityRequired(),1),('needs_review','capacity',False))
     def test_other_failures_keep_bounded_retries(self):
         from pipeline import failure_state,PermanentError
         self.assertEqual(failure_state(ConnectionError(),1),('queued','retry_wait',True))
-        self.assertEqual(failure_state(ConnectionError(),3),('failed','failed',False))
+        self.assertEqual(failure_state(ConnectionError(),30),('queued','retry_wait',True))
+        self.assertEqual(failure_state(ValueError(),3),('failed','failed',False))
         self.assertEqual(failure_state(PermanentError(),1),('failed','failed',False))
+
+    def test_transient_recovery_delay_is_capped(self):
+        from pipeline import retry_delay,failure_state
+        import httpx
+        self.assertEqual(retry_delay(10000),900)
+        self.assertEqual(failure_state(httpx.ConnectError('offline'),100),('queued','retry_wait',True))
+        response=httpx.Response(503,request=httpx.Request('GET','https://example.com'))
+        error=httpx.HTTPStatusError('unavailable',request=response.request,response=response)
+        self.assertEqual(failure_state(error,100),('queued','retry_wait',True))
 
     def test_lost_lease_cannot_write_progress(self):
         from pipeline import Job, LeaseLost

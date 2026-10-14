@@ -192,10 +192,13 @@ def download(job,max_bytes,timeout):
         handle.prioritize_files([7 if i==chosen['index'] else 0 for i in range(files.num_files())])
         handle.unset_flags(lt.torrent_flags.upload_mode)
         job.progress('downloading',force=True)
+        last_bytes=-1;last_advance=time.monotonic()
         while True:
             job.check();state=handle.status()
             if state.errc.value():raise RuntimeError(state.errc.message())
             done=handle.file_progress()[chosen['index']]
+            if done>last_bytes:last_bytes=done;last_advance=time.monotonic()
+            elif time.monotonic()-last_advance>180:raise TimeoutError('Download sem receber dados por 3 minutos; reconexão automática com reaproveitamento das partes')
             job.progress('downloading',done/max(1,chosen['bytes'])*100,peers=state.num_peers,seeds=state.num_seeds,download_rate=state.download_rate,bytes_done=done,bytes_total=chosen['bytes'])
             if done>=chosen['bytes']:break
             if time.monotonic()-started>timeout:raise TimeoutError('Tempo de download excedido; partes serão reaproveitadas')
@@ -354,11 +357,23 @@ def process(job,r2,bucket,max_bytes,timeout,recovery,local_file=None):
     job.checkpoint(complete=True,completed_at=utc(),metadata=meta)
     LOG.info('Import %s ready; draft created/updated',job.id)
 
+def transient_error(exc):
+    import httpx
+    if transport_error(exc) or isinstance(exc,httpx.TransportError):return True
+    status=getattr(getattr(exc,'response',None),'status_code',0)
+    response=getattr(exc,'response',{})
+    if isinstance(response,dict):status=response.get('ResponseMetadata',{}).get('HTTPStatusCode',0)
+    return status==429 or isinstance(status,int) and 500<=status<600
+
+def retry_delay(attempts):
+    return min(900,60*2**min(max(0,attempts),4))
+
 def failure_state(exc, attempts):
     if isinstance(exc,CapacityRequired):return 'needs_review','capacity',False
     if isinstance(exc,ReviewRequired):return 'needs_review','selection',False
-    if isinstance(exc,MetadataUnavailable) and attempts>=3:return 'needs_review','source_unavailable',False
+    if isinstance(exc,MetadataUnavailable):return 'queued','retry_wait',True
     if isinstance(exc,PermanentError):return 'failed','failed',False
+    if transient_error(exc):return 'queued','retry_wait',True
     if attempts<3:return 'queued','retry_wait',True
     return 'failed','failed',False
 
@@ -373,7 +388,8 @@ def handle_job(db,r2,record,root,recovery,bucket,max_bytes,timeout,local_file=No
             message=str(exc) if review or permanent or isinstance(exc,TimeoutError) else 'Falha temporária de conexão/processamento; os arquivos foram preservados'
             LOG.error('Import %s: %s (%s)',job.id,message,type(exc).__name__)
             if not job.lost.is_set():
-                job.update(status=status,stage=stage,error_message=message[:500],error_code=type(exc).__name__,next_retry_at=utc(60*2**record['attempts']) if retry else None,locked_until=None)
+                delay=3600 if isinstance(exc,MetadataUnavailable) and record['attempts']>=3 else retry_delay(record['attempts'])
+                job.update(status=status,stage=stage,error_message=message[:500],error_code=type(exc).__name__,next_retry_at=utc(delay) if retry else None,locked_until=None)
 
 def main():
     from dotenv import load_dotenv
