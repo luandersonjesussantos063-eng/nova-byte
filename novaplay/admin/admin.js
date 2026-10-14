@@ -1000,18 +1000,37 @@ async function forgot(){
  status("auth-message",error?errorText(error):"Se a conta existir, enviaremos instruções de recuperação para esse e-mail.",!!error,!error);
 }
 
+
+function openReadyMagnetInCatalog(job){
+ const form=$("legacy-upload-options");if(form){form.hidden=false;form.removeAttribute("aria-hidden");}
+ const editor=$("upload-form");if(!editor)return;
+ if(typeof resetForm==="function")resetForm();
+ $("source-type").value="r2";setSourceType();
+ $("title").value=job.title||"";
+ $("r2-catalog-key").value=job.r2_object_key||"";
+ $("publish").checked=false;
+ $("r2-rights").checked=false;
+ const magnetPanel=$("magnet-import-heading")?.closest("section");
+ if(magnetPanel)magnetPanel.hidden=true;
+ const title=$("form-title");if(title)title.textContent="Cadastrar filme importado no catálogo";
+ status("upload-message","Vídeo recebido do R2. Confira os direitos, complete gênero, sinopse e capa e salve como rascunho. A publicação requer revisão posterior.");
+ document.querySelector('[data-admin-tab="importacoes"]')?.click();
+ editor.scrollIntoView({behavior:"smooth",block:"start"});
+}
+
 async function loadMagnetApprovals(){
  const list=$("magnet-pending-list");if(!list||!client||!sessionUser)return;
  list.textContent="Consultando solicitações...";
  try{
-  const {data,error}=await client.from("novaplay_magnet_imports").select("id,title,status,approved_for_processing,created_at").order("created_at",{ascending:false}).limit(20);
+  const {data,error}=await client.from("novaplay_magnet_imports").select("id,title,status,approved_for_processing,created_at,r2_object_key").order("created_at",{ascending:false}).limit(20);
   if(error)throw error;
   list.replaceChildren();
   if(!data?.length){list.textContent="Nenhuma solicitação encontrada.";return}
   for(const job of data){
    const box=document.createElement("div");box.style.cssText="border:1px solid #365075;border-radius:12px;padding:12px;margin:10px 0";
    const title=document.createElement("strong");title.textContent=job.title+" (#"+job.id.slice(0,8)+")";box.appendChild(title);
-   const state=document.createElement("p");state.className="muted";state.textContent=job.approved_for_processing?"Autorização registrada · "+job.status:"Aguardando declaração · "+job.status;box.appendChild(state);
+   const state=document.createElement("p");state.className="muted";state.textContent=job.status==="ready"?"Vídeo enviado ao R2 · aguardando cadastro no catálogo":job.approved_for_processing?"Autorização registrada · "+job.status:"Aguardando declaração · "+job.status;box.appendChild(state);
+    if(job.status==="ready"&&job.r2_object_key){const btn=document.createElement("button");btn.type="button";btn.className="primary";btn.textContent="Cadastrar no catálogo";btn.addEventListener("click",()=>openReadyMagnetInCatalog(job));box.appendChild(btn);}
    if(job.status==="pending_processor"&&!job.approved_for_processing){
     const label=document.createElement("label");label.className="publish-check";
     const cb=document.createElement("input");cb.type="checkbox";
