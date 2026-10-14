@@ -25,7 +25,7 @@ function init(){
 const button=$("iframe-channels-open");if(!button)return;
 const mobile=$("iframe-channels-open-mobile");if(mobile)mobile.onclick=()=>button.click();
 button.onclick=()=>{$("iframe-channels-panel").hidden=false;$("iframe-channels-panel").scrollIntoView({behavior:"smooth"});load()};
-$("iframe-channel-close").onclick=()=>{$("iframe-channel-player").replaceChildren();$("iframe-channel-viewer").hidden=true};
+$("iframe-channel-close").onclick=()=>{if(window.nplaySptvHls){window.nplaySptvHls.destroy();window.nplaySptvHls=null}$("iframe-channel-player").replaceChildren();$("iframe-channel-viewer").hidden=true};
 }
 if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",init);else init()
 })();
