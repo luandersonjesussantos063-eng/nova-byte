@@ -8,6 +8,7 @@ const VIDEO_BUCKET="novaplay-videos",POSTER_BUCKET="novaplay-posters";
 const MAX_VIDEO=50*1024*1024,MAX_POSTER=5*1024*1024;
 const $=id=>document.getElementById(id);
 let client=null,editing=null,items=[],busy=false,currentUpload=null,sessionUser=null;
+let magnetLoading=false;
 let libraryPage=0;
 let qualityFilter="all";
 let activityCounts=new Map(),activityLimitReached=false;
@@ -64,7 +65,7 @@ async function checkSession(){
  try{
   const u=await Promise.race([hasAdmin(),new Promise((_,reject)=>setTimeout(()=>reject(new Error("A verificação de acesso demorou demais. Confira a conexão e tente novamente.")),12000))]);
   sessionUser=u||null;
-  if(u){show("dashboard");await loadLibrary();await Promise.all([loadActivity(),loadFeaturedConfig(),loadPlaybackIssues()]);}
+  if(u){show("dashboard");await loadLibrary();await Promise.all([loadActivity(),loadFeaturedConfig(),loadPlaybackIssues(),loadMagnetApprovals()]);}
   else if(u===false){
    const v=await client.auth.getUser();
    $("pending-email").textContent=v.data.user?.email||"Conta aguardando aprovação";
@@ -597,7 +598,7 @@ function renderPlaybackIssues(){
 async function loadLibrary(){
  // Ler todas as páginas: o catálogo importado pode ter centenas de rascunhos.
  const gathered=[];
- const select="r2_object_key,id,title,description,kind,series_title,episode_number,genre,production_year,video_path,youtube_id,google_drive_id,google_drive_resource_key,licensed_stream_url,netflix_reference_url,licensed_rights_confirmed,poster_path,is_published,rights_reviewed,rights_reviewed_at,catalog_only,review_queue_id,quality_score,quality_score_source,quality_score_note,quality_scored_at,file_size_bytes,mime_type,created_at";
+ const select="media_validated_at,auto_publish,season_number,import_job_id,r2_object_key,id,title,description,kind,series_title,episode_number,genre,production_year,video_path,youtube_id,google_drive_id,google_drive_resource_key,licensed_stream_url,netflix_reference_url,licensed_rights_confirmed,poster_path,is_published,rights_reviewed,rights_reviewed_at,catalog_only,review_queue_id,quality_score,quality_score_source,quality_score_note,quality_scored_at,file_size_bytes,mime_type,duration_seconds,created_at";
  for(let offset=0;offset<5000;offset+=500){
   const {data,error}=await client.from("novaplay_library").select(select).order("created_at",{ascending:false}).range(offset,offset+499);
   if(error){status("upload-message","Não foi possível ler a biblioteca: "+errorText(error),true);return}
@@ -686,9 +687,10 @@ function renderLibrary(){
   const poster=window.NovaPlayCover?.selectPoster?.(row.title,true,row.genre,customPoster,row.youtube_id)
    ||window.NovaPlayCover?.genrePoster?.(row.title,row.genre)
    ||window.NovaPlayCover?.titleCard(row.title)||"../assets/posters/autoral.svg";
-  const source=row.catalog_only?"Aguardando vídeo autorizado":row.licensed_stream_url?"Licenciado · Streaming direto":row.youtube_id?"YouTube · Link":row.google_drive_id?"Google Drive · Link":((row.file_size_bytes||0)/(1024*1024)).toFixed(1)+" MB";
+  const source=row.catalog_only?"Aguardando vídeo autorizado":row.licensed_stream_url?"Licenciado · Streaming direto":row.youtube_id?"YouTube · Link":row.google_drive_id?"Google Drive · Link":(row.file_size_bytes?((row.file_size_bytes)/(1024*1024)).toFixed(1)+" MB":"Tamanho ainda não verificado");
   const engagement=activityCounts.get(row.id)||{detail:0,attempt:0};
   const metricBadge='<small>Ficha: '+engagement.detail+' · Tentativas de assistir: '+engagement.attempt+' (30 dias)</small>';
+  const validationBadge=row.r2_object_key?"<small>"+(row.media_validated_at?"Vídeo validado":"Validação técnica pendente")+(row.auto_publish?" · Publicação automática ativada":"")+"</small>":"";
   const review=row.genre==="Importado - revisão";
   const displayState=row.catalog_only?(row.is_published?"NA GRADE · EM BREVE":"RASCUNHO · SEM VÍDEO"):row.is_published?"PUBLICADO":row.rights_reviewed?"CONFERIDO · AGUARDA PUBLICAÇÃO":review?"RASCUNHO · REVISAR DIREITOS":"RASCUNHO";
   const grade=Number.isInteger(row.quality_score)?row.quality_score:null;
@@ -699,7 +701,7 @@ function renderLibrary(){
    '<label class="quality-select-label">Nota <select class="quality-select" aria-label="Nota de '+esc(row.title)+'">'+options+'</select></label>'+
    '<input type="text" class="quality-note" maxlength="500" placeholder="Motivo da nota (opcional)" value="'+esc(row.quality_score_note||"")+'" aria-label="Motivo da nota de '+esc(row.title)+'">'+
    '<button type="button" class="quality-save">Salvar nota</button></div>';
-  item.innerHTML='<img class="movie-thumb" alt="" loading="lazy" src="'+esc(poster)+'"><div class="movie-main"><strong>'+esc(row.title)+'</strong><small>'+esc(row.catalog_only?(row.genre==="Anime · Série"?"Anime / série":"Anime / filme"):(row.kind==="episode"?(row.series_title+" · Ep. "+row.episode_number):"Filme/curta"))+' · '+esc(source)+'</small>'+metricBadge+'<span class="movie-state'+(row.is_published?"":" draft")+'">'+displayState+'</span>'+gradeBadge+gradeEditor+'<div class="movie-buttons"><button class="review">'+(row.rights_reviewed?'✓ Conferido':'Marcar como conferido')+'</button><button class="edit">Editar</button><button class="publish">'+(row.is_published?(row.catalog_only?"Ocultar Em breve":"Retirar do catálogo"):"Publicar")+'</button><button class="danger delete">Excluir</button></div></div>';
+  item.innerHTML='<img class="movie-thumb" alt="" loading="lazy" src="'+esc(poster)+'"><div class="movie-main"><strong>'+esc(row.title)+'</strong><small>'+esc(row.catalog_only?(row.genre==="Anime · Série"?"Anime / série":"Anime / filme"):(row.kind==="episode"?(row.series_title+" · Ep. "+row.episode_number):"Filme/curta"))+' · '+esc(source)+'</small>'+metricBadge+validationBadge+'<span class="movie-state'+(row.is_published?"":" draft")+'">'+displayState+'</span>'+gradeBadge+gradeEditor+'<div class="movie-buttons"><button class="review">'+(row.rights_reviewed?'✓ Conferido':'Marcar como conferido')+'</button><button class="edit">Editar</button><button class="publish">'+(row.is_published?(row.catalog_only?"Ocultar Em breve":"Retirar do catálogo"):"Publicar")+'</button><button class="danger delete">Excluir</button></div></div>';
   item.querySelector(".movie-thumb").addEventListener("error",function(){
    if(this.dataset.fallbackShown)return;
    this.dataset.fallbackShown="1";
@@ -741,6 +743,7 @@ function beginEdit(row){
  $("series-name").value=row.series_title||"";$("episode-number").value=row.episode_number||"";
  $("genre").value=row.genre;$("description").value=row.description||"";
  $("publish").checked=releasing&&!isNetflixReference(row)?true:row.is_published;
+ $("auto-publish").checked=!!row.auto_publish;$("season-number").value=row.season_number||1;
  $("source-type").value=row.r2_object_key?"r2":isNetflixReference(row)?"netflix-reference":row.licensed_stream_url?"licensed":row.google_drive_id?"google-drive":row.youtube_id?"youtube":releasing?"google-drive":"upload";
  $("youtube-url").value=row.youtube_id?"https://youtu.be/"+row.youtube_id:"";
  $("drive-url").value=row.google_drive_id?"https://drive.google.com/file/d/"+row.google_drive_id+"/view"+(row.google_drive_resource_key?"?resourcekey="+encodeURIComponent(row.google_drive_resource_key):""):"";
@@ -853,8 +856,9 @@ async function togglePublish(row){
  busy=true;renderLibrary();
  try{
   const changes={is_published:publish};
+  if(!publish)changes.auto_publish=false;
   if(publish){const g=genreForPublication(row.title,row.description,row.genre);if(!g)throw Error("Gênero não identificado. Abra Editar e escolha o gênero antes de publicar.");changes.genre=g;}
-  if(publish&&!row.rights_reviewed&&!row.catalog_only){changes.rights_reviewed=true;changes.rights_reviewed_at=new Date().toISOString();}
+  if(publish&&!row.rights_reviewed&&!row.catalog_only)throw Error("Confira os direitos deste título antes de publicar.");
   const {error}=await client.from("novaplay_library").update(changes).eq("id",row.id);
   if(error)throw error;
   await loadLibrary();
@@ -872,7 +876,7 @@ async function bulkMarkReviewed(){
  const confirmed=confirm(
   "MARCAR TODOS COMO CONFERIDOS\n\n"+
   "Você confirma que já revisou os "+ids.length+" filmes pendentes, incluindo os links e as autorizações de exibição pública de cada obra?\n\n"+
-  "Essa ação marca todos os rascunhos pendentes, em todas as páginas, mas NÃO publica nenhum filme. A publicação continuará exigindo o botão 'Liberar todos os conferidos'."
+  "Rascunhos com publicação automática ativada serão publicados quando também tiverem vídeo validado, capa, sinopse e gênero. Os demais continuarão aguardando publicação."
  );
  if(!confirmed)return;
  busy=true;renderLibrary();
@@ -977,13 +981,14 @@ async function sendForm(e){
   episode_number:kind==="episode"?Number($("episode-number").value):null,
   production_year:$("year").value?Number($("year").value):null,
   genre:genreForPublication($("title").value,$("description").value,$("genre").value)||"Autoral",
-  is_published:$("publish").checked,
+  is_published:$("publish").checked,auto_publish:$("auto-publish").checked,season_number:kind==="episode"?Number($("season-number").value||1):1,
   catalog_only:netflix,
   r2_object_key:r2?r2key:null,
   licensed_stream_url:licensed?licensedUrl:null,
   netflix_reference_url:netflix?netflixUrl:null,
   licensed_rights_confirmed:(licensed&&$("licensed-rights").checked)||(r2&&$("r2-rights").checked)
  };
+ if(editing?.is_published&&!payload.is_published)payload.auto_publish=false;
  if(licensed||netflix||r2)payload.rights_reviewed=r2?!!editing?.rights_reviewed:licensed&&!!payload.licensed_rights_confirmed;
  if(netflix){payload.rights_reviewed_at=null;payload.licensed_rights_confirmed=false}
  if(payload.is_published&&payload.genre==="Autoral"){status("upload-message","Escolha um gênero antes de publicar. O leitor automático não encontrou uma classificação confiável.",true);return}
@@ -1010,7 +1015,7 @@ async function sendForm(e){
       google_drive_id:drive?driveFile.id:null,
       google_drive_resource_key:drive?driveFile.resourceKey:null,
       licensed_stream_url:licensed?licensedUrl:null,
-      video_path:null,mime_type:null,file_size_bytes:null,duration_seconds:null
+      video_path:null,mime_type:r2&&editing?.r2_object_key===r2key?editing.mime_type:null,file_size_bytes:r2&&editing?.r2_object_key===r2key?editing.file_size_bytes:null,duration_seconds:r2&&editing?.r2_object_key===r2key?editing.duration_seconds:null
     });
   }else{
    payload.youtube_id=null;payload.google_drive_id=null;payload.google_drive_resource_key=null;
@@ -1091,7 +1096,9 @@ function openReadyMagnetInCatalog(job){
 }
 
 async function loadMagnetApprovals(){
- const list=$("magnet-pending-list");if(!list||!client||!sessionUser)return;
+ const list=$("magnet-pending-list");if(!list||!client||!sessionUser||magnetLoading)return;
+ magnetLoading=true;
+ const opened=new Set([...list.querySelectorAll("details[open]")].map(x=>x.dataset.group));
  list.textContent="Consultando solicitações...";
  try{
   // Buscar em páginas: limit(20) fazia os contadores pararem em 20.
@@ -1099,7 +1106,7 @@ async function loadMagnetApprovals(){
   const pageSize=500;
   for(let offset=0;offset<50000;offset+=pageSize){
    const {data:page,error}=await client.from("novaplay_magnet_imports")
-    .select("id,title,status,approved_for_processing,created_at,r2_object_key,error_message,rights_confirmed,license_reference")
+    .select("id,title,status,stage,progress_percent,heartbeat_at,worker_id,attempts,next_retry_at,duplicate_of,file_candidates,selected_file_index,approved_for_processing,created_at,r2_object_key,error_message,rights_confirmed,license_reference")
     .order("created_at",{ascending:false}).range(offset,offset+pageSize-1);
    if(error)throw error;
    data.push(...(page||[]));
@@ -1113,7 +1120,10 @@ async function loadMagnetApprovals(){
   if(!data?.length){list.textContent="Nenhuma solicitação encontrada.";return}
   const groups=[
    {id:"awaiting",label:"Aguardando liberação",items:[]},
-   {id:"processing",label:"Em processo",items:[]},
+   {id:"processing",label:"Processando agora",items:[]},
+   {id:"queued",label:"Na fila",items:[]},
+   {id:"review",label:"Precisam de atenção",items:[]},
+   {id:"duplicate",label:"Duplicadas · preservadas no histórico",items:[]},
    {id:"failed",label:"Falharam · Tentar novamente",items:[]},
    {id:"released",label:"Já liberados / cadastrados",items:[]}
   ];
@@ -1121,28 +1131,36 @@ async function loadMagnetApprovals(){
    const registered=job.r2_object_key?registeredByKey.get(job.r2_object_key):null;
    const box=document.createElement("div");box.style.cssText="border:1px solid #365075;border-radius:12px;padding:12px;margin:10px 0";
    const title=document.createElement("strong");title.textContent=job.title+" (#"+job.id.slice(0,8)+")";box.appendChild(title);
-   const state=document.createElement("p");state.className="muted";state.textContent=registered?"✓ Já cadastrado no catálogo: "+registered.title:job.status==="ready"?"Vídeo enviado ao R2 · aguardando cadastro no catálogo":job.approved_for_processing?"Autorização registrada · "+job.status:"Aguardando declaração · "+job.status;box.appendChild(state);
+   const state=document.createElement("p");state.className="muted";state.textContent=registered?"✓ Já cadastrado no catálogo: "+registered.title:job.status==="ready"?"Vídeo enviado ao R2 · aguardando cadastro no catálogo":job.approved_for_processing?({queued:"Na fila",pending_processor:"Na fila",processing:"Processando",needs_review:"Precisa de revisão",duplicate:"Duplicada",failed:"Falhou"}[job.status]||job.status):"Aguardando autorização";box.appendChild(state);
+   const stages={metadata:"Buscando metadados",downloading:"Baixando",inspecting:"Analisando vídeo",converting:"Convertendo",uploading:"Enviando",validating:"Validando",complete:"Concluído",queued:"Aguardando processador",retry_wait:"Nova tentativa agendada",selection:"Escolha o arquivo",legacy:"Processador anterior · sem telemetria"};
+   if(job.stage){const p=document.createElement("p");p.textContent=stages[job.stage]||job.stage;box.append(p);}
+   if(job.status==="processing"&&job.worker_id){const progress=document.createElement("progress");progress.max=100;progress.value=job.progress_percent||0;progress.setAttribute("aria-label","Progresso de "+job.title);box.append(progress);const p=document.createElement("p");const age=job.heartbeat_at?Math.round((Date.now()-Date.parse(job.heartbeat_at))/1000):null;p.textContent=Math.round(job.progress_percent||0)+"% · "+(age===null?"Aguardando comunicação":age>120?"Sem comunicação recente · retomada automática após expirar a reserva":"Processador conectado");box.append(p);}
+   if(job.next_retry_at){const p=document.createElement("p");p.textContent="Próxima tentativa: "+new Date(job.next_retry_at).toLocaleString("pt-BR");box.append(p);}
+   if(job.status==="needs_review"){
+    if(job.error_message){const p=document.createElement("p");p.textContent=job.error_message;box.append(p);}
+    if(Array.isArray(job.file_candidates)&&job.file_candidates.length){const select=document.createElement("select");select.setAttribute("aria-label","Arquivo de "+job.title);const placeholder=document.createElement("option");placeholder.value="";placeholder.textContent="Escolha o vídeo correto";select.append(placeholder);job.file_candidates.forEach(f=>{const o=document.createElement("option");o.value=String(f.index);o.textContent=f.name+" · "+(f.bytes/1024**2).toFixed(0)+" MB";select.append(o);});const button=document.createElement("button");button.type="button";button.textContent="Processar arquivo selecionado";button.disabled=true;select.onchange=()=>button.disabled=select.value==="";button.onclick=async()=>{button.disabled=true;const {data,error}=await client.rpc("novaplay_select_import_file",{p_job_id:job.id,p_index:Number(select.value)});if(error||!data){status("magnet-approval-status",error?errorText(error):"A seleção não foi confirmada. Atualize a lista.",true);button.disabled=false;}else await loadMagnetApprovals();};box.append(select,button);}
+   }
     if(job.status==="ready"&&job.r2_object_key&&!registered){const btn=document.createElement("button");btn.type="button";btn.className="primary";btn.textContent="Cadastrar no catálogo";btn.addEventListener("click",()=>openReadyMagnetInCatalog(job));box.appendChild(btn);}
    if(job.status==="failed"){
     if(job.error_message){const err=document.createElement("p");err.style.cssText="color:#ffb3b3;overflow-wrap:anywhere";err.textContent="Motivo da falha: "+job.error_message;box.appendChild(err);}
     const btn=document.createElement("button");btn.type="button";btn.className="primary";btn.textContent="↻ Tentar novamente";
-    const eligible=job.approved_for_processing&&job.rights_confirmed&&Boolean(job.license_reference);
+    const eligible=!job.duplicate_of&&job.approved_for_processing&&job.rights_confirmed&&Boolean(job.license_reference);
     btn.disabled=!eligible;
     if(!eligible)btn.title="É necessária autorização de processamento e licença válida.";
     btn.addEventListener("click",async()=>{
      const feedback=document.createElement("p");feedback.className="muted";feedback.textContent="Enviando solicitação...";box.appendChild(feedback);
      btn.disabled=true;status("magnet-approval-status","Reenfileirando filme...");
      try{
-      const {data,error}=await client.from("novaplay_magnet_imports").update({status:"pending_processor",error_message:null}).eq("id",job.id).eq("status","failed").eq("approved_for_processing",true).eq("rights_confirmed",true).select("id");
+      const {data,error}=await client.rpc("novaplay_retry_import",{p_job_id:job.id});
       if(error)throw error;
-      if(!data?.length)throw Error("O banco não confirmou o reinício. Atualize a lista.");
+      if(!data)throw Error("O banco não confirmou o reinício. Atualize a lista.");
       feedback.textContent="✓ Filme enviado novamente para a fila.";
-      status("magnet-approval-status","Filme recolocado na fila. Mantenha o importador aberto no CMD.",false,true);
+      status("magnet-approval-status","Filme recolocado na fila. O processador retomará as etapas pendentes.",false,true);
       await loadMagnetApprovals();
      }catch(e){feedback.textContent="Erro ao tentar novamente: "+errorText(e);feedback.style.color="#ffb3b3";status("magnet-approval-status","Falha ao tentar novamente: "+errorText(e),true);btn.disabled=false;}
     });box.appendChild(btn);
    }
-   if(job.status==="pending_processor"&&!job.approved_for_processing){
+   if(["pending_processor","queued"].includes(job.status)&&!job.approved_for_processing){
     const label=document.createElement("label");label.className="publish-check";
     const cb=document.createElement("input");cb.type="checkbox";
     const description=document.createElement("span");description.textContent="Declaro, sob minha responsabilidade, que tenho autorização válida para obter este arquivo por magnet e distribuí-lo pela NPlay, incluindo o uso desta fonte. Estou ciente de que a declaração não comprova a licença.";
@@ -1160,14 +1178,14 @@ async function loadMagnetApprovals(){
      }catch(e){status("magnet-approval-status","Falha: "+errorText(e),true);btn.disabled=false}
     });box.appendChild(btn);
    }
-   const target=job.status==="failed"?"failed":registered?"released":job.status==="ready"?"awaiting":job.status==="pending_processor"&&!job.approved_for_processing?"awaiting":"processing";
+   const target=job.duplicate_of||job.status==="duplicate"?"duplicate":job.status==="needs_review"?"review":job.status==="failed"?"failed":registered?"released":job.status==="ready"||!job.approved_for_processing?"awaiting":job.status==="processing"?"processing":"queued";
    groups.find(g=>g.id===target).items.push(box);
   }
-  const order=["failed","awaiting","processing","released"];
+  const order=["review","failed","awaiting","processing","queued","released","duplicate"];
   for(const id of order){
    const group=groups.find(g=>g.id===id);
    const details=document.createElement("details");details.style.cssText="border:1px solid #365075;border-radius:12px;margin:10px 0;background:#101f36";
-   details.open=(id==="failed"||id==="awaiting")&&group.items.length>0;
+   details.dataset.group=id;details.open=opened.has(id)||((id==="failed"||id==="review"||id==="awaiting")&&group.items.length>0);
    const summary=document.createElement("summary");summary.style.cssText="cursor:pointer;padding:14px 16px;font-weight:750;color:#e7f0ff";
    summary.textContent=group.label+" ("+group.items.length+")";details.appendChild(summary);
    const body=document.createElement("div");body.style.cssText="padding:0 12px 10px";
@@ -1175,7 +1193,7 @@ async function loadMagnetApprovals(){
    else{const empty=document.createElement("p");empty.className="muted";empty.textContent="Nenhuma importação nesta etapa.";body.appendChild(empty)}
    details.appendChild(body);list.appendChild(details);
   }
- }catch(e){list.textContent="Falha ao carregar solicitações: "+errorText(e)}
+ }catch(e){list.textContent="Falha ao carregar solicitações: "+errorText(e)}finally{magnetLoading=false;}
 }
 async function submitMagnetImport(event){
  event.preventDefault();
@@ -1188,8 +1206,8 @@ async function submitMagnetImport(event){
  if(title.length<2||license.length<5){status("magnet-status","Informe título e referência da licença.",true);return}
  button.disabled=true;status("magnet-status","Registrando solicitação...");
  try{
-  const {data,error}=await client.from("novaplay_magnet_imports").insert({created_by:sessionUser.id,title,magnet_uri:magnet,license_reference:license,rights_confirmed:true}).select("id,status").single();
-  if(error)throw error;
+  const {data,error}=await client.from("novaplay_magnet_imports").insert({created_by:sessionUser.id,title,magnet_uri:"magnet:?xt="+hash+"&"+[...parsed.searchParams].filter(([k])=>k!=="xt").map(([k,v])=>encodeURIComponent(k)+"="+encodeURIComponent(v)).join("&"),license_reference:license,rights_confirmed:true}).select("id,status").single();
+  if(error){if(error.code==="23505")throw Error("Este magnet já está na fila ou no catálogo. Consulte a importação existente.");throw error;}
   status("magnet-status","Importação registrada (#"+data.id.slice(0,8)+"). Aguardando conexão do processador de torrents; nenhum vídeo foi baixado ou publicado.",false,true);
   $("magnet-import-form").reset();
   loadMagnetApprovals();
@@ -1212,6 +1230,7 @@ function init(){
  $("licensed-url").addEventListener("input",()=>{const url=netflixReferenceUrl($("licensed-url").value);if(url&&$("source-type").value==="licensed"){$("netflix-url").value=url;$("source-type").value="netflix-reference";setSourceType();status("upload-message","Link da Netflix detectado: referência privada selecionada automaticamente. O filme ficará em rascunho.",false,true)}});
  $("licensed-new").onclick=()=>{
   resetForm();
+  $("legacy-upload-options").hidden=false;$("legacy-upload-options").removeAttribute("aria-hidden");
   $("kind").value="movie";setKind();
   $("source-type").value="licensed";setSourceType();
   $("publish").checked=false;
@@ -1236,6 +1255,7 @@ function init(){
  client.auth.onAuthStateChange((event)=>{
   if(event==="PASSWORD_RECOVERY"){setTimeout(async()=>{const pass=prompt("Digite sua nova senha (pelo menos 8 caracteres):");if(pass&&pass.length>=8){const {error}=await client.auth.updateUser({password:pass});alert(error?errorText(error):"Senha alterada. Agora você pode entrar.")}},100)}
  });
+ setInterval(()=>{if(!document.hidden&&sessionUser&&!busy&&!document.querySelector("#magnet-pending-list select:focus")&&document.querySelector('[data-admin-tab="importacoes"]')?.classList.contains("active"))loadMagnetApprovals();},15000);
  checkSession();
  } catch(e) { console.error("NPlay admin initialization failed",e); show("login-view"); status("auth-message","Falha ao preparar o painel: "+errorText(e),true); }
 }
