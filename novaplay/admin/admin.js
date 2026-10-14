@@ -354,6 +354,7 @@ function isFeaturedSeries(row){
 function normalizeFeaturedSearch(value){
  return String(value||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLocaleLowerCase("pt-BR").trim();
 }
+function isPlayableFeatured(x){const r=x?.record;return !r||(r.is_published&&!r.catalog_only&&!!(r.video_path||r.google_drive_id||r.youtube_id||r.licensed_stream_url));}
 function eligibleFeatured(){
  const films=items.filter(x=>x.kind==="movie"&&(x.is_published||x.catalog_only))
   .map(x=>({id:"upload-"+x.id,title:x.title,record:x,type:isFeaturedSeries(x)?"series":"movie"}));
@@ -391,7 +392,7 @@ async function loadFeaturedConfig(){
 }
 function selectFeaturedItem(id){
  const candidates=eligibleFeatured();
- if(!candidates.some(x=>x.id===id)||chosenFeatured.includes(id))return;
+ if(!candidates.some(x=>x.id===id&&isPlayableFeatured(x))||chosenFeatured.includes(id))return;
  featuredPickedId=id;
  renderFeaturedBrowser(candidates);
 }
@@ -421,13 +422,13 @@ function renderFeaturedBrowser(candidates){
   const btn=document.createElement("button");btn.type="button";
   btn.className="featured-candidate"+(featuredPickedId===film.id?" is-selected":"");
   btn.setAttribute("aria-pressed",String(featuredPickedId===film.id));
-  btn.disabled=disabled;btn.dataset.id=film.id;
+  btn.disabled=disabled||!isPlayableFeatured(film);btn.dataset.id=film.id;
   const img=document.createElement("img");img.src=posterOfFeatured(film);
   img.alt="Capa de "+film.title;img.loading="lazy";
   img.onerror=function(){if(!this.dataset.fallback){this.dataset.fallback="1";this.src="../assets/posters/autoral.svg"}};
   const info=document.createElement("span");info.className="featured-candidate-details";
   const title=document.createElement("strong");title.textContent=film.title;
-  const tag=document.createElement("small");tag.textContent=(film.type==="series"?"Série / anime":"Filme")+(film.record?.catalog_only?" · Em breve":"");
+  const tag=document.createElement("small");tag.textContent=(film.type==="series"?"Série / anime":"Filme")+(!isPlayableFeatured(film)?" · Em breve (indisponível)":"");
   info.append(title,tag);
   const check=document.createElement("span");check.className="featured-candidate-check";check.textContent=featuredPickedId===film.id?"✓":"›";
   btn.append(img,info,check);
@@ -441,12 +442,12 @@ function renderFeaturedBrowser(candidates){
  const preview=$("featured-preview");
  const picked=choices.find(x=>x.id===featuredPickedId);
  preview.hidden=!picked;
- $("featured-add").disabled=disabled||!picked;
+ $("featured-add").disabled=disabled||!picked||!isPlayableFeatured(picked);
  if(picked){
   $("featured-preview-image").src=posterOfFeatured(picked);
   $("featured-preview-image").alt="Capa de "+picked.title;
   $("featured-preview-title").textContent=picked.title;
-  $("featured-preview-type").textContent=(picked.type==="series"?"Série / anime":"Filme")+(picked.record?.catalog_only?" · Em breve (sem reprodução)":" · Pronto para destacar");
+  $("featured-preview-type").textContent=(picked.type==="series"?"Série / anime":"Filme")+(!isPlayableFeatured(picked)?" · Em breve (aguardando publicação)":" · Pronto para destacar");
  }
 }
 function renderFeatured(){
@@ -489,8 +490,8 @@ async function saveFeatured(next){
  if(next.length<1||next.length>6||new Set(next).size!==next.length){
   status("featured-message","Mantenha de 1 a 6 filmes diferentes nos destaques.",true);return;
  }
- if(next.some(id=>!eligibleFeatured().some(x=>x.id===id))){
-  status("featured-message","Um dos filmes não está mais publicado com vídeo. Atualize a biblioteca e tente novamente.",true);return;
+ if(next.some(id=>!eligibleFeatured().some(x=>x.id===id&&isPlayableFeatured(x)))){
+  status("featured-message","Só é possível destacar filmes publicados com vídeo cadastrado. Conteúdos Em breve aparecem na busca, mas não podem ser selecionados.",true);return;
  }
  const original=chosenFeatured.slice();
  featuredBusy=true;chosenFeatured=next.slice();renderFeatured();
