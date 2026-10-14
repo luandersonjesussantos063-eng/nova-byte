@@ -355,13 +355,11 @@ function normalizeFeaturedSearch(value){
  return String(value||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLocaleLowerCase("pt-BR").trim();
 }
 function eligibleFeatured(){
- const films=items.filter(x=>x.kind==="movie"&&x.is_published&&!x.catalog_only
-  &&(x.video_path||x.google_drive_id||x.youtube_id||x.licensed_stream_url))
+ const films=items.filter(x=>x.kind==="movie"&&(x.is_published||x.catalog_only))
   .map(x=>({id:"upload-"+x.id,title:x.title,record:x,type:isFeaturedSeries(x)?"series":"movie"}));
  const groups=new Map();
  for(const row of items){
-  if(row.kind!=="episode"||!row.is_published||row.catalog_only||!row.series_title
-   ||!(row.video_path||row.google_drive_id||row.youtube_id||row.licensed_stream_url))continue;
+  if(row.kind!=="episode"||!(row.is_published||row.catalog_only)||!row.series_title)continue;
   const key=normalizeFeaturedSearch(row.series_title);
   if(!groups.has(key))groups.set(key,[]);
   groups.get(key).push(row);
@@ -429,7 +427,7 @@ function renderFeaturedBrowser(candidates){
   img.onerror=function(){if(!this.dataset.fallback){this.dataset.fallback="1";this.src="../assets/posters/autoral.svg"}};
   const info=document.createElement("span");info.className="featured-candidate-details";
   const title=document.createElement("strong");title.textContent=film.title;
-  const tag=document.createElement("small");tag.textContent=film.type==="series"?"Série / anime":"Filme";
+  const tag=document.createElement("small");tag.textContent=(film.type==="series"?"Série / anime":"Filme")+(film.record?.catalog_only?" · Em breve":"");
   info.append(title,tag);
   const check=document.createElement("span");check.className="featured-candidate-check";check.textContent=featuredPickedId===film.id?"✓":"›";
   btn.append(img,info,check);
@@ -448,7 +446,7 @@ function renderFeaturedBrowser(candidates){
   $("featured-preview-image").src=posterOfFeatured(picked);
   $("featured-preview-image").alt="Capa de "+picked.title;
   $("featured-preview-title").textContent=picked.title;
-  $("featured-preview-type").textContent=picked.type==="series"?"Série / anime · Pronto para destacar":"Filme · Pronto para destacar";
+  $("featured-preview-type").textContent=(picked.type==="series"?"Série / anime":"Filme")+(picked.record?.catalog_only?" · Em breve (sem reprodução)":" · Pronto para destacar");
  }
 }
 function renderFeatured(){
