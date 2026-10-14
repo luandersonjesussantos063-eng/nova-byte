@@ -448,7 +448,7 @@ function renderCategory(kind){
   buttons.replaceChildren();
   const groups=genreGroups();
   for(const name of ["Todos",...genreOrder.filter(name=>groups.get(name).length)]){
-   const count=name==="Todos"?db.films.filter(x=>!x.catalogOnly&&x.mode!=="youtube").length:groups.get(name).length;
+   const count=name==="Todos"?uploadedCatalog.filter(x=>x.kind==="film"&&!x.catalogOnly&&x.mode!=="youtube").length:groups.get(name).length;
    const b=document.createElement("button");b.type="button";
    b.className="genre-chip"+(selectedGenre===name?" active":"");
    b.setAttribute("aria-pressed",String(selectedGenre===name));
@@ -456,7 +456,7 @@ function renderCategory(kind){
    b.onclick=()=>{selectedGenre=name;renderCategory("filmes")};
    buttons.append(b);
   }
-  list=selectedGenre==="Todos"?db.films:groups.get(selectedGenre)||[];
+  list=selectedGenre==="Todos"?uploadedCatalog.filter(x=>x.kind==="film"&&!x.catalogOnly&&x.mode!=="youtube"):groups.get(selectedGenre)||[];
   $("category-heading").textContent=selectedGenre==="Todos"?"Filmes por gênero":selectedGenre;
   $("genre-filter-count").textContent=list.length+" título"+(list.length===1?"":"s")+" nesta categoria";
  }
