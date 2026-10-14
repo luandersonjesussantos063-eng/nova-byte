@@ -2,6 +2,14 @@
 "use strict";
 const gate=document.getElementById("nplay-profile-gate"),grid=document.getElementById("nplay-profile-grid"),avatar=document.getElementById("profile-trigger");
 if(!gate||!grid)return;
+const poster=document.querySelector(".nplay-profile-poster");
+if(poster){
+ const hero=poster.closest(".nplay-profile-hero");
+ const showArt=()=>{if(poster.naturalWidth>0)hero?.classList.add("has-poster")};
+ const fallback=()=>{poster.hidden=true;hero?.classList.remove("has-poster")};
+ poster.addEventListener("load",showArt);poster.addEventListener("error",fallback);
+ if(poster.complete){if(poster.naturalWidth)showArt();else fallback()}
+}
 const key="nplay-profiles-v1",activeKey="nplay-active-profile";
 const defaults=[{name:"Meu perfil",emoji:"🙂",bg:"#1478eb"},{name:"Família",emoji:"🎬",bg:"#db3a91"},{name:"Convidado",emoji:"🦊",bg:"#4c9c73"},{name:"Crianças",emoji:"🧸",bg:"#25b47d",kids:true},{name:"Infantil",emoji:"⭐",bg:"#e6a400",kids:true}];
 let profiles;
