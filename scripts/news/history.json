@@ -1,5 +1,6 @@
 {
   "published_ids": [
+    "https://developer.chrome.com/blog/html-in-canvas-ot-changes?hl=en",
     "https://developer.chrome.com/blog/connection-allowlist-announcement?hl=en",
     "tag:blogger.com,1999:blog-6755709643044947179.post-6326737442389025352",
     "tag:blogger.com,1999:blog-6755709643044947179.post-6813543615798583147",
@@ -40,6 +41,15 @@
     "tag:blogger.com,1999:blog-6755709643044947179.post-3564094472242054542"
   ],
   "posts": [
+    {
+      "slug": "html-in-canvas-updates-iterating-toward-a-better-web-api",
+      "title": "HTML-in-Canvas updates: Iterating toward a better Web API",
+      "description": "HTML-in-Canvas updates: Iterating toward a better Web API. Entenda a novidade e o impacto prático para empresas, sites, aplicativos e profissionais.",
+      "date": "2026-10-14",
+      "category": "Web e performance",
+      "image": "/assets/news/html-in-canvas-updates-iterating-toward-a-better-web-api.svg",
+      "source": "https://developer.chrome.com/blog/html-in-canvas-ot-changes?hl=en"
+    },
     {
       "slug": "connection-allowlists-secure-your-web-applications-network-access",
       "title": "Connection allowlists: Secure your web application's network access",
