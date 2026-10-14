@@ -1136,8 +1136,8 @@ function importFailureMessage(job){
 async function loadMagnetApprovals(){
  const list=$("magnet-pending-list");if(!list||!client||!sessionUser||magnetLoading)return;
  magnetLoading=true;
- const opened=new Set([...list.querySelectorAll("details[open]")].map(x=>x.dataset.group));
- list.textContent="Consultando solicitações...";
+ if(!list.children.length)list.textContent="Consultando solicitações...";
+ list.setAttribute('aria-busy','true');
  try{
   // Buscar em páginas: limit(20) fazia os contadores pararem em 20.
   const data=[];
@@ -1154,7 +1154,21 @@ async function loadMagnetApprovals(){
   const {data:catalog,error:catalogError}=await client.from("novaplay_library").select("id,title,r2_object_key").not("r2_object_key","is",null);
   if(catalogError)throw catalogError;
   const registeredByKey=new Map((catalog||[]).filter(x=>x.r2_object_key).map(x=>[x.r2_object_key,x]));
-  list.replaceChildren();
+  // Capture immediately before rendering: the user may expand a group during the request.
+  const groupState=new Map([...list.querySelectorAll('details[data-group]')].map(x=>[x.dataset.group,x.open]));
+  const cardState=new Map([...list.querySelectorAll('[data-import-id]')].map(x=>[x.dataset.importId,{
+   open:x.querySelector('details')?.open,
+   selected:x.querySelector('select')?.value,
+   checked:x.querySelector('input[type="checkbox"]')?.checked
+  }]));
+  // Leave controls being edited intact; the next poll will apply fresh data.
+  if(list.contains(document.activeElement)&&document.activeElement.matches('select'))return;
+  const activeCard=document.activeElement.closest?.('[data-import-id]');
+  const activeGroup=document.activeElement.closest?.('details[data-group]');
+  const focusIndex=activeCard?[...activeCard.querySelectorAll('button,input,select,summary')].indexOf(document.activeElement):-1;
+  const anchor=[...list.querySelectorAll('[data-import-id],details[data-group]')].find(x=>x.getBoundingClientRect().bottom>0&&x.getBoundingClientRect().top<innerHeight);
+  const anchorKey=anchor?.dataset.importId,anchorGroup=anchor?.dataset.group,anchorTop=anchor?.getBoundingClientRect().top;
+  const fragment=document.createDocumentFragment();
   if(!data?.length){list.textContent="Nenhuma solicitação encontrada.";return}
   const groups=[
    {id:"awaiting",label:"Aguardando liberação",items:[]},
@@ -1167,7 +1181,7 @@ async function loadMagnetApprovals(){
   ];
   for(const job of data){
    const registered=job.r2_object_key?registeredByKey.get(job.r2_object_key):null;
-   const box=document.createElement("div");box.style.cssText="border:1px solid #365075;border-radius:12px;padding:12px;margin:10px 0";
+   const box=document.createElement("div");box.dataset.importId=job.id;box.style.cssText="border:1px solid #365075;border-radius:12px;padding:12px;margin:10px 0";
    const title=document.createElement("strong");title.textContent=job.title+" (#"+job.id.slice(0,8)+")";box.appendChild(title);
    const state=document.createElement("p");state.className="muted";state.textContent=registered?"✓ Já cadastrado no catálogo: "+registered.title:job.status==="ready"?"Vídeo enviado ao R2 · aguardando cadastro no catálogo":job.approved_for_processing?({queued:"Na fila",pending_processor:"Na fila",processing:"Processando",needs_review:"Precisa de revisão",duplicate:"Duplicada",failed:"Falhou"}[job.status]||job.status):"Aguardando autorização";box.appendChild(state);
    const stages={metadata:"Buscando metadados",downloading:"Baixando",inspecting:"Analisando vídeo",converting:"Convertendo",uploading:"Enviando",validating:"Validando",complete:"Concluído",queued:"Aguardando processador",retry_wait:"Nova tentativa agendada",selection:"Escolha o arquivo",capacity:"Ajuste de capacidade necessário",source_unavailable:"Troque a fonte para continuar",legacy:"Processador anterior · sem telemetria"};
@@ -1224,21 +1238,37 @@ async function loadMagnetApprovals(){
     });box.appendChild(btn);
    }
    const target=job.duplicate_of||job.status==="duplicate"?"duplicate":job.status==="needs_review"?"review":job.status==="failed"?"failed":registered?"released":job.status==="ready"||!job.approved_for_processing?"awaiting":job.status==="processing"?"processing":"queued";
+   const saved=cardState.get(job.id);
+   if(saved){
+    const diagnostic=box.querySelector('details');if(diagnostic&&saved.open!==undefined)diagnostic.open=saved.open;
+    const select=box.querySelector('select');if(select&&saved.selected!==undefined){select.value=saved.selected;select.dispatchEvent(new Event('change'));}
+    const checkbox=box.querySelector('input[type="checkbox"]');if(checkbox&&saved.checked!==undefined){checkbox.checked=saved.checked;checkbox.dispatchEvent(new Event('change'));}
+   }
    groups.find(g=>g.id===target).items.push(box);
   }
   const order=["review","failed","awaiting","processing","queued","released","duplicate"];
   for(const id of order){
    const group=groups.find(g=>g.id===id);
    const details=document.createElement("details");details.style.cssText="border:1px solid #365075;border-radius:12px;margin:10px 0;background:#101f36";
-   details.dataset.group=id;details.open=opened.has(id)||((id==="failed"||id==="review"||id==="awaiting")&&group.items.length>0);
+   details.dataset.group=id;details.open=groupState.has(id)?groupState.get(id):((id==="failed"||id==="review"||id==="awaiting")&&group.items.length>0);
    const summary=document.createElement("summary");summary.style.cssText="cursor:pointer;padding:14px 16px;font-weight:750;color:#e7f0ff";
    summary.textContent=group.label+" ("+group.items.length+")";details.appendChild(summary);
    const body=document.createElement("div");body.style.cssText="padding:0 12px 10px";
    if(group.items.length)body.append(...group.items);
    else{const empty=document.createElement("p");empty.className="muted";empty.textContent="Nenhuma importação nesta etapa.";body.appendChild(empty)}
-   details.appendChild(body);list.appendChild(details);
+   details.appendChild(body);fragment.appendChild(details);
   }
- }catch(e){list.textContent="Falha ao carregar solicitações: "+errorText(e)}finally{magnetLoading=false;}
+  list.replaceChildren(fragment);
+  if(activeCard&&focusIndex>=0){const card=[...list.querySelectorAll('[data-import-id]')].find(x=>x.dataset.importId===activeCard.dataset.importId);card?.querySelectorAll('button,input,select,summary')[focusIndex]?.focus({preventScroll:true});}
+  else if(activeGroup&&document.activeElement===document.body){[...list.querySelectorAll('details[data-group]')].find(x=>x.dataset.group===activeGroup.dataset.group)?.querySelector('summary')?.focus({preventScroll:true});}
+  const restored=anchorKey?[...list.querySelectorAll('[data-import-id]')].find(x=>x.dataset.importId===anchorKey):[...list.querySelectorAll('details[data-group]')].find(x=>x.dataset.group===anchorGroup);
+  if(restored&&anchorTop!==undefined){const delta=restored.getBoundingClientRect().top-anchorTop;if(Math.abs(delta)>1)window.scrollBy({top:delta,behavior:'instant'});}
+  list.dataset.loaded='true';
+  status('magnet-approval-status','Andamento atualizado às '+new Date().toLocaleTimeString('pt-BR')+'.',false,true);
+ }catch(e){
+  if(!list.querySelector('details[data-group]'))list.textContent="Falha ao carregar solicitações: "+errorText(e);
+  status('magnet-approval-status','Não foi possível atualizar agora. Os dados anteriores foram mantidos; nova consulta automática em 15 segundos.',true);
+ }finally{magnetLoading=false;list.removeAttribute('aria-busy');}
 }
 async function submitMagnetImport(event){
  event.preventDefault();
