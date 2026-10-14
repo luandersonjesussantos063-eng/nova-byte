@@ -253,6 +253,19 @@ def sha256_file(job,path):
             job.check();digest.update(block)
     return digest.hexdigest()
 
+def transport_error(exc):
+    from botocore.exceptions import ConnectionClosedError, EndpointConnectionError, ReadTimeoutError, ConnectTimeoutError
+    return isinstance(exc,(ConnectionError,TimeoutError,ConnectionClosedError,EndpointConnectionError,ReadTimeoutError,ConnectTimeoutError))
+
+def upload_part_with_retry(job,r2,**kwargs):
+    for attempt in range(3):
+        job.check()
+        try:return r2.upload_part(**kwargs)
+        except Exception as exc:
+            if not transport_error(exc) or attempt==2:raise
+            LOG.warning('Upload connection interrupted for %s; retrying same part',job.id)
+            time.sleep(2**(attempt+1))
+
 def upload_resumable(job,r2,bucket,path):
     size=Path(path).stat().st_size
     digest=sha256_file(job,path)
@@ -288,11 +301,14 @@ def upload_resumable(job,r2,bucket,path):
         while data:=src.read(upload['part_size']):
             job.check();part=known.get(number)
             if not part or part['Size']!=len(data):
-                part=r2.upload_part(Bucket=bucket,Key=key,UploadId=upload['id'],PartNumber=number,Body=data)
+                part=upload_part_with_retry(job,r2,Bucket=bucket,Key=key,UploadId=upload['id'],PartNumber=number,Body=data)
             completed.append({'PartNumber':number,'ETag':part['ETag']})
             done+=len(data);number+=1;job.progress('uploading',done/size*100,force=True)
     job.check()
-    r2.complete_multipart_upload(Bucket=bucket,Key=key,UploadId=upload['id'],MultipartUpload={'Parts':completed})
+    try:r2.complete_multipart_upload(Bucket=bucket,Key=key,UploadId=upload['id'],MultipartUpload={'Parts':completed})
+    except Exception as exc:
+        # A dropped response can mean the object was successfully committed.
+        if not transport_error(exc) or not confirmed():raise
     if not confirmed():raise RuntimeError('Verificação do objeto enviado falhou')
     job.checkpoint(upload_complete=True)
     return key

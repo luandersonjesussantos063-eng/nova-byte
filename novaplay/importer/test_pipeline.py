@@ -83,7 +83,8 @@ class PipelineTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as folder:
             path=Path(folder)/'video.mp4';path.write_bytes(b'x'*(32*1024**2+7))
             job=FakeJob();r2=FakeR2();r2.fail_part=2
-            with self.assertRaises(ConnectionError):upload_resumable(job,r2,'bucket',path)
+            with patch('pipeline.upload_part_with_retry',side_effect=lambda job,r2,**kw:r2.upload_part(**kw)):
+                with self.assertRaises(ConnectionError):upload_resumable(job,r2,'bucket',path)
             upload_resumable(job,r2,'bucket',path)
             self.assertEqual(r2.calls,[1,2,2])
             # Database update failed after upload: retry must not upload again.
@@ -92,8 +93,22 @@ class PipelineTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as folder:
             path=Path(folder)/'video.mp4';path.write_bytes(b'x'*17)
             job=FakeJob();r2=FakeR2();r2.fail_complete=True
-            with self.assertRaises(ConnectionError):upload_resumable(job,r2,'bucket',path)
+            upload_resumable(job,r2,'bucket',path)
             upload_resumable(job,r2,'bucket',path)
             self.assertEqual(r2.calls,[1])
+
+    def test_transient_part_failure_retried_in_same_upload(self):
+        with tempfile.TemporaryDirectory() as folder,patch('pipeline.time.sleep'):
+            path=Path(folder)/'video.mp4';path.write_bytes(b'x'*17)
+            job=FakeJob();r2=FakeR2();r2.fail_part=1
+            upload_resumable(job,r2,'bucket',path)
+            self.assertEqual(r2.calls,[1,1])
+            self.assertTrue(job.manifest['upload_complete'])
+
+    def test_persistent_connection_failure_has_bounded_retries(self):
+        from pipeline import upload_part_with_retry
+        job=FakeJob();r2=MagicMock();r2.upload_part.side_effect=ConnectionError()
+        with patch('pipeline.time.sleep'),self.assertRaises(ConnectionError):upload_part_with_retry(job,r2,Body=b'x')
+        self.assertEqual(r2.upload_part.call_count,3)
 
 if __name__=='__main__':unittest.main()

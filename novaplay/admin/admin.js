@@ -1097,6 +1097,11 @@ function openReadyMagnetInCatalog(job){
  requestAnimationFrame(()=>document.querySelector(".editor")?.scrollIntoView({behavior:"smooth",block:"start"}));
 }
 
+function importFailureMessage(job){
+ const message=job.error_message||"";
+ if(/Connection was closed|endpoint URL|uploadId=|ConnectionClosedError|EndpointConnectionError|ReadTimeoutError/i.test(message+" "+(job.error_code||"")))return "A conexão caiu durante o envio ao armazenamento. Tente novamente: o processador retomará as etapas salvas.";
+ return message.replace(/https?:\/\/\S+/gi,"[endereço técnico omitido]");
+}
 async function loadMagnetApprovals(){
  const list=$("magnet-pending-list");if(!list||!client||!sessionUser||magnetLoading)return;
  magnetLoading=true;
@@ -1143,13 +1148,13 @@ async function loadMagnetApprovals(){
     if(job.error_message){const p=document.createElement("p");p.textContent=job.error_message;box.append(p);}
     if(job.stage==="selection"&&Array.isArray(job.file_candidates)&&job.file_candidates.length){const select=document.createElement("select");select.setAttribute("aria-label","Arquivo de "+job.title);const placeholder=document.createElement("option");placeholder.value="";placeholder.textContent="Escolha o vídeo correto";select.append(placeholder);job.file_candidates.forEach(f=>{const o=document.createElement("option");o.value=String(f.index);o.textContent=f.name+" · "+(f.bytes/1024**2).toFixed(0)+" MB";select.append(o);});const button=document.createElement("button");button.type="button";button.textContent="Processar arquivo selecionado";button.disabled=true;select.onchange=()=>button.disabled=select.value==="";button.onclick=async()=>{button.disabled=true;const {data,error}=await client.rpc("novaplay_select_import_file",{p_job_id:job.id,p_index:Number(select.value)});if(error||!data){status("magnet-approval-status",error?errorText(error):"A seleção não foi confirmada. Atualize a lista.",true);button.disabled=false;}else await loadMagnetApprovals();};box.append(select,button);}
    }
-   if(job.status==='needs_review'||job.status==='failed'){
+   if(['capacity','source_unavailable'].includes(job.stage)||/maior que limite|excede o limite|Espaço insuficiente|Metadados do torrent/.test(job.error_message||'')){
     const sourceButton=document.createElement('button');sourceButton.type='button';sourceButton.textContent='Usar outra fonte / versão menor';
     sourceButton.onclick=()=>{$('magnet-title').value=job.title;$('magnet-license').value=job.license_reference||'';$('magnet-uri').value='';$('magnet-rights').checked=false;$('magnet-import-form').scrollIntoView({behavior:'smooth'});$('magnet-uri').focus();status('magnet-status','Cole outro magnet autorizado. O histórico anterior será preservado; não use o mesmo link que não respondeu.');};box.append(sourceButton);
    }
     if(job.status==="ready"&&job.r2_object_key&&!registered){const btn=document.createElement("button");btn.type="button";btn.className="primary";btn.textContent="Cadastrar no catálogo";btn.addEventListener("click",()=>openReadyMagnetInCatalog(job));box.appendChild(btn);}
    if(job.status==="failed"){
-    if(job.error_message){const err=document.createElement("p");err.style.cssText="color:#ffb3b3;overflow-wrap:anywhere";err.textContent="Motivo da falha: "+job.error_message;box.appendChild(err);}
+    if(job.error_message){const err=document.createElement("p");err.style.cssText="color:#ffb3b3;overflow-wrap:anywhere";err.textContent="Motivo da falha: "+importFailureMessage(job);box.appendChild(err);}
     const btn=document.createElement("button");btn.type="button";btn.className="primary";btn.textContent="↻ Tentar novamente";
     const needsChange=job.error_code==="CapacityRequired"||job.error_code==="MetadataUnavailable"||/maior que limite|excede o limite|Espaço insuficiente/.test(job.error_message||"");
     const eligible=!needsChange&&!job.duplicate_of&&job.approved_for_processing&&job.rights_confirmed&&Boolean(job.license_reference);
