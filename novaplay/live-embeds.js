@@ -23,6 +23,7 @@ if(!data.length)list.textContent="Nenhum canal disponível no momento.";
 }
 function init(){
 const button=$("iframe-channels-open");if(!button)return;
+const mobile=$("iframe-channels-open-mobile");if(mobile)mobile.onclick=()=>button.click();
 button.onclick=()=>{$("iframe-channels-panel").hidden=false;$("iframe-channels-panel").scrollIntoView({behavior:"smooth"});load()};
 $("iframe-channel-close").onclick=()=>{$("iframe-channel-player").replaceChildren();$("iframe-channel-viewer").hidden=true};
 }
