@@ -404,8 +404,12 @@ function renderCategory(kind){
    player.replaceChildren();const video=document.createElement("video");video.controls=true;video.autoplay=true;video.playsInline=true;video.style.cssText="width:100%;height:100%;background:black";player.append(video);
    const source="https://nplay-sptv-hls.luandersonjesussantos063.workers.dev/look/sptv/playlist.m3u8";
    $("iframe-channel-heading").textContent="SPTV · Transmissão de teste";panel.hidden=false;viewer.hidden=false;viewer.scrollIntoView({behavior:"smooth"});
+   const diagnostic=document.createElement("p");diagnostic.style.cssText="padding:12px;color:#ffd6a5";diagnostic.textContent="Verificando conexão com o servidor SPTV...";player.append(diagnostic);
+   fetch(source,{cache:"no-store"}).then(async response=>{if(!response.ok)throw Error("Gateway retornou HTTP "+response.status);const manifest=await response.text();if(!manifest.trim().startsWith("#EXTM3U"))throw Error("O servidor não enviou uma playlist HLS válida.");diagnostic.textContent="Playlist recebida. Preparando vídeo...";}).catch(err=>{diagnostic.textContent="Falha na transmissão: "+err.message+" Solicite ao fornecedor a URL HTTPS oficial do canal.";});
+   video.addEventListener("playing",()=>{diagnostic.textContent="Transmissão conectada."});
+   video.addEventListener("error",()=>{diagnostic.textContent="Erro de reprodução de vídeo (código "+(video.error?.code||"desconhecido")+")."});
    if(video.canPlayType("application/vnd.apple.mpegurl")){video.src=source;video.play().catch(()=>{})}
-   else if(window.Hls?.isSupported()){const hls=new Hls({enableWorker:true});window.nplaySptvHls=hls;hls.loadSource(source);hls.attachMedia(video);hls.on(Hls.Events.MANIFEST_PARSED,()=>video.play().catch(()=>{}));hls.on(Hls.Events.ERROR,(_,data)=>{if(data.fatal){const note=document.createElement("p");note.textContent="Não foi possível carregar a transmissão. Verifique a disponibilidade do servidor de origem.";player.append(note);hls.destroy()}})}
+   else if(window.Hls?.isSupported()){const hls=new Hls({enableWorker:true});window.nplaySptvHls=hls;hls.loadSource(source);hls.attachMedia(video);hls.on(Hls.Events.MANIFEST_PARSED,()=>video.play().catch(()=>{}));hls.on(Hls.Events.ERROR,(_,data)=>{if(data.fatal){const note=document.createElement("p");note.textContent="Falha HLS: "+data.type+" / "+data.details+". Verifique o servidor de origem.";player.append(note);hls.destroy()}})}
    else{const note=document.createElement("p");note.textContent="Este navegador não oferece suporte à transmissão HLS.";player.append(note)}
   };
   if(remoteDb)remoteDb.from("novaplay_live_embeds").select("id,title,embed_url").eq("is_published",true).order("created_at",{ascending:false}).then(({data,error})=>{
