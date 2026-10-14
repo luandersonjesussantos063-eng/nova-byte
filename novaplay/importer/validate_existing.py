@@ -1,9 +1,10 @@
 """Validate existing ready imports without downloading the whole object or publishing."""
-import json,os,subprocess
+import json,os,subprocess,sys
 from pathlib import Path
 import boto3
 from dotenv import load_dotenv
 from supabase import create_client
+if Path(__file__).with_name('importer.stop').exists():sys.exit(0)
 load_dotenv(Path(__file__).with_name('.env'))
 db=create_client(os.environ['SUPABASE_URL'],os.environ['SUPABASE_SERVICE_ROLE_KEY'])
 r2=boto3.client('s3',endpoint_url=f"https://{os.environ['R2_ACCOUNT_ID']}.r2.cloudflarestorage.com",aws_access_key_id=os.environ['R2_ACCESS_KEY_ID'],aws_secret_access_key=os.environ['R2_SECRET_ACCESS_KEY'],region_name='auto')

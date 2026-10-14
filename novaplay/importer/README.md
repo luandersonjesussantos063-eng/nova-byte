@@ -4,7 +4,7 @@ Requer Python 3.11, FFmpeg/FFprobe, dependências de `requirements.txt` e `.env`
 
 ## Operação no Windows
 
-Execute `INICIAR-IMPORTADOR.bat` para iniciar manualmente. Para iniciar ao entrar no Windows, execute `INSTALAR-INICIO-AUTOMATICO.ps1` no PowerShell. O supervisor mantém somente uma instância por instalação, reinicia o processo após falha e salva logs em `logs/`.
+Execute `INICIAR-IMPORTADOR.bat` para iniciar manualmente. Para iniciar ao entrar no Windows, execute `INSTALAR-INICIO-AUTOMATICO.ps1` no PowerShell. A tarefa NPlay Validacao de Videos verifica a cada 15 minutos os envios antigos concluídos sem validação; respeita o sinal importer.stop. O supervisor mantém somente uma instância por instalação, reinicia o processo após falha e salva logs em `logs/`.
 
 Para parar sem perder a tarefa atual, crie um arquivo vazio `importer.stop` nesta pasta. O trabalho atual termina; nenhum novo é iniciado. Remova esse arquivo para retomar. A inicialização manual também remove esse sinal. Não encerre o FFmpeg durante uma conversão.
 
