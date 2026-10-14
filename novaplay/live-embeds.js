@@ -28,19 +28,25 @@ function openChannel(url,title){
  el.append(frame);
  $("iframe-channel-heading").textContent=title;
  $("iframe-channel-viewer").hidden=false;
- note("Transmissão incorporada. O fornecedor pode abrir anúncios em novas abas.");
+ note(currentUrl===PROVIDER?"Transmissão incorporada. O fornecedor pode abrir anúncios em novas abas.":"Transmissão pelo player oficial da emissora.");
  $("iframe-channel-viewer").scrollIntoView({behavior:"smooth",block:"start"});
 }
 async function load(){
  const list=$("iframe-channel-list");if(!list)return;
  list.replaceChildren();
- const channels=[{title:"Premiere Clubes · Ao vivo",embed_url:PROVIDER}];
+ // Players publicados nas páginas oficiais das emissoras. Preservamos os
+ // controles e anúncios da origem; nenhum sinal é retransmitido pela NPlay.
+ const channels=[
+  {title:"TV Gazeta",embed_url:"https://geo.dailymotion.com/player/xb2fp.html?video=x9xwtpy",source_page:"https://www.tvgazeta.com.br/aovivo/"},
+  {title:"TV Assembleia MT",embed_url:"https://owncast.al.mt.gov.br/embed/video",source_page:"https://www.al.mt.gov.br/institucional/tv/14/10/2026"},
+  {title:"Premiere Clubes · Ao vivo",embed_url:PROVIDER}
+ ];
  if(window.supabase){
   try{
    const db=window.supabase.createClient("https://vajlhodqxskozuxxlujv.supabase.co","sb_publishable_uT0b4y0Bex1k1QWZoyIfKg_K0pm-yS3");
    const {data,error}=await db.from("novaplay_live_embeds").select("id,title,embed_url").eq("is_published",true).order("created_at",{ascending:false});
    if(error)throw error;
-   const seen=new Set([PROVIDER]);
+   const seen=new Set(channels.map(item=>item.embed_url));
    for(const item of data||[]){
     if(!item.embed_url||seen.has(item.embed_url))continue;
     seen.add(item.embed_url);channels.push(item);
