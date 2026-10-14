@@ -11,9 +11,9 @@
 <meta name="robots" content="noindex,nofollow">
 <meta name="description" content="NPlay: filmes clássicos, séries históricas e TV aberta grátis em uma plataforma de streaming.">
 <link rel="icon" href="./assets/icon.svg" type="image/svg+xml">
-<link rel="manifest" href="./manifest.webmanifest?v=0.45.16">
+<link rel="manifest" href="./manifest.webmanifest?v=0.45.17">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
-<link rel="stylesheet" href="./styles.css?v=0.45.16">
+<link rel="stylesheet" href="./styles.css?v=0.45.17">
 <title>NPlay — Filmes, séries e TV ao vivo</title>
 <style>
 .nplay-live-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,260px),1fr));gap:20px;margin-top:20px}
@@ -49,7 +49,7 @@
 .nplay-profile-form input,.nplay-profile-form select{background:#0e1a2d;color:#fff;border:1px solid #7991b2;border-radius:8px;padding:11px;min-width:0}.nplay-profile-form button{background:#3272d7;color:#fff;border:0;border-radius:8px;padding:10px 15px;cursor:pointer}
 @media(max-width:450px){.nplay-profile-hero{min-height:43vh}.nplay-profile-grid{gap:20px 12px}.nplay-profile-picture{width:min(100%,100px)}}
 </style><style id="nplay-profile-poster-style">
-/* V 0.45.16: abertura imersiva vertical com perfis integrados. */
+/* V 0.45.17: abertura imersiva vertical com perfis integrados. */
 .nplay-profile-gate{background:#07111f;color:#fff;overflow-x:hidden;overflow-y:auto;scrollbar-color:#566176 transparent;display:block}
 .nplay-profile-hero{position:relative;box-sizing:border-box;width:100%;max-width:600px;min-height:0;height:auto;margin:0 auto;display:flex;align-items:center;justify-content:center;flex-direction:column;padding:0;overflow:hidden;background:#07111f}
 .nplay-profile-hero::before,.nplay-profile-hero::after{content:none;display:none}
@@ -80,13 +80,42 @@
 .nplay-profile-choice{font-size:17px}
 }
 @media(max-width:350px){.nplay-profile-body{padding-left:18px;padding-right:18px}.nplay-profile-grid{gap:20px 12px}}
+
+/* Avatares originais 3D e galeria acessível. */
+.nplay-avatar-art{background-image:url('./assets/avatars-3d-v04517.webp?v=0.45.17')!important;background-size:300% 300%!important;background-position:var(--avatar-x,0%) var(--avatar-y,0%)!important;background-repeat:no-repeat!important}
+#profile-trigger.nplay-avatar-art{border-radius:12px;width:38px;height:38px;overflow:hidden}
+.nplay-profile-dialog{box-sizing:border-box;width:min(94vw,490px);max-height:90svh;overflow:auto;padding:24px;border:1px solid #647999;border-radius:22px;color:#f5f7ff;background:#111e31;box-shadow:0 25px 90px #000a;text-align:left}
+.nplay-profile-dialog::backdrop{background:#020713bb;backdrop-filter:blur(7px)}
+.nplay-profile-dialog .nplay-profile-form{display:flex;flex-direction:column;gap:10px;max-width:none;margin:0}
+.nplay-profile-dialog-top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px}
+.nplay-profile-dialog-top h2{font-size:22px;margin:0!important;color:#fff!important;font-weight:750!important}
+.nplay-profile-dialog-top button{width:38px;height:38px;flex-shrink:0;padding:0!important;background:#ffffff13!important}
+.nplay-profile-dialog label{font-size:13px;font-weight:650;color:#c5d3e8;margin-top:4px}
+.nplay-profile-dialog input,.nplay-profile-dialog select{width:100%;box-sizing:border-box;font-size:16px}
+.nplay-avatar-heading{font-size:15px;font-weight:700;margin:12px 0 2px}
+.nplay-avatar-picker{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.nplay-profile-form .nplay-avatar-option{padding:0;background:transparent;border:0;display:flex;flex-direction:column;gap:6px;align-items:center;color:#cdd8ea;font-size:11px;text-align:center}
+.nplay-avatar-option .nplay-profile-picture{width:100%;max-width:112px;box-sizing:border-box;border:3px solid transparent;box-shadow:none;border-radius:19%;transition:transform .15s,border-color .15s}
+.nplay-avatar-option[aria-pressed="true"] .nplay-profile-picture{border-color:#77bcff;box-shadow:0 0 0 2px #77bcff55;transform:scale(.96)}
+.nplay-avatar-option[aria-pressed="true"]{color:#9dcdff;font-weight:750}
+.nplay-avatar-option:focus-visible{outline:2px solid #a6d4ff;outline-offset:3px;border-radius:12px}
+.nplay-profile-feedback{color:#ffcf99;min-height:18px;font-size:13px;margin:0}
+.nplay-profile-form .nplay-profile-save{padding:13px;font-size:16px;font-weight:750;border-radius:12px}
 </style></head>
 <body>
 <section id="nplay-profile-gate" class="nplay-profile-gate" hidden aria-label="Escolha seu perfil">
-<div class="nplay-profile-hero"><img class="nplay-profile-poster" src="./assets/profile-immersive-v04516.webp?v=0.45.16" alt="NPlay — Filmes, séries e TV ao vivo" width="948" height="1659" fetchpriority="high" decoding="async"><div class="nplay-profile-brand">N<span>Play</span></div><p class="nplay-profile-tag">Seu entretenimento começa aqui</p></div>
+<div class="nplay-profile-hero"><img class="nplay-profile-poster" src="./assets/profile-immersive-v04516.webp?v=0.45.17" alt="NPlay — Filmes, séries e TV ao vivo" width="948" height="1659" fetchpriority="high" decoding="async"><div class="nplay-profile-brand">N<span>Play</span></div><p class="nplay-profile-tag">Seu entretenimento começa aqui</p></div>
 <div class="nplay-profile-body"><h2>Escolha o seu perfil</h2><div id="nplay-profile-grid" class="nplay-profile-grid"></div>
 <button id="nplay-profile-edit" class="nplay-profile-edit nplay-profile-choice" type="button" aria-label="Editar perfis"><span class="nplay-profile-picture" aria-hidden="true">✎</span><span class="nplay-profile-name">Editar</span></button>
-<form id="nplay-profile-form" class="nplay-profile-form" hidden><select id="nplay-profile-slot" aria-label="Escolha o perfil"></select><input id="nplay-profile-name" maxlength="20" placeholder="Nome do perfil" aria-label="Nome do perfil" required><button type="submit">Salvar</button></form>
+<dialog id="nplay-profile-dialog" class="nplay-profile-dialog" aria-labelledby="nplay-profile-dialog-title">
+<form id="nplay-profile-form" class="nplay-profile-form">
+<div class="nplay-profile-dialog-top"><h2 id="nplay-profile-dialog-title">Personalizar perfil</h2><button id="nplay-profile-cancel" type="button" aria-label="Fechar edição">✕</button></div>
+<label for="nplay-profile-slot">Qual perfil você quer editar?</label><select id="nplay-profile-slot" aria-label="Escolha o perfil"></select>
+<label for="nplay-profile-name">Nome do perfil</label><input id="nplay-profile-name" maxlength="20" placeholder="Nome do perfil" aria-label="Nome do perfil" required>
+<p class="nplay-avatar-heading">Escolha seu personagem 3D</p><div id="nplay-avatar-picker" class="nplay-avatar-picker" role="group" aria-label="Personagens 3D"></div>
+<p id="nplay-profile-feedback" class="nplay-profile-feedback" role="status"></p>
+<button class="nplay-profile-save" type="submit">Salvar perfil</button>
+</form></dialog>
 </div></section>
 <svg style="position:absolute;width:0;height:0;overflow:hidden" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
 <symbol id="i-home" viewBox="0 0 24 24"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1Z"/><path d="M9 21v-8h6v8"/></symbol>
@@ -260,16 +289,16 @@
 </div>
 <aside id="nplay-install-banner" hidden style="position:fixed;z-index:1000;bottom:calc(76px + env(safe-area-inset-bottom,0px));left:12px;right:12px;max-width:480px;margin:auto;padding:15px 16px;border-radius:16px;border:1px solid #5474a2;background:#122541;box-shadow:0 12px 38px #000b;color:#fff"><div style="display:flex;align-items:center;gap:12px"><img src="./assets/icon-192.png" alt="" width="48" height="48" style="border-radius:12px"><div style="flex:1"><strong>Instale a NPlay</strong><div id="nplay-install-description" style="font-size:12px;color:#b8cbed;margin-top:3px">Assista com um toque na tela inicial.</div></div><button id="nplay-install-dismiss" type="button" aria-label="Fechar sugestão de instalação" style="background:transparent;color:white;border:0;font-size:20px;cursor:pointer">✕</button></div><button id="nplay-install-action" type="button" style="margin-top:12px;width:100%;background:#326ad6;color:white;border:0;border-radius:10px;padding:12px;font-weight:800;cursor:pointer">Instalar aplicativo</button></aside>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
-<footer class="app-footer"><a href="./admin/" style="display:inline-block;color:#a6c8ff;font-weight:750;padding:7px 0;text-decoration:underline">Painel do criador ↗</a><div>NPlay V 0.45.16 · Cinema clássico e TV aberta grátis · Artes ilustrativas da NPlay · O uso comercial de cada conteúdo exige verificação dos direitos.</div></footer>
+<footer class="app-footer"><a href="./admin/" style="display:inline-block;color:#a6c8ff;font-weight:750;padding:7px 0;text-decoration:underline">Painel do criador ↗</a><div>NPlay V 0.45.17 · Cinema clássico e TV aberta grátis · Artes ilustrativas da NPlay · O uso comercial de cada conteúdo exige verificação dos direitos.</div></footer>
 <script src="./assets/cover.js?v=0.39.2-covers2"></script>
 <script src="./assets/card-hover.js?v=0.39.2"></script>
 <script src="./assets/hero-scenes.js?v=0.39.2"></script>
 <script src="./catalog.js?v=0.39.2"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.58.0/dist/umd/supabase.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/hls.js@1.7.3/dist/hls.min.js"></script>
-<script src="./app.js?v=0.45.16" defer></script>
-<script src="./live-embeds.js?v=0.45.16" defer></script>
-<script src="./install.js?v=0.45.16" defer></script>
-<script src="./profiles.js?v=0.45.16" defer></script>
+<script src="./app.js?v=0.45.17" defer></script>
+<script src="./live-embeds.js?v=0.45.17" defer></script>
+<script src="./install.js?v=0.45.17" defer></script>
+<script src="./profiles.js?v=0.45.17" defer></script>
 </body>
 </html>
