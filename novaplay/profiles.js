@@ -24,10 +24,11 @@ function render(){
   const icon=document.createElement("span");icon.className="nplay-profile-picture";icon.style.background=p.bg||defaults[i].bg;icon.textContent=p.emoji||defaults[i].emoji;
   const name=document.createElement("span");name.className="nplay-profile-name";name.textContent=p.name;
   b.append(icon,name);
-  if(p.kids){const small=document.createElement("small");small.textContent="Infantil";b.append(small)}
+  if(p.kids){const small=document.createElement("small");small.textContent="Infantil";icon.append(small)}
   b.onclick=()=>{try{localStorage.setItem(activeKey,String(i));sessionStorage.setItem("nplay-profile-selected","1")}catch{}if(avatar){avatar.textContent=(p.name||"NP").slice(0,2).toUpperCase();avatar.title="Trocar perfil: "+p.name}hide()};
   grid.append(b);
  });
+ if(edit)grid.append(edit);
 }
 if(avatar){avatar.onclick=show;avatar.setAttribute("aria-label","Trocar perfil")}
 const edit=document.getElementById("nplay-profile-edit"),form=document.getElementById("nplay-profile-form"),slot=document.getElementById("nplay-profile-slot"),name=document.getElementById("nplay-profile-name");
