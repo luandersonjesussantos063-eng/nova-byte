@@ -42,6 +42,63 @@ async function testLink(){
  finally{clearTimeout(timeout)}
 }
 
+
+let batchResults=[];
+function parseM3uList(input){
+ const lines=input.replaceAll(String.fromCharCode(13),"").split(String.fromCharCode(10));
+ const entries=[];let title="";
+ for(const line of lines){const s=line.trim();if(s.startsWith("#EXTINF")){title=s.split(",").slice(1).join(",").trim()||"Canal sem nome";continue}
+ if(!s||s.startsWith("#"))continue;
+ const m=s.match(/https?:\/\/[^\s<>|)\]]+/i);if(!m)continue;
+ try{const u=new URL(m[0]);if(!isHls(u.href))continue;entries.push({title:title||"Canal "+(entries.length+1),url:u.href});}catch(e){}
+ title="";
+ }
+ return entries.slice(0,100);
+}
+async function batchCheck(item){
+ let gateway;
+ try{gateway=playableUrl(item.url)}catch(e){return {...item,status:"Sem gateway HTTPS",detail:e.message,gateway:null}}
+ try{
+ const ctrl=new AbortController(),timer=setTimeout(()=>ctrl.abort(),9000);
+ let res;try{res=await fetch(gateway,{signal:ctrl.signal,cache:"no-store"})}finally{clearTimeout(timer)}
+ if(!res.ok)return {...item,status:"Sem sinal",detail:"HTTP "+res.status,gateway};
+ const body=(await res.text()).slice(0,200000);
+ if(!body.trim().startsWith("#EXTM3U"))return {...item,status:"Inválido",detail:"Resposta não é playlist HLS",gateway};
+ if(!/#EXTINF|#EXT-X-STREAM-INF/.test(body))return {...item,status:"Inválido",detail:"Playlist sem segmentos",gateway};
+ return {...item,status:"Playlist encontrada",detail:"Precisa confirmar reprodução",gateway};
+ }catch(e){return {...item,status:"Sem sinal",detail:e.name==="AbortError"?"Tempo esgotado":e.message,gateway}}
+}
+function renderBatch(){
+ const host=$("live-batch-results");host.replaceChildren();
+ const summary=$("live-batch-status");
+ const good=batchResults.filter(x=>x.status==="Playlist encontrada").length;
+ summary.textContent=batchResults.length+" testados · "+good+" playlists encontradas (reprodução ainda não confirmada)";
+ for(const item of batchResults){
+ const card=document.createElement("div");card.style.cssText="border:1px solid #365075;border-radius:10px;padding:12px;margin:8px 0;overflow-wrap:anywhere";
+ const name=document.createElement("strong");name.textContent=item.title+" — "+item.status;card.append(name);
+ const detail=document.createElement("p");detail.textContent=item.detail+" · "+item.url;card.append(detail);
+ if(item.gateway&&item.status==="Playlist encontrada"){
+ const b=document.createElement("button");b.type="button";b.className="outline";b.textContent="Testar vídeo deste canal";
+ b.onclick=()=>{$("live-embed-title").value=item.title;$("live-embed-url").value=item.url;testLink();window.scrollTo({top:$("live-test-button").getBoundingClientRect().top+window.scrollY-150,behavior:"smooth"})};card.append(b);
+ }
+ host.append(card);
+ }
+}
+async function runBatch(){
+ const input=$("live-batch-input").value.trim();
+ const entries=parseM3uList(input);
+ if(!entries.length){$("live-batch-status").textContent="Nenhum link HLS .m3u8 encontrado na lista.";return}
+ const button=$("live-batch-run");button.disabled=true;batchResults=[];
+ try{
+ for(let i=0;i<entries.length;i+=4){
+ const chunk=await Promise.all(entries.slice(i,i+4).map(batchCheck));
+ batchResults.push(...chunk);renderBatch();
+ $("live-batch-status").textContent="Analisados "+batchResults.length+" de "+entries.length+" canais...";
+ }
+ renderBatch();
+ }finally{button.disabled=false}
+}
+
 function parse(raw){const m=raw.match(/<iframe[^>]+src=["']([^"']+)/i);const found=raw.match(/https?:\/\/[^\s<>|)\]]+/i);const u=new URL(m?m[1]:found?found[0]:raw.trim());if(!["http:","https:"].includes(u.protocol))throw Error("Use HTTP ou HTTPS.");if(u.username||u.password)throw Error("URL com senha não é aceita.");return u.href}
 async function refresh(){
 const list=$("live-embed-list");if(!list)return;
@@ -62,8 +119,9 @@ function init(){
 if(!$("live-embed-controls"))return;
 if(!window.supabase){setTimeout(init,300);return}
 db=client();
-$("live-embed-controls").innerHTML='<form id="live-embed-form" style="display:grid;gap:12px;max-width:680px"><label>Nome do canal<input id="live-embed-title" required></label><label>Link HTTP/HTTPS ou código iframe<textarea id="live-embed-url" required rows="3"></textarea></label><label><input id="live-embed-rights" type="checkbox" required> Confirmo autorização para exibição na NPlay</label><label><input id="live-embed-published" type="checkbox"> Publicar imediatamente</label><button class="primary" type="submit">Salvar canal</button></form><div style="padding:16px;border:1px solid #3a6396;border-radius:12px"><h3>Testador de sinal HLS</h3><p>Informe nome e link HTTP ou HTTPS .m3u8 acima, clique em testar e aguarde a reprodução. Um retorno HTTP 200 sozinho não comprova sinal.</p><button id="live-test-button" type="button" class="outline">🔎 Testar sinal</button> <button id="live-test-publish" type="button" class="primary" disabled>✓ Publicar canal testado</button><p id="live-test-message" role="status" aria-live="polite"></p><video id="live-test-video" controls muted playsinline hidden style="display:block;width:100%;max-width:600px;max-height:330px;background:#000;border-radius:10px"></video><small>Links HTTP são aceitos para diagnóstico. A reprodução no site HTTPS exige um gateway HTTPS; o endereço SPTV já possui um gateway de teste.</small></div><p id="live-embed-message"></p><h3>Canais cadastrados</h3><div id="live-embed-list"></div>';
+$("live-embed-controls").innerHTML='<form id="live-embed-form" style="display:grid;gap:12px;max-width:680px"><label>Nome do canal<input id="live-embed-title" required></label><label>Link HTTP/HTTPS ou código iframe<textarea id="live-embed-url" required rows="3"></textarea></label><label><input id="live-embed-rights" type="checkbox" required> Confirmo autorização para exibição na NPlay</label><label><input id="live-embed-published" type="checkbox"> Publicar imediatamente</label><button class="primary" type="submit">Salvar canal</button></form><div style="padding:16px;border:1px solid #3a6396;border-radius:12px"><h3>Testador de sinal HLS</h3><p>Informe nome e link HTTP ou HTTPS .m3u8 acima, clique em testar e aguarde a reprodução. Um retorno HTTP 200 sozinho não comprova sinal.</p><button id="live-test-button" type="button" class="outline">🔎 Testar sinal</button> <button id="live-test-publish" type="button" class="primary" disabled>✓ Publicar canal testado</button><p id="live-test-message" role="status" aria-live="polite"></p><video id="live-test-video" controls muted playsinline hidden style="display:block;width:100%;max-width:600px;max-height:330px;background:#000;border-radius:10px"></video><small>Links HTTP são aceitos para diagnóstico. A reprodução no site HTTPS exige um gateway HTTPS; o endereço SPTV já possui um gateway de teste.</small></div><section style="padding:16px;border:1px solid #3a6396;border-radius:12px;margin-top:16px"><h3>Testar lista M3U completa</h3><p>Cole uma lista M3U com vários canais. Testa até 100 endereços HLS, quatro por vez. Links HTTP precisam de gateway HTTPS configurado; o SPTV usa o gateway existente. Playlist encontrada não significa vídeo reproduzido.</p><textarea id="live-batch-input" rows="9" placeholder="#EXTM3U&#10;#EXTINF:-1,Canal&#10;http://servidor/canal/playlist.m3u8" style="width:100%"></textarea><button type="button" id="live-batch-run" class="primary">Testar lista completa</button><p id="live-batch-status" role="status"></p><div id="live-batch-results"></div></section><p id="live-embed-message"></p><h3>Canais cadastrados</h3><div id="live-embed-list"></div>';
 $("live-test-button").onclick=testLink;
+$("live-batch-run").onclick=runBatch;
 $("live-embed-url").addEventListener("input",()=>{testedUrl=null;testPassed=false;$("live-test-publish").disabled=true;testStatus("Link alterado. Teste novamente.")});
 $("live-test-publish").onclick=async()=>{if(!testPassed||!testedUrl)return;const title=$("live-embed-title").value.trim();if(!title){testStatus("Informe o nome do canal.");return}if(!$("live-embed-rights").checked){testStatus("Confirme a autorização de exibição.");return}const btn=$("live-test-publish");btn.disabled=true;const {error}=await db.from("novaplay_live_embeds").insert({title,embed_url:testedUrl,rights_confirmed:true,is_published:true});if(error){testStatus("Erro ao publicar: "+error.message);btn.disabled=false;return}testStatus("✅ Canal publicado na NPlay.");$("live-embed-form").reset();testPassed=false;testedUrl=null;refresh()};
 $("live-embed-form").onsubmit=async e=>{e.preventDefault();try{
