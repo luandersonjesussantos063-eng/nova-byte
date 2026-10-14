@@ -16,7 +16,7 @@ const player=$("iframe-channel-player");player.replaceChildren();
 const frame=document.createElement("iframe");frame.src=u.href;frame.title=item.title;frame.allow="autoplay; encrypted-media; picture-in-picture; fullscreen";frame.allowFullscreen=true;
 // Restrict only this test embed: no popups or top-level navigation permissions.
 // The remote provider may refuse framing or require permissions we cannot grant safely.
-if(item.restricted)frame.setAttribute("sandbox","allow-scripts allow-same-origin allow-forms allow-presentation");
+// The source blocks sandboxed embedding. Do not bypass its player checks.
 frame.referrerPolicy="strict-origin-when-cross-origin";frame.style.cssText="width:100%;height:100%;border:0";player.append(frame);
 $("iframe-channel-heading").textContent=item.title;
 $("iframe-channel-viewer").hidden=false;
