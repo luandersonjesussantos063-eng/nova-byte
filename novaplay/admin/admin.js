@@ -1096,15 +1096,16 @@ async function loadMagnetApprovals(){
     btn.disabled=!eligible;
     if(!eligible)btn.title="É necessária autorização de processamento e licença válida.";
     btn.addEventListener("click",async()=>{
-     if(!confirm("Recolocar '"+job.title+"' na fila de importação?"))return;
+     const feedback=document.createElement("p");feedback.className="muted";feedback.textContent="Enviando solicitação...";box.appendChild(feedback);
      btn.disabled=true;status("magnet-approval-status","Reenfileirando filme...");
      try{
       const {data,error}=await client.from("novaplay_magnet_imports").update({status:"pending_processor",error_message:null}).eq("id",job.id).eq("status","failed").eq("approved_for_processing",true).eq("rights_confirmed",true).select("id");
       if(error)throw error;
-      if(!data?.length)throw Error("Não foi possível reenfileirar. Atualize a lista.");
+      if(!data?.length)throw Error("O banco não confirmou o reinício. Atualize a lista.");
+      feedback.textContent="✓ Filme enviado novamente para a fila.";
       status("magnet-approval-status","Filme recolocado na fila. Mantenha o importador aberto no CMD.",false,true);
       await loadMagnetApprovals();
-     }catch(e){status("magnet-approval-status","Falha ao tentar novamente: "+errorText(e),true);btn.disabled=false;}
+     }catch(e){feedback.textContent="Erro ao tentar novamente: "+errorText(e);feedback.style.color="#ffb3b3";status("magnet-approval-status","Falha ao tentar novamente: "+errorText(e),true);btn.disabled=false;}
     });box.appendChild(btn);
    }
    if(job.status==="pending_processor"&&!job.approved_for_processing){
