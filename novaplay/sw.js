@@ -1,5 +1,5 @@
-const CACHE="novaplay-v0.45.19";
-const CORE=["./assets/avatars-3d-v04517.webp?v=0.45.19","./assets/profile-immersive-v04516.webp?v=0.45.19","./","./index.html","./styles.css","./app.js","./live-embeds.js","./profiles.js","./install.js","./assets/cover.js","./assets/card-hover.js","./assets/hero-scenes.js","./catalog.js","./manifest.webmanifest","./assets/icon.svg",
+const CACHE="novaplay-v0.45.20";
+const CORE=["./assets/profile-hero-wide-v04515.webp?v=0.45.20","./assets/avatars-3d-v04517.webp?v=0.45.20","./assets/profile-immersive-v04516.webp?v=0.45.20","./","./index.html","./styles.css","./app.js","./live-embeds.js","./profiles.js","./install.js","./assets/cover.js","./assets/card-hover.js","./assets/hero-scenes.js","./catalog.js","./manifest.webmanifest","./assets/icon.svg",
 "./assets/posters/autoral.svg","./assets/posters/nosferatu.svg","./assets/posters/lua.svg","./assets/posters/caligari.svg","./assets/posters/lostworld.svg",
 "./assets/posters/pauline.svg","./assets/posters/phantom.svg","./assets/posters/camara.svg","./assets/posters/brasil.svg","./assets/posters/cultura.svg","./assets/backdrops/lostworld-hero.svg"];
 self.addEventListener("install",e=>{e.waitUntil(caches.open(CACHE).then(c=>c.addAll(CORE)).then(()=>self.skipWaiting()))});
