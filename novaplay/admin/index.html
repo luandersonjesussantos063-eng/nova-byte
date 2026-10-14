@@ -144,7 +144,7 @@
           <label>Nome da série <span class="required">*</span><input id="series-name" maxlength="140" placeholder="Nome da sua série"></label>
           <label>Número do episódio <span class="required">*</span><input id="episode-number" type="number" min="1" max="9999" placeholder="1"></label>
         </div>
-        <label>Gênero ou categoria<input id="genre" list="novaplay-genre-options" maxlength="90" placeholder="Escolha ou digite o gênero principal" value="Autoral"></label>
+        <button id="auto-genre" type="button" class="outline">Detectar gênero automaticamente</button><label>Gênero ou categoria<input id="genre" list="novaplay-genre-options" maxlength="90" placeholder="Escolha ou digite o gênero principal" value="Autoral"></label>
         <datalist id="novaplay-genre-options">
           <option value="Ação"></option><option value="Animação"></option><option value="Aventura"></option>
           <option value="Comédia"></option><option value="Drama"></option><option value="Fantasia"></option>
@@ -356,7 +356,7 @@
  }
  function startAdmin(){
   if(!window.supabase||typeof window.supabase.createClient!=="function"){fail();return}
-  load("./admin.js?v=0.43.15",function(){},function(){if(msg)msg.textContent="Falha ao carregar o módulo administrativo. Atualize a página."});
+  load("./admin.js?v=0.43.17",function(){},function(){if(msg)msg.textContent="Falha ao carregar o módulo administrativo. Atualize a página."});
  }
  function fail(){if(msg)msg.textContent="Não foi possível carregar a biblioteca de autenticação. Confira a conexão e tente novamente.";}
  function attempt(i){
