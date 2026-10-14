@@ -23,8 +23,9 @@ if errorlevel 1 (
  exit /b 1
 )
 echo NPlay: iniciando importador local...
-echo Mantenha esta janela aberta enquanto importa.
-".venv\Scripts\python.exe" worker.py
+echo Mantenha esta janela aberta ou instale o inicio automatico.
+if exist "importer.stop" del "importer.stop"
+".venv\Scripts\python.exe" supervisor.py
 echo.
 echo O importador parou. Verifique o erro acima.
 pause

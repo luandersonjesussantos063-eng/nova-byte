@@ -1,0 +1,15 @@
+.env
+.env.*
+!.env.example
+node_modules/
+__pycache__/
+*.pyc
+.venv/
+novaplay/importer/jobs/
+novaplay/importer/recovery/
+novaplay/importer/logs/
+novaplay/importer/*.lock
+novaplay/importer/*.stop
+novaplay/importer/drafts/
+supabase/.temp/
+/novaplay/importer/validation-results.json
