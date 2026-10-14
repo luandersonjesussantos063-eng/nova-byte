@@ -234,7 +234,7 @@ function primaryGenre(film){
 }
 function genreGroups(){
  const groups=new Map(genreOrder.map(name=>[name,[]]));
- for(const item of db.films.filter(x=>x.kind==="film"&&!x.catalogOnly&&x.mode!=="youtube"))
+ for(const item of uploadedCatalog.filter(x=>x.kind==="film"&&!x.catalogOnly&&x.mode!=="youtube"))
   groups.get(primaryGenre(item)).push(item);
  return groups;
 }
@@ -252,12 +252,10 @@ function renderRows(){
  ["Filmes do Cloudflare R2",uploadedCatalog.filter(x=>x.kind==="film"&&x.mode==="r2"&&!x.catalogOnly),"filmes",false],
  ["Filmes do YouTube",youtubeFilms(),"youtube",false],
  ["Animes e estreias · Em breve",upcomingFilms(),"em-breve",false],
- ["Filmes clássicos",db.films.filter(x=>x.mode!=="youtube"),"filmes",false],
- ["Séries clássicas",db.series,"series",false],
  ...genreOrder.filter(name=>name!=="Não classificados")
   .map(name=>[name,genreGroups().get(name),"genero:"+name,false]).filter(b=>b[1].length),
  ["Ainda sem gênero",genreGroups().get("Não classificados").slice(0,80),"genero:Não classificados",false],
- ["Adicionados ao catálogo",[...db.films.filter(x=>!x.catalogOnly&&x.mode!=="youtube").slice().reverse(),...db.series,...db.films.filter(x=>x.catalogOnly)],"filmes",false],
+ ["Adicionados ao catálogo",[...uploadedCatalog].reverse(),"filmes",false],
  ["Minha lista",all.filter(x=>favorite.has(x.id)),"favoritos",false]
  ];
  blocks.forEach(b=>{const row=shelf(b[0],b[1].slice(0,36),b[2],b[3]);if(row)holder.append(row)});
