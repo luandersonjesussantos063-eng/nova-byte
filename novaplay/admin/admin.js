@@ -1065,7 +1065,7 @@ async function loadMagnetApprovals(){
   const pageSize=500;
   for(let offset=0;offset<50000;offset+=pageSize){
    const {data:page,error}=await client.from("novaplay_magnet_imports")
-    .select("id,title,status,approved_for_processing,created_at,r2_object_key")
+    .select("id,title,status,approved_for_processing,created_at,r2_object_key,error_message,rights_confirmed,license_reference")
     .order("created_at",{ascending:false}).range(offset,offset+pageSize-1);
    if(error)throw error;
    data.push(...(page||[]));
@@ -1080,6 +1080,7 @@ async function loadMagnetApprovals(){
   const groups=[
    {id:"awaiting",label:"Aguardando liberação",items:[]},
    {id:"processing",label:"Em processo",items:[]},
+   {id:"failed",label:"Falharam · Tentar novamente",items:[]},
    {id:"released",label:"Já liberados / cadastrados",items:[]}
   ];
   for(const job of data){
@@ -1088,6 +1089,24 @@ async function loadMagnetApprovals(){
    const title=document.createElement("strong");title.textContent=job.title+" (#"+job.id.slice(0,8)+")";box.appendChild(title);
    const state=document.createElement("p");state.className="muted";state.textContent=registered?"✓ Já cadastrado no catálogo: "+registered.title:job.status==="ready"?"Vídeo enviado ao R2 · aguardando cadastro no catálogo":job.approved_for_processing?"Autorização registrada · "+job.status:"Aguardando declaração · "+job.status;box.appendChild(state);
     if(job.status==="ready"&&job.r2_object_key&&!registered){const btn=document.createElement("button");btn.type="button";btn.className="primary";btn.textContent="Cadastrar no catálogo";btn.addEventListener("click",()=>openReadyMagnetInCatalog(job));box.appendChild(btn);}
+   if(job.status==="failed"){
+    if(job.error_message){const err=document.createElement("p");err.style.cssText="color:#ffb3b3;overflow-wrap:anywhere";err.textContent="Motivo da falha: "+job.error_message;box.appendChild(err);}
+    const btn=document.createElement("button");btn.type="button";btn.className="primary";btn.textContent="↻ Tentar novamente";
+    const eligible=job.approved_for_processing&&job.rights_confirmed&&Boolean(job.license_reference);
+    btn.disabled=!eligible;
+    if(!eligible)btn.title="É necessária autorização de processamento e licença válida.";
+    btn.addEventListener("click",async()=>{
+     if(!confirm("Recolocar '"+job.title+"' na fila de importação?"))return;
+     btn.disabled=true;status("magnet-approval-status","Reenfileirando filme...");
+     try{
+      const {data,error}=await client.from("novaplay_magnet_imports").update({status:"pending_processor",error_message:null}).eq("id",job.id).eq("status","failed").eq("approved_for_processing",true).eq("rights_confirmed",true).select("id");
+      if(error)throw error;
+      if(!data?.length)throw Error("Não foi possível reenfileirar. Atualize a lista.");
+      status("magnet-approval-status","Filme recolocado na fila. Mantenha o importador aberto no CMD.",false,true);
+      await loadMagnetApprovals();
+     }catch(e){status("magnet-approval-status","Falha ao tentar novamente: "+errorText(e),true);btn.disabled=false;}
+    });box.appendChild(btn);
+   }
    if(job.status==="pending_processor"&&!job.approved_for_processing){
     const label=document.createElement("label");label.className="publish-check";
     const cb=document.createElement("input");cb.type="checkbox";
@@ -1106,14 +1125,14 @@ async function loadMagnetApprovals(){
      }catch(e){status("magnet-approval-status","Falha: "+errorText(e),true);btn.disabled=false}
     });box.appendChild(btn);
    }
-   const target=registered?"released":job.status==="ready"?"awaiting":job.status==="pending_processor"&&!job.approved_for_processing?"awaiting":"processing";
+   const target=job.status==="failed"?"failed":registered?"released":job.status==="ready"?"awaiting":job.status==="pending_processor"&&!job.approved_for_processing?"awaiting":"processing";
    groups.find(g=>g.id===target).items.push(box);
   }
-  const order=["awaiting","processing","released"];
+  const order=["failed","awaiting","processing","released"];
   for(const id of order){
    const group=groups.find(g=>g.id===id);
    const details=document.createElement("details");details.style.cssText="border:1px solid #365075;border-radius:12px;margin:10px 0;background:#101f36";
-   details.open=id==="awaiting"&&group.items.length>0;
+   details.open=(id==="failed"||id==="awaiting")&&group.items.length>0;
    const summary=document.createElement("summary");summary.style.cssText="cursor:pointer;padding:14px 16px;font-weight:750;color:#e7f0ff";
    summary.textContent=group.label+" ("+group.items.length+")";details.appendChild(summary);
    const body=document.createElement("div");body.style.cssText="padding:0 12px 10px";
