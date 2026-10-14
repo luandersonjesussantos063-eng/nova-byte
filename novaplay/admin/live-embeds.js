@@ -6,12 +6,14 @@ const SPTV_HTTP_ORIGIN="http://95.211.149.215:8081/look/sptv/playlist.m3u8";
 const SPTV_HTTPS_PROXY="https://nplay-sptv-hls.luandersonjesussantos063.workers.dev/look/sptv/playlist.m3u8";
 function playableUrl(url){const u=new URL(url);if(u.protocol==="https:")return u.href;if(u.hostname==="95.211.149.215"&&u.port==="8081"&&u.pathname.replace(/\/$/,"")==="/look/sptv/playlist.m3u8")return SPTV_HTTPS_PROXY+u.search;throw Error("Este servidor HTTP ainda não tem gateway HTTPS para testar o sinal. Use um link HTTPS ou configure um gateway autorizado.");}
 const isHls=u=>/\.m3u8(?:\?|$)/i.test(u);
+const isPlaylistEndpoint=u=>{try{return /\/get\.php$/i.test(new URL(u).pathname)}catch{return false}};
 function testStatus(msg){const el=$("live-test-message");if(el)el.textContent=msg;}
 async function testLink(){
  const raw=$("live-embed-url").value.trim();let url;
  try{url=parse(raw)}catch(e){testStatus("❌ "+e.message);return}
  let playbackUrl;try{playbackUrl=playableUrl(url)}catch(e){testStatus("⚠️ "+e.message);return}
  testedUrl=null;testPassed=false;$("live-test-publish").disabled=true;
+ if(isPlaylistEndpoint(url)){testStatus("⚠️ Este link get.php fornece uma lista de canais, não um vídeo. Não pode ser publicado como canal. Exporte a lista M3U autorizada e cole no testador de lista completa.");return}
  if(!isHls(url)){testStatus("Links iframe não permitem verificar o sinal automaticamente. Use a prévia no site antes de publicar.");return}
  testStatus("Verificando playlist e reprodução do sinal...");
  const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),12000);
@@ -126,6 +128,7 @@ $("live-embed-url").addEventListener("input",()=>{testedUrl=null;testPassed=fals
 $("live-test-publish").onclick=async()=>{if(!testPassed||!testedUrl)return;const title=$("live-embed-title").value.trim();if(!title){testStatus("Informe o nome do canal.");return}if(!$("live-embed-rights").checked){testStatus("Confirme a autorização de exibição.");return}const btn=$("live-test-publish");btn.disabled=true;const {error}=await db.from("novaplay_live_embeds").insert({title,embed_url:testedUrl,rights_confirmed:true,is_published:true});if(error){testStatus("Erro ao publicar: "+error.message);btn.disabled=false;return}testStatus("✅ Canal publicado na NPlay.");$("live-embed-form").reset();testPassed=false;testedUrl=null;refresh()};
 $("live-embed-form").onsubmit=async e=>{e.preventDefault();try{
 const title=$("live-embed-title").value.trim(),rawUrl=parse($("live-embed-url").value),embed_url=isHls(rawUrl)?playableUrl(rawUrl):rawUrl;
+if(isPlaylistEndpoint(rawUrl))throw Error("get.php é um endereço de lista IPTV, não um canal. Use o testador de lista M3U.");
 if(!isHls(rawUrl)&&!rawUrl.startsWith("https://"))throw Error("Iframes devem utilizar HTTPS.");
 if(!title)throw Error("Informe o nome.");
 if(isHls(embed_url)&&$("live-embed-published").checked)throw Error("Para publicar um canal HLS, use Testar sinal e depois Publicar canal testado.");
