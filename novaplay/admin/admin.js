@@ -1107,7 +1107,7 @@ async function loadMagnetApprovals(){
   const pageSize=500;
   for(let offset=0;offset<50000;offset+=pageSize){
    const {data:page,error}=await client.from("novaplay_magnet_imports")
-    .select("id,title,status,stage,progress_percent,heartbeat_at,worker_id,attempts,next_retry_at,duplicate_of,file_candidates,selected_file_index,approved_for_processing,created_at,r2_object_key,error_message,rights_confirmed,license_reference")
+    .select("id,title,status,stage,progress_percent,heartbeat_at,worker_id,attempts,next_retry_at,error_code,duplicate_of,file_candidates,selected_file_index,approved_for_processing,created_at,r2_object_key,error_message,rights_confirmed,license_reference")
     .order("created_at",{ascending:false}).range(offset,offset+pageSize-1);
    if(error)throw error;
    data.push(...(page||[]));
@@ -1133,21 +1133,27 @@ async function loadMagnetApprovals(){
    const box=document.createElement("div");box.style.cssText="border:1px solid #365075;border-radius:12px;padding:12px;margin:10px 0";
    const title=document.createElement("strong");title.textContent=job.title+" (#"+job.id.slice(0,8)+")";box.appendChild(title);
    const state=document.createElement("p");state.className="muted";state.textContent=registered?"✓ Já cadastrado no catálogo: "+registered.title:job.status==="ready"?"Vídeo enviado ao R2 · aguardando cadastro no catálogo":job.approved_for_processing?({queued:"Na fila",pending_processor:"Na fila",processing:"Processando",needs_review:"Precisa de revisão",duplicate:"Duplicada",failed:"Falhou"}[job.status]||job.status):"Aguardando autorização";box.appendChild(state);
-   const stages={metadata:"Buscando metadados",downloading:"Baixando",inspecting:"Analisando vídeo",converting:"Convertendo",uploading:"Enviando",validating:"Validando",complete:"Concluído",queued:"Aguardando processador",retry_wait:"Nova tentativa agendada",selection:"Escolha o arquivo",legacy:"Processador anterior · sem telemetria"};
+   const stages={metadata:"Buscando metadados",downloading:"Baixando",inspecting:"Analisando vídeo",converting:"Convertendo",uploading:"Enviando",validating:"Validando",complete:"Concluído",queued:"Aguardando processador",retry_wait:"Nova tentativa agendada",selection:"Escolha o arquivo",capacity:"Ajuste de capacidade necessário",source_unavailable:"Troque a fonte para continuar",legacy:"Processador anterior · sem telemetria"};
    if(job.stage){const p=document.createElement("p");p.textContent=stages[job.stage]||job.stage;box.append(p);}
    if(job.status==="processing"&&job.worker_id){const progress=document.createElement("progress");progress.max=100;progress.value=job.progress_percent||0;progress.setAttribute("aria-label","Progresso de "+job.title);box.append(progress);const p=document.createElement("p");const age=job.heartbeat_at?Math.round((Date.now()-Date.parse(job.heartbeat_at))/1000):null;p.textContent=Math.round(job.progress_percent||0)+"% · "+(age===null?"Aguardando comunicação":age>120?"Sem comunicação recente · retomada automática após expirar a reserva":"Processador conectado");box.append(p);}
+   if(job.status==="queued"&&job.error_message){const p=document.createElement("p");p.textContent=job.error_message+" Nova tentativa automática, sem precisar clicar em Atualizar.";box.append(p);}
    if(job.next_retry_at){const p=document.createElement("p");p.textContent="Próxima tentativa: "+new Date(job.next_retry_at).toLocaleString("pt-BR");box.append(p);}
    if(job.status==="needs_review"){
     if(job.error_message){const p=document.createElement("p");p.textContent=job.error_message;box.append(p);}
-    if(Array.isArray(job.file_candidates)&&job.file_candidates.length){const select=document.createElement("select");select.setAttribute("aria-label","Arquivo de "+job.title);const placeholder=document.createElement("option");placeholder.value="";placeholder.textContent="Escolha o vídeo correto";select.append(placeholder);job.file_candidates.forEach(f=>{const o=document.createElement("option");o.value=String(f.index);o.textContent=f.name+" · "+(f.bytes/1024**2).toFixed(0)+" MB";select.append(o);});const button=document.createElement("button");button.type="button";button.textContent="Processar arquivo selecionado";button.disabled=true;select.onchange=()=>button.disabled=select.value==="";button.onclick=async()=>{button.disabled=true;const {data,error}=await client.rpc("novaplay_select_import_file",{p_job_id:job.id,p_index:Number(select.value)});if(error||!data){status("magnet-approval-status",error?errorText(error):"A seleção não foi confirmada. Atualize a lista.",true);button.disabled=false;}else await loadMagnetApprovals();};box.append(select,button);}
+    if(job.stage==="selection"&&Array.isArray(job.file_candidates)&&job.file_candidates.length){const select=document.createElement("select");select.setAttribute("aria-label","Arquivo de "+job.title);const placeholder=document.createElement("option");placeholder.value="";placeholder.textContent="Escolha o vídeo correto";select.append(placeholder);job.file_candidates.forEach(f=>{const o=document.createElement("option");o.value=String(f.index);o.textContent=f.name+" · "+(f.bytes/1024**2).toFixed(0)+" MB";select.append(o);});const button=document.createElement("button");button.type="button";button.textContent="Processar arquivo selecionado";button.disabled=true;select.onchange=()=>button.disabled=select.value==="";button.onclick=async()=>{button.disabled=true;const {data,error}=await client.rpc("novaplay_select_import_file",{p_job_id:job.id,p_index:Number(select.value)});if(error||!data){status("magnet-approval-status",error?errorText(error):"A seleção não foi confirmada. Atualize a lista.",true);button.disabled=false;}else await loadMagnetApprovals();};box.append(select,button);}
+   }
+   if(job.status==='needs_review'||job.status==='failed'){
+    const sourceButton=document.createElement('button');sourceButton.type='button';sourceButton.textContent='Usar outra fonte / versão menor';
+    sourceButton.onclick=()=>{$('magnet-title').value=job.title;$('magnet-license').value=job.license_reference||'';$('magnet-uri').value='';$('magnet-rights').checked=false;$('magnet-import-form').scrollIntoView({behavior:'smooth'});$('magnet-uri').focus();status('magnet-status','Cole outro magnet autorizado. O histórico anterior será preservado; não use o mesmo link que não respondeu.');};box.append(sourceButton);
    }
     if(job.status==="ready"&&job.r2_object_key&&!registered){const btn=document.createElement("button");btn.type="button";btn.className="primary";btn.textContent="Cadastrar no catálogo";btn.addEventListener("click",()=>openReadyMagnetInCatalog(job));box.appendChild(btn);}
    if(job.status==="failed"){
     if(job.error_message){const err=document.createElement("p");err.style.cssText="color:#ffb3b3;overflow-wrap:anywhere";err.textContent="Motivo da falha: "+job.error_message;box.appendChild(err);}
     const btn=document.createElement("button");btn.type="button";btn.className="primary";btn.textContent="↻ Tentar novamente";
-    const eligible=!job.duplicate_of&&job.approved_for_processing&&job.rights_confirmed&&Boolean(job.license_reference);
+    const needsChange=job.error_code==="CapacityRequired"||job.error_code==="MetadataUnavailable"||/maior que limite|excede o limite|Espaço insuficiente/.test(job.error_message||"");
+    const eligible=!needsChange&&!job.duplicate_of&&job.approved_for_processing&&job.rights_confirmed&&Boolean(job.license_reference);
     btn.disabled=!eligible;
-    if(!eligible)btn.title="É necessária autorização de processamento e licença válida.";
+    if(!eligible)btn.title=needsChange?"Altere a fonte ou resolva a capacidade antes de repetir.":"É necessária autorização de processamento e licença válida.";
     btn.addEventListener("click",async()=>{
      const feedback=document.createElement("p");feedback.className="muted";feedback.textContent="Enviando solicitação...";box.appendChild(feedback);
      btn.disabled=true;status("magnet-approval-status","Reenfileirando filme...");
@@ -1262,4 +1268,3 @@ function init(){
 }
 if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",init);else init();
 })();
-

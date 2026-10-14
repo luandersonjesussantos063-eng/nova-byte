@@ -28,6 +28,6 @@ O sistema não adivinha sinopses nem confirma a identidade de um filme apenas pe
 - `python worker.py --once --job-id UUID --local-file CAMINHO`: recuperação/teste de um trabalho autorizado já na fila. Não cria autorização nem publica o conteúdo.
 - `python validate_existing.py`: verifica importações já enviadas e preenche metadados técnicos; não altera a revisão editorial.
 
-`recovery/<id>.mp4` é reaproveitado quando existe. Os arquivos locais são preservados para recuperação; verifique o espaço antes de remover arquivos de tarefas comprovadamente concluídas. O limite padrão é 8 GiB por vídeo e duas horas por etapa de download/conversão, ajustável no `.env`.
+`recovery/<id>.mp4` é reaproveitado quando existe. Os arquivos locais são preservados para recuperação; verifique o espaço antes de remover arquivos de tarefas comprovadamente concluídas. Fontes que não respondem após três tentativas vão para atenção, com opção de trocar o magnet. Limite de tamanho e falta de espaço exigem ajuste; não geram tentativas automáticas inúteis. O download reserva margem para manter o original e preparar o vídeo. O limite padrão é 16 GiB por vídeo e duas horas por etapa de download/conversão, ajustável no `.env`.
 
 Nunca envie `.env`, credenciais, logs privados ou vídeos ao Git. As chaves do processador ficam apenas no computador/servidor.

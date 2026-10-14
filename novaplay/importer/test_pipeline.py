@@ -34,6 +34,19 @@ class FakeR2:
         if self.fail_complete:self.fail_complete=False;raise ConnectionError('response lost after completion')
 
 class PipelineTest(unittest.TestCase):
+    def test_unavailable_source_stops_repeating_after_three_attempts(self):
+        from pipeline import failure_state,MetadataUnavailable
+        self.assertEqual(failure_state(MetadataUnavailable(),1),('queued','retry_wait',True))
+        self.assertEqual(failure_state(MetadataUnavailable(),3),('needs_review','source_unavailable',False))
+    def test_capacity_requires_action_instead_of_blind_retry(self):
+        from pipeline import failure_state,CapacityRequired
+        self.assertEqual(failure_state(CapacityRequired(),1),('needs_review','capacity',False))
+    def test_other_failures_keep_bounded_retries(self):
+        from pipeline import failure_state,PermanentError
+        self.assertEqual(failure_state(ConnectionError(),1),('queued','retry_wait',True))
+        self.assertEqual(failure_state(ConnectionError(),3),('failed','failed',False))
+        self.assertEqual(failure_state(PermanentError(),1),('failed','failed',False))
+
     def test_lost_lease_cannot_write_progress(self):
         from pipeline import Job, LeaseLost
         with tempfile.TemporaryDirectory() as root:

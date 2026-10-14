@@ -22,6 +22,12 @@ VIDEO_EXT = {'.mp4', '.mkv', '.webm', '.mov', '.avi', '.m4v', '.ts', '.ogv'}
 class ReviewRequired(Exception):
     pass
 
+class MetadataUnavailable(TimeoutError):
+    pass
+
+class CapacityRequired(ReviewRequired):
+    pass
+
 class LeaseLost(Exception):
     pass
 
@@ -141,13 +147,15 @@ def download(job,max_bytes,timeout):
     if torrent_path.exists():params.ti=lt.torrent_info(str(torrent_path))
     params.save_path=str(job.folder/'download')
     params.flags |= lt.torrent_flags.upload_mode
+    params.flags &= ~lt.torrent_flags.auto_managed
+    params.flags &= ~lt.torrent_flags.paused
     session=lt.session({'listen_interfaces':'0.0.0.0:0','enable_dht':True,'enable_lsd':False,'enable_upnp':False,'enable_natpmp':False})
     handle=session.add_torrent(params)
     started=time.monotonic()
     try:
         while not handle.has_metadata():
             job.check()
-            if time.monotonic()-started>min(timeout,600):raise TimeoutError('Metadados do torrent não disponíveis')
+            if time.monotonic()-started>min(timeout,600):raise MetadataUnavailable('A fonte não respondeu com os metadados. O magnet pode estar sem participantes disponíveis ou inacessível nesta rede.')
             time.sleep(2)
         info=handle.torrent_file()
         torrent_path.write_bytes(lt.bencode(lt.create_torrent(info).generate()))
@@ -161,12 +169,12 @@ def download(job,max_bytes,timeout):
         if not candidates:raise PermanentError('Torrent sem arquivo de vídeo reconhecido')
         job.update(file_candidates=candidates)
         chosen=select_video(candidates,job.record.get('selected_file_index'))
-        if chosen['bytes']>max_bytes:raise PermanentError(f'Vídeo excede o limite configurado de {max_bytes/1024**3:g} GiB')
+        if chosen['bytes']>max_bytes:raise CapacityRequired(f"Este vídeo tem {chosen['bytes']/1024**3:.1f} GiB; o limite desta instalação é {max_bytes/1024**3:g} GiB. Use uma versão menor ou revise a capacidade do processador.")
         source=safe_file(job.folder/'download',chosen['name'])
         # libtorrent rechecks existing pieces, so partial data survives restarts.
         available=source.stat().st_size if source.exists() else 0
-        if shutil.disk_usage(job.folder).free < max(0,chosen['bytes']-available)+1024**3:
-            raise PermanentError('Espaço em disco insuficiente para continuar o download')
+        if shutil.disk_usage(job.folder).free < max(0,chosen['bytes']-available)+chosen['bytes']*2+2*1024**3:
+            raise CapacityRequired('Espaço insuficiente para baixar e preparar este vídeo mantendo os originais. Libere espaço ou escolha uma versão menor; atualizar a lista não resolve esta condição.')
         handle.prioritize_files([7 if i==chosen['index'] else 0 for i in range(files.num_files())])
         handle.unset_flags(lt.torrent_flags.upload_mode)
         job.progress('downloading',force=True)
@@ -213,14 +221,14 @@ def run_process(job,command,timeout,stage,duration=None):
 def prepare(job,source,max_bytes,timeout):
     job.progress('inspecting',force=True)
     meta=inspect_media(source)
-    if meta['size_bytes']>max_bytes:raise PermanentError('Arquivo excede o limite configurado')
+    if meta['size_bytes']>max_bytes:raise CapacityRequired('Arquivo excede o limite configurado. Escolha uma versão menor ou revise a capacidade do processador.')
     fingerprint={'path':str(source.resolve()),'size':source.stat().st_size,'mtime_ns':source.stat().st_mtime_ns}
     output=source
     if not browser_compatible(source,meta):
         output=job.folder/'prepared.mp4'
         ready=job.manifest.get('prepared')
         if not (ready and output.is_file() and job.manifest.get('source_fingerprint')==fingerprint):
-            if shutil.disk_usage(job.folder).free < max(meta['size_bytes']*2,1024**3):raise PermanentError('Espaço insuficiente para converter sem perder o original')
+            if shutil.disk_usage(job.folder).free < max(meta['size_bytes']*2,1024**3):raise CapacityRequired('Espaço insuficiente para converter sem perder o original. Libere espaço antes de retomar.')
             partial=job.folder/'prepared.partial.mp4'
             command=['ffmpeg','-nostdin','-y','-i',str(source),'-map','0:v:0','-map','0:a?','-sn','-dn','-c:v','libx264','-preset','veryfast','-crf','23','-pix_fmt','yuv420p','-c:a','aac','-b:a','160k','-movflags','+faststart',str(partial)]
             job.progress('converting',force=True)
@@ -228,7 +236,8 @@ def prepare(job,source,max_bytes,timeout):
             os.replace(partial,output)
             job.checkpoint(prepared=True,source_fingerprint=fingerprint)
         meta=inspect_media(output)
-    if not browser_compatible(output,meta) or meta['size_bytes']>max_bytes:raise PermanentError('Saída incompatível ou maior que o limite')
+    if not browser_compatible(output,meta):raise PermanentError('Saída incompatível com o player')
+    if meta['size_bytes']>max_bytes:raise CapacityRequired('Vídeo preparado maior que o limite. Escolha uma versão menor ou revise a capacidade.')
     job.progress('validating',force=True)
     # Decode beginning, middle and end; distinguish this from a full-file integrity scan.
     for point in sorted({0,meta['duration_seconds']/2,max(0,meta['duration_seconds']-3)}):
@@ -313,19 +322,26 @@ def process(job,r2,bucket,max_bytes,timeout,recovery,local_file=None):
     job.checkpoint(complete=True,completed_at=utc(),metadata=meta)
     LOG.info('Import %s ready; draft created/updated',job.id)
 
+def failure_state(exc, attempts):
+    if isinstance(exc,CapacityRequired):return 'needs_review','capacity',False
+    if isinstance(exc,ReviewRequired):return 'needs_review','selection',False
+    if isinstance(exc,MetadataUnavailable) and attempts>=3:return 'needs_review','source_unavailable',False
+    if isinstance(exc,PermanentError):return 'failed','failed',False
+    if attempts<3:return 'queued','retry_wait',True
+    return 'failed','failed',False
+
 def handle_job(db,r2,record,root,recovery,bucket,max_bytes,timeout,local_file=None):
     with Job(db,record,root) as job:
         try:process(job,r2,bucket,max_bytes,timeout,recovery,local_file)
         except LeaseLost:LOG.warning('Import %s stopped after loss of lease',job.id)
         except Exception as exc:
-            review=isinstance(exc,ReviewRequired);permanent=isinstance(exc,PermanentError)
-            retry=not review and not permanent and record['attempts']<3
-            status='needs_review' if review else 'queued' if retry else 'failed'
+            status,stage,retry=failure_state(exc,record['attempts'])
+            review=status=='needs_review';permanent=isinstance(exc,PermanentError)
             # Do not log secrets, raw SDK responses, signed URLs or magnets.
             message=str(exc) if review or permanent or isinstance(exc,TimeoutError) else 'Falha temporária de conexão/processamento; os arquivos foram preservados'
             LOG.error('Import %s: %s (%s)',job.id,message,type(exc).__name__)
             if not job.lost.is_set():
-                job.update(status=status,stage='selection' if review else 'retry_wait' if retry else 'failed',error_message=message[:500],error_code=type(exc).__name__,next_retry_at=utc(60*2**record['attempts']) if retry else None,locked_until=None)
+                job.update(status=status,stage=stage,error_message=message[:500],error_code=type(exc).__name__,next_retry_at=utc(60*2**record['attempts']) if retry else None,locked_until=None)
 
 def main():
     from dotenv import load_dotenv
@@ -348,7 +364,7 @@ def main():
     worker=f'{socket.gethostname()}-{os.getpid()}-{uuid.uuid4().hex[:8]}'
     root=Path(os.getenv('IMPORTER_WORK_DIR',str(base/'jobs')))
     recovery=Path(os.getenv('IMPORTER_RECOVERY_DIR',str(base/'recovery')))
-    max_bytes=int(os.getenv('IMPORTER_MAX_BYTES',str(8*1024**3)))
+    max_bytes=int(os.getenv('IMPORTER_MAX_BYTES',str(16*1024**3)))
     timeout=int(os.getenv('IMPORTER_TIMEOUT_SECONDS','7200'))
     while not (base/'importer.stop').exists():
         try:
