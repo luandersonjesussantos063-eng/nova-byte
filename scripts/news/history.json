@@ -1,5 +1,6 @@
 {
   "published_ids": [
+    "tag:blogger.com,1999:blog-6755709643044947179.post-6326737442389025352",
     "tag:blogger.com,1999:blog-6755709643044947179.post-6813543615798583147",
     "https://developer.chrome.com/blog/jpeg-xl-in-chrome?hl=en",
     "https://developer.chrome.com/blog/email-verification-october-2026?hl=en",
@@ -38,6 +39,15 @@
     "tag:blogger.com,1999:blog-6755709643044947179.post-3564094472242054542"
   ],
   "posts": [
+    {
+      "slug": "novas-maneiras-de-impulsionar-a-descoberta-mais-inteligente-o-envolvimento-mais",
+      "title": "Novas maneiras de impulsionar a descoberta mais inteligente, o envolvimento mais",
+      "description": "Novas maneiras de impulsionar a descoberta mais inteligente, o envolvimento mais. Entenda a novidade e o impacto prático para empresas, sites, aplicativos ",
+      "date": "2026-10-13",
+      "category": "Android e aplicativos",
+      "image": "/assets/news/novas-maneiras-de-impulsionar-a-descoberta-mais-inteligente-o-envolvimento-mais.svg",
+      "source": "https://android-developers.googleblog.com/2026/10/new-tools-for-discovery-and-engagement.html"
+    },
     {
       "slug": "trazendo-nosso-mais-recente-modelo-de-fronteira-para-desenvolvedores-android",
       "title": "Trazendo nosso mais recente modelo de fronteira para desenvolvedores Android",
