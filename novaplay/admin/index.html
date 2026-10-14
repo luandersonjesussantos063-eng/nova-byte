@@ -5,7 +5,7 @@
 <meta name="theme-color" content="#080e1b"><meta name="robots" content="noindex,nofollow">
 <title>NPlay | Painel de conteúdo</title>
 <link rel="icon" href="../assets/icon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="./admin.css?v=0.42.5">
+<link rel="stylesheet" href="./admin.css?v=0.42.6">
 <style>
 .admin-nav{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 10px;padding:8px;background:#0d192b;border:1px solid #304461;border-radius:15px}
 .admin-tab{border:1px solid transparent;border-radius:10px;background:transparent;color:#aabed9;font-weight:750;padding:12px 18px;flex:1 1 145px}
@@ -19,9 +19,9 @@
 </style>
 </head>
 <body>
-<header class="top"><a class="brand" href="../"><span class="mark">▶</span> N<span>Play</span></a><div class="top-right"><strong>Painel administrativo · NPlay V 0.42.5</strong><button id="logout" class="outline" hidden>Sair</button></div></header>
+<header class="top"><a class="brand" href="../"><span class="mark">▶</span> N<span>Play</span></a><div class="top-right"><strong>Painel administrativo · NPlay V 0.42.6</strong><button id="logout" class="outline" hidden>Sair</button></div></header>
 <main class="container">
-  <section id="loading" class="panel intro" hidden><div class="spin"></div><p>Preparando seu painel... <small>V 0.42.5</small></p><p id="loading-error" class="feedback" role="status"></p><button id="loading-retry" class="outline" type="button" hidden onclick="location.reload()">Tentar novamente</button></section>
+  <section id="loading" class="panel intro" hidden><div class="spin"></div><p>Preparando seu painel... <small>V 0.42.6</small></p><p id="loading-error" class="feedback" role="status"></p><button id="loading-retry" class="outline" type="button" hidden onclick="location.reload()">Tentar novamente</button></section>
   <section id="login-view" class="panel login">
     <div class="section-label">ACESSO RESTRITO</div>
     <h1>Gerencie sua NPlay</h1>
@@ -286,7 +286,7 @@
     if(!loading||loading.hidden)return;
     var msg=document.getElementById("loading-error");
     var retry=document.getElementById("loading-retry");
-    if(msg)msg.textContent="O carregamento demorou demais. Tente novamente. Se persistir, verifique a publicação da versão 0.42.5.";
+    if(msg)msg.textContent="O carregamento demorou demais. Tente novamente. Se persistir, verifique a publicação da versão 0.42.6.";
     if(retry)retry.hidden=false;
     var spin=loading.querySelector(".spin");
     if(spin)spin.style.display="none";
@@ -355,7 +355,7 @@
  }
  function startAdmin(){
   if(!window.supabase||typeof window.supabase.createClient!=="function"){fail();return}
-  load("./admin.js?v=0.42.5",function(){},function(){if(msg)msg.textContent="Falha ao carregar o módulo administrativo. Atualize a página."});
+  load("./admin.js?v=0.42.6",function(){},function(){if(msg)msg.textContent="Falha ao carregar o módulo administrativo. Atualize a página."});
  }
  function fail(){if(msg)msg.textContent="Não foi possível carregar a biblioteca de autenticação. Confira a conexão e tente novamente.";}
  function attempt(i){
