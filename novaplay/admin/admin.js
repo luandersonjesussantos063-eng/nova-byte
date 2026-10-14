@@ -806,13 +806,13 @@ async function toggleReview(row){
  if(busy)return;
  const next=!row.rights_reviewed;
  if(next&&isNetflixReference(row)){status("bulk-message","Este título da Netflix está apenas como referência. Substitua por um link licenciado antes de conferir.",true);return}
- if(next&&!confirm("Você conferiu este filme e confirma que possui autorização de exibição pública na NPlay e que o link é acessível? Marcar “"+row.title+"” como conferido?"))return;
+ if(next&&!confirm("Você conferiu este filme e confirma que possui autorização de exibição pública na NPlay e que o link é acessível? Marcar “"+row.title+"” como conferido?"+(row.auto_publish?" A publicação automática ocorrerá se vídeo, sinopse, gênero e capa estiverem prontos.":"")))return;
  busy=true;renderLibrary();
  try{
   const stamp=next?new Date().toISOString():null;
-  const {error}=await client.from("novaplay_library").update({rights_reviewed:next,rights_reviewed_at:stamp}).eq("id",row.id);
+  const {error}=await client.from("novaplay_library").update(next?{rights_reviewed:true,rights_reviewed_at:stamp}:{rights_reviewed:false,rights_reviewed_at:null,is_published:false,auto_publish:false}).eq("id",row.id);
   if(error)throw error;
-  row.rights_reviewed=next;row.rights_reviewed_at=stamp;
+  await loadLibrary();
   status("bulk-message",next?"Título conferido: "+row.title:"Conferência retirada: "+row.title,false,true);
  }catch(e){status("bulk-message","Falha ao salvar conferência: "+errorText(e),true)}
  finally{busy=false;renderLibrary()}
@@ -1030,9 +1030,10 @@ async function sendForm(e){
   if(!editing)payload.created_by=sessionUser.id;
   status("upload-message",external?"Salvando link no catálogo...":"Salvando informações do filme...");
   const result=editing
-   ?await client.from("novaplay_library").update(payload).eq("id",editing.id).select("id").single()
-   :await client.from("novaplay_library").insert(payload).select("id").single();
+   ?await client.from("novaplay_library").update(payload).eq("id",editing.id).select("id,is_published").single()
+   :await client.from("novaplay_library").insert(payload).select("id,is_published").single();
   if(result.error)throw result.error;
+  payload.is_published=!!result.data.is_published;
   if(editing?.video_path && (external||newVideo) && editing.video_path!==newVideo){
     const clean=await client.storage.from(VIDEO_BUCKET).remove([editing.video_path]);
     if(clean.error)console.warn("Limpeza de vídeo antigo não concluída.");
@@ -1261,3 +1262,4 @@ function init(){
 }
 if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",init);else init();
 })();
+
