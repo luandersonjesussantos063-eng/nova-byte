@@ -1,5 +1,6 @@
 {
   "published_ids": [
+    "https://developer.chrome.com/blog/connection-allowlist-announcement?hl=en",
     "tag:blogger.com,1999:blog-6755709643044947179.post-6326737442389025352",
     "tag:blogger.com,1999:blog-6755709643044947179.post-6813543615798583147",
     "https://developer.chrome.com/blog/jpeg-xl-in-chrome?hl=en",
@@ -39,6 +40,15 @@
     "tag:blogger.com,1999:blog-6755709643044947179.post-3564094472242054542"
   ],
   "posts": [
+    {
+      "slug": "connection-allowlists-secure-your-web-applications-network-access",
+      "title": "Connection allowlists: Secure your web application's network access",
+      "description": "Connection allowlists: Secure your web application's network access. Entenda a novidade e o impacto prático para empresas, sites, aplicativos e profissiona",
+      "date": "2026-10-14",
+      "category": "Web e performance",
+      "image": "/assets/news/connection-allowlists-secure-your-web-applications-network-access.svg",
+      "source": "https://developer.chrome.com/blog/connection-allowlist-announcement?hl=en"
+    },
     {
       "slug": "novas-maneiras-de-impulsionar-a-descoberta-mais-inteligente-o-envolvimento-mais",
       "title": "Novas maneiras de impulsionar a descoberta mais inteligente, o envolvimento mais",
