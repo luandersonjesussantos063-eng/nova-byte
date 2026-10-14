@@ -50,7 +50,7 @@
 </a>
 <nav class="desktop-nav" aria-label="Seções">
   <button class="nav-option active" data-nav="inicio">Início</button>
-  <button class="nav-option" data-nav="tv">TV ao vivo</button><button class="nav-option" id="iframe-channels-open">Canais iframe</button>
+  <button class="nav-option" data-nav="tv">TV ao vivo</button>
   <button class="nav-option" data-nav="filmes">Filmes</button>
   <button class="nav-option" data-nav="youtube">YouTube</button>
   <button class="nav-option" data-nav="series">Séries</button>
@@ -63,7 +63,7 @@
 </div>
 </header>
 <nav class="mobile-chips" aria-label="Categorias rápidas">
-  <button data-nav="tv">TV aberta</button><button id="iframe-channels-open-mobile" type="button">Canais iframe</button>
+  <button data-nav="tv">TV ao vivo</button>
   <button data-nav="filmes">Filmes</button>
   <button data-nav="youtube">YouTube</button>
   <button data-nav="series">Séries</button>
@@ -121,13 +121,7 @@
     <p id="search-summary" class="search-summary"></p>
     <div id="search-results" class="category-grid"></div>
   </div>
-<section id="iframe-channels-panel" hidden style="padding:20px;max-width:1200px;margin:auto">
-<h2>TV ao Vivo · canais incorporados</h2>
-<div id="iframe-channel-list" class="nplay-live-grid"></div>
-<section id="iframe-channel-viewer" hidden style="margin-top:22px"><h3 id="iframe-channel-heading"></h3>
-<div id="iframe-channel-player" style="aspect-ratio:16/9;background:#000;border-radius:12px;overflow:hidden"></div>
-<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px"><button id="nplay-channel-fullscreen" type="button">⛶ Tela cheia</button><button id="nplay-channel-reload" type="button">↻ Recarregar canal</button><button id="iframe-channel-close" type="button">✕ Fechar transmissão</button></div><p id="nplay-channel-notice" role="status" style="font-size:12px;line-height:1.5;color:#b9c8e1;margin-top:10px"></p></section>
-</section></main>
+</main>
 <nav class="mobile-nav" aria-label="Menu principal">
   <button class="mobile-nav-item active" data-nav="inicio"><svg><use href="#i-home"/></svg><span>Início</span></button>
   <button class="mobile-nav-item" data-nav="tv"><svg><use href="#i-tv"/></svg><span>TV</span></button>
@@ -197,7 +191,7 @@
   </div>
 </div>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
-<footer class="app-footer"><a href="./admin/" style="display:inline-block;color:#a6c8ff;font-weight:750;padding:7px 0;text-decoration:underline">Painel do criador ↗</a><div>NPlay V 0.45.7 · Cinema clássico e TV aberta grátis · Artes ilustrativas da NPlay · O uso comercial de cada conteúdo exige verificação dos direitos.</div></footer>
+<footer class="app-footer"><a href="./admin/" style="display:inline-block;color:#a6c8ff;font-weight:750;padding:7px 0;text-decoration:underline">Painel do criador ↗</a><div>NPlay V 0.45.8 · Cinema clássico e TV aberta grátis · Artes ilustrativas da NPlay · O uso comercial de cada conteúdo exige verificação dos direitos.</div></footer>
 <script src="./assets/cover.js?v=0.39.2-covers2"></script>
 <script src="./assets/card-hover.js?v=0.39.2"></script>
 <script src="./assets/hero-scenes.js?v=0.39.2"></script>
@@ -205,6 +199,6 @@
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.58.0/dist/umd/supabase.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/hls.js@1.7.3/dist/hls.min.js"></script>
 <script src="./app.js?v=0.44.0" defer></script>
-<script src="./live-embeds.js?v=0.45.7" defer></script>
+<script src="./live-embeds.js?v=0.45.8" defer></script>
 </body>
 </html>
