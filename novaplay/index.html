@@ -11,7 +11,22 @@
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="./styles.css?v=0.39.2">
 <title>NPlay — Filmes, séries e TV ao vivo</title>
-</head>
+<style>
+.nplay-live-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,260px),1fr));gap:20px;margin-top:20px}
+.nplay-live-card{min-width:0;display:flex;flex-direction:column;gap:7px}
+.nplay-live-cover{display:block;position:relative;isolation:isolate;aspect-ratio:16/9;width:100%;padding:0;overflow:hidden;border:1px solid #738eae;border-radius:16px;background:#f4f5f8;cursor:pointer;box-shadow:0 7px 20px #0005;transition:transform .2s,border-color .2s,box-shadow .2s}
+.nplay-live-cover:hover,.nplay-live-cover:focus-visible{transform:translateY(-3px);border-color:#90bdff;box-shadow:0 12px 26px #0008;outline-offset:3px}
+.nplay-live-art{display:flex;align-items:center;justify-content:center;flex-direction:column;width:100%;height:100%;color:#152544}
+.nplay-premiere-art{background:radial-gradient(ellipse at 70% 20%,#204d9d 0%,transparent 52%),linear-gradient(130deg,#070e22,#122f65 65%,#081325);color:#fff;gap:5px}
+.nplay-premiere-emblem{display:grid;place-items:center;width:66px;height:66px;border:5px solid #fff;border-radius:50%;font-size:42px;font-weight:900;font-style:italic;line-height:1;letter-spacing:-6px;padding-right:7px;text-shadow:0 2px 12px #0006}
+.nplay-premiere-brand{font-weight:900;font-size:clamp(19px,2.3vw,27px);letter-spacing:3px;text-shadow:0 2px 12px #0008}
+.nplay-generic-channel{font-size:50px;font-weight:900;letter-spacing:-3px}
+.nplay-live-badge{position:absolute;top:11px;right:11px;background:#e71e40;color:#fff;border-radius:5px;padding:6px 10px;font-size:12px;font-weight:900;box-shadow:0 3px 12px #0004}
+.nplay-live-play{position:absolute;right:12px;bottom:12px;width:45px;height:45px;border-radius:50%;background:#202f4aee;color:#fff;display:grid;place-items:center;font-size:19px;box-shadow:0 4px 12px #0006}
+.nplay-live-title{font-size:15px;color:#fff;line-height:1.4}
+.nplay-live-subtitle{font-size:13px;color:#aabbd3}
+@media(max-width:540px){.nplay-live-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.nplay-live-cover{border-radius:11px}.nplay-premiere-emblem{width:48px;height:48px;font-size:29px;border-width:3px}.nplay-premiere-brand{font-size:14px;letter-spacing:1px}.nplay-live-badge{top:6px;right:6px;font-size:9px;padding:4px 5px}.nplay-live-play{width:31px;height:31px;font-size:14px;right:7px;bottom:7px}}
+</style></head>
 <body>
 <svg style="position:absolute;width:0;height:0;overflow:hidden" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
 <symbol id="i-home" viewBox="0 0 24 24"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1Z"/><path d="M9 21v-8h6v8"/></symbol>
@@ -108,7 +123,7 @@
   </div>
 <section id="iframe-channels-panel" hidden style="padding:20px;max-width:1200px;margin:auto">
 <h2>TV ao Vivo · canais incorporados</h2>
-<div id="iframe-channel-list" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px"></div>
+<div id="iframe-channel-list" class="nplay-live-grid"></div>
 <section id="iframe-channel-viewer" hidden style="margin-top:22px"><h3 id="iframe-channel-heading"></h3>
 <div id="iframe-channel-player" style="aspect-ratio:16/9;background:#000;border-radius:12px;overflow:hidden"></div>
 <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px"><button id="nplay-channel-fullscreen" type="button">⛶ Tela cheia</button><button id="nplay-channel-reload" type="button">↻ Recarregar canal</button><button id="iframe-channel-close" type="button">✕ Fechar transmissão</button></div><p id="nplay-channel-notice" role="status" style="font-size:12px;line-height:1.5;color:#b9c8e1;margin-top:10px"></p></section>
@@ -182,7 +197,7 @@
   </div>
 </div>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
-<footer class="app-footer"><a href="./admin/" style="display:inline-block;color:#a6c8ff;font-weight:750;padding:7px 0;text-decoration:underline">Painel do criador ↗</a><div>NPlay V 0.45.6 · Cinema clássico e TV aberta grátis · Artes ilustrativas da NPlay · O uso comercial de cada conteúdo exige verificação dos direitos.</div></footer>
+<footer class="app-footer"><a href="./admin/" style="display:inline-block;color:#a6c8ff;font-weight:750;padding:7px 0;text-decoration:underline">Painel do criador ↗</a><div>NPlay V 0.45.7 · Cinema clássico e TV aberta grátis · Artes ilustrativas da NPlay · O uso comercial de cada conteúdo exige verificação dos direitos.</div></footer>
 <script src="./assets/cover.js?v=0.39.2-covers2"></script>
 <script src="./assets/card-hover.js?v=0.39.2"></script>
 <script src="./assets/hero-scenes.js?v=0.39.2"></script>
@@ -190,6 +205,6 @@
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.58.0/dist/umd/supabase.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/hls.js@1.7.3/dist/hls.min.js"></script>
 <script src="./app.js?v=0.44.0" defer></script>
-<script src="./live-embeds.js?v=0.45.6" defer></script>
+<script src="./live-embeds.js?v=0.45.7" defer></script>
 </body>
 </html>
