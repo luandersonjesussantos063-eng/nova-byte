@@ -35,7 +35,7 @@
 </a>
 <nav class="desktop-nav" aria-label="Seções">
   <button class="nav-option active" data-nav="inicio">Início</button>
-  <button class="nav-option" data-nav="tv">TV ao vivo</button>
+  <button class="nav-option" data-nav="tv">TV ao vivo</button><button class="nav-option" id="iframe-channels-open">Canais iframe</button>
   <button class="nav-option" data-nav="filmes">Filmes</button>
   <button class="nav-option" data-nav="youtube">YouTube</button>
   <button class="nav-option" data-nav="series">Séries</button>
@@ -106,7 +106,13 @@
     <p id="search-summary" class="search-summary"></p>
     <div id="search-results" class="category-grid"></div>
   </div>
-</main>
+<section id="iframe-channels-panel" hidden style="padding:20px;max-width:1200px;margin:auto">
+<h2>TV ao Vivo · canais incorporados</h2>
+<div id="iframe-channel-list" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px"></div>
+<section id="iframe-channel-viewer" hidden style="margin-top:22px"><h3 id="iframe-channel-heading"></h3>
+<div id="iframe-channel-player" style="aspect-ratio:16/9;background:#000;border-radius:12px;overflow:hidden"></div>
+<button id="iframe-channel-close" type="button" style="margin-top:12px">Fechar transmissão</button></section>
+</section></main>
 <nav class="mobile-nav" aria-label="Menu principal">
   <button class="mobile-nav-item active" data-nav="inicio"><svg><use href="#i-home"/></svg><span>Início</span></button>
   <button class="mobile-nav-item" data-nav="tv"><svg><use href="#i-tv"/></svg><span>TV</span></button>
@@ -184,5 +190,6 @@
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.58.0/dist/umd/supabase.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/hls.js@1.7.3/dist/hls.min.js"></script>
 <script src="./app.js?v=0.42.2" defer></script>
+<script src="./live-embeds.js?v=0.43.0" defer></script>
 </body>
 </html>
