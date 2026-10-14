@@ -1,6 +1,8 @@
 """Private NPlay magnet importer. Run only on a controlled backend server."""
 import os, time, uuid, pathlib, tempfile, logging, subprocess, argparse, shutil
 import boto3
+from botocore.config import Config
+from boto3.s3.transfer import TransferConfig
 from dotenv import load_dotenv
 load_dotenv()
 import libtorrent as lt
@@ -11,9 +13,10 @@ log=logging.getLogger("nplay-importer")
 URL=os.environ["SUPABASE_URL"]
 DB=create_client(URL,os.environ["SUPABASE_SERVICE_ROLE_KEY"])
 ACCOUNT=os.environ["R2_ACCOUNT_ID"]
-R2=boto3.client("s3",endpoint_url=f"https://{ACCOUNT}.r2.cloudflarestorage.com",aws_access_key_id=os.environ["R2_ACCESS_KEY_ID"],aws_secret_access_key=os.environ["R2_SECRET_ACCESS_KEY"],region_name="auto")
+R2=boto3.client("s3",endpoint_url=f"https://{ACCOUNT}.r2.cloudflarestorage.com",aws_access_key_id=os.environ["R2_ACCESS_KEY_ID"],aws_secret_access_key=os.environ["R2_SECRET_ACCESS_KEY"],region_name="auto",config=Config(retries={"max_attempts":10,"mode":"adaptive"},connect_timeout=45,read_timeout=180,tcp_keepalive=True))
 BUCKET=os.getenv("R2_BUCKET","nplay-filmes")
 MAX_BYTES=int(os.getenv("IMPORTER_MAX_BYTES",str(500*1024**3)))
+R2_TRANSFER=TransferConfig(multipart_threshold=32*1024**2,multipart_chunksize=32*1024**2,max_concurrency=2,use_threads=True)
 TIMEOUT=int(os.getenv("IMPORTER_TIMEOUT_SECONDS","7200"))
 RECOVERY_DIR=pathlib.Path(os.getenv("IMPORTER_RECOVERY_DIR",str(pathlib.Path(__file__).resolve().parent/"recovery")))
 RECOVERY_DIR.mkdir(parents=True,exist_ok=True)
@@ -95,7 +98,7 @@ def run(job):
                 upload_source=converted
             key=f"{job['created_by']}/{uuid.uuid4()}-import-{uuid.uuid4()}{upload_source.suffix.lower()}"
             try:
-                R2.upload_file(str(upload_source),BUCKET,key,ExtraArgs={"ContentType":{".mp4":"video/mp4",".webm":"video/webm",".ogv":"video/ogg"}[upload_source.suffix.lower()]})
+                R2.upload_file(str(upload_source),BUCKET,key,ExtraArgs={"ContentType":{".mp4":"video/mp4",".webm":"video/webm",".ogv":"video/ogg"}[upload_source.suffix.lower()]},Config=R2_TRANSFER)
             except Exception:
                 recovery=RECOVERY_DIR/f"{jid}{upload_source.suffix.lower()}"
                 shutil.copy2(upload_source,recovery)
