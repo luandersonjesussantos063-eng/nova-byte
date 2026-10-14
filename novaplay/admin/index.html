@@ -47,7 +47,7 @@
     <nav class="admin-nav" aria-label="Áreas do painel">
       <button type="button" class="admin-tab active" data-admin-tab="catalogo">Catálogo</button>
       <button type="button" class="admin-tab" data-admin-tab="importacoes">Importações</button>
-      <button type="button" class="admin-tab" data-admin-tab="destaques">Destaques</button>
+      <button type="button" class="admin-tab" data-admin-tab="canais">Canais incorporados</button><button type="button" class="admin-tab" data-admin-tab="destaques">Destaques</button>
       <button type="button" class="admin-tab" data-admin-tab="ferramentas">Ferramentas</button>
     </nav>
     <p class="admin-tab-help" id="admin-tab-help">Pesquise, revise e publique os títulos do catálogo.</p>
@@ -373,10 +373,11 @@
   var groups={
    catalogo:[dash.querySelector(".workspace .library")],
    importacoes:[dash.querySelector(".workspace .editor")],
+   canais:[dash.querySelector("#live-embed-manager")],
    destaques:[dash.querySelector(".featured-manager")],
    ferramentas:[dash.querySelector('[aria-labelledby="r2-test-heading"]'),dash.querySelector(".licensed-manager"),dash.querySelector(".issue-manager")]
   };
-  var descriptions={catalogo:"Pesquise, revise e publique os títulos do catálogo.",importacoes:"Cadastre e acompanhe importações licenciadas. Um vídeo enviado ao R2 ainda precisa ser cadastrado e publicado no catálogo.",destaques:"Organize as capas e os títulos da página inicial.",ferramentas:"Testes de armazenamento, links licenciados e avisos de reprodução."};
+  var descriptions={catalogo:"Pesquise, revise e publique os títulos do catálogo.",importacoes:"Cadastre e acompanhe importações licenciadas. Um vídeo enviado ao R2 ainda precisa ser cadastrado e publicado no catálogo.",canais:"Gerencie links incorporados de canais autorizados.",destaques:"Organize as capas e os títulos da página inicial.",ferramentas:"Testes de armazenamento, links licenciados e avisos de reprodução."};
   var workspace=dash.querySelector(".workspace");if(workspace)workspace.classList.add("admin-workspace");
   var intro=dash.querySelector(".intro-text"),stats=dash.querySelector(".stats"),source=dash.querySelector("#source-summary"),drive=dash.querySelector(".intro-text + .stats + #source-summary + .panel");
   function show(name){
