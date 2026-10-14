@@ -427,7 +427,17 @@ function renderCategory(kind){
      const panel=$("iframe-channels-panel"),viewer=$("iframe-channel-viewer"),player=$("iframe-channel-player");
      if(!panel||!viewer||!player)return;
      let url;try{url=new URL(channel.embed_url);if(url.protocol!=="https:")return}catch(e){return}
-     player.replaceChildren();const frame=document.createElement("iframe");frame.src=url.href;frame.title=channel.title;frame.allow="autoplay; encrypted-media; picture-in-picture; fullscreen";frame.allowFullscreen=true;frame.setAttribute("sandbox","allow-scripts allow-same-origin allow-forms allow-presentation");frame.style.cssText="width:100%;height:100%;border:0";player.append(frame);
+     player.replaceChildren();
+     if(window.nplaySptvHls){window.nplaySptvHls.destroy();window.nplaySptvHls=null}
+     if(/\\.m3u8(?:\\?|$)/i.test(url.href)){
+      const video=document.createElement("video");video.controls=true;video.autoplay=true;video.playsInline=true;video.style.cssText="width:100%;height:100%;background:#000";player.append(video);
+      const msg=document.createElement("p");msg.style.cssText="padding:12px;color:#ffd6a5";msg.textContent="Conectando ao sinal ao vivo...";player.append(msg);
+      video.addEventListener("playing",()=>msg.textContent="● Transmissão ao vivo conectada");
+      video.addEventListener("error",()=>msg.textContent="Falha ao reproduzir este canal.");
+      if(video.canPlayType("application/vnd.apple.mpegurl")){video.src=url.href;video.play().catch(()=>msg.textContent="Toque no botão de reprodução.")}
+      else if(window.Hls?.isSupported()){const h=new window.Hls({enableWorker:true});window.nplaySptvHls=h;h.attachMedia(video);h.loadSource(url.href);h.on(window.Hls.Events.MANIFEST_PARSED,()=>video.play().catch(()=>msg.textContent="Toque no botão de reprodução."));h.on(window.Hls.Events.ERROR,(_,d)=>{if(d.fatal)msg.textContent="Falha no sinal: "+d.details})}
+      else msg.textContent="Este navegador não suporta HLS.";
+     }else{const frame=document.createElement("iframe");frame.src=url.href;frame.title=channel.title;frame.allow="autoplay; encrypted-media; picture-in-picture; fullscreen";frame.allowFullscreen=true;frame.setAttribute("sandbox","allow-scripts allow-same-origin allow-forms allow-presentation");frame.style.cssText="width:100%;height:100%;border:0";player.append(frame)}
      $("iframe-channel-heading").textContent=channel.title;panel.hidden=false;viewer.hidden=false;viewer.scrollIntoView({behavior:"smooth",block:"start"});
     };
     embeds.append(button)
