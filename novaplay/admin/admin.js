@@ -814,6 +814,37 @@ async function toggleReview(row){
  }catch(e){status("bulk-message","Falha ao salvar conferência: "+errorText(e),true)}
  finally{busy=false;renderLibrary()}
 }
+
+const GENRE_GENERIC=/^(autoral|importado(?: - revis[aã]o)?|outros|sem g[eê]nero|a classificar|produ[cç][aã]o independente)$/i;
+function guessGenre(title,description=""){
+ const t=(title+" "+description).normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase();
+ const rules=[
+ ["Animação",/animac|anime|dragon ball|toy story|zootopia|pixar|disney|tadeo|minions|naruto|one piece/],
+ ["Terror",/terror|horror|assombrad|fantasma|zumbi|vampir|nosferatu|maldi[cç]|sobrenatural/],
+ ["Ficção científica",/fic[cç][aã]o cientifica|espacial|alien|futurist|viagem a lua|star wars/],
+ ["Ação",/vingan[cç]a|combate|guerra|policial|super.heroi|homem.aranha|batman|miss[aã]o/],
+ ["Aventura",/aventura|explora[cç][aã]o|tesouro|jornada|expedi[cç][aã]o/],
+ ["Comédia",/comedia|humor|engra[cç]ad|risad/],
+ ["Romance",/romance|amor|apaixonad/],
+ ["Documentário",/documentario|biografia|historia real/],
+ ["Suspense",/suspense|investiga[cç][aã]o|misterio|sequestro/],
+ ["Fantasia",/fantasia|magia|magico|drag[aã]o|feiti[cç]o/],
+ ["Drama",/drama|familia|supera[cç][aã]o/]
+ ];
+ for(const [name,re] of rules)if(re.test(t))return name;
+ return null;
+}
+function genreForPublication(title,description,current){
+ const g=String(current||"").trim();
+ if(g&&!GENRE_GENERIC.test(g))return g;
+ return guessGenre(title,description);
+}
+function autoGenreForm(){
+ const g=genreForPublication($("title").value,$("description").value,$("genre").value);
+ if(g){$("genre").value=g;status("upload-message","Gênero sugerido: "+g+". Confira antes de publicar.",false,true)}
+ else status("upload-message","Não foi possível determinar o gênero com segurança. Selecione manualmente antes de publicar.",true);
+}
+
 async function togglePublish(row){
  if(busy)return;
  const publish=!row.is_published;
@@ -822,6 +853,7 @@ async function togglePublish(row){
  busy=true;renderLibrary();
  try{
   const changes={is_published:publish};
+  if(publish){const g=genreForPublication(row.title,row.description,row.genre);if(!g)throw Error("Gênero não identificado. Abra Editar e escolha o gênero antes de publicar.");changes.genre=g;}
   if(publish&&!row.rights_reviewed&&!row.catalog_only){changes.rights_reviewed=true;changes.rights_reviewed_at=new Date().toISOString();}
   const {error}=await client.from("novaplay_library").update(changes).eq("id",row.id);
   if(error)throw error;
@@ -877,7 +909,9 @@ async function bulkPublishReviewed(){
  try{
   for(let index=0;index<ids.length;index+=80){
    status("bulk-message","Publicando conferidos... "+done+" de "+ids.length);
-   const group=ids.slice(index,index+80);
+   const group=ids.slice(index,index+80).filter(id=>{const row=items.find(x=>x.id===id);return row&&genreForPublication(row.title,row.description,row.genre)});
+   for(const id of group){const row=items.find(x=>x.id===id),g=genreForPublication(row.title,row.description,row.genre);if(g!==row.genre){const {error:ge}=await client.from("novaplay_library").update({genre:g}).eq("id",id);if(ge)throw ge}}
+   if(!group.length)continue;
    const {data,error}=await client.from("novaplay_library").update({is_published:true}).in("id",group).eq("is_published",false).eq("rights_reviewed",true).select("id");
    if(error)throw error;
    done+=(data||[]).length;
@@ -942,7 +976,7 @@ async function sendForm(e){
   series_title:kind==="episode"?$("series-name").value.trim():null,
   episode_number:kind==="episode"?Number($("episode-number").value):null,
   production_year:$("year").value?Number($("year").value):null,
-  genre:$("genre").value.trim()||"Autoral",
+  genre:genreForPublication($("title").value,$("description").value,$("genre").value)||"Autoral",
   is_published:$("publish").checked,
   catalog_only:netflix,
   r2_object_key:r2?r2key:null,
@@ -952,6 +986,7 @@ async function sendForm(e){
  };
  if(licensed||netflix||r2)payload.rights_reviewed=r2?!!editing?.rights_reviewed:licensed&&!!payload.licensed_rights_confirmed;
  if(netflix){payload.rights_reviewed_at=null;payload.licensed_rights_confirmed=false}
+ if(payload.is_published&&payload.genre==="Autoral"){status("upload-message","Escolha um gênero antes de publicar. O leitor automático não encontrou uma classificação confiável.",true);return}
  if(payload.title.length<2){status("upload-message","Informe um título de pelo menos 2 caracteres.",true);return}
  if(kind==="episode"&&(!payload.series_title||!payload.episode_number)){status("upload-message","Informe o nome da série e o número do episódio.",true);return}
  disable(true);status("upload-message",external?"Preparando vídeo pelo link...":"Preparando envio do vídeo...");
@@ -1172,7 +1207,8 @@ function init(){
  if($("login-form"))$("login-form").onsubmit=authAction;$("signup").onclick=signUp;$("forgot").onclick=forgot;
  $("pending-exit").onclick=async()=>{await client.auth.signOut();show("login-view")};
  $("logout").onclick=async()=>{if(busy)return;await client.auth.signOut();sessionUser=null;show("login-view")};
- if($("upload-form"))$("upload-form").onsubmit=sendForm;$("kind").onchange=setKind;$("source-type").onchange=setSourceType;setSourceType();
+ if($("upload-form"))$("upload-form").onsubmit=sendForm;
+ if($("auto-genre"))$("auto-genre").onclick=autoGenreForm;$("kind").onchange=setKind;$("source-type").onchange=setSourceType;setSourceType();
  $("licensed-url").addEventListener("input",()=>{const url=netflixReferenceUrl($("licensed-url").value);if(url&&$("source-type").value==="licensed"){$("netflix-url").value=url;$("source-type").value="netflix-reference";setSourceType();status("upload-message","Link da Netflix detectado: referência privada selecionada automaticamente. O filme ficará em rascunho.",false,true)}});
  $("licensed-new").onclick=()=>{
   resetForm();
