@@ -75,9 +75,8 @@ async function load(){
  }
 }
 function init(){
- const button=$("iframe-channels-open");if(!button)return;
- const mobile=$("iframe-channels-open-mobile");if(mobile)mobile.onclick=()=>button.click();
- button.onclick=()=>{$("iframe-channels-panel").hidden=false;$("iframe-channels-panel").scrollIntoView({behavior:"smooth"});load()};
+ window.addEventListener("nplay:tv-open",()=>{const panel=$("iframe-channels-panel");if(panel){panel.hidden=false;load()}});
+ if(location.hash==="#tv")load();
  $("iframe-channel-close").onclick=closeChannel;
  const reload=$("nplay-channel-reload");
  if(reload)reload.onclick=()=>{if(currentUrl)openChannel(currentUrl,currentTitle)};
