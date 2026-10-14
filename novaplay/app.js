@@ -411,7 +411,7 @@ function renderCategory(kind){
      const panel=$("iframe-channels-panel"),viewer=$("iframe-channel-viewer"),player=$("iframe-channel-player");
      if(!panel||!viewer||!player)return;
      let url;try{url=new URL(channel.embed_url);if(url.protocol!=="https:")return}catch(e){return}
-     player.replaceChildren();const frame=document.createElement("iframe");frame.src=url.href;frame.title=channel.title;frame.allow="autoplay; encrypted-media; picture-in-picture; fullscreen";frame.allowFullscreen=true;frame.style.cssText="width:100%;height:100%;border:0";player.append(frame);
+     player.replaceChildren();const frame=document.createElement("iframe");frame.src=url.href;frame.title=channel.title;frame.allow="autoplay; encrypted-media; picture-in-picture; fullscreen";frame.allowFullscreen=true;frame.setAttribute("sandbox","allow-scripts allow-same-origin allow-forms allow-presentation");frame.style.cssText="width:100%;height:100%;border:0";player.append(frame);
      $("iframe-channel-heading").textContent=channel.title;panel.hidden=false;viewer.hidden=false;viewer.scrollIntoView({behavior:"smooth",block:"start"});
     };
     embeds.append(button)
