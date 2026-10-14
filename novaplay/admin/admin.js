@@ -1105,6 +1105,7 @@ function importDiagnosticLines(job){
  else if(job.stage==='metadata')lines.push('Buscando a lista de arquivos da fonte. O download ainda não começou; não há porcentagem disponível nesta etapa.');
  if(Number.isFinite(d.elapsed_seconds))lines.push('Tempo nesta etapa: '+Math.floor(d.elapsed_seconds/60)+' min '+d.elapsed_seconds%60+' s (na última leitura).');
  if(Number.isFinite(d.peers)){
+  if(Number.isFinite(d.dht_nodes))lines.push(d.dht_nodes>0?'Rede de busca conectada: '+d.dht_nodes+' nós conhecidos. Esses nós ajudam a localizar fontes, mas não são participantes deste filme.':'Rede de busca ainda sem conexões. O processador está tentando os pontos de entrada alternativos.');
   lines.push('Participantes conectados: '+d.peers+' · Fontes completas conectadas: '+(d.seeds||0));
   if(d.peers===0)lines.push('Nenhum participante conectado neste momento. A fonte pode estar indisponível ou a rede pode impedir a conexão; isso não comprova que o link esteja inválido.');
  }

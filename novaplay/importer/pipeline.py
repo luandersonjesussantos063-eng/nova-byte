@@ -18,6 +18,7 @@ from datetime import datetime, timedelta, timezone
 
 LOG = logging.getLogger('nplay-importer')
 VIDEO_EXT = {'.mp4', '.mkv', '.webm', '.mov', '.avi', '.m4v', '.ts', '.ogv'}
+DHT_BOOTSTRAP = 'dht.libtorrent.org:25401,router.bittorrent.com:6881,dht.transmissionbt.com:6881'
 
 class ReviewRequired(Exception):
     pass
@@ -161,14 +162,14 @@ def download(job,max_bytes,timeout):
     params.flags |= lt.torrent_flags.upload_mode
     params.flags &= ~lt.torrent_flags.auto_managed
     params.flags &= ~lt.torrent_flags.paused
-    session=lt.session({'listen_interfaces':'0.0.0.0:0','enable_dht':True,'enable_lsd':False,'enable_upnp':False,'enable_natpmp':False})
+    session=lt.session({'listen_interfaces':'0.0.0.0:0','enable_dht':True,'dht_bootstrap_nodes':DHT_BOOTSTRAP,'enable_lsd':False,'enable_upnp':False,'enable_natpmp':False})
     handle=session.add_torrent(params)
     started=time.monotonic()
     try:
         while not handle.has_metadata():
             job.check()
             state=handle.status()
-            job.progress('metadata',peers=state.num_peers,seeds=state.num_seeds,download_rate=state.download_rate,timeout_seconds=min(timeout,600),message='Aguardando a lista de arquivos da fonte; o download do vídeo ainda não começou.')
+            job.progress('metadata',peers=state.num_peers,seeds=state.num_seeds,dht_nodes=session.status().dht_nodes,download_rate=state.download_rate,timeout_seconds=min(timeout,600),message='Aguardando a lista de arquivos da fonte; o download do vídeo ainda não começou.')
             if time.monotonic()-started>min(timeout,600):raise MetadataUnavailable('A fonte não respondeu com os metadados. O magnet pode estar sem participantes disponíveis ou inacessível nesta rede.')
             time.sleep(2)
         info=handle.torrent_file()
