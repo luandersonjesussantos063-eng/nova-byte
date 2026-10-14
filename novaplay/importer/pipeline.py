@@ -165,12 +165,13 @@ def download(job,max_bytes,timeout):
     session=lt.session({'listen_interfaces':'0.0.0.0:0','enable_dht':True,'dht_bootstrap_nodes':DHT_BOOTSTRAP,'enable_lsd':False,'enable_upnp':False,'enable_natpmp':False})
     handle=session.add_torrent(params)
     started=time.monotonic()
+    metadata_timeout=max(30,int(os.getenv('IMPORTER_METADATA_TIMEOUT_SECONDS','120')))
     try:
         while not handle.has_metadata():
             job.check()
             state=handle.status()
-            job.progress('metadata',peers=state.num_peers,seeds=state.num_seeds,dht_nodes=session.status().dht_nodes,download_rate=state.download_rate,timeout_seconds=min(timeout,600),message='Aguardando a lista de arquivos da fonte; o download do vídeo ainda não começou.')
-            if time.monotonic()-started>min(timeout,600):raise MetadataUnavailable('A fonte não respondeu com os metadados. O magnet pode estar sem participantes disponíveis ou inacessível nesta rede.')
+            job.progress('metadata',peers=state.num_peers,seeds=state.num_seeds,dht_nodes=session.status().dht_nodes,download_rate=state.download_rate,timeout_seconds=min(timeout,metadata_timeout),message='Aguardando a lista de arquivos da fonte; o download do vídeo ainda não começou.')
+            if time.monotonic()-started>min(timeout,metadata_timeout):raise MetadataUnavailable('A fonte não respondeu com os metadados. O magnet pode estar sem participantes disponíveis ou inacessível nesta rede.')
             time.sleep(2)
         info=handle.torrent_file()
         torrent_path.write_bytes(lt.bencode(lt.create_torrent(info).generate()))
@@ -389,7 +390,7 @@ def handle_job(db,r2,record,root,recovery,bucket,max_bytes,timeout,local_file=No
             message=str(exc) if review or permanent or isinstance(exc,TimeoutError) else 'Falha temporária de conexão/processamento; os arquivos foram preservados'
             LOG.error('Import %s: %s (%s)',job.id,message,type(exc).__name__)
             if not job.lost.is_set():
-                delay=3600 if isinstance(exc,MetadataUnavailable) and record['attempts']>=3 else retry_delay(record['attempts'])
+                delay=3600 if isinstance(exc,MetadataUnavailable) else retry_delay(record['attempts'])
                 job.update(status=status,stage=stage,error_message=message[:500],error_code=type(exc).__name__,next_retry_at=utc(delay) if retry else None,locked_until=None)
 
 def main():
