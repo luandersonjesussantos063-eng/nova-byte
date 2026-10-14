@@ -394,60 +394,7 @@ function renderCategory(kind){
  $("category-kicker").textContent=conf[0];$("category-heading").textContent=conf[1];$("category-subtitle").textContent=conf[2];
  const content=$("category-grid");content.replaceChildren();
  let list=kind==="favoritos"?all.filter(x=>favorite.has(x.id)):kind==="youtube"?youtubeFilms():kind==="em-breve"?upcomingFilms():conf[3];
- if(kind==="tv"){
-  const section=document.createElement("section");section.id="tv-iframe-grid";section.style.cssText="grid-column:1/-1;margin-bottom:20px";
-  const heading=document.createElement("h2");heading.textContent="Canais ao vivo incorporados";section.append(heading);
-  const embeds=document.createElement("div");embeds.id="tv-iframe-cards";embeds.style.cssText="display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:14px";
-  const loading=document.createElement("p");loading.textContent="Carregando canais...";embeds.append(loading);
-  section.append(embeds);content.append(section);
-  const sptv=document.createElement("button");sptv.type="button";sptv.className="poster-card channel-card";sptv.style.cssText="background:#12223b;color:white;border:1px solid #375075;border-radius:14px;min-height:170px;padding:18px;cursor:pointer;text-align:center";sptv.textContent="📺 SPTV · Testar transmissão HLS";embeds.append(sptv);
-  sptv.onclick=()=>{
-   const panel=$("iframe-channels-panel"),viewer=$("iframe-channel-viewer"),player=$("iframe-channel-player");
-   if(!panel||!viewer||!player)return;
-   if(window.nplaySptvHls){window.nplaySptvHls.destroy();window.nplaySptvHls=null}
-   player.replaceChildren();const video=document.createElement("video");video.controls=true;video.autoplay=true;video.playsInline=true;video.style.cssText="width:100%;height:100%;background:black";player.append(video);
-   const source="https://nplay-sptv-hls.luandersonjesussantos063.workers.dev/look/sptv/playlist.m3u8";
-   $("iframe-channel-heading").textContent="SPTV · Transmissão de teste";panel.hidden=false;viewer.hidden=false;viewer.scrollIntoView({behavior:"smooth"});
-   const diagnostic=document.createElement("p");diagnostic.style.cssText="padding:12px;color:#ffd6a5";diagnostic.textContent="Verificando conexão com o servidor SPTV...";player.append(diagnostic);
-   fetch(source,{cache:"no-store"}).then(async response=>{if(!response.ok)throw Error("Gateway retornou HTTP "+response.status);const manifest=await response.text();if(!manifest.trim().startsWith("#EXTM3U"))throw Error("O servidor não enviou uma playlist HLS válida.");diagnostic.textContent="Playlist recebida. Preparando vídeo...";}).catch(err=>{diagnostic.textContent="Falha na transmissão: "+err.message+" Solicite ao fornecedor a URL HTTPS oficial do canal.";});
-   video.addEventListener("playing",()=>{diagnostic.textContent="Transmissão conectada."});
-   video.addEventListener("error",()=>{diagnostic.textContent="Erro de reprodução de vídeo (código "+(video.error?.code||"desconhecido")+")."});
-   if(video.canPlayType("application/vnd.apple.mpegurl")){video.src=source;video.play().catch(()=>{})}
-   else if(window.Hls?.isSupported()){const hls=new Hls({enableWorker:true});window.nplaySptvHls=hls;hls.loadSource(source);hls.attachMedia(video);hls.on(Hls.Events.MANIFEST_PARSED,()=>video.play().catch(()=>{}));hls.on(Hls.Events.ERROR,(_,data)=>{if(data.fatal){const note=document.createElement("p");note.textContent="Falha HLS: "+data.type+" / "+data.details+". Verifique o servidor de origem.";player.append(note);hls.destroy()}})}
-   else{const note=document.createElement("p");note.textContent="Este navegador não oferece suporte à transmissão HLS.";player.append(note)}
-  };
-  if(remoteDb)remoteDb.from("novaplay_live_embeds").select("id,title,embed_url").eq("is_published",true).order("created_at",{ascending:false}).then(({data,error})=>{
-   if(!section.isConnected)return;
-   embeds.replaceChildren(sptv);
-   if(error){const msg=document.createElement("p");msg.textContent="Não foi possível carregar os canais incorporados.";embeds.append(msg);return}
-   if(!data?.length){const msg=document.createElement("p");msg.textContent="Nenhum canal incorporado publicado.";embeds.append(msg);return}
-   for(const channel of data){
-    const button=document.createElement("button");button.type="button";button.className="poster-card channel-card";button.style.cssText="background:#12223b;color:#fff;border:1px solid #375075;border-radius:14px;min-height:170px;padding:18px;cursor:pointer;text-align:center";
-    const icon=document.createElement("div");icon.textContent="📺";icon.style.fontSize="42px";
-    const label=document.createElement("strong");label.textContent=channel.title;
-    const live=document.createElement("p");live.textContent="● AO VIVO";live.style.color="#fb5b68";
-    button.append(icon,label,live);
-    button.onclick=()=>{
-     const panel=$("iframe-channels-panel"),viewer=$("iframe-channel-viewer"),player=$("iframe-channel-player");
-     if(!panel||!viewer||!player)return;
-     let url;try{url=new URL(channel.embed_url);if(url.protocol!=="https:")return}catch(e){return}
-     player.replaceChildren();
-     if(window.nplaySptvHls){window.nplaySptvHls.destroy();window.nplaySptvHls=null}
-     if(/\\.m3u8(?:\\?|$)/i.test(url.href)){
-      const video=document.createElement("video");video.controls=true;video.autoplay=true;video.playsInline=true;video.style.cssText="width:100%;height:100%;background:#000";player.append(video);
-      const msg=document.createElement("p");msg.style.cssText="padding:12px;color:#ffd6a5";msg.textContent="Conectando ao sinal ao vivo...";player.append(msg);
-      video.addEventListener("playing",()=>msg.textContent="● Transmissão ao vivo conectada");
-      video.addEventListener("error",()=>msg.textContent="Falha ao reproduzir este canal.");
-      if(video.canPlayType("application/vnd.apple.mpegurl")){video.src=url.href;video.play().catch(()=>msg.textContent="Toque no botão de reprodução.")}
-      else if(window.Hls?.isSupported()){const h=new window.Hls({enableWorker:true});window.nplaySptvHls=h;h.attachMedia(video);h.loadSource(url.href);h.on(window.Hls.Events.MANIFEST_PARSED,()=>video.play().catch(()=>msg.textContent="Toque no botão de reprodução."));h.on(window.Hls.Events.ERROR,(_,d)=>{if(d.fatal)msg.textContent="Falha no sinal: "+d.details})}
-      else msg.textContent="Este navegador não suporta HLS.";
-     }else{const frame=document.createElement("iframe");frame.src=url.href;frame.title=channel.title;frame.allow="autoplay; encrypted-media; picture-in-picture; fullscreen";frame.allowFullscreen=true;frame.setAttribute("sandbox","allow-scripts allow-same-origin allow-forms allow-presentation");frame.style.cssText="width:100%;height:100%;border:0";player.append(frame)}
-     $("iframe-channel-heading").textContent=channel.title;panel.hidden=false;viewer.hidden=false;viewer.scrollIntoView({behavior:"smooth",block:"start"});
-    };
-    embeds.append(button)
-   }
-  });
- }
+ if(kind==="tv")window.dispatchEvent(new Event("nplay:tv-open"));
  const filters=$("genre-filter-panel"),buttons=$("genre-filter-buttons");
  filters.hidden=kind!=="filmes";
  if(kind==="filmes"){
@@ -489,6 +436,7 @@ function navigate(page){
  $("view-home").hidden=chosen!=="inicio";
  $("view-category").hidden=chosen==="inicio"||chosen==="buscar";
  $("view-search").hidden=chosen!=="buscar";
+ const embeddedPanel=$("iframe-channels-panel");if(embeddedPanel)embeddedPanel.hidden=chosen!=="tv";
  document.querySelectorAll("[data-nav]").forEach(b=>{const yes=b.dataset.nav===chosen;b.classList.toggle("active",yes);if(yes)b.setAttribute("aria-current","page");else b.removeAttribute("aria-current")});
  if(chosen==="inicio"){renderRows();updateHero(featuredIndex)}
  else if(chosen==="buscar"){renderSearch();setTimeout(()=>$("search-input").focus(),100)}
