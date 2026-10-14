@@ -1038,9 +1038,10 @@ async function forgot(){
 
 
 function openReadyMagnetInCatalog(job){
- const form=$("legacy-upload-options");if(form){form.hidden=false;form.removeAttribute("aria-hidden");}
  const editor=$("upload-form");if(!editor)return;
  if(typeof resetForm==="function")resetForm();
+ const form=$("legacy-upload-options");if(form){form.hidden=false;form.removeAttribute("aria-hidden");}
+ $("cancel-edit").hidden=false;
  $("source-type").value="r2";setSourceType();
  $("title").value=job.title||"";
  $("r2-catalog-key").value=job.r2_object_key||"";
@@ -1051,7 +1052,7 @@ function openReadyMagnetInCatalog(job){
  const title=$("form-title");if(title)title.textContent="Cadastrar filme importado no catálogo";
  status("upload-message","Vídeo recebido do R2. Confira os direitos, complete gênero, sinopse e capa e salve como rascunho. A publicação requer revisão posterior.");
  document.querySelector('[data-admin-tab="importacoes"]')?.click();
- editor.scrollIntoView({behavior:"smooth",block:"start"});
+ requestAnimationFrame(()=>document.querySelector(".editor")?.scrollIntoView({behavior:"smooth",block:"start"}));
 }
 
 async function loadMagnetApprovals(){
