@@ -1,8 +1,9 @@
 (()=>{
 const $=id=>document.getElementById(id);
 const DASH_URL="https://otte.live.fly.ww.aiv-cdn.net/gru-nitro/live/clients/dash/enc/nelfyucw9a/out/v1/6ffb2c365ad14f88b154591beb43d1f6/cenc.mpd";
-let dashPlayer=null;
-async function stopDash(){if(dashPlayer){try{await dashPlayer.destroy()}catch(e){}dashPlayer=null}}
+let dashPlayer=null,dashTimer=null;
+function cancelDashTimer(){if(dashTimer){clearTimeout(dashTimer);dashTimer=null}}
+async function stopDash(){cancelDashTimer();if(dashPlayer){try{await dashPlayer.destroy()}catch(e){}dashPlayer=null}}
 function shakaReady(){
  if(window.shaka?.Player)return Promise.resolve();
  return new Promise((resolve,reject)=>{
@@ -15,22 +16,30 @@ async function playDash(){
  await stopDash();const player=$("iframe-channel-player");player.replaceChildren();
  const video=document.createElement("video");video.controls=true;video.autoplay=true;video.playsInline=true;video.muted=true;
  video.style.cssText="width:100%;height:100%;background:#000;object-fit:contain";
- const status=document.createElement("p");status.style.cssText="color:#fff;padding:8px;font-size:13px";
+ const status=document.createElement("p");status.id="nplay-dash-status";status.setAttribute("role","status");status.style.cssText="color:#e5eeff;background:#17263d;border:1px solid #365075;border-radius:10px;padding:12px;font-size:14px;line-height:1.5;white-space:pre-wrap;margin:12px 0";
  status.textContent="Conectando ao sinal DASH autorizado...";
- player.append(video,status);
+ player.append(video);
+ const viewer=$("iframe-channel-viewer");viewer.querySelector("#nplay-dash-status")?.remove();player.insertAdjacentElement("afterend",status);
  $("iframe-channel-heading").textContent="Premiere Clubes · Player NPlay (teste)";
  $("iframe-channel-viewer").hidden=false;$("iframe-channel-viewer").scrollIntoView({behavior:"smooth",block:"start"});
  try{
+ const manifest=await fetch(DASH_URL,{cache:"no-store"}).then(async response=>{if(!response.ok)throw Error("Manifesto HTTP "+response.status);return response.text()});
+ const xml=new DOMParser().parseFromString(manifest,"application/xml");
+ const protections=[...xml.getElementsByTagName("*")].filter(n=>n.localName==="ContentProtection");
+ const schemes=protections.map(n=>n.getAttribute("schemeIdUri")||"proteção não identificada");
+ const protectedSignal=protections.length>0;
+ status.textContent=protectedSignal?"O manifesto declara proteção de conteúdo ("+schemes.join(", ")+"). Verificando compatibilidade e autorização do player...":"Manifesto recebido sem ContentProtection declarado. Verificando reprodução...";
  await shakaReady();window.shaka.polyfill.installAll();
  if(!window.shaka.Player.isBrowserSupported())throw Error("Este navegador não suporta reprodução DASH");
  const instance=new window.shaka.Player();dashPlayer=instance;
+ const details=()=>protectedSignal?"O manifesto declara proteção de conteúdo; pode ser necessário configurar a licença autorizada do fornecedor.":"Verifique a disponibilidade dos segmentos e a compatibilidade dos codecs.";
  await instance.attach(video);
- instance.addEventListener("error",event=>{status.textContent="Falha na reprodução DASH (código "+(event.detail?.code||"desconhecido")+"). Pode haver DRM, codec incompatível ou segmentos indisponíveis."});
+ instance.addEventListener("error",event=>{status.textContent="Falha na reprodução DASH (código "+(event.detail?.code||"desconhecido")+"). "+details()});
  await instance.load(DASH_URL);
  const tracks=instance.getVariantTracks();
- if(!tracks.length){status.textContent="Manifesto recebido, mas nenhuma faixa de vídeo compatível foi encontrada. Pode haver codec incompatível ou DRM.";return}
+ if(!tracks.length){status.textContent="Manifesto recebido, mas nenhuma faixa reproduzível foi encontrada. "+details();return}
  status.textContent="Sinal carregado. Use o botão de reprodução se necessário.";
- try{await video.play();status.textContent="Aguardando imagem do canal...";setTimeout(()=>{if(dashPlayer===instance&&video.currentTime===0)status.textContent="Manifesto recebido, mas sem imagem. Possível bloqueio dos segmentos, codec incompatível ou DRM. O player incorporado continua disponível.";else if(dashPlayer===instance)status.textContent=""},12000)}catch(e){status.textContent="Clique em reproduzir para iniciar o canal (teste inicialmente sem áudio)."}
+ try{await video.play();status.textContent="Aguardando os primeiros quadros do vídeo...";dashTimer=setTimeout(()=>{if(dashPlayer===instance&&video.readyState<2)status.textContent="O player não recebeu quadros de vídeo em 12 segundos. "+details()+" A incorporação original continua disponível.";else if(dashPlayer===instance)status.textContent="Quadros recebidos. Se a tela continuar preta, verifique a decodificação do vídeo.";},12000)}catch(e){status.textContent="Clique em reproduzir para iniciar o canal (teste inicialmente sem áudio). "+details()}
  }catch(e){status.textContent="Não foi possível reproduzir o sinal diretamente ("+(e.code||e.message||"erro desconhecido")+"). Utilize a opção de incorporação original."}
 }
 async function load(){
