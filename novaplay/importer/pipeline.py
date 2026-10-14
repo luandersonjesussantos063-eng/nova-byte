@@ -98,6 +98,8 @@ class Job:
         self.stop, self.lost = threading.Event(), threading.Event()
         self.last_progress = 0.0
         self.thread = None
+        self.stage = None
+        self.stage_started = time.monotonic()
 
     def check(self):
         if self.lost.is_set():
@@ -110,10 +112,14 @@ class Job:
             self.lost.set()
             raise LeaseLost('Reserva não encontrada')
 
-    def progress(self, stage, percent=0, force=False):
+    def progress(self, stage, percent=0, force=False, **diagnostics):
         self.check()
+        if self.stage != stage:
+            self.stage, self.stage_started = stage, time.monotonic()
+            force = True
         if force or time.monotonic()-self.last_progress >= 10:
-            self.update(stage=stage, progress_percent=max(0,min(100,percent)),heartbeat_at=utc(),locked_until=utc(300))
+            diagnostics.update(stage=stage,elapsed_seconds=int(time.monotonic()-self.stage_started))
+            self.update(stage=stage, diagnostics=diagnostics, progress_percent=max(0,min(100,percent)),heartbeat_at=utc(),locked_until=utc(300))
             self.last_progress=time.monotonic()
 
     def checkpoint(self, **fields):
@@ -121,12 +127,18 @@ class Job:
         atomic_json(self.manifest_path,self.manifest)
 
     def heartbeat(self):
+        last_success=time.monotonic()
         while not self.stop.wait(20):
-            try:self.update(heartbeat_at=utc(),locked_until=utc(300))
+            try:
+                self.update(heartbeat_at=utc(),locked_until=utc(300))
+                last_success=time.monotonic()
+            except LeaseLost:return
             except Exception:
-                self.lost.set()
-                LOG.error('Heartbeat failed for %s; stopping this job',self.id)
-                return
+                LOG.warning('Heartbeat connection interrupted for %s; retrying',self.id)
+                if time.monotonic()-last_success>=90:
+                    self.lost.set()
+                    LOG.error('Heartbeat unavailable for 90 seconds for %s; stopping this job',self.id)
+                    return
 
     def __enter__(self):
         self.thread=threading.Thread(target=self.heartbeat,daemon=True)
@@ -155,6 +167,8 @@ def download(job,max_bytes,timeout):
     try:
         while not handle.has_metadata():
             job.check()
+            state=handle.status()
+            job.progress('metadata',peers=state.num_peers,seeds=state.num_seeds,download_rate=state.download_rate,timeout_seconds=min(timeout,600),message='Aguardando a lista de arquivos da fonte; o download do vídeo ainda não começou.')
             if time.monotonic()-started>min(timeout,600):raise MetadataUnavailable('A fonte não respondeu com os metadados. O magnet pode estar sem participantes disponíveis ou inacessível nesta rede.')
             time.sleep(2)
         info=handle.torrent_file()
@@ -182,7 +196,7 @@ def download(job,max_bytes,timeout):
             job.check();state=handle.status()
             if state.errc.value():raise RuntimeError(state.errc.message())
             done=handle.file_progress()[chosen['index']]
-            job.progress('downloading',done/max(1,chosen['bytes'])*100)
+            job.progress('downloading',done/max(1,chosen['bytes'])*100,peers=state.num_peers,seeds=state.num_seeds,download_rate=state.download_rate,bytes_done=done,bytes_total=chosen['bytes'])
             if done>=chosen['bytes']:break
             if time.monotonic()-started>timeout:raise TimeoutError('Tempo de download excedido; partes serão reaproveitadas')
             time.sleep(3)
@@ -295,15 +309,17 @@ def upload_resumable(job,r2,bucket,path):
         upload={'id':response['UploadId'],'sha256':digest,'part_size':32*1024**2}
         job.checkpoint(multipart=upload)
     known={p['PartNumber']:p for p in parts};completed=[];done=0
-    job.progress('uploading',force=True)
+    upload_started=time.monotonic();sent=0
+    job.progress('uploading',force=True,bytes_done=0,bytes_total=size)
     with Path(path).open('rb') as src:
         number=1
         while data:=src.read(upload['part_size']):
             job.check();part=known.get(number)
             if not part or part['Size']!=len(data):
                 part=upload_part_with_retry(job,r2,Bucket=bucket,Key=key,UploadId=upload['id'],PartNumber=number,Body=data)
+                sent+=len(data)
             completed.append({'PartNumber':number,'ETag':part['ETag']})
-            done+=len(data);number+=1;job.progress('uploading',done/size*100,force=True)
+            done+=len(data);number+=1;job.progress('uploading',done/size*100,force=True,bytes_done=done,bytes_total=size,upload_rate=int(sent/max(1,time.monotonic()-upload_started)))
     job.check()
     try:r2.complete_multipart_upload(Bucket=bucket,Key=key,UploadId=upload['id'],MultipartUpload={'Parts':completed})
     except Exception as exc:

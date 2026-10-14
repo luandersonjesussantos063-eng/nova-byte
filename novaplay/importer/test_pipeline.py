@@ -34,6 +34,37 @@ class FakeR2:
         if self.fail_complete:self.fail_complete=False;raise ConnectionError('response lost after completion')
 
 class PipelineTest(unittest.TestCase):
+    def test_heartbeat_tolerates_transient_connection_failure(self):
+        from pipeline import Job
+        with tempfile.TemporaryDirectory() as root:
+            job=Job(MagicMock(),{'id':FakeJob.id,'lock_token':'token'},root)
+            job.stop=MagicMock();job.stop.wait.side_effect=[False,False,True]
+            job.update=MagicMock(side_effect=[ConnectionError(),None])
+            with patch('pipeline.time.monotonic',side_effect=[0,20,40]):job.heartbeat()
+            self.assertFalse(job.lost.is_set())
+            self.assertEqual(job.update.call_count,2)
+
+    def test_heartbeat_stops_before_lease_expiry(self):
+        from pipeline import Job
+        with tempfile.TemporaryDirectory() as root:
+            job=Job(MagicMock(),{'id':FakeJob.id,'lock_token':'token'},root)
+            job.stop=MagicMock();job.stop.wait.return_value=False
+            job.update=MagicMock(side_effect=ConnectionError())
+            with patch('pipeline.time.monotonic',side_effect=[0,100]):job.heartbeat()
+            self.assertTrue(job.lost.is_set())
+
+    def test_diagnostics_reset_on_stage_change(self):
+        from pipeline import Job
+        with tempfile.TemporaryDirectory() as root:
+            job=Job(MagicMock(),{'id':FakeJob.id,'lock_token':'token'},root)
+            job.update=MagicMock()
+            job.progress('metadata',peers=0)
+            self.assertEqual(job.update.call_args.kwargs['diagnostics']['peers'],0)
+            job.progress('uploading',bytes_total=100)
+            d=job.update.call_args.kwargs['diagnostics']
+            self.assertNotIn('peers',d)
+            self.assertEqual(d['stage'],'uploading')
+
     def test_unavailable_source_stops_repeating_after_three_attempts(self):
         from pipeline import failure_state,MetadataUnavailable
         self.assertEqual(failure_state(MetadataUnavailable(),1),('queued','retry_wait',True))

@@ -1097,6 +1097,36 @@ function openReadyMagnetInCatalog(job){
  requestAnimationFrame(()=>document.querySelector(".editor")?.scrollIntoView({behavior:"smooth",block:"start"}));
 }
 
+function importDiagnosticLines(job){
+ const d=job.diagnostics?.stage===job.stage?job.diagnostics:{},lines=[];
+ const bytes=n=>(Number(n)/1024/1024).toFixed(1)+" MB";
+ if(job.status==='processing'&&!job.worker_id)lines.push('Sem telemetria: o processador antigo não informa progresso. Não é possível confirmar se continua trabalhando. É necessário migrar esta tarefa para o processador atualizado.');
+ else if(job.status==='queued')lines.push(job.approved_for_processing?'Na fila, aguardando um processador disponível. Atualizar a página não inicia nem reinicia o download.':'Aguardando liberação para processamento.');
+ else if(job.stage==='metadata')lines.push('Buscando a lista de arquivos da fonte. O download ainda não começou; não há porcentagem disponível nesta etapa.');
+ if(Number.isFinite(d.elapsed_seconds))lines.push('Tempo nesta etapa: '+Math.floor(d.elapsed_seconds/60)+' min '+d.elapsed_seconds%60+' s (na última leitura).');
+ if(Number.isFinite(d.peers)){
+  lines.push('Participantes conectados: '+d.peers+' · Fontes completas conectadas: '+(d.seeds||0));
+  if(d.peers===0)lines.push('Nenhum participante conectado neste momento. A fonte pode estar indisponível ou a rede pode impedir a conexão; isso não comprova que o link esteja inválido.');
+ }
+ if(Number.isFinite(d.download_rate))lines.push('Velocidade de download: '+bytes(d.download_rate)+'/s');
+ if(Number.isFinite(d.upload_rate))lines.push('Velocidade média de envio nesta tentativa: '+bytes(d.upload_rate)+'/s');
+ if(Number.isFinite(d.bytes_total))lines.push('Transferido: '+bytes(d.bytes_done||0)+' de '+bytes(d.bytes_total));
+ if(job.stage==='metadata')lines.push('Limite de espera por tentativa: '+Math.round((d.timeout_seconds||600)/60)+' minutos. Se a fonte não responder, a fila segue e o motivo aparece no cartão.');
+ if(job.status==='processing'&&job.worker_id&&!Object.keys(d).length)lines.push('Este processador ainda não enviou métricas detalhadas desta etapa.');
+ lines.push('Tentativa: '+(job.attempts||0)+' de 3');
+ if(job.heartbeat_at)lines.push('Última comunicação: '+new Date(job.heartbeat_at).toLocaleString('pt-BR'));
+ if(job.error_message)lines.push('Último aviso: '+importFailureMessage(job));
+ return lines;
+}
+function appendImportDiagnostics(box,job){
+ const details=document.createElement('details');details.open=['processing','queued','failed','needs_review'].includes(job.status);
+ const summary=document.createElement('summary');summary.textContent='Diagnóstico e próximos passos';details.append(summary);
+ const lines=importDiagnosticLines(job);
+ for(const line of lines){const p=document.createElement('p');p.textContent=line;details.append(p);}
+ const copy=document.createElement('button');copy.type='button';copy.textContent='Copiar diagnóstico';
+ copy.onclick=async()=>{try{await navigator.clipboard.writeText([job.title,'Importação: '+job.id,'Estado: '+job.status+' / '+job.stage,...lines].join('\n'));copy.textContent='Diagnóstico copiado';}catch{copy.textContent='Não foi possível copiar. Selecione o texto acima.';}};
+ details.append(copy);box.append(details);
+}
 function importFailureMessage(job){
  const message=job.error_message||"";
  if(/Connection was closed|endpoint URL|uploadId=|ConnectionClosedError|EndpointConnectionError|ReadTimeoutError/i.test(message+" "+(job.error_code||"")))return "A conexão caiu durante o envio ao armazenamento. Tente novamente: o processador retomará as etapas salvas.";
@@ -1113,7 +1143,7 @@ async function loadMagnetApprovals(){
   const pageSize=500;
   for(let offset=0;offset<50000;offset+=pageSize){
    const {data:page,error}=await client.from("novaplay_magnet_imports")
-    .select("id,title,status,stage,progress_percent,heartbeat_at,worker_id,attempts,next_retry_at,error_code,duplicate_of,file_candidates,selected_file_index,approved_for_processing,created_at,r2_object_key,error_message,rights_confirmed,license_reference")
+    .select("diagnostics,id,title,status,stage,progress_percent,heartbeat_at,worker_id,attempts,next_retry_at,error_code,duplicate_of,file_candidates,selected_file_index,approved_for_processing,created_at,r2_object_key,error_message,rights_confirmed,license_reference")
     .order("created_at",{ascending:false}).range(offset,offset+pageSize-1);
    if(error)throw error;
    data.push(...(page||[]));
@@ -1141,7 +1171,8 @@ async function loadMagnetApprovals(){
    const state=document.createElement("p");state.className="muted";state.textContent=registered?"✓ Já cadastrado no catálogo: "+registered.title:job.status==="ready"?"Vídeo enviado ao R2 · aguardando cadastro no catálogo":job.approved_for_processing?({queued:"Na fila",pending_processor:"Na fila",processing:"Processando",needs_review:"Precisa de revisão",duplicate:"Duplicada",failed:"Falhou"}[job.status]||job.status):"Aguardando autorização";box.appendChild(state);
    const stages={metadata:"Buscando metadados",downloading:"Baixando",inspecting:"Analisando vídeo",converting:"Convertendo",uploading:"Enviando",validating:"Validando",complete:"Concluído",queued:"Aguardando processador",retry_wait:"Nova tentativa agendada",selection:"Escolha o arquivo",capacity:"Ajuste de capacidade necessário",source_unavailable:"Troque a fonte para continuar",legacy:"Processador anterior · sem telemetria"};
    if(job.stage){const p=document.createElement("p");p.textContent=stages[job.stage]||job.stage;box.append(p);}
-   if(job.status==="processing"&&job.worker_id){const progress=document.createElement("progress");progress.max=100;progress.value=job.progress_percent||0;progress.setAttribute("aria-label","Progresso de "+job.title);box.append(progress);const p=document.createElement("p");const age=job.heartbeat_at?Math.round((Date.now()-Date.parse(job.heartbeat_at))/1000):null;p.textContent=Math.round(job.progress_percent||0)+"% · "+(age===null?"Aguardando comunicação":age>120?"Sem comunicação recente · retomada automática após expirar a reserva":"Processador conectado");box.append(p);}
+   if(job.status==="processing"&&job.worker_id){const progress=document.createElement("progress");progress.max=100;if(job.stage!=="metadata")progress.value=job.progress_percent||0;progress.setAttribute("aria-label","Progresso de "+job.title);box.append(progress);const p=document.createElement("p");const age=job.heartbeat_at?Math.round((Date.now()-Date.parse(job.heartbeat_at))/1000):null;p.textContent=(job.stage==="metadata"?"Aguardando a fonte · ":Math.round(job.progress_percent||0)+"% da etapa · ")+(age===null?"Aguardando comunicação":age>120?"Sem comunicação recente · retomada automática após expirar a reserva":"Processador conectado");box.append(p);}
+   appendImportDiagnostics(box,job);
    if(job.status==="queued"&&job.error_message){const p=document.createElement("p");p.textContent=job.error_message+" Nova tentativa automática, sem precisar clicar em Atualizar.";box.append(p);}
    if(job.next_retry_at){const p=document.createElement("p");p.textContent="Próxima tentativa: "+new Date(job.next_retry_at).toLocaleString("pt-BR");box.append(p);}
    if(job.status==="needs_review"){
