@@ -286,6 +286,34 @@ async function inspectVideo(file){
   video.src=url;video.load();
  });
 }
+
+async function coverFromPublishedR2(id){
+ if(!/^[0-9a-f-]{36}$/i.test(id||""))return null;
+ return new Promise(resolve=>{
+  const video=document.createElement("video");
+  video.crossOrigin="anonymous";video.muted=true;video.preload="auto";video.playsInline=true;
+  let done=false;const timeout=setTimeout(()=>finish(null),12000);
+  function finish(file){if(done)return;done=true;clearTimeout(timeout);video.pause();video.removeAttribute("src");video.load();resolve(file)}
+  function capture(){
+   if(done||!video.videoWidth||!video.videoHeight)return;
+   try{
+    const canvas=document.createElement("canvas");canvas.width=480;canvas.height=720;
+    const ctx=canvas.getContext("2d",{alpha:false});
+    const scale=Math.max(canvas.width/video.videoWidth,canvas.height/video.videoHeight);
+    ctx.drawImage(video,(canvas.width-video.videoWidth*scale)/2,(canvas.height-video.videoHeight*scale)/2,video.videoWidth*scale,video.videoHeight*scale);
+    const gradient=ctx.createLinearGradient(0,520,0,720);gradient.addColorStop(0,"#050a1700");gradient.addColorStop(1,"#050a17cc");ctx.fillStyle=gradient;ctx.fillRect(0,520,480,200);
+    canvas.toBlob(blob=>finish(blob?new File([blob],"capa-r2.jpg",{type:"image/jpeg"}):null),"image/jpeg",0.85);
+   }catch(e){finish(null)}
+  }
+  video.addEventListener("loadedmetadata",()=>{try{video.currentTime=Math.min(90,Math.max(8,(video.duration||120)*0.08))}catch(e){capture()}},{once:true});
+  video.addEventListener("seeked",capture,{once:true});
+  video.addEventListener("loadeddata",()=>{if(video.readyState>=2&&video.currentTime>1)capture()});
+  video.addEventListener("error",()=>finish(null),{once:true});
+  video.src=R2_WORKER+"/watch/"+encodeURIComponent(id);
+  video.load();
+ });
+}
+
 async function uploadCover(file){
  const ext=extForMime(file,false);
  const path=sessionUser.id+"/"+crypto.randomUUID()+"."+ext.ext;
@@ -929,7 +957,8 @@ async function sendForm(e){
    generated=await inspectVideo(file);
    if(generated.duration!==null)payload.duration_seconds=generated.duration;
   }
-  const chosenCover=cover||generated.thumbnail;
+  let chosenCover=cover||generated.thumbnail;
+   if(!chosenCover&&r2&&editing?.id&&!editing.poster_path){status("upload-message","Criando capa automaticamente a partir do vídeo R2...");chosenCover=await coverFromPublishedR2(editing.id);if(!chosenCover)console.warn("NPlay: não foi possível extrair capa do R2; o cadastro será preservado.");}
   if(chosenCover){
     status("upload-message","Enviando capa...");
     newPoster=await uploadCover(chosenCover);
