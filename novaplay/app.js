@@ -901,7 +901,7 @@ $("close-details").onclick=closeDetails;
  $("detail-back").onclick=closeDetails;
 document.querySelectorAll("[data-close='details']").forEach(x=>x.addEventListener("click",closeDetails));
 $("search-trigger").onclick=()=>navigate("buscar");
-$("profile-trigger").onclick=()=>{window.location.href="./admin/"};
+
 $("search-input").addEventListener("input",renderSearch);
 $("brand-link").addEventListener("click",e=>{e.preventDefault();navigate("inicio")});
 document.querySelectorAll("[data-nav]").forEach(btn=>btn.addEventListener("click",()=>navigate(btn.dataset.nav)));
@@ -916,7 +916,7 @@ document.addEventListener("keydown",e=>{
 document.addEventListener("visibilitychange",()=>{if(document.hidden){stopHeroPreview();if(!$("player-layer").hidden)$("video").pause()}});
 window.addEventListener("scroll",()=>$("app-header").classList.toggle("is-scrolled",window.scrollY>24),{passive:true});
 if("serviceWorker" in navigator&&location.protocol==="https:"){
- window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js?v=0.45.11",{updateViaCache:"none"}).catch(()=>{}));
+ window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js?v=0.45.12",{updateViaCache:"none"}).catch(()=>{}));
 }
 navigate((location.hash||"").slice(1)||"inicio");
 loadUploadedCatalog();
