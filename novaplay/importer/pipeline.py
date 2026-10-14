@@ -26,6 +26,12 @@ class ReviewRequired(Exception):
 class MetadataUnavailable(TimeoutError):
     pass
 
+class SlowSource(TimeoutError):
+    pass
+
+def slow_window(bytes_start, bytes_done, elapsed, window, minimum_rate):
+    return elapsed >= window and max(0, bytes_done-bytes_start)/max(1,elapsed) < minimum_rate
+
 class CapacityRequired(ReviewRequired):
     pass
 
@@ -201,6 +207,9 @@ def download(job,max_bytes,timeout):
         handle.unset_flags(lt.torrent_flags.upload_mode)
         job.progress('downloading',force=True)
         last_bytes=-1;last_advance=time.monotonic()
+        window_start=time.monotonic();window_bytes=handle.file_progress()[chosen['index']]
+        speed_window=max(60,int(os.getenv('IMPORTER_SPEED_WINDOW_SECONDS','300')))
+        minimum_rate=max(0,int(os.getenv('IMPORTER_MIN_DOWNLOAD_RATE','32768')))
         while True:
             job.check();state=handle.status()
             if state.errc.value():raise RuntimeError(state.errc.message())
@@ -209,6 +218,10 @@ def download(job,max_bytes,timeout):
             elif time.monotonic()-last_advance>180:raise TimeoutError('Download sem receber dados por 3 minutos; reconexão automática com reaproveitamento das partes')
             job.progress('downloading',done/max(1,chosen['bytes'])*100,peers=state.num_peers,seeds=state.num_seeds,download_rate=state.download_rate,bytes_done=done,bytes_total=chosen['bytes'])
             if done>=chosen['bytes']:break
+            elapsed=time.monotonic()-window_start
+            if slow_window(window_bytes,done,elapsed,speed_window,minimum_rate):
+                raise SlowSource('Fonte lenta por 5 minutos; partes preservadas e fila liberada para o próximo vídeo')
+            if elapsed>=speed_window:window_start=time.monotonic();window_bytes=done
             if time.monotonic()-started>timeout:raise TimeoutError('Tempo de download excedido; partes serão reaproveitadas')
             time.sleep(3)
         handle.pause();handle.flush_cache()
@@ -255,7 +268,11 @@ def prepare(job,source,max_bytes,timeout):
         if not (ready and output.is_file() and job.manifest.get('source_fingerprint')==fingerprint):
             if shutil.disk_usage(job.folder).free < max(meta['size_bytes']*2,1024**3):raise CapacityRequired('Espaço insuficiente para converter sem perder o original. Libere espaço antes de retomar.')
             partial=job.folder/'prepared.partial.mp4'
-            command=['ffmpeg','-nostdin','-y','-i',str(source),'-map','0:v:0','-map','0:a?','-sn','-dn','-c:v','libx264','-preset','veryfast','-crf','23','-pix_fmt','yuv420p','-c:a','aac','-b:a','160k','-movflags','+faststart',str(partial)]
+            # Reuse browser-compatible streams; changing a container or audio
+            # does not require hours of encoding the video again.
+            video_args=['-c:v','copy'] if meta['video_codec']=='h264' and meta['pixel_format']=='yuv420p' else ['-c:v','libx264','-preset','veryfast','-crf','23','-pix_fmt','yuv420p']
+            audio_args=['-c:a','copy'] if all(a=='aac' for a in meta['audio_codecs']) else ['-c:a','aac','-b:a','160k']
+            command=['ffmpeg','-nostdin','-y','-i',str(source),'-map','0:v:0','-map','0:a?','-sn','-dn']+video_args+audio_args+['-movflags','+faststart',str(partial)]
             job.progress('converting',force=True)
             run_process(job,command,timeout,'converting',meta['duration_seconds'])
             os.replace(partial,output)
@@ -384,6 +401,7 @@ def failure_state(exc, attempts):
         # recycling it forever. Other queued imports can proceed.
         if attempts>=3:return 'needs_review','source_unavailable',False
         return 'queued','retry_wait',True
+    if isinstance(exc,SlowSource):return 'queued','retry_wait',True
     if isinstance(exc,PermanentError):return 'failed','failed',False
     if transient_error(exc):return 'queued','retry_wait',True
     if attempts<3:return 'queued','retry_wait',True
@@ -400,7 +418,7 @@ def handle_job(db,r2,record,root,recovery,bucket,max_bytes,timeout,local_file=No
             message=str(exc) if review or permanent or isinstance(exc,TimeoutError) else 'Falha temporária de conexão/processamento; os arquivos foram preservados'
             LOG.error('Import %s: %s (%s)',job.id,message,type(exc).__name__)
             if not job.lost.is_set():
-                delay=3600 if isinstance(exc,MetadataUnavailable) else retry_delay(record['attempts'])
+                delay=3600 if isinstance(exc,MetadataUnavailable) else 900 if isinstance(exc,SlowSource) else retry_delay(record['attempts'])
                 job.update(status=status,stage=stage,error_message=message[:500],error_code=type(exc).__name__,next_retry_at=utc(delay) if retry else None,locked_until=None)
 
 def main():

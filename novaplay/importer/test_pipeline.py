@@ -65,10 +65,18 @@ class PipelineTest(unittest.TestCase):
             self.assertNotIn('peers',d)
             self.assertEqual(d['stage'],'uploading')
 
-    def test_unavailable_source_remains_automatically_retryable(self):
+    def test_unavailable_source_stops_recycling_after_three_attempts(self):
         from pipeline import failure_state,MetadataUnavailable
         self.assertEqual(failure_state(MetadataUnavailable(),1),('queued','retry_wait',True))
-        self.assertEqual(failure_state(MetadataUnavailable(),3),('queued','retry_wait',True))
+        self.assertEqual(failure_state(MetadataUnavailable(),3),('needs_review','source_unavailable',False))
+
+    def test_slow_window_uses_progress_not_instantaneous_rate(self):
+        from pipeline import slow_window,SlowSource,failure_state
+        self.assertFalse(slow_window(100,100,299,300,32768))
+        self.assertTrue(slow_window(100,101,300,300,32768))
+        self.assertFalse(slow_window(100,100+300*32768,300,300,32768))
+        self.assertFalse(slow_window(100,100,300,300,0))
+        self.assertEqual(failure_state(SlowSource(),9),('queued','retry_wait',True))
     def test_capacity_requires_action_instead_of_blind_retry(self):
         from pipeline import failure_state,CapacityRequired
         self.assertEqual(failure_state(CapacityRequired(),1),('needs_review','capacity',False))

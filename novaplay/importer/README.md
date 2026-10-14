@@ -31,3 +31,9 @@ O sistema não adivinha sinopses nem confirma a identidade de um filme apenas pe
 `recovery/<id>.mp4` é reaproveitado quando existe. Os arquivos locais são preservados para recuperação; verifique o espaço antes de remover arquivos de tarefas comprovadamente concluídas. Fontes que não respondem após três tentativas vão para atenção, com opção de trocar o magnet. Limite de tamanho e falta de espaço exigem ajuste; não geram tentativas automáticas inúteis. O download reserva margem para manter o original e preparar o vídeo. O limite padrão é 16 GiB por vídeo e duas horas por etapa de download/conversão, ajustável no `.env`.
 
 Nunca envie `.env`, credenciais, logs privados ou vídeos ao Git. As chaves do processador ficam apenas no computador/servidor.
+
+## Proteção contra fontes lentas
+
+Uma fonte que entrega menos de 32 KiB/s durante uma janela de cinco minutos libera a fila e é retomada após 15 minutos, com as partes preservadas. Ajuste `IMPORTER_SPEED_WINDOW_SECONDS` e `IMPORTER_MIN_DOWNLOAD_RATE` no `.env`; taxa zero desativa essa proteção. Falhas de metadados aguardam uma hora entre tentativas e, após três tentativas, exigem revisão da fonte. Os prazos de retomada e reserva usam o relógio do banco.
+
+Na preparação, H.264/yuv420p e áudio AAC são copiados sem recodificação quando somente o contêiner precisa mudar. Outros codecs continuam sendo convertidos e a saída passa pela mesma validação técnica.
