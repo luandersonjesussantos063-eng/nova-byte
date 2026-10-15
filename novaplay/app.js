@@ -600,7 +600,7 @@ function updateCinemaControls(){
  }
 }
 function showCinemaUi(){
- if($("player-layer").hidden||$("player-layer").classList.contains("youtube-active")||$("player-layer").classList.contains("drive-active"))return;
+ if($("player-layer").hidden||$("player-layer").classList.contains("youtube-active")||$("player-layer").classList.contains("drive-active")||$("player-layer").classList.contains("live-embed-active"))return;
  $("player-layer").classList.remove("ui-idle");
  clearTimeout(playerUiTimer);
  if(!$("video").paused)playerUiTimer=setTimeout(()=>{
@@ -610,7 +610,7 @@ function showCinemaUi(){
 }
 function resetCinemaUi(){
  clearTimeout(playerUiTimer);playerUiTimer=null;seekActive=false;
- $("player-layer").classList.remove("ui-idle","youtube-active","drive-active","has-player-error");
+ $("player-layer").classList.remove("ui-idle","youtube-active","drive-active","live-embed-active","has-player-error");
  $("cinema-controls").hidden=true;
  $("player-status").hidden=false;
  $("player-content-note").hidden=false;
@@ -661,6 +661,7 @@ $("cinema-fullscreen").onclick=()=>{
  showCinemaUi();
 };
 function stopPlayback(){
+ $("player-live-reload").hidden=true;
  $("player-issue-panel").hidden=true;
  $("player-issue-open").hidden=true;
  $("player-issue-feedback").textContent="";
@@ -748,7 +749,29 @@ function setResume(video,id,seq){
  };
  video.onended=()=>{delete progress[id];save(progressKey,progress);if(view==="inicio")renderRows()};
 }
+function openLiveEmbed(url,title){
+ let source;
+ try{source=new URL(url);if(source.protocol!=="https:")return false}catch{return false}
+ window.NovaPlayHeroScenes?.stop?.();window.NovaPlayHover?.close?.();stopHeroPreview();
+ $("detail-layer").hidden=true;selected=null;
+ stopPlayback();
+ current={item:{title:String(title||"Canal ao vivo"),kind:"tv",liveEmbedUrl:source.href},episode:null};
+ const layer=$("player-layer"),frame=$("fallback-frame");
+ layer.hidden=false;layer.classList.add("live-embed-active");document.body.classList.add("modal-open");
+ $("video").hidden=true;$("cinema-controls").hidden=true;
+ $("player-status").hidden=true;$("player-content-note").hidden=true;
+ $("player-heading").textContent="AO VIVO · "+current.item.title;
+ $("player-title").textContent=current.item.title;$("player-error").textContent="";
+ $("retry-btn").hidden=true;$("fallback-btn").hidden=true;$("source-link").hidden=true;
+ $("player-live-reload").hidden=false;
+ frame.title=current.item.title;frame.setAttribute("allow","autoplay; encrypted-media; fullscreen; picture-in-picture");
+ frame.referrerPolicy="strict-origin-when-cross-origin";frame.hidden=false;frame.src=source.href;
+ enterCinema();$("player-close").focus();return true;
+}
+window.NovaPlayPlayer={openEmbed:openLiveEmbed,closeEmbed:()=>{if(current?.item?.liveEmbedUrl)closePlayer()}};
+$("player-live-reload").onclick=()=>{if(current?.item?.liveEmbedUrl)openLiveEmbed(current.item.liveEmbedUrl,current.item.title)};
 function play(item,episode){
+ if(item?.liveEmbedUrl){openLiveEmbed(item.liveEmbedUrl,item.title);return}
  if(item?.kind==="tv"&&item.mode==="external"){openOfficialChannel(item);return}
  window.NovaPlayHeroScenes?.stop?.();
  window.NovaPlayHover?.close?.();
@@ -927,7 +950,7 @@ document.addEventListener("keydown",e=>{
 document.addEventListener("visibilitychange",()=>{if(document.hidden){stopHeroPreview();if(!$("player-layer").hidden)$("video").pause()}});
 window.addEventListener("scroll",()=>$("app-header").classList.toggle("is-scrolled",window.scrollY>24),{passive:true});
 if("serviceWorker" in navigator&&location.protocol==="https:"){
- window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js?v=0.45.32",{updateViaCache:"none"}).catch(()=>{}));
+ window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js?v=0.45.33",{updateViaCache:"none"}).catch(()=>{}));
 }
 navigate((location.hash||"").slice(1)||"inicio");
 loadUploadedCatalog();

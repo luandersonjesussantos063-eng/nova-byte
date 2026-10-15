@@ -1,4 +1,4 @@
-const CACHE="novaplay-v0.45.32";
+const CACHE="novaplay-v0.45.33";
 const CORE=["./","./index.html","./styles.css","./app.js","./live-embeds.js","./profiles.js","./install.js","./catalog.js","./manifest.webmanifest","./assets/icon.svg"];
 self.addEventListener("install",event=>{
  event.waitUntil(caches.open(CACHE).then(async cache=>{

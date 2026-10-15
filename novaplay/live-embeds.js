@@ -11,34 +11,10 @@ function imageUrl(value){
 }
 function channelKey(url){try{return new URL(url).pathname.replace(/\/+$/,"").split("/").pop()}catch{return ""}}
 function channelIdentity(url){try{const u=new URL(url);return u.origin+u.pathname.replace(/\/+$/,"")+u.search}catch{return url}}
-let currentUrl="",currentTitle="",loadSequence=0;
-const player=()=>$("iframe-channel-player");
+let loadSequence=0;
 function note(message){const el=$("nplay-channel-notice");if(el)el.textContent=message}
-function closeChannel(){
- const el=player();if(el)el.replaceChildren();
- currentUrl="";currentTitle="";
- $("iframe-channel-viewer").hidden=true;
- note("");
-}
 function openChannel(url,title){
- let parsed;
- try{parsed=new URL(url);if(parsed.protocol!=="https:")throw Error("HTTPS necessário")}catch(e){note("Endereço do canal inválido.");return}
- currentUrl=parsed.href;currentTitle=title;
- const el=player();el.replaceChildren();
- const frame=document.createElement("iframe");
- frame.src=currentUrl;frame.title=title;
- frame.allow="autoplay; encrypted-media; picture-in-picture; fullscreen";
- frame.allowFullscreen=true;
-
- frame.loading="eager";
- frame.referrerPolicy="strict-origin-when-cross-origin";
- frame.style.cssText="display:block;width:100%;height:100%;border:0;background:#000";
- // O provedor bloqueia iframe sandboxed. Mantemos incorporação padrão sem alterar o conteúdo remoto.
- el.append(frame);
- $("iframe-channel-heading").textContent=title;
- $("iframe-channel-viewer").hidden=false;
- note(currentUrl.includes("rdcanais.org")?"Transmissão incorporada de site externo. O fornecedor pode exibir anúncios ou abrir outras abas. Som baixo? Confira também o volume dentro do player e o volume de mídia do aparelho.":"Transmissão incorporada de fonte externa. Som baixo? Confira também o volume dentro do player e o volume de mídia do aparelho.");
- $("iframe-channel-viewer").scrollIntoView({behavior:"smooth",block:"start"});
+ if(!window.NovaPlayPlayer?.openEmbed?.(url,title))console.warn("NPlay: não foi possível abrir o player do canal.");
 }
 async function load(){
  const list=$("iframe-channel-list");if(!list)return;
@@ -141,11 +117,7 @@ function renderChannels(channels){
 function init(){
  window.addEventListener("nplay:tv-open",()=>{const panel=$("iframe-channels-panel");if(panel){panel.hidden=false;load()}});
  if(location.hash==="#tv")load();
- $("iframe-channel-close").onclick=closeChannel;
- const reload=$("nplay-channel-reload");
- if(reload)reload.onclick=()=>{if(currentUrl)openChannel(currentUrl,currentTitle)};
- const fullscreen=$("nplay-channel-fullscreen");
- if(fullscreen)fullscreen.onclick=async()=>{const el=player();if(!el||!currentUrl)return;try{if(document.fullscreenElement)await document.exitFullscreen();else await el.requestFullscreen()}catch(e){note("Tela cheia não está disponível neste navegador.")}};
+
 }
 if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",init);else init();
 })();
