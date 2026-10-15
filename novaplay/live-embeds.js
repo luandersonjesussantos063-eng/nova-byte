@@ -23,7 +23,7 @@ async function load(){
  note("Carregando canais publicados…");
  try{
   if(!window.supabase)throw Error("Cadastro de canais indisponível");
-  const db=window.supabase.createClient("https://vajlhodqxskozuxxlujv.supabase.co","sb_publishable_uT0b4y0Bex1k1QWZoyIfKg_K0pm-yS3");
+  const db=window.NPlayAccessClient||window.supabase.createClient("https://vajlhodqxskozuxxlujv.supabase.co","sb_publishable_uT0b4y0Bex1k1QWZoyIfKg_K0pm-yS3");
   const {data,error}=await db.from("novaplay_live_embeds").select("id,title,embed_url,stream_type,logo_url,category").eq("is_published",true).order("created_at",{ascending:false});
   if(error)throw error;
   if(sequence!==loadSequence)return;
