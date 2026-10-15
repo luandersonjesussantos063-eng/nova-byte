@@ -60,7 +60,7 @@ async function load(){
    const url=entry?.embeds?.find(x=>typeof x?.embed_url==="string"&&x.embed_url.startsWith("https://"))?.embed_url;
    if(!url||existing.has(url))continue;
    existing.add(url);
-   channels.push({title:String(entry.name||entry.title||entry.id||"Canal"),embed_url:url,logo_url:entry.logo_url||"",category:entry.category||"",epg:entry.epg||null});
+   channels.push({title:String(entry.name||entry.title||entry.id||"Canal"),embed_url:url,logo_url:entry.logo_url||entry.logo||entry.image||entry.thumbnail||entry.poster||"",category:entry.category||"",epg:entry.epg||null});
   }
  }catch(error){console.warn("NPlay: API de canais indisponível",error);note("Não foi possível sincronizar a API agora. Os canais existentes continuam disponíveis.");}
  if(window.supabase){
