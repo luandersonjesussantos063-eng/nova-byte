@@ -39,7 +39,8 @@ async function load(){
  const channels=[
   {title:"TV Gazeta",embed_url:"https://geo.dailymotion.com/player/xb2fp.html?video=x9xwtpy",source_page:"https://www.tvgazeta.com.br/aovivo/"},
   {title:"TV Assembleia MT",embed_url:"https://owncast.al.mt.gov.br/embed/video",source_page:"https://www.al.mt.gov.br/institucional/tv/14/10/2026"},
-  {title:"Premiere Clubes · Ao vivo",embed_url:PROVIDER}
+  {title:"Premiere Clubes · Ao vivo",embed_url:PROVIDER},
+  {title:"Paramount+ 2 · Ao vivo",embed_url:"https://rdcanais.org/paramountplus2"}
  ];
  if(window.supabase){
   try{
