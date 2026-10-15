@@ -1,5 +1,5 @@
-const CACHE="novaplay-v0.48.1";
-const CORE=["./","./index.html","./styles.css","./assets/experience.css","./assets/hero-live.js","./assets/casting.js","./access.js","./app.js","./live-embeds.js","./assets/live-preview.js","./profiles.js","./install.js","./catalog.js","./manifest.webmanifest","./assets/icon.svg"];
+const CACHE="novaplay-v0.48.2";
+const CORE=["./","./index.html","./styles.css","./assets/experience.css","./assets/hero-live.js","./assets/casting.js","./access.js","./app.js","./live-embeds.js","./assets/live-preview.js","./profiles.js","./install.js","./catalog.js","./manifest.webmanifest","./assets/icon.svg","./assets/brand/nplay-wordmark-v0482.svg","./assets/brand/nplay-icon-192-v0482.png","./assets/brand/nplay-icon-512-v0482.png"];
 self.addEventListener("install",event=>{
  event.waitUntil(caches.open(CACHE).then(async cache=>{
   await Promise.allSettled(CORE.map(url=>cache.add(new Request(url,{cache:"reload"}))));

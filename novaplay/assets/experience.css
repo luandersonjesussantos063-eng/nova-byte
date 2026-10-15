@@ -153,3 +153,7 @@ button{transition:background .2s,color .2s,border-color .2s,transform .2s}
 .tv-connected{position:absolute;bottom:140px;left:50%;transform:translateX(-50%);padding:12px 18px;border:1px solid #3e638c;background:#10243bea;border-radius:12px;color:#d6e9ff;z-index:18;font-size:14px;text-align:center;max-width:90%;pointer-events:none}
 .casting-active .cinema-controls,.casting-active .player-bar{opacity:1!important;pointer-events:auto!important}
 @media(max-width:600px){.tv-dialog{padding:18px}.tv-connected{bottom:155px;font-size:12px}#cinema-cast span{display:none}.cinema-toolbar-group{gap:7px}}
+
+/* Shared white-and-blue NPlay wordmark, including the installed app. */
+.brand .nplay-wordmark{display:block;width:142px;height:51px;object-fit:contain}
+@media(max-width:540px){.brand .nplay-wordmark{width:110px;height:40px}}
