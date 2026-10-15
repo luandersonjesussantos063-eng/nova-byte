@@ -78,7 +78,7 @@ async function load(){
    if(!url)continue;
    const metadata={logo_url:CHANNEL_LOGOS[channelKey(url)]||imageUrl(entry.logo_url||entry.logo||entry.image||entry.thumbnail||entry.poster),category:typeof entry.category==="string"?entry.category:entry.category?.name||"",epg:entry.epg||null};
    const identity=channelIdentity(url),known=existing.get(identity);
-   if(known){if(metadata.logo_url)known.logo_url=metadata.logo_url;known.category=metadata.category;known.epg=metadata.epg;continue}
+   if(known){if(metadata.logo_url&&!known.logo_url?.startsWith("./assets/"))known.logo_url=metadata.logo_url;known.category=metadata.category;known.epg=metadata.epg;continue}
    const item={title:String(entry.name||entry.title||entry.id||"Canal"),embed_url:url,...metadata};
    existing.set(identity,item);channels.push(item);
   }
