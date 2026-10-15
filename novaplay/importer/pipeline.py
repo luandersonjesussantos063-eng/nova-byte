@@ -15,6 +15,11 @@ import threading
 import time
 import uuid
 from cleanup import cleanup_published_imports
+try:
+    from streaming import build_adaptive, optimize_existing_once
+except ImportError:
+    build_adaptive=None
+    def optimize_existing_once(*args, **kwargs):return False
 from datetime import datetime, timedelta, timezone
 
 LOG = logging.getLogger('nplay-importer')
@@ -377,6 +382,10 @@ def process(job,r2,bucket,max_bytes,timeout,recovery,local_file=None):
     except LeaseLost:raise
     except Exception:LOG.warning('Automatic cover unavailable for %s; draft will need a cover',job.id)
     key=upload_resumable(job,r2,bucket,output)
+    try:
+        if build_adaptive:meta["adaptive_manifest"]=build_adaptive(job,r2,bucket,output,key,meta,run_process,timeout)
+    except LeaseLost:raise
+    except Exception as exc:LOG.warning("Adaptive versions deferred for %s (%s); original MP4 preserved",job.id,type(exc).__name__)
     job.progress('validating',100,force=True)
     # The DB trigger creates the draft transactionally; if it fails, retry reuses the object.
     job.update(status='ready',stage='complete',progress_percent=100,r2_object_key=key,media_metadata=meta,error_message=None,error_code=None,locked_until=None)
@@ -451,6 +460,7 @@ def main():
         cleanup_published_imports(db,r2,bucket,root,recovery)
         return
     next_cleanup=0.0
+    adaptive_cooldown={}
     while not (base/'importer.stop').exists():
         try:
             if time.monotonic() >= next_cleanup:
@@ -460,7 +470,8 @@ def main():
             if jobs:
                 handle_job(db,r2,jobs[0],root,recovery,bucket,max_bytes,timeout,args.local_file)
                 cleanup_published_imports(db,r2,bucket,root,recovery)
-            elif not args.once:time.sleep(15)
+            elif not args.once:
+                if not optimize_existing_once(db,r2,bucket,root,base/"importer.stop",inspect_media,run_process,timeout,adaptive_cooldown):time.sleep(15)
         except Exception as exc:
             LOG.error('Queue unavailable (%s)',type(exc).__name__)
             if args.once:raise

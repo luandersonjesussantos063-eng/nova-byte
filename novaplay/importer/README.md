@@ -53,3 +53,20 @@ Invoke-WebRequest -UseBasicParsing 'https://novabytesolucoes.com.br/novaplay/imp
 O comando sinaliza parada, espera o supervisor terminar o trabalho atual, instala somente `pipeline.py` e `cleanup.py`, confere a sintaxe, executa a limpeza das tarefas publicadas elegíveis e abre o importador novamente. `.env` e credenciais são preservados. Não feche o FFmpeg durante a espera. Se houver um worker iniciado separadamente, aguarde esse worker parar antes de atualizar.
 
 Também é possível executar somente a conferência e limpeza: `python worker.py --cleanup-only` (com o supervisor parado). Os erros de capacidade existentes continuam exigindo a opção de tentar novamente no painel depois que houver espaço.
+
+
+## Streaming adaptativo e conexões lentas
+
+A versão 0.45.36 inclui `streaming.py`. Após o envio do MP4, o processador prepara HLS com versões de até 240p, 480p e 720p, sem ampliar a resolução de origem. O manifesto principal só é enviado depois de conferir todos os segmentos no R2. O MP4 continua como alternativa. Uma falha na otimização não impede a publicação do MP4.
+
+Quando a fila está livre, o processador otimiza também vídeos publicados anteriormente, um por vez. Esse trabalho pode demorar horas no computador; usa FFmpeg com duas threads por versão e requer espaço temporário. Os arquivos temporários da otimização antiga são removidos após concluir; uma falha os preserva para retomada. O arquivo `importer.stop` interrompe essa otimização de vídeos antigos com segurança. Trabalhos novos já iniciados terminam antes de o supervisor parar.
+
+O player descobre automaticamente quando o HLS está disponível, começa pela qualidade baixa e permite a adaptação do navegador/HLS.js. Filmes HLS têm buffer alvo de 60 segundos, limitado também pela memória; isso não garante ausência de pausas abaixo da velocidade da versão mínima. Vídeos do YouTube, Drive e players externos dependem dos próprios fornecedores.
+
+Atualização no Prompt de Comando do Windows, dentro da pasta do importador:
+
+```cmd
+powershell -NoProfile -Command "Invoke-WebRequest -UseBasicParsing 'https://novabytesolucoes.com.br/novaplay/importer/ATUALIZAR-STREAMING.ps1' -OutFile 'ATUALIZAR-STREAMING.ps1'; if ($?) { & ([scriptblock]::Create((Get-Content -Raw -Encoding UTF8 '.\ATUALIZAR-STREAMING.ps1'))) }"
+```
+
+O site estático não converte filmes. A otimização só começa depois de instalar esta atualização no computador e deixar o importador em execução. O log registra `preparing adaptive`, o progresso e `adaptive streaming ready`.

@@ -11,7 +11,7 @@
 <meta name="robots" content="noindex,nofollow">
 <meta name="description" content="NPlay: filmes clássicos, séries históricas e TV aberta grátis em uma plataforma de streaming.">
 <link rel="icon" href="./assets/icon.svg" type="image/svg+xml">
-<link rel="manifest" href="./manifest.webmanifest?v=0.45.33">
+<link rel="manifest" href="./manifest.webmanifest?v=0.45.36">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="./styles.css?v=0.45.22">
 <title>NPlay — Filmes, séries e TV ao vivo</title>
@@ -49,7 +49,7 @@
 .nplay-profile-form input,.nplay-profile-form select{background:#0e1a2d;color:#fff;border:1px solid #7991b2;border-radius:8px;padding:11px;min-width:0}.nplay-profile-form button{background:#3272d7;color:#fff;border:0;border-radius:8px;padding:10px 15px;cursor:pointer}
 @media(max-width:450px){.nplay-profile-hero{min-height:43vh}.nplay-profile-grid{gap:20px 12px}.nplay-profile-picture{width:min(100%,100px)}}
 </style><style id="nplay-profile-poster-style">
-/* V 0.45.33: abertura imersiva vertical com perfis integrados. */
+/* V 0.45.36: abertura imersiva vertical com perfis integrados. */
 .nplay-profile-gate{background:#07111f;color:#fff;overflow-x:hidden;overflow-y:auto;scrollbar-color:#566176 transparent;display:block}
 .nplay-profile-hero{position:relative;box-sizing:border-box;width:100%;max-width:600px;min-height:0;height:auto;margin:0 auto;display:flex;align-items:center;justify-content:center;flex-direction:column;padding:0;overflow:hidden;background:#07111f}
 .nplay-profile-hero::before,.nplay-profile-hero::after{content:none;display:none}
@@ -330,16 +330,16 @@
 </div>
 <aside id="nplay-install-banner" hidden style="position:fixed;z-index:1000;bottom:calc(76px + env(safe-area-inset-bottom,0px));left:12px;right:12px;max-width:480px;margin:auto;padding:15px 16px;border-radius:16px;border:1px solid #5474a2;background:#122541;box-shadow:0 12px 38px #000b;color:#fff"><div style="display:flex;align-items:center;gap:12px"><img src="./assets/icon-192.png" alt="" width="48" height="48" style="border-radius:12px"><div style="flex:1"><strong>Instale a NPlay</strong><div id="nplay-install-description" style="font-size:12px;color:#b8cbed;margin-top:3px">Assista com um toque na tela inicial.</div></div><button id="nplay-install-dismiss" type="button" aria-label="Fechar sugestão de instalação" style="background:transparent;color:white;border:0;font-size:20px;cursor:pointer">✕</button></div><button id="nplay-install-action" type="button" style="margin-top:12px;width:100%;background:#326ad6;color:white;border:0;border-radius:10px;padding:12px;font-weight:800;cursor:pointer">Instalar aplicativo</button></aside>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
-<footer class="app-footer"><a href="./admin/" style="display:inline-block;color:#a6c8ff;font-weight:750;padding:7px 0;text-decoration:underline">Painel do criador ↗</a><div>NPlay V 0.45.33 · Cinema clássico e TV aberta grátis · Artes ilustrativas da NPlay · O uso comercial de cada conteúdo exige verificação dos direitos.</div></footer>
+<footer class="app-footer"><a href="./admin/" style="display:inline-block;color:#a6c8ff;font-weight:750;padding:7px 0;text-decoration:underline">Painel do criador ↗</a><div>NPlay V 0.45.36 · Cinema clássico e TV aberta grátis · Artes ilustrativas da NPlay · O uso comercial de cada conteúdo exige verificação dos direitos.</div></footer>
 <script src="./assets/cover.js?v=0.39.2-covers2"></script>
 <script src="./assets/card-hover.js?v=0.39.2"></script>
 <script src="./assets/hero-scenes.js?v=0.39.2"></script>
 <script src="./catalog.js?v=0.39.2"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.58.0/dist/umd/supabase.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/hls.js@1.7.3/dist/hls.min.js"></script>
-<script src="./app.js?v=0.45.33" defer></script>
-<script src="./live-embeds.js?v=0.45.33" defer></script>
-<script src="./install.js?v=0.45.33" defer></script>
-<script src="./profiles.js?v=0.45.33" defer></script>
+<script src="./app.js?v=0.45.36" defer></script>
+<script src="./live-embeds.js?v=0.45.36" defer></script>
+<script src="./install.js?v=0.45.36" defer></script>
+<script src="./profiles.js?v=0.45.36" defer></script>
 </body>
 </html>

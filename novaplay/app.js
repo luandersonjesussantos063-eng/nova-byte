@@ -815,7 +815,7 @@ function play(item,episode){
  const v=$("video");v.hidden=false;
  const seq=++attempt;
  let src=media.licensed_stream_url||media.src;
- let hasFailed=false;
+ let hasFailed=false,networkRecoveries=0;
  const fail=msg=>{if(!hasFailed){hasFailed=true;playbackFailed(msg,seq)}};
  v.onerror=()=>fail("O arquivo não pôde ser reproduzido neste navegador. Tente novamente.");
  v.onplaying=()=>{
@@ -825,7 +825,7 @@ function play(item,episode){
    $("retry-btn").hidden=true;$("fallback-btn").hidden=true;
    playerStatus(item.kind==="tv"?"● AO VIVO — reproduzindo":"▶ Reproduzindo");
  };
- v.onwaiting=()=>{if(seq===attempt)playerStatus("Aguardando dados da transmissão...")};
+ v.onwaiting=()=>{if(seq===attempt)playerStatus(item.kind==="tv"?"Aguardando dados da transmissão...":"Carregando vídeo para continuar...")};
  v.oncanplay=()=>{if(seq===attempt){clearTimeout(timer);playerStatus(v.paused?"Preparando reprodução automática...":"▶ Reproduzindo")}};
  const progressId=item.kind==="tv"?null:episode?episode.id:item.id;
  setResume(v,progressId,seq);
@@ -837,9 +837,10 @@ function play(item,episode){
     if(v.canPlayType("application/vnd.apple.mpegurl")){
       v.src=src;startAutoplay(v,seq);
     }else if(window.Hls&&window.Hls.isSupported()){
-      hls=new window.Hls({enableWorker:true,lowLatencyMode:true,maxBufferLength:20});
+      hls=new window.Hls({enableWorker:true,lowLatencyMode:item.kind==="tv",maxBufferLength:item.kind==="tv"?20:60,maxMaxBufferLength:180,maxBufferSize:64*1024*1024,backBufferLength:30,startLevel:0,capLevelToPlayerSize:true,abrEwmaDefaultEstimate:400000});
       hls.on(window.Hls.Events.ERROR,(event,data)=>{
         if(seq!==attempt||!data.fatal)return;
+        if(data.type===window.Hls.ErrorTypes.NETWORK_ERROR&&networkRecoveries++<3){playerStatus("Reconectando e carregando vídeo...");hls.startLoad();return}
         if(data.type===window.Hls.ErrorTypes.MEDIA_ERROR){try{hls.recoverMediaError();return}catch(e){}}
         fail("A transmissão interrompeu. Toque em Tentar novamente.");
       });
@@ -884,8 +885,14 @@ function play(item,episode){
   $("player-content-note").textContent="";
  }else if(media.r2_object_key){
   playerStatus("Preparando vídeo R2 autorizado...");
-  src="https://nplay-r2-api.luandersonjesussantos063.workers.dev/watch/"+encodeURIComponent((episode?.id||item.id).replace(/^upload-/,""));
-  startSource();
+  const delivery="https://nplay-r2-api.luandersonjesussantos063.workers.dev",id=encodeURIComponent((episode?.id||item.id).replace(/^upload-/,""));
+  src=delivery+"/watch/"+id;
+  const controller=new AbortController(),resolveTimer=setTimeout(()=>controller.abort(),8000);
+  fetch(delivery+"/playback/"+id,{signal:controller.signal}).then(async response=>{
+   if(!response.ok)return;
+   const info=await response.json(),url=new URL(info.url);
+   if(url.origin===delivery&&(url.pathname.startsWith("/hls/"+id+"/")||url.pathname==="/watch/"+id))src=url.href;
+  }).catch(()=>{}).finally(()=>{clearTimeout(resolveTimer);if(seq===attempt)startSource()});
  }else if(media.video_path){
   if(!remoteDb){fail("Serviço de mídia indisponível. Recarregue a página.");return}
   playerStatus("Preparando vídeo publicado...");
@@ -950,7 +957,7 @@ document.addEventListener("keydown",e=>{
 document.addEventListener("visibilitychange",()=>{if(document.hidden){stopHeroPreview();if(!$("player-layer").hidden)$("video").pause()}});
 window.addEventListener("scroll",()=>$("app-header").classList.toggle("is-scrolled",window.scrollY>24),{passive:true});
 if("serviceWorker" in navigator&&location.protocol==="https:"){
- window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js?v=0.45.33",{updateViaCache:"none"}).catch(()=>{}));
+ window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js?v=0.45.36",{updateViaCache:"none"}).catch(()=>{}));
 }
 navigate((location.hash||"").slice(1)||"inicio");
 loadUploadedCatalog();
