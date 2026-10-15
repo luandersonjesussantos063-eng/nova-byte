@@ -25,8 +25,9 @@ function create(root,options={}){
   clearTimeout(timer);timer=null;
   for(const state of [...active.values()])stopState(state);
  }
- function fail(state){
+ function fail(state,reason="unavailable"){
   if(active.get(state.entry)!==state)return;
+  state.entry.card.setAttribute("data-preview-status",String(reason).slice(0,80));
   state.entry.failed=true;stopState(state);schedule();
  }
  function start(entry){
@@ -35,23 +36,27 @@ function create(root,options={}){
   const video=document.createElement('video');
   video.className='nplay-live-preview';video.muted=true;video.defaultMuted=true;video.autoplay=true;video.playsInline=true;video.preload='none';
   video.setAttribute('muted','');video.setAttribute('playsinline','');video.setAttribute('aria-hidden','true');video.tabIndex=-1;
-  const state={entry,video,hls:null,timeout:null};active.set(entry,state);
+  const state={entry,video,hls:null,timeout:null,recoveries:0};active.set(entry,state);
   soundButton(entry,false);entry.cover.append(video);
   const play=()=>{
    if(active.get(entry)!==state)return;
-   try{Promise.resolve(video.play()).catch(()=>fail(state))}catch{fail(state)}
+   try{Promise.resolve(video.play()).catch(error=>fail(state,error?.name||"playback"))}catch{fail(state)}
   };
   video.addEventListener('playing',()=>{
    if(active.get(entry)!==state)return;
    clearTimeout(state.timeout);entry.card.classList.add('nplay-live-preview-playing');entry.sound.hidden=false;
   });
-  video.addEventListener('error',()=>fail(state));
-  state.timeout=setTimeout(()=>fail(state),12000);
+  video.addEventListener('error',()=>fail(state,'media-'+(video.error?.code||0)));
+  state.timeout=setTimeout(()=>fail(state,"timeout"),22000);
   try{
    if(window.Hls?.isSupported()){
-    state.hls=new window.Hls({enableWorker:true,maxBufferLength:6,maxMaxBufferLength:12,backBufferLength:0,startLevel:0,capLevelToPlayerSize:true});
+    state.hls=new window.Hls({enableWorker:true,lowLatencyMode:false,maxBufferLength:20,maxMaxBufferLength:40,maxBufferSize:8*1024*1024,backBufferLength:0,startLevel:0,capLevelToPlayerSize:true});
     state.hls.on(window.Hls.Events.MANIFEST_PARSED,play);
-    state.hls.on(window.Hls.Events.ERROR,(_,data)=>{if(data.fatal)fail(state)});
+    state.hls.on(window.Hls.Events.ERROR,(_,data)=>{
+     if(active.get(entry)!==state||!data.fatal)return;
+     if(data.type===window.Hls.ErrorTypes?.NETWORK_ERROR&&data.type&&state.recoveries++<1){state.hls.startLoad();return;}
+     fail(state,data.details||data.type||"hls");
+    });
     state.hls.attachMedia(video);state.hls.loadSource(entry.url);
    }else if(video.canPlayType('application/vnd.apple.mpegurl')){
     video.src=entry.url;play();
