@@ -23,11 +23,21 @@ while (!$ready) {
         if ($null -ne $stream) { $stream.Dispose() }
     }
 }
-# Refuse an independently launched worker that is not owned by the supervisor.
-$standalone = Get-CimInstance Win32_Process -Filter "name = 'python.exe'" | Where-Object {
-    $_.CommandLine -and $_.CommandLine.Contains($base) -and $_.CommandLine -match '(worker|pipeline)\.py'
+# updater-wait-v2: a worker can outlive the supervisor lock briefly.
+# Wait for this installation only; never kill Python or FFmpeg processes.
+$nextNotice = Get-Date
+while ($true) {
+    $running = @(Get-CimInstance Win32_Process -Filter "name = 'python.exe' OR name = 'pythonw.exe'" | Where-Object {
+        $_.CommandLine -and $_.CommandLine.IndexOf($base, [StringComparison]::OrdinalIgnoreCase) -ge 0 -and $_.CommandLine -match '(worker|pipeline|supervisor)\.py(?:["\s]|$)'
+    })
+    if ($running.Count -eq 0) { break }
+    if ((Get-Date) -gt $deadline) { throw 'O processador continua ocupado apos quatro horas. Nenhum arquivo foi substituido. Confira o andamento no painel e os logs antes de atualizar novamente.' }
+    if ((Get-Date) -ge $nextNotice) {
+        Write-Host ('Ainda aguardando o importador encerrar. Processos desta instalacao: ' + (($running | Select-Object -ExpandProperty ProcessId) -join ', ') + '. Nao feche o FFmpeg.')
+        $nextNotice = (Get-Date).AddSeconds(30)
+    }
+    Start-Sleep -Seconds 5
 }
-if ($standalone) { throw 'Ainda existe um processador em execucao. Aguarde encerrar antes de atualizar.' }
 $stage = Join-Path $base ('.update-' + [guid]::NewGuid().ToString())
 New-Item -Path $stage -ItemType Directory | Out-Null
 try {
@@ -44,7 +54,7 @@ try {
     & (Join-Path $base '.venv\Scripts\python.exe') (Join-Path $base 'worker.py') --cleanup-only
     if ($LASTEXITCODE -ne 0) { throw 'A limpeza nao terminou. Confira a conexao e inicie o importador novamente.' }
     Write-Host 'Pronto. Iniciando importador com limpeza e streaming adaptativo.'
-    Start-Process -FilePath (Join-Path $base 'INICIAR-IMPORTADOR.bat') -WorkingDirectory $base
+    Start-Process -FilePath $env:ComSpec -ArgumentList @('/k', ('call "' + (Join-Path $base 'INICIAR-IMPORTADOR.bat') + '"')) -WorkingDirectory $base
 } finally {
     Remove-Item -Recurse -Force $stage
 }
