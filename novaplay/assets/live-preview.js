@@ -34,7 +34,7 @@ function create(root,options={}){
   if(blocked()||!entry||entry.failed||active.has(entry))return;
   if(limit===1)stop();
   const video=document.createElement('video');
-  video.className='nplay-live-preview';video.muted=true;video.defaultMuted=true;video.autoplay=true;video.playsInline=true;video.preload='none';
+  video.className='nplay-live-preview';video.muted=true;video.defaultMuted=true;video.autoplay=true;video.playsInline=true;video.preload='auto';
   video.setAttribute('muted','');video.setAttribute('playsinline','');video.setAttribute('aria-hidden','true');video.tabIndex=-1;
   const state={entry,video,hls:null,timeout:null,recoveries:0};active.set(entry,state);
   soundButton(entry,false);entry.cover.append(video);
@@ -50,7 +50,7 @@ function create(root,options={}){
   state.timeout=setTimeout(()=>fail(state,"timeout"),22000);
   try{
    if(window.Hls?.isSupported()){
-    state.hls=new window.Hls({enableWorker:true,lowLatencyMode:false,maxBufferLength:20,maxMaxBufferLength:40,maxBufferSize:8*1024*1024,backBufferLength:0,startLevel:0,capLevelToPlayerSize:true});
+    state.hls=new window.Hls({enableWorker:true,lowLatencyMode:false,maxBufferLength:20,maxMaxBufferLength:limit>1?180:40,maxBufferSize:(limit>1?64:8)*1024*1024,backBufferLength:0,startLevel:limit>1?-1:0,abrEwmaDefaultEstimate:limit>1?2000000:500000,capLevelToPlayerSize:limit===1});
     state.hls.on(window.Hls.Events.MANIFEST_PARSED,play);
     state.hls.on(window.Hls.Events.ERROR,(_,data)=>{
      if(active.get(entry)!==state||!data.fatal)return;
