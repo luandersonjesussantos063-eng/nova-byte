@@ -4,6 +4,7 @@
 const db=window.NovaPlayCatalog;
 const remoteDb=window.NPlayAccessClient||window.supabase?.createClient?.("https://vajlhodqxskozuxxlujv.supabase.co","sb_publishable_uT0b4y0Bex1k1QWZoyIfKg_K0pm-yS3");
 let uploadedCatalog=[];
+let homeLiveChannels=[];
 if(!db){console.error("O catálogo não foi carregado.");return;}
 const $=id=>document.getElementById(id);
 const all=[...db.channels,...db.films,...db.series];
@@ -137,10 +138,10 @@ function card(item,channel=false){
  +'<button type="button" class="cover-btn" aria-label="'+escapeText(isEpisode?"Continuar "+item.title:"Ver detalhes de "+item.title)+'"></button>'
  +(item.catalogOnly?'':'<button type="button" class="card-direct-play" aria-label="Assistir '+escapeText(item.title)+'">'+icon("play")+'</button>')
  +(pct?'<span class="card-progress"><span style="width:'+pct+'%"></span></span>':'')+'</div>'
- +'<h3>'+escapeText(item.title)+'</h3><p>'+escapeText(isEpisode?(Math.max(1,Math.round((item.progress.duration-item.progress.position)/60))+" min restantes"):(item.kind==="tv"?(item.mode==="external"?"Acessar transmissão no site oficial":"TV aberta • Assista grátis"):(item.catalogOnly?"Em breve":(item.year||(item.kind==="series"?"Série":"Filme")))+" • "+(item.category||"Acervo clássico")))+'</p>';
+ +'<h3>'+escapeText(item.title)+'</h3><p>'+escapeText(isEpisode?(Math.max(1,Math.round((item.progress.duration-item.progress.position)/60))+" min restantes"):(item.kind==="tv"?(item.mode==="external"?"Acessar transmissão no site oficial":"TV ao vivo • Assista grátis"):(item.catalogOnly?"Em breve":(item.year||(item.kind==="series"?"Série":"Filme")))+" • "+(item.category||"Acervo clássico")))+'</p>';
  el.querySelector(".cover-btn").addEventListener("click",()=>item.kind==="tv"&&item.mode==="external"?startWatching(item):isEpisode?play(item.show,item.episode):openDetails(item));
  el.querySelector(".card-direct-play")?.addEventListener("click",e=>{e.stopPropagation();if(isEpisode)play(item.show,item.episode);else startWatching(item)});
- el.querySelector("img").addEventListener("error",function(){
+ el.querySelector("img")?.addEventListener("error",function(){
   if(this.dataset.fallbackShown)return;
   this.dataset.fallbackShown="1";
   if(channel){
@@ -253,7 +254,7 @@ function renderRows(){
  const holder=$("home-rows");holder.replaceChildren();
  const blocks=[
  ["Continuar assistindo",continued(),"continuar",false],
- ["TV aberta",db.channels,"tv",true],
+ ["TV ao vivo",[...homeLiveChannels,...db.channels],"tv",true],
  ["Filmes licenciados",uploadedCatalog.filter(x=>x.mode==="licensed"&&!x.catalogOnly),"filmes",false],
  ["Sua próxima sessão",uploadedCatalog.filter(x=>x.kind==="film"&&x.mode==="r2"&&!x.catalogOnly),"filmes",false],
  ["Séries para acompanhar",uploadedCatalog.filter(x=>x.kind==="series"&&!x.catalogOnly),"series",false],
@@ -266,6 +267,31 @@ function renderRows(){
  ];
  blocks.forEach(b=>{const row=shelf(b[0],b[1].slice(0,36),b[2],b[3]);if(row)holder.append(row)});
 }
+// The home shelf reuses the published live catalog; it never imports or republishes a stream.
+function selectHomeLiveChannels(channels){
+ const choices=[
+  ["2a538992-1915-43d7-b115-bf83afe34194","Nick Online HD","#e66b18"],
+  ["5ca05f1a-72f5-4925-bb91-809b99e99c3c","NTV Brazil","#224c91"],
+  ["084c6066-f604-4b5c-8dec-c236ca140ec0","Comedy Central Brasil","#242a36"],
+  ["27482c9d-3abf-45c8-9b95-56b3996465a5","SBT Interior SP","#173878"]
+ ];
+ const published=new Map((channels||[]).map(item=>[item.id,item])),seen=new Set();
+ return choices.flatMap(([id,title,brandColor])=>{
+  const item=published.get(id);if(!item)return [];
+  let url;try{url=new URL(item.embed_url);if(url.protocol!=="https:"||url.username||url.password||seen.has(url.href))return [];}catch{return [];}
+  const direct=item.stream_type==="hls"||/\.m3u8(?:\?|$)/i.test(url.href);
+  if(!direct)return [];
+  seen.add(url.href);
+  const cover=id==="27482c9d-3abf-45c8-9b95-56b3996465a5"?"./assets/channel-logos/sbt.png":item.logo_url;
+  return [{id:"live-"+id,homeLive:true,title,kind:"tv",mode:"hls",live:true,src:url.href,cover:cover||"",customLabel:cover?null:title,brandColor,category:"TV ao vivo",description:"Acompanhe a programação ao vivo dentro da NPlay."}];
+ });
+}
+window.NPlayHomeLive={setChannels(channels){
+ for(let i=all.length-1;i>=0;i--)if(all[i].homeLive){map.delete(all[i].id);all.splice(i,1);}
+ homeLiveChannels=selectHomeLiveChannels(channels);
+ for(const item of homeLiveChannels){all.push(item);map.set(item.id,item);}
+ renderRows();
+}};
 const defaultFeatured=[];
 let featured=defaultFeatured.map(byId).filter(Boolean);
 // Admin preferences load only after the published film catalog is available.
@@ -1086,7 +1112,7 @@ document.addEventListener("keydown",e=>{
 document.addEventListener("visibilitychange",()=>{if(document.hidden){stopHeroPreview();if(!$("player-layer").hidden)$("video").pause()}});
 window.addEventListener("scroll",()=>$("app-header").classList.toggle("is-scrolled",window.scrollY>24),{passive:true});
 if("serviceWorker" in navigator&&location.protocol==="https:"){
- window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js?v=0.48.2",{updateViaCache:"none"}).catch(()=>{}));
+ window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js?v=0.48.3",{updateViaCache:"none"}).catch(()=>{}));
 }
 $("hero-play").onclick=()=>navigate("tv");
 $("hero-info").onclick=()=>navigate("filmes");

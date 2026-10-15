@@ -29,10 +29,12 @@ async function load(){
   if(sequence!==loadSequence)return;
   const channels=(data||[]).filter(item=>item.embed_url);
   window.NPlayHeroLive?.setChannels(channels);
+  window.NPlayHomeLive?.setChannels(channels);
   renderChannels(channels);
   note(channels.length?"":"Nenhum canal publicado no momento.");
  }catch(error){
   if(sequence!==loadSequence)return;
+  window.NPlayHomeLive?.setChannels([]);
   renderChannels([]);note("Não foi possível carregar os canais publicados. Tente novamente em instantes.");
  }
 }
