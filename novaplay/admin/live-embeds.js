@@ -115,7 +115,54 @@ function filterChannels(items,group,status,query){
  return items.filter(item=>channelGroup(item)===group&&(status==='all'||(status==='published'?item.is_published:!item.is_published))&&(!search||normalize(item.title).includes(search)||normalize(item.category).includes(search)));
 }
 let selectedChannelGroup='m3u';
-const selectedChannelIds=new Set();
+const selectedSaved=new Set();let savedController=null;
+function savedVisible(){return filterChannels(savedChannels,selectedChannelGroup,$('live-channel-status').value,$('live-channel-search').value);}
+function savedActions(){
+ const visible=savedVisible(),drafts=visible.filter(x=>!x.is_published),selected=drafts.filter(x=>selectedSaved.has(x.id));
+ $('live-saved-select-all').textContent=visible.length&&visible.every(x=>selectedSaved.has(x.id))?'Desmarcar todos':'Marcar todos';
+ $('live-saved-select-all').disabled=!visible.length||publishing;
+ $('live-saved-publish-all').textContent='Publicar todos os rascunhos ('+drafts.length+')';
+ $('live-saved-publish-all').disabled=!drafts.length||publishing||running;
+ $('live-saved-publish-selected').textContent='Publicar selecionados ('+selected.length+')';
+ $('live-saved-publish-selected').disabled=!selected.length||publishing||running;
+ $('live-saved-selection').textContent=visible.filter(x=>selectedSaved.has(x.id)).length+' selecionados neste filtro';
+}
+async function publishSaved(onlySelected=false){
+ if(publishing||running)return;
+ const drafts=savedVisible().filter(x=>!x.is_published&&(!onlySelected||selectedSaved.has(x.id)));
+ if(!drafts.length)return;
+ if(drafts.some(x=>!x.rights_confirmed)&&!authorized())return;
+ publishing=true;savedController=new AbortController();renderSaved();summary();
+ const host=$('live-saved-preview');host.replaceChildren();
+ let done=0,failed=0;const failures=[];
+ const progress=()=>message('live-saved-progress',`${done} publicados · ${failed} não publicados · ${drafts.length-done-failed} restantes.`+(failures.length?' '+failures.slice(-3).join(' | '):''));
+ try{
+  const direct=drafts.filter(x=>channelGroup(x)!=='m3u');
+  if(direct.length){
+   const {data,error}=await db.from('novaplay_live_embeds').update({is_published:true,rights_confirmed:true}).in('id',direct.map(x=>x.id)).select('id');
+   if(error){failed+=direct.length;failures.push(error.message);}
+   else{const ids=new Set((data||[]).map(x=>x.id));done+=ids.size;failed+=direct.length-ids.size;direct.forEach(x=>{if(ids.has(x.id)){x.is_published=true;selectedSaved.delete(x.id);}});}
+   progress();
+  }
+  const signals=drafts.filter(x=>channelGroup(x)==='m3u');let next=0;
+  async function worker(){
+   const video=document.createElement('video');video.muted=true;video.playsInline=true;video.style.cssText='width:100%;max-width:360px;background:#000;border-radius:8px';host.append(video);
+   while(next<signals.length&&!savedController.signal.aborted){
+    const item=signals[next++];
+    try{
+     message('live-saved-progress','Testando '+item.title+'… '+done+' publicados · '+failed+' não publicados.');
+     await NPlaySignal.testSignal(video,core().playable(item.embed_url),{signal:savedController.signal});
+     const {data,error}=await db.from('novaplay_live_embeds').update({is_published:true,rights_confirmed:true,last_tested_at:new Date().toISOString()}).eq('id',item.id).select('id');
+     if(error)throw error;if(!data?.length)throw Error('O canal não foi atualizado.');
+     item.is_published=true;selectedSaved.delete(item.id);done++;
+    }catch(error){failed++;failures.push(item.title+': '+error.message);}
+    progress();
+   }
+  }
+  if(signals.length)await Promise.all([worker(),worker()]);
+ }catch(error){failures.push(error.message);}
+ finally{publishing=false;savedController=null;host.replaceChildren();await refresh();summary();progress();}
+}
 async function refresh(){
  const list=$('live-embed-list');if(!list)return;
  const {data,error}=await db.from('novaplay_live_embeds').select('*').order('created_at',{ascending:false});
@@ -128,22 +175,18 @@ function renderSaved(){
   const control=$('live-group-'+group),count=savedChannels.filter(item=>channelGroup(item)===group).length;
   control.textContent=label+' ('+count+')';control.setAttribute('aria-pressed',String(group===selectedChannelGroup));control.className=group===selectedChannelGroup?'primary':'outline';
  }
- const visible=filterChannels(savedChannels,selectedChannelGroup,$('live-channel-status').value,$('live-channel-search').value);
- const selectedBar=$('live-selected-actions');
- if(selectedBar){
-  selectedBar.hidden=false;
-  const count=visible.filter(item=>selectedChannelIds.has(String(item.id))).length;
-  $('live-selected-count').textContent=count+' marcados neste filtro';
-  $('live-publish-selected').disabled=!count;
- }
+ const visible=savedVisible();
+ const visibleIds=new Set(visible.map(x=>x.id));for(const id of selectedSaved)if(!visibleIds.has(id))selectedSaved.delete(id);
  const active=visible.filter(item=>item.is_published).length;
  message('live-channel-count',visible.length+' canais neste filtro · '+active+' publicados · '+(visible.length-active)+' rascunhos');
  message('live-channel-help',selectedChannelGroup==='m3u'?'Canais das listas M3U e sinais HLS que você cadastrou pelo testador.':selectedChannelGroup==='legacy'?'Canais antigos do provedor anterior. Os rascunhos ficam fora da grade; o botão Publicar canal antigo permite recuperá-los.':'Canais cadastrados individualmente por iframe, incluindo as emissoras oficiais.');
  for(const item of visible){
   const card=document.createElement('article');card.style.cssText='border:1px solid #365075;border-radius:10px;padding:12px;margin:10px 0';
   const group=channelGroup(item);
-  const select=document.createElement('input');select.type='checkbox';select.checked=selectedChannelIds.has(String(item.id));select.setAttribute('aria-label','Marcar '+item.title);select.style.cssText='width:20px;height:20px;margin-right:12px;vertical-align:middle';select.onchange=()=>{if(select.checked)selectedChannelIds.add(String(item.id));else selectedChannelIds.delete(String(item.id));renderSaved();};card.append(select);
   const title=document.createElement('strong');title.textContent=item.title;
+  const selection=document.createElement('label');selection.style.cssText='display:flex;align-items:center;gap:10px;margin-bottom:10px';
+  const checkbox=document.createElement('input');checkbox.type='checkbox';checkbox.checked=selectedSaved.has(item.id);checkbox.disabled=publishing;checkbox.style.width='auto';checkbox.setAttribute('aria-label','Selecionar '+item.title);
+  checkbox.onchange=()=>{if(checkbox.checked)selectedSaved.add(item.id);else selectedSaved.delete(item.id);savedActions();};selection.append(checkbox,title);
   const badge=document.createElement('p');badge.textContent=(group==='m3u'?'Lista M3U':group==='legacy'?'Canal antigo · iframe':'Cadastro individual · iframe')+' · '+(item.is_published?'Publicado na grade':'Rascunho no ADM');badge.style.color=group==='legacy'?'#f6c98b':'#96c5ff';
   if(item.logo_url){const image=document.createElement('img');image.src=item.logo_url;image.alt='';image.loading='lazy';image.referrerPolicy='no-referrer';image.style.cssText='width:64px;height:44px;object-fit:contain;float:right;background:#172a44;border-radius:6px';image.onerror=()=>image.remove();card.append(image);}
   const detail=document.createElement('details');const caption=document.createElement('summary');caption.textContent='Ver endereço do canal';const address=document.createElement('p');address.className='muted';address.style.overflowWrap='anywhere';address.textContent=item.embed_url;detail.append(caption,address);
@@ -155,9 +198,10 @@ function renderSaved(){
    message('live-embed-message',error?error.message:'Canal atualizado.');await refresh();
   });
   const remove=button('Excluir',async()=>{if(!confirm('Excluir o canal '+item.title+' do cadastro?'))return;const {error}=await db.from('novaplay_live_embeds').delete().eq('id',item.id);message('live-embed-message',error?error.message:'Canal excluído.');await refresh();});
-  const actions=document.createElement('div');actions.style.cssText='display:flex;gap:10px;flex-wrap:wrap';actions.append(toggle,remove);card.append(title,badge,detail,actions);list.append(card);
+  const actions=document.createElement('div');actions.style.cssText='display:flex;gap:10px;flex-wrap:wrap';toggle.disabled=publishing;remove.disabled=publishing;actions.append(toggle,remove);card.append(selection,badge,detail,actions);list.append(card);
  }
  if(!visible.length)list.textContent='Nenhum canal neste grupo com os filtros selecionados.';
+ savedActions();
 }
 function init(){
  if(!$('live-embed-controls'))return;
@@ -175,24 +219,14 @@ function init(){
  <form id="live-embed-form" style="display:grid;gap:12px;margin-top:16px;max-width:680px"><label>Nome do canal<input id="live-embed-title" maxlength="140" required></label><label>Link ou código iframe<textarea id="live-embed-url" rows="3" required></textarea></label><label><input id="live-embed-published" type="checkbox"> Publicar imediatamente (somente iframe)</label><button type="submit" class="outline">Salvar canal / rascunho</button></form>
  <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px"><button id="live-test-button" type="button" class="outline">Testar sinal HLS</button><button id="live-test-publish" type="button" class="primary" hidden>Publicar canal testado</button></div><p id="live-test-message" role="status" aria-live="polite"></p><video id="live-test-video" muted playsinline hidden style="width:100%;max-width:520px;background:#000"></video></details>
  <p id="live-embed-message" role="status" aria-live="polite"></p><h3>Canais publicados e rascunhos</h3><p class="muted">Os rascunhos ficam somente no ADM. Use Publicar para colocar um canal na grade TV ao vivo.</p><div style="display:flex;gap:8px;flex-wrap:wrap;margin:14px 0" aria-label="Origem dos canais"><button id="live-group-m3u" type="button" class="primary" aria-pressed="true">Canais M3U</button><button id="live-group-legacy" type="button" class="outline" aria-pressed="false">Canais antigos</button><button id="live-group-individual" type="button" class="outline" aria-pressed="false">Outros canais</button></div><p id="live-channel-help" class="muted"></p>
- <div id="live-selected-actions" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:12px 0"><button type="button" id="live-select-all" class="outline">Marcar todos do filtro</button><button type="button" id="live-clear-selection" class="outline">Desmarcar</button><button type="button" id="live-publish-selected" class="primary">Publicar marcados</button><span id="live-selected-count" aria-live="polite">0 marcados</span></div>
- <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:end"><label style="flex:1;min-width:180px">Buscar canal<input id="live-channel-search" type="search" placeholder="Nome ou categoria" maxlength="140"></label><label>Situação<select id="live-channel-status"><option value="all">Publicados e rascunhos</option><option value="published">Somente publicados</option><option value="draft">Somente rascunhos</option></select></label><button id="live-embed-refresh" type="button" class="outline">Atualizar canais</button></div><p id="live-channel-count" role="status" aria-live="polite"></p><div id="live-embed-list"></div>`;
+ <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:end"><label style="flex:1;min-width:180px">Buscar canal<input id="live-channel-search" type="search" placeholder="Nome ou categoria" maxlength="140"></label><label>Situação<select id="live-channel-status"><option value="all">Publicados e rascunhos</option><option value="published">Somente publicados</option><option value="draft">Somente rascunhos</option></select></label><button id="live-embed-refresh" type="button" class="outline">Atualizar canais</button></div><p id="live-channel-count" role="status" aria-live="polite"></p>
+ <div style="display:flex;gap:10px;flex-wrap:wrap;margin:14px 0"><button id="live-saved-select-all" type="button" class="outline">Marcar todos</button><button id="live-saved-publish-selected" type="button" class="outline" disabled>Publicar selecionados</button><button id="live-saved-publish-all" type="button" class="primary" disabled>Publicar todos os rascunhos</button></div>
+ <p class="muted">As ações usam o grupo, a busca e a situação selecionados. Canais M3U são testados antes de publicar; os que falharem continuam em rascunho.</p><p id="live-saved-selection" class="muted"></p><p id="live-saved-progress" role="status" aria-live="polite"></p><div id="live-saved-preview" style="display:flex;gap:10px;flex-wrap:wrap"></div><div id="live-embed-list"></div>`;
  $('live-batch-run').onclick=runBatch;$('live-batch-stop').onclick=()=>batchController?.abort();$('live-batch-publish').onclick=publishBatch;
  $('live-test-button').onclick=testSingle;$('live-embed-refresh').onclick=refresh;
  for(const group of ['m3u','legacy','individual'])$('live-group-'+group).onclick=()=>{selectedChannelGroup=group;renderSaved();};
- $('live-select-all').onclick=()=>{for(const item of filterChannels(savedChannels,selectedChannelGroup,$('live-channel-status').value,$('live-channel-search').value))selectedChannelIds.add(String(item.id));renderSaved();};
- $('live-clear-selection').onclick=()=>{selectedChannelIds.clear();renderSaved();};
- $('live-publish-selected').onclick=async()=>{
-  const items=filterChannels(savedChannels,selectedChannelGroup,$('live-channel-status').value,$('live-channel-search').value).filter(item=>selectedChannelIds.has(String(item.id))&&!item.is_published);
-  if(!items.length){message('live-embed-message','Nenhum rascunho marcado para publicar.');return;}
-  if(!confirm('Publicar '+items.length+' canais marcados? Nenhum registro será apagado.'))return;
-  const btn=$('live-publish-selected');btn.disabled=true;let ok=0,failed=0;
-  for(const item of items){
-   const {error}=await db.from('novaplay_live_embeds').update({is_published:true}).eq('id',item.id).eq('is_published',false);
-   if(error)failed++;else{ok++;selectedChannelIds.delete(String(item.id));}
-  }
-  message('live-embed-message',ok+' canais publicados; '+failed+' falharam.');await refresh();
- };
+ $('live-saved-select-all').onclick=()=>{const visible=savedVisible(),all=visible.every(x=>selectedSaved.has(x.id));visible.forEach(x=>{if(all)selectedSaved.delete(x.id);else selectedSaved.add(x.id);});renderSaved();};
+ $('live-saved-publish-all').onclick=()=>publishSaved(false);$('live-saved-publish-selected').onclick=()=>publishSaved(true);
  $('live-channel-search').oninput=renderSaved;$('live-channel-status').onchange=renderSaved;
  $('live-embed-url').oninput=()=>{singleController?.abort();singleItem=null;$('live-test-publish').hidden=true;};
  $('live-test-publish').onclick=async()=>{if(!singleItem)return;singleItem.title=$('live-embed-title').value.trim();await publishOne(singleItem);if(singleItem?.published)$('live-test-publish').hidden=true;};
@@ -209,7 +243,7 @@ function init(){
   }catch(error){message('live-embed-message',error.message);}
  };
  document.querySelector('[data-admin-tab="canais"]')?.addEventListener('click',refresh);
- window.addEventListener('pagehide',()=>{batchController?.abort();singleController?.abort();});
+ window.addEventListener('pagehide',()=>{batchController?.abort();singleController?.abort();savedController?.abort();});
  setInterval(()=>{if(rows.length){rows.forEach(update);summary();}},30000);
  refresh();
 }

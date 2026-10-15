@@ -122,3 +122,14 @@ button{transition:background .2s,color .2s,border-color .2s,transform .2s}
  .hero-live-control-row>button{width:36px;height:36px;flex-basis:36px;font-size:15px;margin-top:15px}
 }
 @media(prefers-reduced-motion:reduce){.hero-live-media{transition:none}}
+
+/* 0.47.0 · Falhas de reprodução legíveis e controles sem sobreposição. */
+.player-layer.cinema.has-player-error .player-info{position:absolute;inset:50% auto auto 50%;transform:translate(-50%,-50%);width:min(560px,calc(100% - 32px));max-height:calc(100% - 140px);overflow:auto;display:flex;flex-direction:column;align-items:stretch;gap:20px;padding:clamp(22px,4vw,36px);border:1px solid #7d9dcc30;border-radius:20px;background:#101a2bf5;box-shadow:0 24px 100px #0009;pointer-events:auto}
+.player-layer.cinema.has-player-error .player-info h2{font-size:clamp(18px,3vw,24px);line-height:1.35;margin:0 0 12px}
+.player-layer.cinema.has-player-error .player-info #player-status{color:#b7c8e2;font-size:13px;line-height:1.5}
+.player-layer.cinema.has-player-error .player-info .player-error{font-size:14px;line-height:1.65;color:#ffd0c9;margin:12px 0 0}
+.player-layer.cinema.has-player-error .player-options{display:flex;gap:12px;flex-wrap:wrap}
+.player-layer.cinema.has-player-error .player-options button{min-height:44px}
+.player-layer.cinema.has-player-error .cinema-controls{display:none!important}
+.nav-option:focus-visible,.poster-card button:focus-visible,.cinema-toolbar button:focus-visible{outline:2px solid #9bbdff;outline-offset:4px}
+@media(max-width:540px){.nplay-volume-control{max-width:130px}.player-layer.cinema.has-player-error .player-options button{width:100%}.cinema-toolbar-group{gap:8px}}

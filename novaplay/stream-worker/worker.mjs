@@ -2,10 +2,14 @@ const ORIGIN="https://novabytesolucoes.com.br";
 const SUPABASE="https://vajlhodqxskozuxxlujv.supabase.co";
 const ANON="sb_publishable_uT0b4y0Bex1k1QWZoyIfKg_K0pm-yS3";
 const json=(x,status=200,headers={})=>new Response(JSON.stringify(x),{status,headers:{"content-type":"application/json",...headers}});
-async function publishedVideo(id){
+function viewerToken(request){
+ const token=(request.headers.get("Authorization")||"").replace(/^Bearer /i,"")||new URL(request.url).searchParams.get("access_token")||"";
+ return token!==ANON&&token.length<=8192?token:"";
+}
+async function publishedVideo(id,request){
  if(!/^[0-9a-f-]{36}$/i.test(id))return null;
- const response=await fetch(SUPABASE+"/rest/v1/novaplay_library?id=eq."+encodeURIComponent(id)+"&select=r2_object_key,is_published,licensed_rights_confirmed,rights_reviewed,catalog_only&limit=1",{headers:{apikey:ANON,Authorization:"Bearer "+ANON}});
- if(!response.ok)throw Error("Catalog lookup unavailable");
+ const response=await fetch(SUPABASE+"/rest/v1/novaplay_library?id=eq."+encodeURIComponent(id)+"&select=r2_object_key,is_published,licensed_rights_confirmed,rights_reviewed,catalog_only&limit=1",{headers:{apikey:ANON,Authorization:"Bearer "+viewerToken(request)}});
+ if(!response.ok){const error=Error("Catalog lookup unavailable");error.status=response.status===401?401:503;throw error;}
  const record=(await response.json())?.[0];
  if(!record?.r2_object_key||!record.is_published||!record.licensed_rights_confirmed||!record.rights_reviewed||record.catalog_only)return null;
  if(!/^[0-9a-f-]{36}\/[0-9a-f-]{36}-[a-z0-9-]{8,80}\.(mp4|webm|ogv)$/i.test(record.r2_object_key))return null;
@@ -18,7 +22,7 @@ async function sourceVersion(etag){
 async function adaptiveResponse(request,env,route,cors){
  if(!["GET","HEAD"].includes(request.method))return json({error:"Método inválido"},405,cors);
  const parts=route.pathname.split("/");
- const record=await publishedVideo(parts[2]);
+ const record=await publishedVideo(parts[2],request);
  if(!record)return json({error:"Vídeo não publicado ou não autorizado"},404,cors);
  const headers={...cors,"Cache-Control":"no-store"};
  if(parts[1]==="playback"){
@@ -38,24 +42,35 @@ async function adaptiveResponse(request,env,route,cors){
  h.set("Access-Control-Expose-Headers","Content-Length,Content-Range,Accept-Ranges");
  // Segments are immutable per source version; authorization is rechecked on each request.
  if(file.endsWith(".ts"))h.set("Cache-Control","private, max-age=3600");
- return new Response(request.method==="HEAD"?null:object.body,{headers:h});
+ let body=object.body;
+ if(file.endsWith(".m3u8")){
+  if(object.size>2097152)return json({error:"Manifesto inválido"},502,cors);
+  const token=viewerToken(request),text=await new Response(object.body).text();
+  body=text.split("\n").map(line=>{
+   if(!line.trim()||line.trim().startsWith("#"))return line;
+   const target=new URL(line.trim(),route);
+   if(target.origin!==route.origin||!target.pathname.startsWith("/hls/"+parts[2]+"/"))throw Error("Invalid manifest destination");
+   target.searchParams.set("access_token",token);return target.href;
+  }).join("\n");
+  h.set("Content-Length",String(new TextEncoder().encode(body).length));
+ }
+ return new Response(request.method==="HEAD"?null:body,{headers:h});
 }
 export default {async fetch(request,env){
  const origin=request.headers.get("Origin");
  const cors={"Access-Control-Allow-Origin":origin===ORIGIN?ORIGIN:"null","Access-Control-Allow-Methods":"GET,HEAD,POST,PUT,OPTIONS","Access-Control-Allow-Headers":"Authorization,Content-Type,Range","Vary":"Origin"};
  if(request.method==="OPTIONS")return new Response(null,{headers:cors});
  const reply=(x,s=200)=>json(x,s,cors);
- if(new URL(request.url).pathname==="/health")return reply({ok:true,bucket:"nplay-filmes",version:"2-adaptive"});
+ if(new URL(request.url).pathname==="/health")return reply({ok:true,bucket:"nplay-filmes",version:"3-session-playback"});
  const route=new URL(request.url);
- if(route.pathname.startsWith("/playback/")||route.pathname.startsWith("/hls/")){try{return await adaptiveResponse(request,env,route,cors)}catch{return reply({error:"Não foi possível preparar a reprodução"},503)}}
+ if(/^\/(playback|watch|hls)\//.test(route.pathname)&&!viewerToken(request))return reply({error:"Entre novamente para assistir a este vídeo."},401);
+ if(route.pathname.startsWith("/playback/")||route.pathname.startsWith("/hls/")){try{return await adaptiveResponse(request,env,route,cors)}catch(error){return reply({error:error.status===401?"Sessão expirada. Entre novamente.":"Não foi possível preparar a reprodução"},error.status||503)}}
  if(route.pathname.startsWith("/watch/")&&(request.method==="GET"||request.method==="HEAD")){
   try{
   const id=route.pathname.slice(7);
   if(!/^[0-9a-f-]{36}$/i.test(id))return reply({error:"Vídeo inválido"},400);
-  const lookup=await fetch(SUPABASE+"/rest/v1/novaplay_library?id=eq."+encodeURIComponent(id)+"&select=r2_object_key,is_published,licensed_rights_confirmed,rights_reviewed,catalog_only",{headers:{"apikey":ANON,"Authorization":"Bearer "+ANON}});
-  if(!lookup.ok)return reply({error:"Não foi possível validar o título"},503);
-  const record=(await lookup.json())?.[0];
-  if(!record?.r2_object_key||!record.is_published||!record.licensed_rights_confirmed||!record.rights_reviewed||record.catalog_only)return reply({error:"Vídeo não publicado ou não autorizado"},404);
+  const record=await publishedVideo(id,request);
+  if(!record)return reply({error:"Vídeo não publicado ou acesso não autorizado"},404);
   const key=record.r2_object_key;
   if(!/^[0-9a-f-]{36}\/[0-9a-f-]{36}-[a-z0-9-]{8,80}\.(mp4|webm|ogv)$/i.test(key))return reply({error:"Arquivo inválido"},400);
   const range=request.headers.get("Range");let options={},metadata=null;
@@ -73,11 +88,11 @@ export default {async fetch(request,env){
   }
   const object=request.method==="HEAD"?metadata:await env.VIDEOS.get(key,options);
   if(!object)return reply({error:"Vídeo indisponível"},404);
-  const h=new Headers({"Access-Control-Allow-Origin":ORIGIN,"Vary":"Origin","Accept-Ranges":"bytes","Access-Control-Expose-Headers":"Content-Range,Content-Length,Accept-Ranges","Cache-Control":"private, max-age=60","Content-Type":object.httpMetadata?.contentType||"video/mp4","X-Content-Type-Options":"nosniff"});
+  const h=new Headers({"Access-Control-Allow-Origin":ORIGIN,"Vary":"Origin","Accept-Ranges":"bytes","Access-Control-Expose-Headers":"Content-Range,Content-Length,Accept-Ranges","Cache-Control":"private, no-store","Content-Type":object.httpMetadata?.contentType||"video/mp4","X-Content-Type-Options":"nosniff"});
   const servedRange=object.range||options.range;
   if(servedRange){const offset=servedRange.offset||0,length=servedRange.length||object.size-offset;h.set("Content-Range","bytes "+offset+"-"+(offset+length-1)+"/"+object.size);h.set("Content-Length",String(length));}else h.set("Content-Length",String(object.size));
   return new Response(request.method==="HEAD"?null:object.body,{status:servedRange?206:200,headers:h});
-  }catch(e){console.error("NPlay watch failed",e?.stack||String(e));return reply({error:"Falha ao acessar vídeo no R2",detail:String(e?.message||e).slice(0,160)},502);}
+  }catch(e){console.error("NPlay watch failed",e?.status||502);return reply({error:e?.status===401?"Sessão expirada. Entre novamente.":"Falha ao acessar vídeo no R2"},e?.status||502);}
  }
  if(origin!==ORIGIN)return reply({error:"Origin não autorizado"},403);
  const token=(request.headers.get("Authorization")||"").replace(/^Bearer /,"");

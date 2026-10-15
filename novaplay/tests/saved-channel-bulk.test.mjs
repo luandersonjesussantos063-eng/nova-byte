@@ -1,0 +1,31 @@
+import {readFileSync} from 'node:fs';
+import vm from 'node:vm';
+import test from 'node:test';
+import assert from 'node:assert/strict';
+function setup(records,group,{deny=[]}={}){
+ const elements=new Map(),writes=[];
+ const node=()=>({style:{},value:'',checked:false,textContent:'',append(){},replaceChildren(){},setAttribute(){},remove(){},focus(){}});
+ const get=id=>{if(!elements.has(id))elements.set(id,node());return elements.get(id);};get('live-channel-status').value='draft';
+ const db={from:()=>({select:()=>({order:async()=>({data:records})}),update:payload=>{
+  const result=ids=>({select:async()=>{const data=[];for(const item of records)if(ids.includes(item.id)&&!deny.includes(item.id)){Object.assign(item,payload);writes.push(item.id);data.push({id:item.id});}return {data};}});
+  return {in:(_,ids)=>result(ids),eq:(_,id)=>result([id])};
+ }})};
+ const context=vm.createContext({document:{getElementById:get,createElement:node},URL,Date,Set,AbortController,NPlayM3u:{playable:x=>x},NPlaySignal:{testSignal:async(_,url)=>{if(url.includes('bad'))throw Error('Sinal indisponível');}}});
+ let source=readFileSync(new URL('../admin/live-embeds.js',import.meta.url),'utf8');
+ source=source.replace(/if\(document.readyState==='loading'\)[\s\S]*?\n\}\)\(\);\s*$/,`globalThis.lab={publishSaved,selectedSaved,setup:(client,items,group)=>{db=client;savedChannels=items;selectedChannelGroup=group;}};\n})();`);
+ vm.runInContext(source,context);context.lab.setup(db,records,group);return {lab:context.lab,writes,get};
+}
+const item=(id,group,published=false)=>({id,title:id,embed_url:group==='legacy'?'https://rdcanais.org/'+id:'https://example.org/'+id+'.m3u8',stream_type:group==='legacy'?'iframe':'hls',rights_confirmed:true,is_published:published});
+test('selected draft publication stays within current origin/status/selection',async()=>{
+ const records=[item('a','legacy'),item('b','legacy'),item('published','legacy',true),item('other','m3u')];const {lab,writes}=setup(records,'legacy');
+ lab.selectedSaved.add('a');lab.selectedSaved.add('published');lab.selectedSaved.add('other');await lab.publishSaved(true);
+ assert.deepEqual(writes,['a']);assert.equal(records[1].is_published,false);assert.equal(records[3].is_published,false);
+});
+test('HLS bulk publication requires actual successful signal test and preserves failures as drafts',async()=>{
+ const records=[item('good','m3u'),item('bad','m3u')];const {lab,writes,get}=setup(records,'m3u');await lab.publishSaved();
+ assert.deepEqual(writes,['good']);assert.equal(records[1].is_published,false);assert.match(get('live-saved-progress').textContent,/1 publicados · 1 não publicados/);
+});
+test('bulk publication counts only rows returned by the database',async()=>{
+ const records=[item('a','legacy'),item('denied','legacy')];const {lab,writes,get}=setup(records,'legacy',{deny:['denied']});await lab.publishSaved();
+ assert.deepEqual(writes,['a']);assert.equal(records[1].is_published,false);assert.match(get('live-saved-progress').textContent,/1 publicados · 1 não publicados/);
+});

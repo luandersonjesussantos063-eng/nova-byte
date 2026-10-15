@@ -705,7 +705,7 @@ function playbackFailed(msg,seq){
  $("player-layer").classList.add("has-player-error");
  showCinemaUi();
  clearTimeout(timer);$("player-error").textContent=msg;
- playerStatus("Transmissão indisponível neste momento");
+ playerStatus(current?.item?.kind==="tv"?"Não foi possível iniciar a transmissão":"Não foi possível iniciar o vídeo");
  $("retry-btn").hidden=false;$("fallback-btn").hidden=!(current&&current.item.fallbackEmbed);
 }
 function useFallback(){
@@ -726,8 +726,8 @@ function startAutoplay(video,seq){
   if(seq!==attempt||$("player-layer").hidden||playerClosing)return;
   video.muted=true;
   try{
-   Promise.resolve(video.play()).catch(()=>{
-    if(seq===attempt&&!$("player-layer").hidden){
+   Promise.resolve(video.play()).catch(err=>{
+    if(err?.name==="NotAllowedError"&&seq===attempt&&!$("player-layer").hidden){
      playerStatus("Toque em ▶ para reproduzir: o navegador bloqueou o início automático.");
      showCinemaUi();
     }
@@ -737,7 +737,7 @@ function startAutoplay(video,seq){
  try{
   Promise.resolve(video.play()).catch(err=>{
    if(seq!==attempt||$("player-layer").hidden||playerClosing)return;
-   if(err?.name!=="AbortError")mutedFallback();
+   if(err?.name==="NotAllowedError")mutedFallback();
   });
  }catch(e){mutedFallback()}
 }
@@ -872,18 +872,21 @@ function play(item,episode){
  const v=$("video");v.hidden=false;
  const seq=++attempt;
  let src=media.licensed_stream_url||media.src;
- let hasFailed=false,networkRecoveries=0;
+ let hasFailed=false,networkRecoveries=0,r2ExpiresAt=0,r2Refreshing=false;
  const fail=msg=>{if(!hasFailed){hasFailed=true;playbackFailed(msg,seq)}};
- v.onerror=()=>fail("O arquivo não pôde ser reproduzido neste navegador. Tente novamente.");
+ v.onerror=()=>{
+  if(media.r2_object_key&&r2ExpiresAt&&Date.now()>=r2ExpiresAt-30000&&!r2Refreshing){loadR2(true);return;}
+  fail(v.error?.code===3?"O navegador não conseguiu decodificar este vídeo. O arquivo precisa de uma versão compatível.":"Não foi possível carregar o vídeo. Tente novamente ou informe o problema ao administrador.");
+ };
  v.onplaying=()=>{
-   if(seq!==attempt)return;if(item.kind!=="tv"||v.videoWidth>0)clearTimeout(timer);
+   if(seq!==attempt)return;hasFailed=false;if(item.kind!=="tv"||v.videoWidth>0)clearTimeout(timer);
    $("player-layer").classList.remove("has-player-error");
    $("player-error").textContent="";
    $("retry-btn").hidden=true;$("fallback-btn").hidden=true;
    playerStatus(item.kind==="tv"?(v.videoWidth>0?"● AO VIVO — reproduzindo":"Aguardando imagem da transmissão…"):"▶ Reproduzindo");
  };
- v.onwaiting=()=>{if(seq===attempt)playerStatus(item.kind==="tv"?"Aguardando dados da transmissão...":"Carregando vídeo para continuar...")};
- v.oncanplay=()=>{if(seq===attempt){if(item.kind!=="tv")clearTimeout(timer);playerStatus(v.paused?"Preparando reprodução automática...":"▶ Reproduzindo")}};
+ v.onwaiting=()=>{if(seq===attempt&&!hasFailed)playerStatus(item.kind==="tv"?"Aguardando dados da transmissão...":"Carregando vídeo para continuar...")};
+ v.oncanplay=()=>{if(seq===attempt&&!hasFailed){if(item.kind!=="tv")clearTimeout(timer);playerStatus(v.paused?"Preparando reprodução automática...":"▶ Reproduzindo")}};
  const progressId=item.kind==="tv"?null:episode?episode.id:item.id;
  setResume(v,progressId,seq);
  if(item.kind==="tv")timer=setTimeout(()=>{if(seq===attempt&&(!v.videoWidth||v.readyState<2))fail("O canal está demorando para carregar. Verifique a conexão ou tente novamente.")},22000);
@@ -903,6 +906,7 @@ function play(item,episode){
           hls.destroy();hls=null;playerStatus("Tentando o modo de reprodução do navegador…");
           v.src=src;startAutoplay(v,seq);return;
         }
+        if(media.r2_object_key&&data.type===window.Hls.ErrorTypes.NETWORK_ERROR&&r2ExpiresAt&&Date.now()>=r2ExpiresAt-30000&&!r2Refreshing){loadR2(true);return;}
         if(data.type===window.Hls.ErrorTypes.NETWORK_ERROR&&networkRecoveries++<3){playerStatus("Reconectando e carregando vídeo...");hls.startLoad();return}
         if(data.type===window.Hls.ErrorTypes.MEDIA_ERROR){try{hls.recoverMediaError();return}catch(e){}}
         fail("A transmissão interrompeu. Toque em Tentar novamente.");
@@ -914,6 +918,31 @@ function play(item,episode){
     v.src=src;
     startAutoplay(v,seq);
   }
+ }
+ async function loadR2(resume=false){
+  if(r2Refreshing||seq!==attempt)return;r2Refreshing=true;
+  const position=resume?v.currentTime:0;
+  playerStatus(resume?"Renovando sessão de reprodução…":"Preparando seu vídeo…");
+  const delivery="https://nplay-r2-api.luandersonjesussantos063.workers.dev",id=encodeURIComponent((episode?.id||item.id).replace(/^upload-/,""));
+  const control=new AbortController(),deadline=setTimeout(()=>control.abort(),12000);
+  try{
+   const auth=(window.NPlayAccessClient||remoteDb)?.auth;
+   let result=await auth?.getSession(),session=result?.data?.session;
+   if(session?.expires_at*1000<Date.now()+60000){result=await auth.refreshSession();session=result?.data?.session;}
+   if(!session?.access_token)throw Error("Sua sessão expirou. Reabra a NPlay para entrar novamente.");
+   const response=await fetch(delivery+"/playback/"+id,{signal:control.signal,headers:{Authorization:"Bearer "+session.access_token},cache:"no-store"});
+   const info=await response.json();
+   if(!response.ok)throw Error(response.status===401?"Sua sessão expirou. Reabra a NPlay para entrar novamente.":response.status===404?"Este dispositivo não tem acesso ao vídeo ou o conteúdo não está disponível.":"O serviço de vídeo está indisponível. Tente novamente.");
+   const url=new URL(info.url);
+   if(url.origin!==delivery||!(url.pathname.startsWith("/hls/"+id+"/")||url.pathname==="/watch/"+id))throw Error("O serviço retornou um endereço de vídeo inválido.");
+   url.searchParams.set("access_token",session.access_token);
+   if(seq!==attempt)return;
+   src=url.href;r2ExpiresAt=session.expires_at*1000;hasFailed=false;
+   if(hls){hls.destroy();hls=null;}
+   if(position>0)v.addEventListener("loadedmetadata",()=>{if(seq===attempt)try{v.currentTime=position}catch{}},{once:true});
+   startSource();
+  }catch(error){if(seq===attempt)fail(error.name==="AbortError"?"O serviço de vídeo demorou para responder. Tente novamente.":error.message);}
+  finally{clearTimeout(deadline);r2Refreshing=false;}
  }
  if(media.youtube_id){
   // The official YouTube player runs INSIDE NPlay; do not bypass YouTube's restrictions.
@@ -947,15 +976,7 @@ function play(item,episode){
   $("player-status").textContent="";
   $("player-content-note").textContent="";
  }else if(media.r2_object_key){
-  playerStatus("Preparando vídeo R2 autorizado...");
-  const delivery="https://nplay-r2-api.luandersonjesussantos063.workers.dev",id=encodeURIComponent((episode?.id||item.id).replace(/^upload-/,""));
-  src=delivery+"/watch/"+id;
-  const controller=new AbortController(),resolveTimer=setTimeout(()=>controller.abort(),8000);
-  fetch(delivery+"/playback/"+id,{signal:controller.signal}).then(async response=>{
-   if(!response.ok)return;
-   const info=await response.json(),url=new URL(info.url);
-   if(url.origin===delivery&&(url.pathname.startsWith("/hls/"+id+"/")||url.pathname==="/watch/"+id))src=url.href;
-  }).catch(()=>{}).finally(()=>{clearTimeout(resolveTimer);if(seq===attempt)startSource()});
+  loadR2();
  }else if(media.video_path){
   if(!remoteDb){fail("Serviço de mídia indisponível. Recarregue a página.");return}
   playerStatus("Preparando vídeo publicado...");
