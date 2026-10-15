@@ -36,7 +36,7 @@ function openChannel(url,title){
  el.append(frame);
  $("iframe-channel-heading").textContent=title;
  $("iframe-channel-viewer").hidden=false;
- note(currentUrl.includes("rdcanais.org")?"Transmissão incorporada de site externo. O fornecedor pode exibir anúncios ou abrir outras abas.":"Transmissão incorporada de fonte externa.");
+ note(currentUrl.includes("rdcanais.org")?"Transmissão incorporada de site externo. O fornecedor pode exibir anúncios ou abrir outras abas. Som baixo? Confira também o volume dentro do player e o volume de mídia do aparelho.":"Transmissão incorporada de fonte externa. Som baixo? Confira também o volume dentro do player e o volume de mídia do aparelho.");
  $("iframe-channel-viewer").scrollIntoView({behavior:"smooth",block:"start"});
 }
 async function load(){

@@ -585,6 +585,10 @@ function updateCinemaControls(){
  $("cinema-play").setAttribute("aria-label",v.paused?"Reproduzir":"Pausar");
  $("cinema-mute").textContent=v.muted?"♪̸":"♫";
  $("cinema-mute").setAttribute("aria-label",v.muted?"Ativar áudio":"Silenciar");
+ const volume=$("cinema-volume"),level=$("cinema-volume-level");
+ const percent=Math.round(v.volume*100);
+ if(volume)volume.value=String(percent);
+ if(level)level.textContent=(v.muted?0:percent)+"%";
  const duration=v.duration;
  const seekable=Number.isFinite(duration)&&duration>0;
  $("cinema-seek").disabled=!seekable;
@@ -627,7 +631,13 @@ $("cinema-play").onclick=()=>{
 };
 $("cinema-rewind").onclick=()=>{const v=$("video");if(Number.isFinite(v.duration))v.currentTime=Math.max(0,v.currentTime-10);updateCinemaControls();showCinemaUi()};
 $("cinema-forward").onclick=()=>{const v=$("video");if(Number.isFinite(v.duration))v.currentTime=Math.min(v.duration,v.currentTime+10);updateCinemaControls();showCinemaUi()};
-$("cinema-mute").onclick=()=>{const v=$("video");v.muted=!v.muted;updateCinemaControls();showCinemaUi()};
+$("cinema-mute").onclick=()=>{const v=$("video");v.muted=!v.muted;if(!v.muted&&v.volume===0)v.volume=1;updateCinemaControls();showCinemaUi()};
+$("cinema-volume")?.addEventListener("input",e=>{
+ const v=$("video"),value=Number(e.target.value);
+ if(!Number.isFinite(value))return;
+ v.volume=Math.max(0,Math.min(100,value))/100;v.muted=v.volume===0;
+ updateCinemaControls();showCinemaUi();
+});
 $("cinema-seek").addEventListener("input",e=>{
  const v=$("video");if(!Number.isFinite(v.duration)||v.duration<=0)return;
  seekActive=true;
@@ -763,6 +773,7 @@ function play(item,episode){
  $("video").playsInline=true;
  $("video").preload="auto";
  $("video").muted=false;
+ $("video").volume=1;
  $("player-status").hidden=externalEmbed;
  $("player-content-note").hidden=externalEmbed;
  updateCinemaControls();
