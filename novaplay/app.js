@@ -661,6 +661,7 @@ $("cinema-fullscreen").onclick=()=>{
  showCinemaUi();
 };
 function stopPlayback(){
+ if($("player-loading"))$("player-loading").hidden=true;
  $("player-live-reload").hidden=true;
  $("player-issue-panel").hidden=true;
  $("player-issue-open").hidden=true;
@@ -690,7 +691,11 @@ function closePlayer(skipFullscreen=false){
  };
  Promise.resolve(exitTask).then(finish,finish);
 }
-function playerStatus(msg){$("player-status").textContent=msg}
+function playerStatus(msg){
+ $("player-status").textContent=msg;
+ const loading=$("player-loading");
+ if(loading){loading.textContent=msg;loading.hidden=!(current?.item?.kind==="tv"&&!current.item.liveEmbedUrl&&!$("player-layer").hidden&&!msg.includes("reproduzindo"));}
+}
 function playbackFailed(msg,seq){
  if(seq!==attempt||$("player-layer").hidden)return;
  $("player-layer").classList.add("has-player-error");
@@ -823,33 +828,35 @@ function play(item,episode){
  const fail=msg=>{if(!hasFailed){hasFailed=true;playbackFailed(msg,seq)}};
  v.onerror=()=>fail("O arquivo não pôde ser reproduzido neste navegador. Tente novamente.");
  v.onplaying=()=>{
-   if(seq!==attempt)return;clearTimeout(timer);
+   if(seq!==attempt)return;if(item.kind!=="tv"||v.videoWidth>0)clearTimeout(timer);
    $("player-layer").classList.remove("has-player-error");
    $("player-error").textContent="";
    $("retry-btn").hidden=true;$("fallback-btn").hidden=true;
-   playerStatus(item.kind==="tv"?"● AO VIVO — reproduzindo":"▶ Reproduzindo");
+   playerStatus(item.kind==="tv"?(v.videoWidth>0?"● AO VIVO — reproduzindo":"Aguardando imagem da transmissão…"):"▶ Reproduzindo");
  };
  v.onwaiting=()=>{if(seq===attempt)playerStatus(item.kind==="tv"?"Aguardando dados da transmissão...":"Carregando vídeo para continuar...")};
- v.oncanplay=()=>{if(seq===attempt){clearTimeout(timer);playerStatus(v.paused?"Preparando reprodução automática...":"▶ Reproduzindo")}};
+ v.oncanplay=()=>{if(seq===attempt){if(item.kind!=="tv")clearTimeout(timer);playerStatus(v.paused?"Preparando reprodução automática...":"▶ Reproduzindo")}};
  const progressId=item.kind==="tv"?null:episode?episode.id:item.id;
  setResume(v,progressId,seq);
- if(item.kind==="tv")timer=setTimeout(()=>{if(seq===attempt&&v.readyState<2)fail("O canal está demorando para carregar. Verifique a conexão ou tente novamente.")},22000);
+ if(item.kind==="tv")timer=setTimeout(()=>{if(seq===attempt&&(!v.videoWidth||v.readyState<2))fail("O canal está demorando para carregar. Verifique a conexão ou tente novamente.")},22000);
  function startSource(){
   if(seq!==attempt)return;
   if(!src){fail("Não foi possível localizar o arquivo de vídeo.");return}
   if(media.mode==="hls"||/\.m3u8?(?:\?|$)/i.test(src)){
-    if(v.canPlayType("application/vnd.apple.mpegurl")){
+    const nativeHls=v.canPlayType("application/vnd.apple.mpegurl");
+    const managedHls=window.Hls&&window.Hls.isSupported();
+    if(nativeHls&&!(item.kind==="tv"&&managedHls)){
       v.src=src;startAutoplay(v,seq);
     }else if(window.Hls&&window.Hls.isSupported()){
-      hls=new window.Hls({enableWorker:true,lowLatencyMode:item.kind==="tv",maxBufferLength:item.kind==="tv"?20:60,maxMaxBufferLength:180,maxBufferSize:64*1024*1024,backBufferLength:30,startLevel:0,capLevelToPlayerSize:true,abrEwmaDefaultEstimate:400000});
+      hls=new window.Hls({enableWorker:true,lowLatencyMode:false,maxBufferLength:item.kind==="tv"?20:60,maxMaxBufferLength:180,maxBufferSize:64*1024*1024,backBufferLength:30,startLevel:0,capLevelToPlayerSize:true,abrEwmaDefaultEstimate:400000});
       hls.on(window.Hls.Events.ERROR,(event,data)=>{
         if(seq!==attempt||!data.fatal)return;
         if(data.type===window.Hls.ErrorTypes.NETWORK_ERROR&&networkRecoveries++<3){playerStatus("Reconectando e carregando vídeo...");hls.startLoad();return}
         if(data.type===window.Hls.ErrorTypes.MEDIA_ERROR){try{hls.recoverMediaError();return}catch(e){}}
         fail("A transmissão interrompeu. Toque em Tentar novamente.");
       });
-      hls.loadSource(src);hls.attachMedia(v);
       hls.on(window.Hls.Events.MANIFEST_PARSED,()=>{if(seq===attempt)startAutoplay(v,seq)});
+      hls.attachMedia(v);hls.loadSource(src);
     }else fail("Este navegador não carregou o suporte a HLS.");
   }else{
     v.src=src;
@@ -961,7 +968,7 @@ document.addEventListener("keydown",e=>{
 document.addEventListener("visibilitychange",()=>{if(document.hidden){stopHeroPreview();if(!$("player-layer").hidden)$("video").pause()}});
 window.addEventListener("scroll",()=>$("app-header").classList.toggle("is-scrolled",window.scrollY>24),{passive:true});
 if("serviceWorker" in navigator&&location.protocol==="https:"){
- window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js?v=0.45.38",{updateViaCache:"none"}).catch(()=>{}));
+ window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js?v=0.45.39",{updateViaCache:"none"}).catch(()=>{}));
 }
 navigate((location.hash||"").slice(1)||"inicio");
 loadUploadedCatalog();

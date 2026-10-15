@@ -82,3 +82,13 @@ test('TV grade reads published channels only and never restores the fixed provid
  vm.runInContext(load,context);await context.load();assert.deepEqual(filter,['is_published',true]);assert.equal(result.length,1);assert.equal(result[0].title,'Aprovado');
  failed=true;await context.load();assert.equal(result.length,0);assert.match(notice,/Não foi possível/);assert.equal(source.includes('CHANNEL_SNAPSHOT'),false);assert.equal(source.includes('fetch('),false);
 });
+test('live playback prefers managed HLS and registers autoplay before loading a manifest',()=>{
+ const app=read('app.js'),start=app.indexOf(' function startSource(){');
+ const code=app.slice(start,app.indexOf(' if(media.youtube_id){',start));
+ let loaded,played=0,nativeSrc,attached=false;
+ class Hls{static isSupported=()=>true;static Events={ERROR:'error',MANIFEST_PARSED:'manifest'};constructor(){this.handlers={};}on(e,fn){this.handlers[e]=fn;}attachMedia(){attached=true;}loadSource(url){assert.equal(attached,true);loaded=url;assert.equal(typeof this.handlers.manifest,'function');this.handlers.manifest();}}
+ const video={canPlayType:()=>true,set src(value){nativeSrc=value;}};
+ const context=vm.createContext({window:{Hls},seq:1,attempt:1,src:'https://example.org/live.m3u8',media:{mode:'hls'},item:{kind:'tv'},v:video,hls:null,networkRecoveries:0,fail:message=>{throw Error(message)},playerStatus:()=>{},startAutoplay:()=>played++});
+ vm.runInContext(code,context);context.startSource();assert.equal(nativeSrc,undefined);assert.equal(loaded,'https://example.org/live.m3u8');assert.equal(played,1);
+ Hls.isSupported=()=>false;context.startSource();assert.equal(nativeSrc,loaded);assert.equal(played,2);
+});
