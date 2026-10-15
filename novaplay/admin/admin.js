@@ -1201,10 +1201,11 @@ async function loadMagnetApprovals(){
     sourceButton.onclick=()=>{$('magnet-title').value=job.title;$('magnet-license').value=job.license_reference||'';$('magnet-uri').value='';$('magnet-rights').checked=false;$('magnet-import-form').scrollIntoView({behavior:'smooth'});$('magnet-uri').focus();status('magnet-status','Cole outro magnet autorizado. O histórico anterior será preservado; não use o mesmo link que não respondeu.');};box.append(sourceButton);
    }
     if(job.status==="ready"&&job.r2_object_key&&!registered){const btn=document.createElement("button");btn.type="button";btn.className="primary";btn.textContent="Cadastrar no catálogo";btn.addEventListener("click",()=>openReadyMagnetInCatalog(job));box.appendChild(btn);}
-   if(job.status==="failed"){
+   if(job.status==="failed"||(job.status==="needs_review"&&job.stage==="capacity")){
+    if(job.stage==="capacity"){const hint=document.createElement("p");hint.className="muted";hint.textContent="Depois de liberar espa\u00e7o no computador ou ajustar o limite, tente novamente para retomar esta importa\u00e7\u00e3o.";box.appendChild(hint);}
     if(job.error_message){const err=document.createElement("p");err.style.cssText="color:#ffb3b3;overflow-wrap:anywhere";err.textContent="Motivo da falha: "+importFailureMessage(job);box.appendChild(err);}
     const btn=document.createElement("button");btn.type="button";btn.className="primary";btn.textContent="↻ Tentar novamente";
-    const needsChange=job.error_code==="CapacityRequired"||job.error_code==="MetadataUnavailable"||/maior que limite|excede o limite|Espaço insuficiente/.test(job.error_message||"");
+    const needsChange=job.error_code==="MetadataUnavailable";
     const eligible=!needsChange&&!job.duplicate_of&&job.approved_for_processing&&job.rights_confirmed&&Boolean(job.license_reference);
     btn.disabled=!eligible;
     if(!eligible)btn.title=needsChange?"Altere a fonte ou resolva a capacidade antes de repetir.":"É necessária autorização de processamento e licença válida.";
