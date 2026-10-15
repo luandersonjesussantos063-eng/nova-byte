@@ -1,0 +1,32 @@
+(()=>{
+"use strict";
+const $=id=>document.getElementById(id);
+const url="https://vajlhodqxskozuxxlujv.supabase.co",key="sb_publishable_uT0b4y0Bex1k1QWZoyIfKg_K0pm-yS3";
+let db;
+async function refresh(){
+ const list=$("nplay-access-admin-list");if(!list)return;
+ const {data:{user}}=await db.auth.getUser();
+ if(!user){$("nplay-access-admin-status").textContent="Entre como administrador para visualizar solicitações.";return}
+ const {data:admin}=await db.from("novaplay_admins").select("user_id").eq("user_id",user.id).maybeSingle();
+ if(!admin){$("nplay-access-admin-status").textContent="Somente administradores podem visualizar esta área.";return}
+ const {data,error}=await db.from("novaplay_access_requests").select("user_id,device_label,status,created_at").order("created_at",{ascending:false}).limit(200);
+ if(error){$("nplay-access-admin-status").textContent=error.message;return}
+ $("nplay-access-admin-status").textContent=(data||[]).length+" solicitações encontradas.";
+ list.replaceChildren();
+ for(const item of data||[]){
+  const row=document.createElement("div");row.style.cssText="border:1px solid #365075;border-radius:10px;padding:12px;margin:9px 0";
+  const title=document.createElement("strong");title.textContent=item.user_id.slice(0,8).toUpperCase()+" · "+item.status;
+  const info=document.createElement("p");info.textContent=item.device_label+" · "+new Date(item.created_at).toLocaleString("pt-BR");info.style.overflowWrap="anywhere";
+  row.append(title,info);
+  for(const [status,label] of [["approved","Aprovar"],["denied","Recusar"],["revoked","Revogar"]]){
+   if(status===item.status)continue;
+   const button=document.createElement("button");button.type="button";button.textContent=label;button.className=status==="approved"?"primary":"outline";button.style.margin="4px";
+   button.onclick=async()=>{if(!confirm(label+" acesso "+item.user_id.slice(0,8)+"?"))return;button.disabled=true;const {error}=await db.from("novaplay_access_requests").update({status,updated_at:new Date().toISOString()}).eq("user_id",item.user_id);if(error)alert(error.message);await refresh()};
+   row.append(button);
+  }
+  list.append(row);
+ }
+}
+function start(){if(!window.supabase?.createClient){setTimeout(start,300);return}db=window.supabase.createClient(url,key);$("nplay-access-refresh")?.addEventListener("click",refresh);refresh()}
+if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",start);else start();
+})();
