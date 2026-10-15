@@ -694,7 +694,7 @@ function closePlayer(skipFullscreen=false){
 function playerStatus(msg){
  $("player-status").textContent=msg;
  const loading=$("player-loading");
- if(loading){loading.textContent=msg;loading.hidden=!(current?.item?.kind==="tv"&&!current.item.liveEmbedUrl&&!$("player-layer").hidden&&!msg.includes("reproduzindo"));}
+ if(loading){loading.textContent=msg;loading.hidden=!(current?.item?.kind==="tv"&&!current.item.liveEmbedUrl&&!$("player-layer").hidden&&!/reproduzindo/i.test(msg));}
 }
 function playbackFailed(msg,seq){
  if(seq!==attempt||$("player-layer").hidden)return;
