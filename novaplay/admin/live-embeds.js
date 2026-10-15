@@ -1,142 +1,165 @@
 (()=>{
-const $=id=>document.getElementById(id);
-const client=()=>window.supabase.createClient("https://vajlhodqxskozuxxlujv.supabase.co","sb_publishable_uT0b4y0Bex1k1QWZoyIfKg_K0pm-yS3");
-let db, testedUrl=null, testPassed=false;
-const SPTV_HTTP_ORIGIN="http://95.211.149.215:8081/look/sptv/playlist.m3u8";
-const SPTV_HTTPS_PROXY="https://nplay-sptv-hls.luandersonjesussantos063.workers.dev/look/sptv/playlist.m3u8";
-function playableUrl(url){const u=new URL(url);if(u.protocol==="https:")return u.href;if(u.hostname==="95.211.149.215"&&u.port==="8081"&&u.pathname.replace(/\/$/,"")==="/look/sptv/playlist.m3u8")return SPTV_HTTPS_PROXY+u.search;throw Error("Este servidor HTTP ainda não tem gateway HTTPS para testar o sinal. Use um link HTTPS ou configure um gateway autorizado.");}
-const isHls=u=>/\.m3u8(?:\?|$)/i.test(u);
-const isPlaylistEndpoint=u=>{try{return /\/get\.php$/i.test(new URL(u).pathname)}catch{return false}};
-function testStatus(msg){const el=$("live-test-message");if(el)el.textContent=msg;}
-async function testLink(){
- const raw=$("live-embed-url").value.trim();let url;
- try{url=parse(raw)}catch(e){testStatus("❌ "+e.message);return}
- let playbackUrl;try{playbackUrl=playableUrl(url)}catch(e){testStatus("⚠️ "+e.message);return}
- testedUrl=null;testPassed=false;$("live-test-publish").disabled=true;
- if(isPlaylistEndpoint(url)){testStatus("⚠️ Este link get.php fornece uma lista de canais, não um vídeo. Não pode ser publicado como canal. Exporte a lista M3U autorizada e cole no testador de lista completa.");return}
- if(!isHls(url)){testStatus("Links iframe não permitem verificar o sinal automaticamente. Use a prévia no site antes de publicar.");return}
- testStatus("Verificando playlist e reprodução do sinal...");
- const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),12000);
+const $=id=>document.getElementById(id),core=()=>globalThis.NPlayM3u;
+let db,savedChannels=[],rows=[],batchController=null,singleController=null,singleItem=null,running=false,publishing=false,published=new Set();
+const fresh=item=>item.state==='passed'&&item.testedAt&&Date.now()-Date.parse(item.testedAt)<30*60*1000;
+function message(id,text){$(id).textContent=text;}
+function source(raw){const iframe=raw.match(/<iframe[^>]+src=["']([^"']+)/i);return core().url(iframe?iframe[1]:raw.trim());}
+function authorized(){if($('live-embed-rights').checked)return true;message('live-embed-message','Confirme a autorização de exibição antes de publicar.');$('live-embed-rights').focus();return false;}
+function button(label,fn,style='outline'){const b=document.createElement('button');b.type='button';b.className=style;b.textContent=label;b.onclick=fn;return b;}
+function stateLabel(item){return ({idle:'Não testado',testing:'Testando vídeo…',passed:'Vídeo confirmado',failed:'Não confirmado',http:'Precisa de HTTPS',unsupported:'Outro formato',cancelled:'Interrompido'})[item.state]||'Não testado';}
+function update(item){
+ if(!item.dom)return;
+ const d=item.dom;d.status.textContent=(item.published?'Publicado · ':'')+stateLabel(item);
+ d.status.style.color=item.state==='passed'?'#85e2b4':item.state==='failed'?'#ffc5bd':'#c5d8f5';
+ d.detail.textContent=item.detail||'';d.video.hidden=item.state!=='testing';
+ d.publish.hidden=!fresh(item)||item.published;d.publish.disabled=publishing;
+ d.retry.disabled=item.state==='testing'||running||publishing;d.retry.textContent=item.state==='idle'?'Testar canal':'Testar novamente';
+}
+function summary(){
+ const ready=rows.filter(x=>fresh(x)&&!x.published),passed=rows.filter(x=>x.state==='passed').length;
+ const tested=rows.filter(x=>!['idle','testing'].includes(x.state)).length;
+ message('live-batch-status',`${rows.length} canais · ${tested} analisados · ${passed} com vídeo confirmado · ${rows.filter(x=>x.published).length} publicados`+(running?' · testes em andamento':''));
+ $('live-batch-publish').textContent=`Publicar ${ready.length} aprovados`;
+ $('live-batch-publish').disabled=!ready.length||running||publishing;
+ $('live-batch-stop').hidden=!running;
+}
+async function checkItem(item,video,signal){
+ item.testedAt=null;item.state='testing';item.detail='Aguardando pelo menos 2 segundos de vídeo em movimento.';update(item);summary();
  try{
-  const res=await fetch(playbackUrl,{cache:"no-store",signal:controller.signal});
-  if(!res.ok)throw Error("Servidor retornou HTTP "+res.status);
-  const body=await res.text();
-  if(!body.trim().startsWith("#EXTM3U"))throw Error("Resposta não é uma playlist M3U8 válida.");
-  if(!body.includes("#EXTINF")&&!body.includes("#EXT-X-STREAM-INF"))throw Error("Playlist sem segmentos ou variantes de vídeo.");
-  const video=$("live-test-video");video.hidden=false;video.muted=true;video.playsInline=true;
-  if(window.nplayAdminTestHls){window.nplayAdminTestHls.destroy();window.nplayAdminTestHls=null}
-  video.removeAttribute("src");video.load();
-  await new Promise((resolve,reject)=>{
-   let done=false;const timer=setTimeout(()=>finish(Error("Nenhum vídeo recebido em 18 segundos.")),18000);
-   function finish(error){if(done)return;done=true;clearTimeout(timer);video.removeEventListener("playing",onPlay);video.removeEventListener("error",onError);if(error)reject(error);else resolve()}
-   const onPlay=()=>finish(),onError=()=>finish(Error("O navegador não conseguiu reproduzir o sinal."));
-   video.addEventListener("playing",onPlay);video.addEventListener("error",onError);
-   if(video.canPlayType("application/vnd.apple.mpegurl")){video.src=playbackUrl;video.play().catch(onError)}
-   else if(window.Hls?.isSupported()){
-    const hls=new window.Hls({enableWorker:true});window.nplayAdminTestHls=hls;
-    hls.on(window.Hls.Events.ERROR,(_,d)=>{if(d.fatal)finish(Error("HLS: "+d.details))});
-    hls.attachMedia(video);hls.loadSource(playbackUrl);hls.on(window.Hls.Events.MANIFEST_PARSED,()=>video.play().catch(onError));
-   }else finish(Error("Biblioteca HLS indisponível neste navegador."));
-  });
-  testedUrl=playbackUrl;testPassed=true;$("live-test-publish").disabled=false;
-  testStatus("✅ Sinal confirmado: vídeo reproduzido. Agora você pode publicar o canal.");
- }catch(e){testStatus("❌ Sinal não confirmado: "+(e.name==="AbortError"?"servidor demorou mais de 12 segundos":e.message)+". Não publique este endereço.")}
- finally{clearTimeout(timeout)}
+  if(item.unsupported){item.state='unsupported';item.detail='Este endereço aponta para um arquivo de vídeo ou FLV. Use o cadastro de vídeos ou um sinal HLS compatível.';return;}
+  try{item.playbackUrl=core().playable(item.url);item.published=published.has(item.playbackUrl);}catch(error){item.state='http';item.detail=error.message;return;}
+  const result=await NPlaySignal.testSignal(video,item.playbackUrl,{signal});
+  item.state='passed';item.testedAt=new Date().toISOString();item.detail=`Imagem recebida: ${result.width} × ${result.height}. Reprodução confirmada por ${result.seconds.toFixed(1)} segundos. O teste vale por 30 minutos e não garante estabilidade contínua.`;
+ }catch(error){item.state=error.name==='AbortError'?'cancelled':'failed';item.detail=error.message;}
+ finally{update(item);summary();}
 }
-
-
-let batchResults=[];
-function parseM3uList(input){
- const lines=input.replaceAll(String.fromCharCode(13),"").split(String.fromCharCode(10));
- const entries=[];let title="";
- for(const line of lines){const s=line.trim();if(s.startsWith("#EXTINF")){title=s.split(",").slice(1).join(",").trim()||"Canal sem nome";continue}
- if(!s||s.startsWith("#"))continue;
- const m=s.match(/https?:\/\/[^\s<>|)\]]+/i);if(!m)continue;
- try{const u=new URL(m[0]);if(!isHls(u.href))continue;entries.push({title:title||"Canal "+(entries.length+1),url:u.href});}catch(e){}
- title="";
- }
- return entries.slice(0,100);
+async function publishItem(item){
+ if(!fresh(item))throw Error('Teste este canal novamente antes de publicar.');
+ if(item.dom)item.title=item.dom.title.value.trim();
+ if(!item.title)throw Error('Informe o nome do canal.');
+ const payload={title:item.title.slice(0,140),embed_url:item.playbackUrl,logo_url:item.logo_url||null,category:item.category||'',stream_type:'hls',last_tested_at:item.testedAt,rights_confirmed:true,is_published:true};
+ const {error}=await db.from('novaplay_live_embeds').upsert(payload,{onConflict:'embed_url'});
+ if(error)throw error;
+ item.published=true;published.add(item.playbackUrl);update(item);summary();
 }
-async function batchCheck(item){
- let gateway;
- try{gateway=playableUrl(item.url)}catch(e){return {...item,status:"Sem gateway HTTPS",detail:e.message,gateway:null}}
- try{
- const ctrl=new AbortController(),timer=setTimeout(()=>ctrl.abort(),9000);
- let res;try{res=await fetch(gateway,{signal:ctrl.signal,cache:"no-store"})}finally{clearTimeout(timer)}
- if(!res.ok)return {...item,status:"Sem sinal",detail:"HTTP "+res.status,gateway};
- const body=(await res.text()).slice(0,200000);
- if(!body.trim().startsWith("#EXTM3U"))return {...item,status:"Inválido",detail:"Resposta não é playlist HLS",gateway};
- if(!/#EXTINF|#EXT-X-STREAM-INF/.test(body))return {...item,status:"Inválido",detail:"Playlist sem segmentos",gateway};
- return {...item,status:"Playlist encontrada",detail:"Precisa confirmar reprodução",gateway};
- }catch(e){return {...item,status:"Sem sinal",detail:e.name==="AbortError"?"Tempo esgotado":e.message,gateway}}
+async function publishOne(item){
+ if(!authorized()||publishing)return;
+ publishing=true;update(item);
+ try{await publishItem(item);message('live-embed-message','Canal publicado na aba TV ao vivo.');await refresh();}
+ catch(error){message('live-embed-message','Não foi possível publicar: '+error.message);}
+ finally{publishing=false;update(item);summary();}
 }
-function renderBatch(){
- const host=$("live-batch-results");host.replaceChildren();
- const summary=$("live-batch-status");
- const good=batchResults.filter(x=>x.status==="Playlist encontrada").length;
- summary.textContent=batchResults.length+" testados · "+good+" playlists encontradas (reprodução ainda não confirmada)";
- for(const item of batchResults){
- const card=document.createElement("div");card.style.cssText="border:1px solid #365075;border-radius:10px;padding:12px;margin:8px 0;overflow-wrap:anywhere";
- const name=document.createElement("strong");name.textContent=item.title+" — "+item.status;card.append(name);
- const detail=document.createElement("p");detail.textContent=item.detail+" · "+item.url;card.append(detail);
- if(item.gateway&&item.status==="Playlist encontrada"){
- const b=document.createElement("button");b.type="button";b.className="outline";b.textContent="Testar vídeo deste canal";
- b.onclick=()=>{$("live-embed-title").value=item.title;$("live-embed-url").value=item.url;testLink();window.scrollTo({top:$("live-test-button").getBoundingClientRect().top+window.scrollY-150,behavior:"smooth"})};card.append(b);
+function renderRows(){
+ const host=$('live-batch-results');host.replaceChildren();
+ for(const item of rows){
+  const card=document.createElement('article');card.style.cssText='border:1px solid #365075;border-radius:12px;padding:14px;margin:12px 0;overflow-wrap:anywhere';
+  if(item.logo_url){const image=document.createElement('img');image.src=item.logo_url;image.alt='';image.loading='lazy';image.referrerPolicy='no-referrer';image.style.cssText='width:64px;height:44px;object-fit:contain;float:right;background:#172a44;border-radius:6px';image.onerror=()=>image.remove();card.append(image);}
+  const label=document.createElement('label');label.textContent='Nome do canal';const title=document.createElement('input');title.value=item.title;title.maxLength=140;label.append(title);
+  const status=document.createElement('strong');status.style.cssText='display:block;margin-top:12px';
+  const url=document.createElement('p');url.className='muted';url.textContent=item.category?item.category+' · '+item.url:item.url;
+  const detail=document.createElement('p');
+  const video=document.createElement('video');video.hidden=true;video.muted=true;video.playsInline=true;video.style.cssText='width:100%;max-width:420px;max-height:235px;background:#000;border-radius:8px';
+  const publish=button('Publicar',()=>publishOne(item),'primary');
+  const retry=button('Testar canal',async()=>{retry.disabled=true;const control=new AbortController();await checkItem(item,video,control.signal);update(item);});
+  const actions=document.createElement('div');actions.style.cssText='display:flex;gap:10px;flex-wrap:wrap';actions.append(retry,publish);
+  item.dom={card,title,status,detail,video,publish,retry};card.append(label,status,url,detail,video,actions);host.append(card);update(item);
  }
- host.append(card);
- }
+ summary();
 }
 async function runBatch(){
- const input=$("live-batch-input").value.trim();
- const entries=parseM3uList(input);
- if(!entries.length){$("live-batch-status").textContent="Nenhum link HLS .m3u8 encontrado na lista.";return}
- const button=$("live-batch-run");button.disabled=true;batchResults=[];
+ if(running||publishing)return;
  try{
- for(let i=0;i<entries.length;i+=4){
- const chunk=await Promise.all(entries.slice(i,i+4).map(batchCheck));
- batchResults.push(...chunk);renderBatch();
- $("live-batch-status").textContent="Analisados "+batchResults.length+" de "+entries.length+" canais...";
- }
- renderBatch();
- }finally{button.disabled=false}
+  const parsed=core().parseList($('live-batch-input').value);
+  if(!parsed.entries.length)throw Error('Nenhum endereço de canal encontrado. Cole a lista M3U ou uma URL por linha.');
+  rows=parsed.entries.map(x=>({...x,state:'idle',published:published.has(x.url)}));
+  message('live-batch-parse',`${parsed.entries.length} endereços carregados; ${parsed.duplicates} repetidos ignorados; ${parsed.invalid} entradas inválidas.`+(parsed.truncated?` A lista tem ${parsed.total} canais; este lote contém os primeiros 500. Divida o restante em outro lote.`:''));
+  running=true;batchController=new AbortController();$('live-batch-run').disabled=true;renderRows();
+  let next=0;const signal=batchController.signal;
+  async function worker(){while(!signal.aborted&&next<rows.length){const item=rows[next++];await checkItem(item,item.dom.video,signal);}}
+  await Promise.all([worker(),worker()]);
+ }catch(error){message('live-batch-parse',error.message);}
+ finally{running=false;batchController=null;$('live-batch-run').disabled=false;rows.forEach(update);summary();}
 }
-
-function parse(raw){const m=raw.match(/<iframe[^>]+src=["']([^"']+)/i);const found=raw.match(/https?:\/\/[^\s<>|)\]]+/i);const u=new URL(m?m[1]:found?found[0]:raw.trim());if(!["http:","https:"].includes(u.protocol))throw Error("Use HTTP ou HTTPS.");if(u.username||u.password)throw Error("URL com senha não é aceita.");return u.href}
+async function publishBatch(){
+ if(running||publishing||!authorized())return;
+ publishing=true;let done=0,failed=0;
+ try{for(const item of rows.filter(x=>fresh(x)&&!x.published)){
+  try{await publishItem(item);done++;}catch(error){failed++;item.detail='Falha na publicação: '+error.message;update(item);}
+  message('live-embed-message',`${done} publicados; ${failed} com erro na publicação.`);
+ }await refresh();}
+ finally{publishing=false;rows.forEach(update);summary();}
+}
+async function testSingle(){
+ singleController?.abort();singleItem=null;$('live-test-publish').hidden=true;
+ try{
+  const url=source($('live-embed-url').value);
+  if(/\/get\.php(?:\?|$)/i.test(url))throw Error('Este endereço fornece uma lista. Cole o conteúdo M3U no teste em lote.');
+  const saved=savedChannels.find(x=>x.embed_url===url);
+  const item={logo_url:saved?.logo_url||null,category:saved?.category||'',title:$('live-embed-title').value.trim()||'Canal',url,state:'idle'};
+  const playbackUrl=core().playable(url);singleController=new AbortController();
+  message('live-test-message','Testando alguns segundos de vídeo…');$('live-test-video').hidden=false;$('live-test-button').disabled=true;
+  const result=await NPlaySignal.testSignal($('live-test-video'),playbackUrl,{signal:singleController.signal});
+  item.playbackUrl=playbackUrl;item.testedAt=new Date().toISOString();item.state='passed';singleItem=item;
+  message('live-test-message',`Vídeo confirmado: ${result.width} × ${result.height}. Você pode publicar este canal.`);$('live-test-publish').hidden=false;
+ }catch(error){message('live-test-message',error.message);}
+ finally{$('live-test-button').disabled=false;$('live-test-video').hidden=true;}
+}
 async function refresh(){
-const list=$("live-embed-list");if(!list)return;
-const {data,error}=await db.from("novaplay_live_embeds").select("*").order("created_at",{ascending:false});
-if(error){list.textContent=error.message;return}list.replaceChildren();
-for(const item of data){
-const box=document.createElement("div");box.style.cssText="border:1px solid #365075;border-radius:10px;padding:12px;margin:8px 0";
-const title=document.createElement("strong");title.textContent=item.title+" — "+(item.is_published?"Publicado":"Rascunho");box.append(title);
-const toggle=document.createElement("button");toggle.type="button";toggle.textContent=item.is_published?"Despublicar":"Publicar";toggle.style.marginLeft="12px";
-toggle.onclick=async()=>{const {error}=await db.from("novaplay_live_embeds").update({is_published:!item.is_published}).eq("id",item.id);$("live-embed-message").textContent=error?error.message:"Atualizado";refresh()};
-const del=document.createElement("button");del.type="button";del.textContent="Excluir";del.style.marginLeft="8px";
-del.onclick=async()=>{if(!confirm("Excluir canal?"))return;const {error}=await db.from("novaplay_live_embeds").delete().eq("id",item.id);$("live-embed-message").textContent=error?error.message:"Excluído";refresh()};
-box.append(toggle,del);list.append(box)
-}
-if(!data.length)list.textContent="Nenhum canal cadastrado.";
+ const list=$('live-embed-list');if(!list)return;
+ const {data,error}=await db.from('novaplay_live_embeds').select('*').order('created_at',{ascending:false});
+ if(error){list.textContent='Não foi possível consultar os canais: '+error.message;return;}
+ savedChannels=data||[];list.replaceChildren();published=new Set((data||[]).filter(x=>x.is_published).map(x=>x.embed_url));
+ for(const item of data||[]){
+  const card=document.createElement('article');card.style.cssText='border:1px solid #365075;border-radius:10px;padding:12px;margin:10px 0';
+  const title=document.createElement('strong');title.textContent=item.title+' · '+(item.is_published?'Publicado':'Rascunho');
+  const detail=document.createElement('p');detail.className='muted';detail.textContent=item.embed_url;
+  const hls=item.stream_type==='hls'||/\.m3u8?(?:\?|$)/i.test(item.embed_url);
+  const toggle=button(item.is_published?'Despublicar':hls?'Testar para publicar':'Publicar',async()=>{
+   if(!item.is_published&&hls){$('live-embed-title').value=item.title;$('live-embed-url').value=item.embed_url;if(item.rights_confirmed)$('live-embed-rights').checked=true;await testSingle();$('live-test-message').scrollIntoView({behavior:'smooth',block:'center'});return;}
+   const {error}=await db.from('novaplay_live_embeds').update({is_published:!item.is_published}).eq('id',item.id);
+   message('live-embed-message',error?error.message:'Canal atualizado.');await refresh();
+  });
+  const remove=button('Excluir',async()=>{if(!confirm('Excluir o canal '+item.title+' do cadastro?'))return;const {error}=await db.from('novaplay_live_embeds').delete().eq('id',item.id);message('live-embed-message',error?error.message:'Canal excluído.');await refresh();});
+  const actions=document.createElement('div');actions.style.cssText='display:flex;gap:10px;flex-wrap:wrap';actions.append(toggle,remove);card.append(title,detail,actions);list.append(card);
+ }
+ if(!data?.length)list.textContent='Nenhum canal cadastrado.';
 }
 function init(){
-if(!$("live-embed-controls"))return;
-if(!window.supabase){setTimeout(init,300);return}
-db=client();
-$("live-embed-controls").innerHTML='<form id="live-embed-form" style="display:grid;gap:12px;max-width:680px"><label>Nome do canal<input id="live-embed-title" required></label><label>Link HTTP/HTTPS ou código iframe<textarea id="live-embed-url" required rows="3"></textarea></label><label><input id="live-embed-rights" type="checkbox" required> Confirmo autorização para exibição na NPlay</label><label><input id="live-embed-published" type="checkbox"> Publicar imediatamente</label><button class="primary" type="submit">Salvar canal</button></form><div style="padding:16px;border:1px solid #3a6396;border-radius:12px"><h3>Testador de sinal HLS</h3><p>Informe nome e link HTTP ou HTTPS .m3u8 acima, clique em testar e aguarde a reprodução. Um retorno HTTP 200 sozinho não comprova sinal.</p><button id="live-test-button" type="button" class="outline">🔎 Testar sinal</button> <button id="live-test-publish" type="button" class="primary" disabled>✓ Publicar canal testado</button><p id="live-test-message" role="status" aria-live="polite"></p><video id="live-test-video" controls muted playsinline hidden style="display:block;width:100%;max-width:600px;max-height:330px;background:#000;border-radius:10px"></video><small>Links HTTP são aceitos para diagnóstico. A reprodução no site HTTPS exige um gateway HTTPS; o endereço SPTV já possui um gateway de teste.</small></div><section style="padding:16px;border:1px solid #3a6396;border-radius:12px;margin-top:16px"><h3>Testar lista M3U completa</h3><p>Cole uma lista M3U com vários canais. Testa até 100 endereços HLS, quatro por vez. Links HTTP precisam de gateway HTTPS configurado; o SPTV usa o gateway existente. Playlist encontrada não significa vídeo reproduzido.</p><textarea id="live-batch-input" rows="9" placeholder="#EXTM3U&#10;#EXTINF:-1,Canal&#10;http://servidor/canal/playlist.m3u8" style="width:100%"></textarea><button type="button" id="live-batch-run" class="primary">Testar lista completa</button><p id="live-batch-status" role="status"></p><div id="live-batch-results"></div></section><p id="live-embed-message"></p><h3>Canais cadastrados</h3><div id="live-embed-list"></div>';
-$("live-test-button").onclick=testLink;
-$("live-batch-run").onclick=runBatch;
-$("live-embed-url").addEventListener("input",()=>{testedUrl=null;testPassed=false;$("live-test-publish").disabled=true;testStatus("Link alterado. Teste novamente.")});
-$("live-test-publish").onclick=async()=>{if(!testPassed||!testedUrl)return;const title=$("live-embed-title").value.trim();if(!title){testStatus("Informe o nome do canal.");return}if(!$("live-embed-rights").checked){testStatus("Confirme a autorização de exibição.");return}const btn=$("live-test-publish");btn.disabled=true;const {error}=await db.from("novaplay_live_embeds").insert({title,embed_url:testedUrl,rights_confirmed:true,is_published:true});if(error){testStatus("Erro ao publicar: "+error.message);btn.disabled=false;return}testStatus("✅ Canal publicado na NPlay.");$("live-embed-form").reset();testPassed=false;testedUrl=null;refresh()};
-$("live-embed-form").onsubmit=async e=>{e.preventDefault();try{
-const title=$("live-embed-title").value.trim(),rawUrl=parse($("live-embed-url").value),embed_url=isHls(rawUrl)?playableUrl(rawUrl):rawUrl;
-if(isPlaylistEndpoint(rawUrl))throw Error("get.php é um endereço de lista IPTV, não um canal. Use o testador de lista M3U.");
-if(!isHls(rawUrl)&&!rawUrl.startsWith("https://"))throw Error("Iframes devem utilizar HTTPS.");
-if(!title)throw Error("Informe o nome.");
-if(isHls(embed_url)&&$("live-embed-published").checked)throw Error("Para publicar um canal HLS, use Testar sinal e depois Publicar canal testado.");
-const {error}=await db.from("novaplay_live_embeds").insert({title,embed_url,rights_confirmed:true,is_published:$("live-embed-published").checked});
-if(error)throw error;$("live-embed-message").textContent="Canal salvo.";$("live-embed-form").reset();refresh()
-}catch(err){$("live-embed-message").textContent="Erro: "+err.message}};
-document.querySelector('[data-admin-tab="canais"]')?.addEventListener("click",refresh);
-refresh()
+ if(!$('live-embed-controls'))return;
+ if(!window.supabase||!core()||!globalThis.NPlaySignal){setTimeout(init,300);return;}
+ db=window.supabase.createClient('https://vajlhodqxskozuxxlujv.supabase.co','sb_publishable_uT0b4y0Bex1k1QWZoyIfKg_K0pm-yS3');
+ $('live-embed-controls').innerHTML=`
+ <p>Cole uma lista M3U para testar os canais nesta conexão. Um canal só fica apto a publicar depois de receber imagem e avançar pelo menos dois segundos no navegador.</p>
+ <label class="publish-check"><input id="live-embed-rights" type="checkbox"><span>Confirmo autorização para exibir na NPlay os canais que eu publicar.</span></label>
+ <section style="border:1px solid #3a6396;border-radius:12px;padding:16px;margin:18px 0">
+ <h3>Testar lista M3U e publicar canais</h3><p class="muted">Até 500 canais por lote, dois testes simultâneos. Nomes, capas e categorias são extraídos da lista. Endereços repetidos são ignorados. Links HTTP sem gateway ficam identificados como “Precisa de HTTPS”.</p>
+ <label>Lista completa<textarea id="live-batch-input" rows="10" maxlength="2097152" placeholder="#EXTM3U&#10;#EXTINF:-1 tvg-logo=&quot;https://exemplo.com/logo.png&quot;,Nome do canal&#10;https://exemplo.com/ao-vivo.m3u8" style="width:100%"></textarea></label>
+ <div style="display:flex;gap:10px;flex-wrap:wrap"><button id="live-batch-run" class="primary" type="button">Carregar e testar lista</button><button id="live-batch-stop" class="outline" type="button" hidden>Parar testes</button><button id="live-batch-publish" class="primary" type="button" disabled>Publicar aprovados</button></div>
+ <p id="live-batch-parse" class="muted" role="status"></p><p id="live-batch-status" role="status" aria-live="polite"></p><div id="live-batch-results"></div></section>
+ <details style="border:1px solid #365075;border-radius:12px;padding:16px"><summary>Testar ou cadastrar um canal individual</summary>
+ <form id="live-embed-form" style="display:grid;gap:12px;margin-top:16px;max-width:680px"><label>Nome do canal<input id="live-embed-title" maxlength="140" required></label><label>Link ou código iframe<textarea id="live-embed-url" rows="3" required></textarea></label><label><input id="live-embed-published" type="checkbox"> Publicar imediatamente (somente iframe)</label><button type="submit" class="outline">Salvar canal / rascunho</button></form>
+ <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px"><button id="live-test-button" type="button" class="outline">Testar sinal HLS</button><button id="live-test-publish" type="button" class="primary" hidden>Publicar canal testado</button></div><p id="live-test-message" role="status" aria-live="polite"></p><video id="live-test-video" muted playsinline hidden style="width:100%;max-width:520px;background:#000"></video></details>
+ <p id="live-embed-message" role="status" aria-live="polite"></p><h3>Canais cadastrados</h3><button id="live-embed-refresh" type="button" class="outline">Atualizar canais cadastrados</button><div id="live-embed-list"></div>`;
+ $('live-batch-run').onclick=runBatch;$('live-batch-stop').onclick=()=>batchController?.abort();$('live-batch-publish').onclick=publishBatch;
+ $('live-test-button').onclick=testSingle;$('live-embed-refresh').onclick=refresh;
+ $('live-embed-url').oninput=()=>{singleController?.abort();singleItem=null;$('live-test-publish').hidden=true;};
+ $('live-test-publish').onclick=async()=>{if(!singleItem)return;singleItem.title=$('live-embed-title').value.trim();await publishOne(singleItem);if(singleItem?.published)$('live-test-publish').hidden=true;};
+ $('live-embed-form').onsubmit=async event=>{
+  event.preventDefault();if(!authorized())return;
+  try{
+   const embed_url=source($('live-embed-url').value),title=$('live-embed-title').value.trim();
+   if(!title)throw Error('Informe o nome do canal.');
+   const hls=/\.m3u8?(?:\?|$)/i.test(embed_url),is_published=$('live-embed-published').checked;
+   if(!embed_url.startsWith('https:'))throw Error('O cadastro precisa de HTTPS. Teste o endereço na lista para ver o diagnóstico.');
+   if(hls&&is_published)throw Error('Use Testar sinal HLS e depois Publicar canal testado.');
+   const {error}=await db.from('novaplay_live_embeds').upsert({title,embed_url,stream_type:hls?'hls':'iframe',rights_confirmed:true,is_published},{onConflict:'embed_url'});
+   if(error)throw error;message('live-embed-message','Canal salvo.');await refresh();
+  }catch(error){message('live-embed-message',error.message);}
+ };
+ document.querySelector('[data-admin-tab="canais"]')?.addEventListener('click',refresh);
+ window.addEventListener('pagehide',()=>{batchController?.abort();singleController?.abort();});
+ setInterval(()=>{if(rows.length){rows.forEach(update);summary();}},30000);
+ refresh();
 }
-if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",init);else init()
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 })();

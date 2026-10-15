@@ -768,7 +768,11 @@ function openLiveEmbed(url,title){
  frame.referrerPolicy="strict-origin-when-cross-origin";frame.hidden=false;frame.src=source.href;
  enterCinema();$("player-close").focus();return true;
 }
-window.NovaPlayPlayer={openEmbed:openLiveEmbed,closeEmbed:()=>{if(current?.item?.liveEmbedUrl)closePlayer()}};
+function openLiveHls(url,title){
+ let source;try{source=new URL(url);if(source.protocol!=="https:"||source.username||source.password)return false}catch{return false}
+ play({id:"live-"+source.href,title:String(title||"Canal ao vivo"),kind:"tv",src:source.href,mode:"hls",live:true});return true;
+}
+window.NovaPlayPlayer={openHls:openLiveHls,openEmbed:openLiveEmbed,closeEmbed:()=>{if(current?.item?.liveEmbedUrl)closePlayer()}};
 $("player-live-reload").onclick=()=>{if(current?.item?.liveEmbedUrl)openLiveEmbed(current.item.liveEmbedUrl,current.item.title)};
 function play(item,episode){
  if(item?.liveEmbedUrl){openLiveEmbed(item.liveEmbedUrl,item.title);return}
@@ -833,7 +837,7 @@ function play(item,episode){
  function startSource(){
   if(seq!==attempt)return;
   if(!src){fail("Não foi possível localizar o arquivo de vídeo.");return}
-  if(/\.m3u8(?:\?|$)/i.test(src)){
+  if(media.mode==="hls"||/\.m3u8?(?:\?|$)/i.test(src)){
     if(v.canPlayType("application/vnd.apple.mpegurl")){
       v.src=src;startAutoplay(v,seq);
     }else if(window.Hls&&window.Hls.isSupported()){
@@ -957,7 +961,7 @@ document.addEventListener("keydown",e=>{
 document.addEventListener("visibilitychange",()=>{if(document.hidden){stopHeroPreview();if(!$("player-layer").hidden)$("video").pause()}});
 window.addEventListener("scroll",()=>$("app-header").classList.toggle("is-scrolled",window.scrollY>24),{passive:true});
 if("serviceWorker" in navigator&&location.protocol==="https:"){
- window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js?v=0.45.36",{updateViaCache:"none"}).catch(()=>{}));
+ window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js?v=0.45.37",{updateViaCache:"none"}).catch(()=>{}));
 }
 navigate((location.hash||"").slice(1)||"inicio");
 loadUploadedCatalog();

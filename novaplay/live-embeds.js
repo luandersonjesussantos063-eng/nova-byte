@@ -13,8 +13,10 @@ function channelKey(url){try{return new URL(url).pathname.replace(/\/+$/,"").spl
 function channelIdentity(url){try{const u=new URL(url);return u.origin+u.pathname.replace(/\/+$/,"")+u.search}catch{return url}}
 let loadSequence=0;
 function note(message){const el=$("nplay-channel-notice");if(el)el.textContent=message}
-function openChannel(url,title){
- if(!window.NovaPlayPlayer?.openEmbed?.(url,title))console.warn("NPlay: não foi possível abrir o player do canal.");
+function openChannel(item){
+ const hls=item.stream_type==="hls"||/\.m3u8?(?:\?|$)/i.test(item.embed_url);
+ const open=hls?window.NovaPlayPlayer?.openHls:window.NovaPlayPlayer?.openEmbed;
+ if(!open?.(item.embed_url,item.title))console.warn("NPlay: não foi possível abrir o player do canal.");
 }
 async function load(){
  const list=$("iframe-channel-list");if(!list)return;
@@ -62,13 +64,12 @@ async function load(){
  if(window.supabase){
   try{
    const db=window.supabase.createClient("https://vajlhodqxskozuxxlujv.supabase.co","sb_publishable_uT0b4y0Bex1k1QWZoyIfKg_K0pm-yS3");
-   const {data,error}=await db.from("novaplay_live_embeds").select("id,title,embed_url").eq("is_published",true).order("created_at",{ascending:false});
+   const {data,error}=await db.from("novaplay_live_embeds").select("id,title,embed_url,stream_type,logo_url,category").eq("is_published",true).order("created_at",{ascending:false});
    if(error)throw error;
-   const seen=new Set(channels.map(item=>item.embed_url));
-   for(const item of data||[]){
-    if(!item.embed_url||seen.has(item.embed_url))continue;
-    seen.add(item.embed_url);channels.push(item);
-   }
+   const saved=(data||[]).filter(item=>item.embed_url);
+   const seen=new Set(saved.map(item=>item.embed_url));
+   const previous=channels.filter(item=>!seen.has(item.embed_url));
+   channels.splice(0,channels.length,...saved,...previous);
   }catch(e){note("Não foi possível atualizar os canais adicionais agora. A lista de canais continua disponível.")}
  }
 
@@ -110,7 +111,7 @@ function renderChannels(channels){
   button.append(art,badge,play);
   const title=document.createElement("strong");title.className="nplay-live-title";title.textContent=item.title;
   const subtitle=document.createElement("span");subtitle.className="nplay-live-subtitle";subtitle.textContent=item.epg?.current?.title?("Agora: "+item.epg.current.title):(item.category?item.category+" · Ao vivo":"Canal ao vivo · Assistir agora");
-  button.onclick=()=>openChannel(item.embed_url,item.title);
+  button.onclick=()=>openChannel(item);
   card.append(button,title,subtitle);list.append(card);
  }
 }
