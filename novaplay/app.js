@@ -662,7 +662,9 @@ $("cinema-fullscreen").onclick=()=>{
  }
  showCinemaUi();
 };
-function stopPlayback(){\n clearNplayShieldTimer();const started=$("nplay-live-video-started");if(started){started.hidden=true;started.disabled=false;started.textContent="Vídeo começou"}\n const shield=$("nplay-live-touch-shield"),toggle=$("nplay-live-touch-toggle");if(shield)shield.hidden=true;if(toggle)toggle.hidden=true;
+function stopPlayback(){
+ clearNplayShieldTimer();const started=$("nplay-live-video-started");if(started){started.hidden=true;started.disabled=false;started.textContent="Vídeo começou"}
+ const shield=$("nplay-live-touch-shield"),toggle=$("nplay-live-touch-toggle");if(shield)shield.hidden=true;if(toggle)toggle.hidden=true;
  if($("player-loading"))$("player-loading").hidden=true;
  $("player-live-reload").hidden=true;
  $("player-issue-panel").hidden=true;
