@@ -662,7 +662,7 @@ $("cinema-fullscreen").onclick=()=>{
  }
  showCinemaUi();
 };
-function stopPlayback(){
+function stopPlayback(){\n const shield=$("nplay-live-touch-shield"),toggle=$("nplay-live-touch-toggle");if(shield)shield.hidden=true;if(toggle)toggle.hidden=true;
  if($("player-loading"))$("player-loading").hidden=true;
  $("player-live-reload").hidden=true;
  $("player-issue-panel").hidden=true;
@@ -756,6 +756,27 @@ function setResume(video,id,seq){
  };
  video.onended=()=>{delete progress[id];save(progressKey,progress);if(view==="inicio")renderRows()};
 }
+function setupLiveTouchShield(){
+ const frame=$("fallback-frame");const wrap=frame?.parentElement;if(!wrap)return;
+ let overlay=$("nplay-live-touch-shield"),toggle=$("nplay-live-touch-toggle");
+ if(!overlay){
+  overlay=document.createElement("div");overlay.id="nplay-live-touch-shield";
+  overlay.style.cssText="position:absolute;inset:0;z-index:12;background:transparent;pointer-events:auto";
+  overlay.setAttribute("aria-label","Toques bloqueados sobre o vídeo");
+  wrap.style.position="relative";wrap.appendChild(overlay);
+ }
+ if(!toggle){
+  toggle=document.createElement("button");toggle.id="nplay-live-touch-toggle";toggle.type="button";
+  toggle.style.cssText="position:fixed;z-index:2147483000;right:16px;bottom:22px;padding:12px 17px;border-radius:12px;background:#2364d5;color:#fff;border:1px solid #a8c6ff;font-weight:800;cursor:pointer;box-shadow:0 4px 18px #0009";
+  document.body.appendChild(toggle);
+  toggle.onclick=()=>{
+   const shield=$("nplay-live-touch-shield");const enabled=shield?.hidden;
+   if(shield)shield.hidden=!enabled;
+   toggle.textContent=enabled?"Liberar controles do vídeo":"Proteger tela";
+  };
+ }
+ overlay.hidden=true;toggle.hidden=false;toggle.textContent="Proteger tela";
+}
 function openLiveEmbed(url,title){
  let source;
  try{source=new URL(url);if(source.protocol!=="https:")return false}catch{return false}
@@ -774,9 +795,9 @@ function openLiveEmbed(url,title){
  frame.title=current.item.title;frame.setAttribute("allow","autoplay; encrypted-media; fullscreen; picture-in-picture");
  // Iframes externos não recebem permissão para abrir pop-ups ou navegar a janela principal.
  // Scripts e reprodução continuam habilitados; alguns provedores podem recusar sandbox.
- frame.setAttribute("sandbox","allow-scripts allow-same-origin allow-forms allow-presentation allow-pointer-lock");
+ frame.removeAttribute("sandbox");
  frame.referrerPolicy="no-referrer";frame.hidden=false;frame.src=source.href;
- enterCinema();$("player-close").focus();return true;
+ setupLiveTouchShield();enterCinema();$("player-close").focus();return true;
 }
 function openLiveHls(url,title){
  let source;try{source=new URL(url);if(source.protocol!=="https:"||source.username||source.password)return false}catch{return false}
