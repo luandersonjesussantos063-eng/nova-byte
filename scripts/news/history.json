@@ -1,5 +1,6 @@
 {
   "published_ids": [
+    "https://developer.chrome.com/blog/new-in-devtools-october-2026?hl=en",
     "https://developer.chrome.com/blog/html-in-canvas-ot-changes?hl=en",
     "https://developer.chrome.com/blog/connection-allowlist-announcement?hl=en",
     "tag:blogger.com,1999:blog-6755709643044947179.post-6326737442389025352",
@@ -41,6 +42,15 @@
     "tag:blogger.com,1999:blog-6755709643044947179.post-3564094472242054542"
   ],
   "posts": [
+    {
+      "slug": "new-in-devtools-october-2026",
+      "title": "New in DevTools - October 2026",
+      "description": "New in DevTools - October 2026. Entenda a novidade e o impacto prático para empresas, sites, aplicativos e profissionais.",
+      "date": "2026-10-14",
+      "category": "Web e performance",
+      "image": "/assets/news/new-in-devtools-october-2026.svg",
+      "source": "https://developer.chrome.com/blog/new-in-devtools-october-2026?hl=en"
+    },
     {
       "slug": "html-in-canvas-updates-iterating-toward-a-better-web-api",
       "title": "HTML-in-Canvas updates: Iterating toward a better Web API",
