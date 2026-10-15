@@ -9,7 +9,7 @@ function imageUrl(value){
  try{const url=new URL(raw,"https://api.reidoscanais.si/");return url.protocol==="https:"?url.href:""}catch{return ""}
 }
 function channelKey(url){try{return new URL(url).pathname.replace(/\/+$/,"").split("/").pop()}catch{return ""}}
-let loadSequence=0,livePreviews=null;
+let loadSequence=0,livePreviews=null,liveChannelData=[];
 function note(message){const el=$("nplay-channel-notice");if(el)el.textContent=message}
 function openChannel(item){
  livePreviews?.stop();
@@ -35,13 +35,21 @@ async function load(){
   renderChannels([]);note("Não foi possível carregar os canais publicados. Tente novamente em instantes.");
  }
 }
+function filterLiveChannels(channels,query){
+ const normalize=value=>String(value||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLocaleLowerCase("pt-BR");
+ const terms=normalize(query).trim().split(/\s+/).filter(Boolean);
+ return channels.filter(item=>terms.every(term=>normalize(item.title+" "+(item.category||"")).includes(term)));
+}
 function renderChannels(channels){
+ liveChannelData=channels;
+ const visibleChannels=filterLiveChannels(channels,$("nplay-live-search")?.value||"");
  const list=$("iframe-channel-list");if(!list)return;
  if(!livePreviews&&window.NPlayLivePreviews)livePreviews=window.NPlayLivePreviews.create(list);
  livePreviews?.reset();
  list.replaceChildren();
- const count=$("nplay-live-count");if(count)count.textContent=channels.length+" canais na lista";
- for(const item of channels){
+ const count=$("nplay-live-count");if(count)count.textContent=visibleChannels.length+" de "+channels.length+" canais";
+ if(!visibleChannels.length&&channels.length){const empty=document.createElement("p");empty.className="nplay-channel-empty";empty.textContent="Nenhum canal encontrado. Tente outro nome ou categoria.";list.append(empty)}
+ for(const item of visibleChannels){
   const isPremiere=item.embed_url===PROVIDER;
   const card=document.createElement("article");
   card.className="nplay-live-card";
@@ -83,6 +91,7 @@ function renderChannels(channels){
  }
 }
 function init(){
+ $("nplay-live-search")?.addEventListener("input",()=>renderChannels(liveChannelData));
  window.addEventListener("nplay:tv-open",()=>{const panel=$("iframe-channels-panel");if(panel){panel.hidden=false;load()}});
  if(location.hash==="#tv")load();
 

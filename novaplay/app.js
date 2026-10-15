@@ -255,13 +255,13 @@ function renderRows(){
  ["Continuar assistindo",continued(),"continuar",false],
  ["TV aberta",db.channels,"tv",true],
  ["Filmes licenciados",uploadedCatalog.filter(x=>x.mode==="licensed"&&!x.catalogOnly),"filmes",false],
- ["Filmes disponíveis",uploadedCatalog.filter(x=>x.kind==="film"&&x.mode==="r2"&&!x.catalogOnly),"filmes",false],
+ ["Sua próxima sessão",uploadedCatalog.filter(x=>x.kind==="film"&&x.mode==="r2"&&!x.catalogOnly),"filmes",false],
+ ["Séries para acompanhar",uploadedCatalog.filter(x=>x.kind==="series"&&!x.catalogOnly),"series",false],
  ["Filmes do YouTube",youtubeFilms(),"youtube",false],
  ["Animes e estreias · Em breve",upcomingFilms(),"em-breve",false],
  ...genreOrder.filter(name=>name!=="Não classificados")
-  .map(name=>[name,genreGroups().get(name),"genero:"+name,false]).filter(b=>b[1].length),
+  .map(name=>[name,genreGroups().get(name),"genero:"+name,false]).filter(b=>b[1].length>=3),
  ["Ainda sem gênero",genreGroups().get("Não classificados").slice(0,80),"genero:Não classificados",false],
- ["Adicionados ao catálogo",[...uploadedCatalog].reverse(),"filmes",false],
  ["Minha lista",all.filter(x=>favorite.has(x.id)),"favoritos",false]
  ];
  blocks.forEach(b=>{const row=shelf(b[0],b[1].slice(0,36),b[2],b[3]);if(row)holder.append(row)});
@@ -972,8 +972,10 @@ document.addEventListener("keydown",e=>{
 document.addEventListener("visibilitychange",()=>{if(document.hidden){stopHeroPreview();if(!$("player-layer").hidden)$("video").pause()}});
 window.addEventListener("scroll",()=>$("app-header").classList.toggle("is-scrolled",window.scrollY>24),{passive:true});
 if("serviceWorker" in navigator&&location.protocol==="https:"){
- window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js?v=0.45.41",{updateViaCache:"none"}).catch(()=>{}));
+ window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js?v=0.46.0",{updateViaCache:"none"}).catch(()=>{}));
 }
+$("hero-play").onclick=()=>navigate("tv");
+$("hero-info").onclick=()=>navigate("filmes");
 navigate((location.hash||"").slice(1)||"inicio");
 loadUploadedCatalog();
 })();

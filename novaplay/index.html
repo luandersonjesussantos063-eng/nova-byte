@@ -11,7 +11,7 @@
 <meta name="robots" content="noindex,nofollow">
 <meta name="description" content="NPlay: filmes, séries e TV ao vivo em português.">
 <link rel="icon" href="./assets/icon.svg" type="image/svg+xml">
-<link rel="manifest" href="./manifest.webmanifest?v=0.45.43">
+<link rel="manifest" href="./manifest.webmanifest?v=0.46.0">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="./styles.css?v=0.45.22">
 <title>NPlay — Filmes, séries e TV ao vivo</title>
@@ -58,7 +58,7 @@
 .nplay-profile-form input,.nplay-profile-form select{background:#0e1a2d;color:#fff;border:1px solid #7991b2;border-radius:8px;padding:11px;min-width:0}.nplay-profile-form button{background:#3272d7;color:#fff;border:0;border-radius:8px;padding:10px 15px;cursor:pointer}
 @media(max-width:450px){.nplay-profile-hero{min-height:43vh}.nplay-profile-grid{gap:20px 12px}.nplay-profile-picture{width:min(100%,100px)}}
 </style><style id="nplay-profile-poster-style">
-/* V 0.45.43: abertura imersiva vertical com perfis integrados. */
+/* V 0.46.0: abertura imersiva vertical com perfis integrados. */
 .nplay-profile-gate{background:#07111f;color:#fff;overflow-x:hidden;overflow-y:auto;scrollbar-color:#566176 transparent;display:block}
 .nplay-profile-hero{position:relative;box-sizing:border-box;width:100%;max-width:600px;min-height:0;height:auto;margin:0 auto;display:flex;align-items:center;justify-content:center;flex-direction:column;padding:0;overflow:hidden;background:#07111f}
 .nplay-profile-hero::before,.nplay-profile-hero::after{content:none;display:none}
@@ -151,7 +151,9 @@
 .player-layer.cinema.live-embed-active .video-wrap iframe{display:block;width:100%;height:100%;border:0;background:#000}
 .nplay-live-reload{display:grid;place-items:center;flex:0 0 36px;width:36px;height:36px;border-radius:50%;border:1px solid #ffffff55;background:#15243acc;color:#fff;font-size:24px;cursor:pointer}
 .nplay-live-reload[hidden]{display:none}
-</style></head>
+</style>
+<link rel="stylesheet" href="./assets/experience.css?v=0.46.0">
+</head>
 <body>
 <section id="nplay-profile-gate" class="nplay-profile-gate" hidden aria-label="Escolha seu perfil">
 <div class="nplay-profile-hero"><img class="nplay-profile-poster" src="./assets/profile-immersive-v04516.webp?v=0.45.22" alt="NPlay — Filmes, séries e TV ao vivo" width="948" height="1659" fetchpriority="high" decoding="async"><div class="nplay-profile-brand">N<span>Play</span></div><p class="nplay-profile-tag">Seu entretenimento começa aqui</p></div>
@@ -222,9 +224,9 @@
       <div class="hero-content">
         <div class="hero-eyebrow"><span class="brand-mini">N</span> <span>DESTAQUE DA NPLAY</span></div>
         <div class="hero-genre" id="hero-genre">FILMES E SÉRIES EM PORTUGUÊS</div>
-        <h1 id="hero-title">NPlay</h1>
+        <h1 id="hero-title">O próximo play é seu.</h1>
         <div class="hero-metadata" id="hero-metadata"></div>
-        <p class="hero-desc" id="hero-description"></p>
+        <p class="hero-desc" id="hero-description">Filmes, séries e TV ao vivo. Escolha o que combina com o seu momento.</p>
         <div class="hero-buttons">
           <button class="btn btn-primary" id="hero-play"><svg><use href="#i-play"/></svg> Assistir agora</button>
           <button class="btn btn-secondary" id="hero-preview-open" aria-label="Assistir prévia com áudio do filme em destaque"><svg><use href="#i-play"/></svg> Prévia com som</button>
@@ -245,6 +247,11 @@
       </section>
       <div class="hero-dots" id="hero-dots" aria-label="Selecionar destaque"></div>
     </section>
+    <nav class="nplay-discover" aria-label="Explore a NPlay">
+      <button type="button" data-nav="tv"><span class="nplay-discover-icon"><svg aria-hidden="true"><use href="#i-tv"/></svg></span><span class="nplay-discover-copy"><strong>Agora, ao vivo</strong><small>Encontre o seu canal favorito</small></span><span class="nplay-discover-arrow" aria-hidden="true">↗</span></button>
+      <button type="button" data-nav="filmes"><span class="nplay-discover-icon"><svg aria-hidden="true"><use href="#i-film"/></svg></span><span class="nplay-discover-copy"><strong>Uma boa história</strong><small>Escolha o filme da sua sessão</small></span><span class="nplay-discover-arrow" aria-hidden="true">↗</span></button>
+      <button type="button" data-nav="series"><span class="nplay-discover-icon"><svg aria-hidden="true"><use href="#i-series"/></svg></span><span class="nplay-discover-copy"><strong>Só mais um episódio</strong><small>Sua próxima série começa aqui</small></span><span class="nplay-discover-arrow" aria-hidden="true">↗</span></button>
+    </nav>
     <div class="home-rows" id="home-rows"></div>
   </div>
   <div id="view-category" class="view" hidden>
@@ -256,7 +263,9 @@
     </div>
     <div class="category-grid" id="category-grid"></div>
 <section id="iframe-channels-panel" hidden style="padding:12px clamp(18px,4.2vw,80px) 30px">
-<h2>Mais canais ao vivo</h2>
+<h2>Encontre seu canal</h2>
+<div class="nplay-live-toolbar"><label class="nplay-channel-search"><svg aria-hidden="true"><use href="#i-search"/></svg><input id="nplay-live-search" type="search" placeholder="Buscar canal ou categoria" aria-label="Buscar canal ao vivo" autocomplete="off"></label><span>A prévia começa sem som.<br>Toque no canal para assistir.</span></div>
+<p id="nplay-channel-notice" role="status"></p>
 <p id="nplay-live-count" role="status" style="color:#aabbd3;font-size:13px;margin:8px 0 16px"></p>
 <div id="iframe-channel-list" class="nplay-live-grid"></div>
 </section>
@@ -339,17 +348,17 @@
 </div>
 <aside id="nplay-install-banner" hidden style="position:fixed;z-index:1000;bottom:calc(76px + env(safe-area-inset-bottom,0px));left:12px;right:12px;max-width:480px;margin:auto;padding:15px 16px;border-radius:16px;border:1px solid #5474a2;background:#122541;box-shadow:0 12px 38px #000b;color:#fff"><div style="display:flex;align-items:center;gap:12px"><img src="./assets/icon-192.png" alt="" width="48" height="48" style="border-radius:12px"><div style="flex:1"><strong>Instale a NPlay</strong><div id="nplay-install-description" style="font-size:12px;color:#b8cbed;margin-top:3px">Assista com um toque na tela inicial.</div></div><button id="nplay-install-dismiss" type="button" aria-label="Fechar sugestão de instalação" style="background:transparent;color:white;border:0;font-size:20px;cursor:pointer">✕</button></div><button id="nplay-install-action" type="button" style="margin-top:12px;width:100%;background:#326ad6;color:white;border:0;border-radius:10px;padding:12px;font-weight:800;cursor:pointer">Instalar aplicativo</button></aside>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
-<footer class="app-footer"><a href="./admin/" style="display:inline-block;color:#a6c8ff;font-weight:750;padding:7px 0;text-decoration:underline">Painel do criador ↗</a><div>NPlay V 0.45.43 · Filmes, séries e TV em português · Artes ilustrativas da NPlay · O uso comercial de cada conteúdo exige verificação dos direitos.</div></footer>
+<footer class="app-footer"><a href="./admin/" style="display:inline-block;color:#a6c8ff;font-weight:750;padding:7px 0;text-decoration:underline">Painel do criador ↗</a><div>NPlay V 0.46.0 · Filmes, séries e TV em português · Artes ilustrativas da NPlay · O uso comercial de cada conteúdo exige verificação dos direitos.</div></footer>
 <script src="./assets/cover.js?v=0.39.2-covers2"></script>
 <script src="./assets/card-hover.js?v=0.39.2"></script>
 <script src="./assets/hero-scenes.js?v=0.39.2"></script>
-<script src="./catalog.js?v=0.45.43"></script>
+<script src="./catalog.js?v=0.46.0"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.58.0/dist/umd/supabase.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/hls.js@1.7.3/dist/hls.min.js"></script>
-<script src="./app.js?v=0.45.43" defer></script>
-<script src="./assets/live-preview.js?v=0.45.43" defer></script>
-<script src="./live-embeds.js?v=0.45.43" defer></script>
-<script src="./install.js?v=0.45.43" defer></script>
-<script src="./profiles.js?v=0.45.43" defer></script>
+<script src="./app.js?v=0.46.0" defer></script>
+<script src="./assets/live-preview.js?v=0.46.0" defer></script>
+<script src="./live-embeds.js?v=0.46.0" defer></script>
+<script src="./install.js?v=0.46.0" defer></script>
+<script src="./profiles.js?v=0.46.0" defer></script>
 </body>
 </html>

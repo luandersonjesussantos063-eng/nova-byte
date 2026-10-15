@@ -103,3 +103,14 @@ test('admin separates new HLS, legacy provider and individual channels with stat
  assert.equal(channelGroup({embed_url:'https://rdcanais.org.example.net/embed'}),'individual');
  assert.equal(filterChannels(records,'m3u','published','publica').length,1);
 });
+
+test('live channel search matches accented titles and multiple category words without changing publication data',()=>{
+ const source=read('live-embeds.js');
+ const helper=source.slice(source.indexOf('function filterLiveChannels('),source.indexOf('function renderChannels('));
+ const context=vm.createContext({});vm.runInContext(helper,context);
+ const rows=[{title:'TV Educação',category:'Pública'},{title:'TV Brasil',category:'Pública'},{title:'Cultura Pará',category:'Educação'}];
+ assert.equal(context.filterLiveChannels(rows,'educacao publica')[0].title,'TV Educação');
+ assert.equal(context.filterLiveChannels(rows,'  BRASIL  ').length,1);
+ assert.equal(context.filterLiveChannels(rows,'inexistente').length,0);
+ assert.equal(context.filterLiveChannels(rows,'').length,3);assert.equal(rows.length,3);
+});
