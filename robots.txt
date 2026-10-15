@@ -1,4 +1,5 @@
 User-agent: *
 Allow: /
+Disallow: /novaplay/
 
 Sitemap: https://novabytesolucoes.com.br/sitemap.xml
