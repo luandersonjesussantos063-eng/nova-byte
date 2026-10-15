@@ -41,9 +41,12 @@ function filterLiveChannels(channels,query){
  const terms=normalize(query).trim().split(/\s+/).filter(Boolean);
  return channels.filter(item=>terms.every(term=>normalize(item.title+" "+(item.category||"")).includes(term)));
 }
+let liveDisplayMode="all";
 function renderChannels(channels){
  liveChannelData=channels;
- const visibleChannels=filterLiveChannels(channels,$("nplay-live-search")?.value||"");
+ const searched=filterLiveChannels(channels,$("nplay-live-search")?.value||"");
+ const direct=item=>item.stream_type==="hls"||/\\.m3u8?(?:\\?|$)/i.test(item.embed_url||"")||/\\.(?:mp4|webm)(?:\\?|$)/i.test(item.embed_url||"");
+ const visibleChannels=searched.filter(item=>liveDisplayMode==="all"||(liveDisplayMode==="direct"?direct(item):!direct(item)));
  const list=$("iframe-channel-list");if(!list)return;
  if(!livePreviews&&window.NPlayLivePreviews)livePreviews=window.NPlayLivePreviews.create(list);
  livePreviews?.reset();
@@ -92,6 +95,12 @@ function renderChannels(channels){
  }
 }
 function init(){
+ $("nplay-live-mode")?.addEventListener("click",event=>{
+  const button=event.target.closest("button[data-live-mode]");if(!button)return;
+  liveDisplayMode=button.dataset.liveMode;
+  document.querySelectorAll("#nplay-live-mode button").forEach(b=>{b.setAttribute("aria-pressed",String(b===button));b.style.background=b===button?"#3973df":"#172944";});
+  renderChannels(liveChannelData);
+ });
  $("nplay-live-search")?.addEventListener("input",()=>renderChannels(liveChannelData));
  window.addEventListener("nplay:tv-open",()=>{const panel=$("iframe-channels-panel");if(panel){panel.hidden=false;load()}});
  load();
