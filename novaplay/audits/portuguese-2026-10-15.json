@@ -1,0 +1,488 @@
+{
+  "date": "2026-10-15",
+  "version": "0.45.43",
+  "policy": "Retirar canais musicais e versões sem áudio português; idioma indefinido fica fora da grade até revisão.",
+  "live_hidden": [
+    {
+      "id": "b0d21887-19fa-4690-b89b-46cd915122d7",
+      "title": "+MaisUm (720p)",
+      "reason": "music_channel"
+    },
+    {
+      "id": "d1617ab0-d6bb-40bf-9d22-3572b7281a3b",
+      "title": "3ABN Praise Him Music Network",
+      "reason": "music_channel"
+    },
+    {
+      "id": "a3572c3b-9035-4efb-a34e-6bb1dcb3b584",
+      "title": "4 Fun TV",
+      "reason": "music_channel"
+    },
+    {
+      "id": "ce5cc728-4263-408c-bc4e-18250d77813b",
+      "title": "4 Music",
+      "reason": "music_channel"
+    },
+    {
+      "id": "97255d33-aeb4-4b8f-af35-45c760aa369d",
+      "title": "4Kurd",
+      "reason": "music_channel"
+    },
+    {
+      "id": "9feb4509-0a90-4745-b26c-4793409e3396",
+      "title": "8XM",
+      "reason": "music_channel"
+    },
+    {
+      "id": "e9e86923-dd79-4ff7-8cfe-f773338433e9",
+      "title": "9X Jalwa (1080p)",
+      "reason": "music_channel"
+    },
+    {
+      "id": "864f656a-f801-499b-8342-84855170d512",
+      "title": "Capital TV",
+      "reason": "music_channel"
+    },
+    {
+      "id": "eac41ed9-9943-4df7-b752-a4b7658c19ab",
+      "title": "FM O DIA 100.5 - ESTÚDIO AO VIVO",
+      "reason": "music_channel"
+    },
+    {
+      "id": "11aa7732-a737-4e9b-983f-40537d701ad8",
+      "title": "Gospel Music",
+      "reason": "music_channel"
+    },
+    {
+      "id": "04dec8cd-8ddc-4ead-b08b-b6323ed1caec",
+      "title": "M2O",
+      "reason": "music_channel"
+    },
+    {
+      "id": "1c40a593-0613-461a-80bb-61bfa3d3dde3",
+      "title": "Ocko Star",
+      "reason": "music_channel"
+    },
+    {
+      "id": "b9d21620-463d-4731-b5da-747e61c00304",
+      "title": "ON FM TV",
+      "reason": "music_channel"
+    },
+    {
+      "id": "d17c4e4f-6186-49d4-85a4-9b0474eb85a0",
+      "title": "PORTAL FOXMIX",
+      "reason": "music_channel"
+    },
+    {
+      "id": "f083b6b9-27a4-4979-b7fe-659a308d07c3",
+      "title": "POWER TV",
+      "reason": "music_channel"
+    },
+    {
+      "id": "442e9f7f-cc5e-40b9-b7a8-719ef5ab2a43",
+      "title": "RTL (Itália)",
+      "reason": "music_channel"
+    },
+    {
+      "id": "aea88f12-723e-43c6-8dd0-26bcbb8ac131",
+      "title": "TV 538",
+      "reason": "music_channel"
+    },
+    {
+      "id": "57851cc9-489e-46b1-bb93-2174a3958cc9",
+      "title": "24 Hour Free Movies (720p)",
+      "reason": "foreign_source_without_portuguese_confirmation"
+    },
+    {
+      "id": "a79c83df-51e2-4dab-a86d-8f3a24129d3a",
+      "title": "ACC Digital Network (1080p)",
+      "reason": "foreign_source_without_portuguese_confirmation"
+    },
+    {
+      "id": "387efc4f-a98f-42b6-8d49-515ff60bb97c",
+      "title": "Afra Film",
+      "reason": "foreign_source_without_portuguese_confirmation"
+    },
+    {
+      "id": "231c1f68-d17c-4194-9c0e-344cb1fa7365",
+      "title": "Alankar TV (720p)",
+      "reason": "foreign_source_without_portuguese_confirmation"
+    },
+    {
+      "id": "133c5008-3384-486b-97e2-bb8a3e4dfd86",
+      "title": "Allo Cine (1080p)",
+      "reason": "foreign_source_without_portuguese_confirmation"
+    },
+    {
+      "id": "9a92c17f-448d-4785-9833-80ca4d8ad913",
+      "title": "Anger Management Channel (1080p)",
+      "reason": "foreign_source_without_portuguese_confirmation"
+    },
+    {
+      "id": "7cd4afbc-cdfb-4c03-bcb1-dc579fdbb522",
+      "title": "Arirang",
+      "reason": "foreign_source_without_portuguese_confirmation"
+    },
+    {
+      "id": "663c802e-e96b-4689-a0cc-7457c85ad32f",
+      "title": "ARTFLIX Movie Classics (720p)",
+      "reason": "foreign_source_without_portuguese_confirmation"
+    },
+    {
+      "id": "f151ca66-c2bc-4c6b-85e9-9af9643c886a",
+      "title": "Astrahan.Ru Sport (720p)",
+      "reason": "foreign_source_without_portuguese_confirmation"
+    },
+    {
+      "id": "0ba6e01a-4d2c-4e21-ae17-fc25fcefcca6",
+      "title": "Aurora Media Films (720p)",
+      "reason": "foreign_source_without_portuguese_confirmation"
+    },
+    {
+      "id": "3c15dedd-6be4-48cd-b81a-5970c9a3eb84",
+      "title": "B4U Bhojpuri (1080p)",
+      "reason": "foreign_source_without_portuguese_confirmation"
+    },
+    {
+      "id": "33ab9065-ab07-429e-a458-d48c5e8cb41b",
+      "title": "B4U Kadak (576p)",
+      "reason": "foreign_source_without_portuguese_confirmation"
+    },
+    {
+      "id": "57778f1d-76bc-4510-9858-902b3e3b3483",
+      "title": "B4U Movies (576p)",
+      "reason": "foreign_source_without_portuguese_confirmation"
+    },
+    {
+      "id": "6f82c90d-f735-4d61-8d36-2fc5eca04e86",
+      "title": "Bhojpuri Cinema (720p)",
+      "reason": "foreign_source_without_portuguese_confirmation"
+    },
+    {
+      "id": "acb685c5-018c-4c6a-9858-abd65437bbdb",
+      "title": "Bloomberg TV",
+      "reason": "foreign_source_without_portuguese_confirmation"
+    },
+    {
+      "id": "1d8330c6-a937-44dc-9512-a18e6eaee1f5",
+      "title": "Canal RT Documentário",
+      "reason": "foreign_source_without_portuguese_confirmation"
+    },
+    {
+      "id": "d23a9f4f-21dd-444f-bc25-a640a7430734",
+      "title": "Comedy Central (Germany)",
+      "reason": "foreign_source_without_portuguese_confirmation"
+    },
+    {
+      "id": "225098a1-2fd6-4bd9-a504-4eff7bbcbf0b",
+      "title": "Comedy Central Latin America (1080p)",
+      "reason": "foreign_source_without_portuguese_confirmation"
+    },
+    {
+      "id": "104200d7-2b7e-4a83-933b-2ad19d10fac5",
+      "title": "Comedy Play (576i)",
+      "reason": "foreign_source_without_portuguese_confirmation"
+    },
+    {
+      "id": "5e7d4066-9f01-4833-add9-d9c3ccb54752",
+      "title": "Cricket Gold (1080p)",
+      "reason": "foreign_source_without_portuguese_confirmation"
+    },
+    {
+      "id": "a4ce7f8e-9a5c-4fe3-8fff-da1721267a9e",
+      "title": "CRTV (Chile) (720p)",
+      "reason": "foreign_source_without_portuguese_confirmation"
+    },
+    {
+      "id": "57e2d11f-68e0-44e4-bee1-3e32a92ac1b9",
+      "title": "DD Sports (720p)",
+      "reason": "foreign_source_without_portuguese_confirmation"
+    },
+    {
+      "id": "d591ca29-67f0-46f5-8ea8-8445ab4f96a2",
+      "title": "DD Sports SD (1080p)",
+      "reason": "foreign_source_without_portuguese_confirmation"
+    },
+    {
+      "id": "71d53cac-44b3-4706-83e2-ed4d595acdfd",
+      "title": "Deutsche Welle",
+      "reason": "foreign_source_without_portuguese_confirmation"
+    },
+    {
+      "id": "b99929e2-88d8-4f01-a7a2-aed4d81d3441",
+      "title": "Dong Nai TV 2 (720p)",
+      "reason": "foreign_source_without_portuguese_confirmation"
+    },
+    {
+      "id": "ea5c0400-86f1-400a-884e-f78466d0ad37",
+      "title": "Dry Bar Comedy+ (720p)",
+      "reason": "foreign_source_without_portuguese_confirmation"
+    },
+    {
+      "id": "b8bb82fc-deda-478d-aa53-79c1196bb47d",
+      "title": "El-Heddaf TV (1080p)",
+      "reason": "foreign_source_without_portuguese_confirmation"
+    },
+    {
+      "id": "544a5009-3f12-4d95-9663-c0060acccd58",
+      "title": "ETV Comedy (1080p)",
+      "reason": "foreign_source_without_portuguese_confirmation"
+    },
+    {
+      "id": "374b30ff-acc9-47d6-9304-739232c4ceb3",
+      "title": "EWTN",
+      "reason": "foreign_source_without_portuguese_confirmation"
+    },
+    {
+      "id": "4489a65e-06cb-42de-aba2-245d022011c1",
+      "title": "FailArmy (720p)",
+      "reason": "foreign_source_without_portuguese_confirmation"
+    },
+    {
+      "id": "2497ac6c-a385-469b-a247-9c8ce3bfbd11",
+      "title": "FailArmy Italy",
+      "reason": "foreign_source_without_portuguese_confirmation"
+    },
+    {
+      "id": "18a4a9b1-1e33-4418-ba76-b239afd07a9e",
+      "title": "FailArmy Poland (720p)",
+      "reason": "foreign_source_without_portuguese_confirmation"
+    },
+    {
+      "id": "8c9c2aa7-4a75-47ca-b68f-2a71d5156c2c",
+      "title": "FailArmy UK (720p)",
+      "reason": "foreign_source_without_portuguese_confirmation"
+    },
+    {
+      "id": "be9db1df-c715-4424-b691-a6e234c8b572",
+      "title": "RT en español",
+      "reason": "foreign_source_without_portuguese_confirmation"
+    }
+  ],
+  "library_audio_check": [
+    {
+      "id": "dfb3f2be-280d-47d1-9787-308d53be02a7",
+      "title": "A Queda 2: No Limite (2026)",
+      "kind": "movie",
+      "result": "unknown",
+      "audio": [
+        {
+          "language": "und"
+        }
+      ]
+    },
+    {
+      "id": "a5f06c2f-d3ce-41bc-b879-e0346dae8c0f",
+      "title": "As Aventuras de Tadeo e a Lâmpada Mágica (2026)",
+      "kind": "movie",
+      "result": "portuguese",
+      "audio": [
+        {
+          "language": "por"
+        }
+      ]
+    },
+    {
+      "id": "3ab8e674-c0b9-4f8e-9f88-52e41e1b290d",
+      "title": "Código vingança",
+      "kind": "movie",
+      "result": "portuguese",
+      "audio": [
+        {
+          "language": "por"
+        }
+      ]
+    },
+    {
+      "id": "b5822afd-2632-4acf-b83a-01ef60c8b1ea",
+      "title": "Dragon Ball Super: Beerus 1ª Temporada (2026)",
+      "kind": "movie",
+      "result": "foreign",
+      "audio": [
+        {
+          "language": "jpn"
+        }
+      ]
+    },
+    {
+      "id": "b9fdb94f-c2c6-4b43-a58e-da090e922385",
+      "title": "Entre Penas e Bicadas (2021)",
+      "kind": "movie",
+      "result": "foreign",
+      "audio": [
+        {
+          "language": "chi"
+        }
+      ]
+    },
+    {
+      "id": "45fb969e-db2b-461c-aa79-d804d932847f",
+      "title": "Grand Theft Auto VI: Um Olhar Estendido (2026)",
+      "kind": "movie",
+      "result": "foreign",
+      "audio": [
+        {
+          "language": "eng"
+        }
+      ]
+    },
+    {
+      "id": "686a200d-2b74-49f7-a6f9-9338ec5f9849",
+      "title": "Homem-Aranha: Um Novo Dia (2026)",
+      "kind": "movie",
+      "result": "portuguese",
+      "audio": [
+        {
+          "language": "por"
+        }
+      ]
+    },
+    {
+      "id": "61f8d02f-6203-4ac3-a37f-8550d52fc4a3",
+      "title": "horaa do recreio",
+      "kind": "movie",
+      "result": "portuguese",
+      "audio": [
+        {
+          "language": "por"
+        },
+        {
+          "language": "por"
+        }
+      ]
+    },
+    {
+      "id": "320363fb-e5e4-4e29-abcb-5107e6ec711d",
+      "title": "Mais Um Tiro Certo  (2024)",
+      "kind": "movie",
+      "result": "portuguese",
+      "audio": [
+        {
+          "language": "por"
+        },
+        {
+          "language": "eng"
+        }
+      ]
+    },
+    {
+      "id": "e2631c88-4708-4606-8914-b02b80e1badf",
+      "title": "Moana 2 (2024)",
+      "kind": "movie",
+      "result": "portuguese",
+      "audio": [
+        {
+          "language": "por"
+        },
+        {
+          "language": "und"
+        }
+      ]
+    },
+    {
+      "id": "aa041e52-53ff-419c-9bc4-88f310b9eae7",
+      "title": "Schumacher 94: Nasce Uma Lenda (2026)",
+      "kind": "movie",
+      "result": "portuguese",
+      "audio": [
+        {
+          "language": "por"
+        }
+      ]
+    },
+    {
+      "id": "a84f3c31-4045-485f-9931-f89de1148178",
+      "title": "Sobrenatural: Agora Entre Nós  (2026)",
+      "kind": "movie",
+      "result": "portuguese",
+      "audio": [
+        {
+          "language": "por"
+        },
+        {
+          "language": "eng"
+        }
+      ]
+    },
+    {
+      "id": "cab7bcd6-759b-4cea-8608-5b71fd0d5b29",
+      "title": "Território do Crime (2026)",
+      "kind": "movie",
+      "result": "portuguese",
+      "audio": [
+        {
+          "language": "por"
+        }
+      ]
+    },
+    {
+      "id": "db68653a-4081-4048-b476-2579d30a45ef",
+      "title": "Tiro Certo 2021",
+      "kind": "movie",
+      "result": "portuguese",
+      "audio": [
+        {
+          "language": "por"
+        },
+        {
+          "language": "eng"
+        }
+      ]
+    },
+    {
+      "id": "14c683df-e46e-44eb-ac1c-256cb361d1eb",
+      "title": "Toy Story 5 (2026)",
+      "kind": "movie",
+      "result": "portuguese",
+      "audio": [
+        {
+          "language": "por"
+        }
+      ]
+    },
+    {
+      "id": "777268c7-69b5-4fdb-9613-51d3cdb0c60c",
+      "title": "Um Panda em Apuros 2 (2022)",
+      "kind": "movie",
+      "result": "portuguese",
+      "audio": [
+        {
+          "language": "por"
+        },
+        {
+          "language": "eng"
+        }
+      ]
+    },
+    {
+      "id": "25779053-deca-473d-857a-9e320ed3badf",
+      "title": "X-Men ’97 2ª Temporada",
+      "kind": "episode",
+      "result": "portuguese",
+      "audio": [
+        {
+          "language": "por"
+        },
+        {
+          "language": "eng"
+        }
+      ]
+    },
+    {
+      "id": "b08cdf18-9bdc-47fa-a721-f0193bdee35f",
+      "title": "zootopia2",
+      "kind": "movie",
+      "result": "unknown",
+      "reason": "no_r2"
+    }
+  ],
+  "static_hidden": [
+    "lua",
+    "nosferatu",
+    "caligari",
+    "lostworld",
+    "pauline",
+    "phantom"
+  ],
+  "method": "Filmes R2: tags de idioma das faixas de áudio via ffprobe. Canais: categoria musical e identificação da versão estrangeira pela fonte. Não foi feita escuta integral."
+}

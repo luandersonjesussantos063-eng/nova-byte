@@ -266,7 +266,7 @@ function renderRows(){
  ];
  blocks.forEach(b=>{const row=shelf(b[0],b[1].slice(0,36),b[2],b[3]);if(row)holder.append(row)});
 }
-const defaultFeatured=["lostworld","nosferatu","lua","caligari"];
+const defaultFeatured=[];
 let featured=defaultFeatured.map(byId).filter(Boolean);
 // Admin preferences load only after the published film catalog is available.
 async function loadFeatured(){
@@ -277,7 +277,7 @@ async function loadFeatured(){
   if(error)throw error;
   const films=(Array.isArray(data?.film_ids)?data.film_ids:defaultFeatured)
    .map(id=>byId(id)).filter(x=>x&&(x.kind==="film"||x.kind==="series")&&!x.catalogOnly).slice(0,6);
-  featured=films.length?films:defaultFeatured.map(byId).filter(Boolean);
+  featured=films.length?films:uploadedCatalog.filter(x=>(x.kind==="film"||x.kind==="series")&&!x.catalogOnly).slice(0,6);
   updateHero(0);
  }catch(e){console.warn("NPlay: destaques personalizados indisponíveis.",e.message)}
 }
@@ -383,17 +383,17 @@ function updateHero(index){
 function youtubeFilms(){return db.films.filter(x=>!x.catalogOnly && x.mode==="youtube" && /^[A-Za-z0-9_-]{11}$/.test(x.youtube_id||""))}
 const categories={
  tv:["TV AO VIVO","TV aberta","Canais gratuitos com reprodução configurada dentro da NPlay. A disponibilidade depende das emissoras.",db.channels],
- filmes:["NOSSO ACERVO","Filmes clássicos","Longas e curtas históricos com versões de arquivo.",db.films.filter(x=>x.mode!=="youtube")],
+ filmes:["NOSSO ACERVO","Filmes","Filmes com áudio em português.",db.films.filter(x=>x.mode!=="youtube")],
  youtube:["YOUTUBE · NPLAY","Filmes do YouTube","Assista por meio do player oficial do YouTube. A disponibilidade depende do canal e das permissões de reprodução.",[]],
  "em-breve":["LANÇAMENTOS · NPLAY","Em breve","Prévias de animes e filmes anunciados. Estes títulos ainda não têm vídeo autorizado para reprodução.",[]],
- series:["CAPÍTULO POR CAPÍTULO","Séries clássicas","Escolha uma série para ver seus episódios.",db.series],
+ series:["CAPÍTULO POR CAPÍTULO","Séries","Escolha uma série com áudio em português.",db.series],
  favoritos:["SUA SELEÇÃO","Minha lista","Tudo o que você marcou como favorito.",[]]
 };
 function renderCategory(kind){
  const conf=categories[kind]||categories.filmes;
  $("category-kicker").textContent=conf[0];$("category-heading").textContent=conf[1];$("category-subtitle").textContent=conf[2];
  const content=$("category-grid");content.replaceChildren();
- let list=kind==="favoritos"?all.filter(x=>favorite.has(x.id)):kind==="youtube"?youtubeFilms():kind==="em-breve"?upcomingFilms():conf[3];
+ let list=kind==="series"?db.series:kind==="favoritos"?all.filter(x=>favorite.has(x.id)):kind==="youtube"?youtubeFilms():kind==="em-breve"?upcomingFilms():conf[3];
  if(kind==="tv")window.dispatchEvent(new Event("nplay:tv-open"));
  const filters=$("genre-filter-panel"),buttons=$("genre-filter-buttons");
  filters.hidden=kind!=="filmes";
