@@ -93,3 +93,13 @@ test('live playback prefers managed HLS and registers autoplay before loading a 
  instance.handlers.error(null,{fatal:true,type:'network'});assert.equal(instance.destroyed,true);assert.equal(nativeSrc,loaded);assert.equal(played,2);
  Hls.isSupported=()=>false;context.startSource();assert.equal(nativeSrc,loaded);assert.equal(played,3);
 });
+test('admin separates new HLS, legacy provider and individual channels with status/search filters',()=>{
+ const source=read('admin/live-embeds.js').replace(/if\(document.readyState==='loading'\)[\s\S]*?\n\}\)\(\);\s*$/,`globalThis.groups={channelGroup,filterChannels};\n})();`);
+ const context=vm.createContext({document:{getElementById:()=>null},URL,Date,Set});vm.runInContext(source,context);
+ const {channelGroup,filterChannels}=context.groups;
+ const records=[{title:'Família',category:'Pública',stream_type:'hls',embed_url:'https://example.org/live',is_published:true},{title:'Novo rascunho',embed_url:'https://example.org/live.m3u8',is_published:false},{title:'Antigo',stream_type:'iframe',embed_url:'https://rdcanais.org/gloob',is_published:false},{title:'Oficial',stream_type:'iframe',embed_url:'https://owncast.al.mt.gov.br/embed/video',is_published:true}];
+ assert.deepEqual(records.map(channelGroup),['m3u','m3u','legacy','individual']);
+ assert.equal(filterChannels(records,'m3u','all','').length,2);assert.equal(filterChannels(records,'m3u','published','familia')[0].title,'Família');assert.equal(filterChannels(records,'m3u','draft','').length,1);assert.equal(filterChannels(records,'legacy','all','')[0].title,'Antigo');assert.equal(filterChannels(records,'individual','all','')[0].title,'Oficial');
+ assert.equal(channelGroup({embed_url:'https://rdcanais.org.example.net/embed'}),'individual');
+ assert.equal(filterChannels(records,'m3u','published','publica').length,1);
+});
