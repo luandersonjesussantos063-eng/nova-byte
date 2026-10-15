@@ -772,7 +772,10 @@ function openLiveEmbed(url,title){
  $("retry-btn").hidden=true;$("fallback-btn").hidden=true;$("source-link").hidden=true;
  $("player-live-reload").hidden=false;
  frame.title=current.item.title;frame.setAttribute("allow","autoplay; encrypted-media; fullscreen; picture-in-picture");
- frame.referrerPolicy="strict-origin-when-cross-origin";frame.hidden=false;frame.src=source.href;
+ // Iframes externos não recebem permissão para abrir pop-ups ou navegar a janela principal.
+ // Scripts e reprodução continuam habilitados; alguns provedores podem recusar sandbox.
+ frame.setAttribute("sandbox","allow-scripts allow-same-origin allow-forms allow-presentation allow-pointer-lock");
+ frame.referrerPolicy="no-referrer";frame.hidden=false;frame.src=source.href;
  enterCinema();$("player-close").focus();return true;
 }
 function openLiveHls(url,title){
