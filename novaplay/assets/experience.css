@@ -133,3 +133,23 @@ button{transition:background .2s,color .2s,border-color .2s,transform .2s}
 .player-layer.cinema.has-player-error .cinema-controls{display:none!important}
 .nav-option:focus-visible,.poster-card button:focus-visible,.cinema-toolbar button:focus-visible{outline:2px solid #9bbdff;outline-offset:4px}
 @media(max-width:540px){.nplay-volume-control{max-width:130px}.player-layer.cinema.has-player-error .player-options button{width:100%}.cinema-toolbar-group{gap:8px}}
+
+/* TV playback: a compact picker and clear remote control state. */
+#cinema-cast{gap:6px;font-size:15px}
+#cinema-cast[aria-pressed="true"]{color:#7db8ff;background:#193b65}
+.tv-dialog{width:min(480px,calc(100% - 32px));max-height:calc(100dvh - 48px);overflow:auto;padding:24px;color:#f3f6ff;background:#101a2d;border:1px solid #334561;border-radius:20px;box-shadow:0 24px 100px #000b}
+.tv-dialog::backdrop{background:#000a;backdrop-filter:blur(6px)}
+.tv-dialog-heading{display:flex;align-items:center;justify-content:space-between;gap:16px}
+.tv-dialog h2{font-size:23px;margin:0}
+.tv-dialog-heading button{width:40px;height:40px;border-radius:50%;border:1px solid #4b5b73;background:#1d2a40;color:white;font-size:26px;cursor:pointer}
+.tv-dialog p{font-size:14px;line-height:1.6;color:#c7d3e7}
+.tv-choices{display:grid;gap:10px;margin:20px 0}
+.tv-choices button{display:flex;flex-direction:column;gap:5px;text-align:left;padding:16px;border-radius:12px;border:1px solid #405575;background:#1a2b46;color:white;cursor:pointer;font:inherit;min-height:52px}
+.tv-choices button span{font-size:12px;color:#bacbe2}
+.tv-choices button:disabled{opacity:.45;cursor:default}
+.tv-choices button:not(:disabled):hover{background:#243d61;border-color:#78acff}
+.tv-dialog summary{cursor:pointer;font-size:14px;color:#a7caff;padding:8px 0}
+.tv-dialog button:focus-visible,.tv-dialog summary:focus-visible{outline:3px solid #8ac4ff;outline-offset:3px}
+.tv-connected{position:absolute;bottom:140px;left:50%;transform:translateX(-50%);padding:12px 18px;border:1px solid #3e638c;background:#10243bea;border-radius:12px;color:#d6e9ff;z-index:18;font-size:14px;text-align:center;max-width:90%;pointer-events:none}
+.casting-active .cinema-controls,.casting-active .player-bar{opacity:1!important;pointer-events:auto!important}
+@media(max-width:600px){.tv-dialog{padding:18px}.tv-connected{bottom:155px;font-size:12px}#cinema-cast span{display:none}.cinema-toolbar-group{gap:7px}}

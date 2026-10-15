@@ -56,13 +56,80 @@ async function adaptiveResponse(request,env,route,cors){
  }
  return new Response(request.method==="HEAD"?null:body,{headers:h});
 }
+
+// TV grants contain only a single file and expire after four hours. No account token
+// is sent to the receiver. AES-GCM authenticates and conceals the object key.
+const TV_TTL=4*60*60;
+const keyPattern=/^[0-9a-f-]{36}\/[0-9a-f-]{36}-[a-z0-9-]{8,80}\.(mp4|webm|ogv)$/i;
+const b64url=bytes=>btoa(String.fromCharCode(...bytes)).replaceAll("+","-").replaceAll("/","_").replace(/=+$/,"");
+const unbase64=text=>Uint8Array.from(atob(text.replaceAll("-","+").replaceAll("_","/")),c=>c.charCodeAt(0));
+async function tvKey(env){
+ if(!/^[0-9a-f]{64}$/i.test(env.CAST_TICKET_KEY||""))throw Error("TV signing unavailable");
+ return crypto.subtle.importKey("raw",Uint8Array.from(env.CAST_TICKET_KEY.match(/../g),x=>parseInt(x,16)),"AES-GCM",false,["encrypt","decrypt"]);
+}
+async function issueTvTicket(id,key,env){
+ const exp=Math.floor(Date.now()/1000)+TV_TTL,iv=crypto.getRandomValues(new Uint8Array(12));
+ const bytes=new TextEncoder().encode(JSON.stringify({v:1,id,key,exp}));
+ const sealed=await crypto.subtle.encrypt({name:"AES-GCM",iv,additionalData:new TextEncoder().encode("nplay-tv-v1")},await tvKey(env),bytes);
+ return {ticket:b64url(iv)+"."+b64url(new Uint8Array(sealed)),exp};
+}
+async function readTvTicket(ticket,id,env){
+ try{
+  if(!ticket||ticket.length>2048||!/^[-\w]+\.[-\w]+$/.test(ticket))return null;
+  const [iv,encrypted]=ticket.split(".").map(unbase64);
+  if(iv.length!==12)return null;
+  const bytes=await crypto.subtle.decrypt({name:"AES-GCM",iv,additionalData:new TextEncoder().encode("nplay-tv-v1")},await tvKey(env),encrypted);
+  const grant=JSON.parse(new TextDecoder().decode(bytes)),now=Math.floor(Date.now()/1000);
+  return grant.v===1&&grant.id===id&&keyPattern.test(grant.key||"")&&Number.isSafeInteger(grant.exp)&&grant.exp>now&&grant.exp<=now+TV_TTL?grant:null;
+ }catch{return null;}
+}
+async function streamFile(request,env,key,cors){
+  const range=request.headers.get("Range");let options={},metadata=null;
+  if(range||request.method==="HEAD"){
+   metadata=await env.VIDEOS.head(key);if(!metadata)return json({error:"Vídeo indisponível"},404,cors);
+  }
+  if(range){
+   const match=/^bytes=(\d*)-(\d*)$/.exec(range);
+   if(!match||(!match[1]&&!match[2]))return json({error:"Range inválido"},416,cors);
+   const size=metadata.size;let start,end;
+   if(!match[1]){const suffix=Number(match[2]);if(!Number.isSafeInteger(suffix)||suffix<=0)return json({error:"Range inválido"},416,cors);start=Math.max(0,size-suffix);end=size-1;}
+   else{start=Number(match[1]);end=match[2]?Math.min(Number(match[2]),size-1):size-1;}
+   if(!Number.isSafeInteger(start)||!Number.isSafeInteger(end)||start<0||start>=size||end<start)return new Response(null,{status:416,headers:{...cors,"Content-Range":"bytes */"+size}});
+   options.range={offset:start,length:end-start+1};
+  }
+  const object=request.method==="HEAD"?metadata:await env.VIDEOS.get(key,options);
+  if(!object)return json({error:"Vídeo indisponível"},404,cors);
+  const h=new Headers({...cors,"Accept-Ranges":"bytes","Access-Control-Expose-Headers":"Content-Range,Content-Length,Accept-Ranges","Cache-Control":"private, no-store","Content-Type":object.httpMetadata?.contentType||(key.endsWith(".webm")?"video/webm":key.endsWith(".ogv")?"video/ogg":"video/mp4"),"X-Content-Type-Options":"nosniff"});
+  const servedRange=object.range||options.range;
+  if(servedRange){const offset=servedRange.offset||0,length=servedRange.length||object.size-offset;h.set("Content-Range","bytes "+offset+"-"+(offset+length-1)+"/"+object.size);h.set("Content-Length",String(length));}else h.set("Content-Length",String(object.size));
+  return new Response(request.method==="HEAD"?null:object.body,{status:servedRange?206:200,headers:h});
+}
+
 export default {async fetch(request,env){
+ const route=new URL(request.url);
  const origin=request.headers.get("Origin");
- const cors={"Access-Control-Allow-Origin":origin===ORIGIN?ORIGIN:"null","Access-Control-Allow-Methods":"GET,HEAD,POST,PUT,OPTIONS","Access-Control-Allow-Headers":"Authorization,Content-Type,Range","Vary":"Origin"};
+ const cors={"Access-Control-Allow-Origin":route.pathname.startsWith("/cast-media/")?"*":origin===ORIGIN?ORIGIN:"null","Access-Control-Allow-Methods":"GET,HEAD,POST,PUT,OPTIONS","Access-Control-Allow-Headers":"Authorization,Content-Type,Range","Vary":"Origin"};
  if(request.method==="OPTIONS")return new Response(null,{headers:cors});
  const reply=(x,s=200)=>json(x,s,cors);
- if(new URL(request.url).pathname==="/health")return reply({ok:true,bucket:"nplay-filmes",version:"3-session-playback"});
- const route=new URL(request.url);
+ if(new URL(request.url).pathname==="/health")return reply({ok:true,bucket:"nplay-filmes",version:"4-tv-playback"});
+ if(route.pathname.startsWith("/cast-media/")){
+  if(!["GET","HEAD"].includes(request.method))return reply({error:"Método inválido"},405);
+  const id=route.pathname.slice(12);
+  const grant=await readTvTicket(route.searchParams.get("ticket"),id,env);
+  if(!grant)return reply({error:"A autorização da TV expirou. Transmita novamente pela NPlay."},401);
+  try{return await streamFile(request,env,grant.key,cors)}catch{return reply({error:"Vídeo indisponível para a TV"},502)}
+ }
+ if(route.pathname.startsWith("/cast/")){
+  if(origin!==ORIGIN)return reply({error:"Origin não autorizado"},403);
+  if(request.method!=="POST")return reply({error:"Método inválido"},405);
+  if(!viewerToken(request))return reply({error:"Entre novamente para transmitir"},401);
+  try{
+   const id=route.pathname.slice(6),record=await publishedVideo(id,request);
+   if(!record||!await env.VIDEOS.head(record.r2_object_key))return reply({error:"Este dispositivo não tem acesso ao vídeo ou o conteúdo está indisponível."},404);
+   const {ticket,exp}=await issueTvTicket(id,record.r2_object_key,env);
+   return json({url:route.origin+"/cast-media/"+id+"?ticket="+encodeURIComponent(ticket),expires_at:exp,content_type:record.r2_object_key.endsWith(".webm")?"video/webm":record.r2_object_key.endsWith(".ogv")?"video/ogg":"video/mp4"},200,{...cors,"Cache-Control":"private, no-store"});
+  }catch(error){return reply({error:"Não foi possível autorizar a transmissão. Tente novamente."},error.status||503)}
+ }
  if(/^\/(playback|watch|hls)\//.test(route.pathname)&&!viewerToken(request))return reply({error:"Entre novamente para assistir a este vídeo."},401);
  if(route.pathname.startsWith("/playback/")||route.pathname.startsWith("/hls/")){try{return await adaptiveResponse(request,env,route,cors)}catch(error){return reply({error:error.status===401?"Sessão expirada. Entre novamente.":"Não foi possível preparar a reprodução"},error.status||503)}}
  if(route.pathname.startsWith("/watch/")&&(request.method==="GET"||request.method==="HEAD")){
@@ -73,25 +140,7 @@ export default {async fetch(request,env){
   if(!record)return reply({error:"Vídeo não publicado ou acesso não autorizado"},404);
   const key=record.r2_object_key;
   if(!/^[0-9a-f-]{36}\/[0-9a-f-]{36}-[a-z0-9-]{8,80}\.(mp4|webm|ogv)$/i.test(key))return reply({error:"Arquivo inválido"},400);
-  const range=request.headers.get("Range");let options={},metadata=null;
-  if(range||request.method==="HEAD"){
-   metadata=await env.VIDEOS.head(key);if(!metadata)return reply({error:"Vídeo indisponível"},404);
-  }
-  if(range){
-   const match=/^bytes=(\d*)-(\d*)$/.exec(range);
-   if(!match||(!match[1]&&!match[2]))return reply({error:"Range inválido"},416);
-   const size=metadata.size;let start,end;
-   if(!match[1]){const suffix=Number(match[2]);if(!Number.isSafeInteger(suffix)||suffix<=0)return reply({error:"Range inválido"},416);start=Math.max(0,size-suffix);end=size-1;}
-   else{start=Number(match[1]);end=match[2]?Math.min(Number(match[2]),size-1):size-1;}
-   if(!Number.isSafeInteger(start)||!Number.isSafeInteger(end)||start<0||start>=size||end<start)return new Response(null,{status:416,headers:{...cors,"Content-Range":"bytes */"+size}});
-   options.range={offset:start,length:end-start+1};
-  }
-  const object=request.method==="HEAD"?metadata:await env.VIDEOS.get(key,options);
-  if(!object)return reply({error:"Vídeo indisponível"},404);
-  const h=new Headers({"Access-Control-Allow-Origin":ORIGIN,"Vary":"Origin","Accept-Ranges":"bytes","Access-Control-Expose-Headers":"Content-Range,Content-Length,Accept-Ranges","Cache-Control":"private, no-store","Content-Type":object.httpMetadata?.contentType||"video/mp4","X-Content-Type-Options":"nosniff"});
-  const servedRange=object.range||options.range;
-  if(servedRange){const offset=servedRange.offset||0,length=servedRange.length||object.size-offset;h.set("Content-Range","bytes "+offset+"-"+(offset+length-1)+"/"+object.size);h.set("Content-Length",String(length));}else h.set("Content-Length",String(object.size));
-  return new Response(request.method==="HEAD"?null:object.body,{status:servedRange?206:200,headers:h});
+  return streamFile(request,env,key,cors);
   }catch(e){console.error("NPlay watch failed",e?.status||502);return reply({error:e?.status===401?"Sessão expirada. Entre novamente.":"Falha ao acessar vídeo no R2"},e?.status||502);}
  }
  if(origin!==ORIGIN)return reply({error:"Origin não autorizado"},403);
