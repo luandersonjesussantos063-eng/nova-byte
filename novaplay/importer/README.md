@@ -47,7 +47,7 @@ Rascunhos, falhas, downloads em andamento e arquivos pessoais fornecidos por `--
 Para atualizar uma instalação existente no Windows, abra o PowerShell **dentro da pasta do importador**, onde ficam `pipeline.py` e `INICIAR-IMPORTADOR.bat`, e execute:
 
 ```powershell
-& ([scriptblock]::Create((Invoke-WebRequest -UseBasicParsing 'https://novabytesolucoes.com.br/novaplay/importer/ATUALIZAR-LIMPEZA.ps1').Content))
+Invoke-WebRequest -UseBasicParsing 'https://novabytesolucoes.com.br/novaplay/importer/ATUALIZAR-LIMPEZA.ps1' -OutFile 'ATUALIZAR-LIMPEZA.ps1'; if ($?) { & ([scriptblock]::Create((Get-Content -Raw -Encoding UTF8 '.\ATUALIZAR-LIMPEZA.ps1'))) }
 ```
 
 O comando sinaliza parada, espera o supervisor terminar o trabalho atual, instala somente `pipeline.py` e `cleanup.py`, confere a sintaxe, executa a limpeza das tarefas publicadas elegíveis e abre o importador novamente. `.env` e credenciais são preservados. Não feche o FFmpeg durante a espera. Se houver um worker iniciado separadamente, aguarde esse worker parar antes de atualizar.
