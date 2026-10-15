@@ -80,12 +80,14 @@ export function renderArticle({ title, description, slug, dateBR, dateISO, summa
 <script type="application/ld+json">${schema}</script>
 
 <!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-XSB3WYJZ71"></script>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-T7CCH2S8J7"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
   gtag('config', 'G-XSB3WYJZ71');
+  gtag('config', 'G-T7CCH2S8J7');
+  window.__nbGaLoaded = true;
   document.addEventListener('click', function(event) {
     const link = event.target.closest && event.target.closest('a[href*="wa.me"]');
     if (link) {

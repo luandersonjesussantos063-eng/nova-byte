@@ -3,12 +3,13 @@
     window.__nbGaLoaded=true;
     var s=document.createElement("script");
     s.async=true;
-    s.src="https://www.googletagmanager.com/gtag/js?id=G-XSB3WYJZ71";
+    s.src="https://www.googletagmanager.com/gtag/js?id=G-T7CCH2S8J7";
     document.head.appendChild(s);
     window.dataLayer=window.dataLayer||[];
     window.gtag=function(){dataLayer.push(arguments);};
     gtag("js",new Date());
     gtag("config","G-XSB3WYJZ71",{send_page_view:true});
+    gtag("config","G-T7CCH2S8J7",{send_page_view:true});
   }
 })();
 

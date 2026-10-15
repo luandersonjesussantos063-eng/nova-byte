@@ -148,12 +148,14 @@ function renderArticle(a){
 <meta property="og:type" content="article"><meta property="og:site_name" content="NovaByte Soluções"><meta property="og:title" content="${esc(title)}"><meta property="og:description" content="${esc(description)}"><meta property="og:url" content="https://novabytesolucoes.com.br/${slug}.html"><meta property="og:image" content="https://novabytesolucoes.com.br/og-image.png">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="/portal.css"><script type="application/ld+json">${schema}</script>
 <!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-XSB3WYJZ71"></script>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-T7CCH2S8J7"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
   gtag('config', 'G-XSB3WYJZ71');
+  gtag('config', 'G-T7CCH2S8J7');
+  window.__nbGaLoaded = true;
   document.addEventListener('click', function(event) {
     const link = event.target.closest && event.target.closest('a[href*="wa.me"]');
     if (link) {
