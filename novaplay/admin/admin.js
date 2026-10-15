@@ -1134,6 +1134,26 @@ function importFailureMessage(job){
  if(/Connection was closed|endpoint URL|uploadId=|ConnectionClosedError|EndpointConnectionError|ReadTimeoutError/i.test(message+" "+(job.error_code||"")))return "A conexão caiu durante o envio ao armazenamento. Tente novamente: o processador retomará as etapas salvas.";
  return message.replace(/https?:\/\/\S+/gi,"[endereço técnico omitido]");
 }
+function importErrorDiagnosis(job){
+ const d=job.diagnostics||{},message=job.error_message||"";
+ if(job.stage==="source_unavailable"||job.error_code==="MetadataUnavailable"){
+  if(d.stage==="metadata"&&Number(d.dht_nodes)>0&&Number(d.peers)===0)return "Diagnóstico: a rede de busca respondeu ("+d.dht_nodes+" nós), mas nenhum participante desta fonte foi encontrado no prazo. A fonte pode estar sem participantes ou inacessível nesta rede; isso não confirma que o link seja inválido. Teste novamente ou use outra fonte.";
+  if(d.stage==="metadata"&&Number(d.peers)>0)return "Diagnóstico: houve contato com participantes, mas a lista de arquivos não chegou no prazo. Pode ser lentidão da fonte ou da conexão. Teste novamente antes de trocar o link.";
+  return "Diagnóstico inconclusivo: não há dados suficientes para separar fonte indisponível de falha na descoberta da rede. Confira se outras importações funcionam na mesma conexão e teste novamente.";
+ }
+ if(job.stage==="capacity"||job.error_code==="CapacityRequired")return /Espaço insuficiente/i.test(message)?"Diagnóstico: falta de espaço no computador. Isso não indica defeito no link. Libere espaço e tente novamente.":"Diagnóstico: o arquivo excedeu a capacidade configurada. Ajuste o limite se houver espaço ou escolha uma versão menor.";
+ if(/Connection|Timeout|Transport/i.test(job.error_code||""))return "Diagnóstico: falha de conexão ou prazo excedido; isso não comprova defeito no link. Tente novamente com o processador conectado.";
+ return "A causa ainda precisa de revisão. Confira o aviso e os dados de diagnóstico antes de trocar a fonte.";
+}
+function importArchiveButton(job,restore){
+ const button=document.createElement("button");button.type="button";button.textContent=restore?"Restaurar importação":"Excluir da lista";
+ button.onclick=async()=>{
+  if(!restore&&!confirm("Retirar esta importação da lista ativa? Ela ficará em Excluídas e poderá ser restaurada. Os arquivos locais e o R2 não serão apagados."))return;
+  button.disabled=true;
+  try{const {data,error}=await client.rpc("novaplay_archive_import",{p_job_id:job.id,p_archived:!restore});if(error)throw error;if(!data)throw Error("A importação mudou de estado ou já possui um vídeo cadastrado. Atualize a lista.");await loadMagnetApprovals();}
+  catch(e){status("magnet-approval-status",errorText(e),true);button.disabled=false;}
+ };return button;
+}
 async function loadMagnetApprovals(){
  const list=$("magnet-pending-list");if(!list||!client||!sessionUser||magnetLoading)return;
  magnetLoading=true;
@@ -1145,7 +1165,7 @@ async function loadMagnetApprovals(){
   const pageSize=500;
   for(let offset=0;offset<50000;offset+=pageSize){
    const {data:page,error}=await client.from("novaplay_magnet_imports")
-    .select("diagnostics,id,title,status,stage,progress_percent,heartbeat_at,worker_id,attempts,next_retry_at,error_code,duplicate_of,file_candidates,selected_file_index,approved_for_processing,created_at,r2_object_key,error_message,rights_confirmed,license_reference")
+    .select("archived_at,diagnostics,id,title,status,stage,progress_percent,heartbeat_at,worker_id,attempts,next_retry_at,error_code,duplicate_of,file_candidates,selected_file_index,approved_for_processing,created_at,r2_object_key,error_message,rights_confirmed,license_reference")
     .order("created_at",{ascending:false}).range(offset,offset+pageSize-1);
    if(error)throw error;
    data.push(...(page||[]));
@@ -1178,21 +1198,24 @@ async function loadMagnetApprovals(){
    {id:"review",label:"Precisam de atenção",items:[]},
    {id:"duplicate",label:"Duplicadas · preservadas no histórico",items:[]},
    {id:"failed",label:"Falharam · Tentar novamente",items:[]},
-   {id:"released",label:"Já liberados / cadastrados",items:[]}
+   {id:"released",label:"Já liberados / cadastrados",items:[]},
+   {id:"archived",label:"Excluídas · podem ser restauradas",items:[]}
   ];
   for(const job of data){
    const registered=job.r2_object_key?registeredByKey.get(job.r2_object_key):null;
    const box=document.createElement("div");box.dataset.importId=job.id;box.style.cssText="border:1px solid #365075;border-radius:12px;padding:12px;margin:10px 0";
    const title=document.createElement("strong");title.textContent=job.title+" (#"+job.id.slice(0,8)+")";box.appendChild(title);
+   if(job.archived_at){const note=document.createElement("p");note.textContent="Retirada da lista ativa em "+new Date(job.archived_at).toLocaleString("pt-BR")+". Histórico e arquivos preservados.";box.append(note,importArchiveButton(job,true));groups.find(g=>g.id==="archived").items.push(box);continue;}
    const state=document.createElement("p");state.className="muted";state.textContent=registered?"✓ Já cadastrado no catálogo: "+registered.title:job.status==="ready"?"Vídeo enviado ao R2 · aguardando cadastro no catálogo":job.approved_for_processing?({queued:"Na fila",pending_processor:"Na fila",processing:"Processando",needs_review:"Precisa de revisão",duplicate:"Duplicada",failed:"Falhou"}[job.status]||job.status):"Aguardando autorização";box.appendChild(state);
    const stages={metadata:"Buscando metadados",downloading:"Baixando",inspecting:"Analisando vídeo",converting:"Convertendo",uploading:"Enviando",validating:"Validando",complete:"Concluído",queued:"Aguardando processador",retry_wait:"Nova tentativa agendada",selection:"Escolha o arquivo",capacity:"Ajuste de capacidade necessário",source_unavailable:"Troque a fonte para continuar",legacy:"Processador anterior · sem telemetria"};
    if(job.stage){const p=document.createElement("p");p.textContent=stages[job.stage]||job.stage;box.append(p);}
    if(job.status==="processing"&&job.worker_id){const progress=document.createElement("progress");progress.max=100;if(job.stage!=="metadata")progress.value=job.progress_percent||0;progress.setAttribute("aria-label","Progresso de "+job.title);box.append(progress);const p=document.createElement("p");const age=job.heartbeat_at?Math.round((Date.now()-Date.parse(job.heartbeat_at))/1000):null;p.textContent=(job.stage==="metadata"?"Aguardando a fonte · ":Math.round(job.progress_percent||0)+"% da etapa · ")+(age===null?"Aguardando comunicação":age>120?"Sem comunicação recente · retomada automática após expirar a reserva":"Processador conectado");box.append(p);}
    appendImportDiagnostics(box,job);
+   if(["failed","needs_review"].includes(job.status)){const diagnosis=document.createElement("p");diagnosis.textContent=importErrorDiagnosis(job);box.appendChild(diagnosis);}
    if(job.status==="queued"&&job.error_message){const p=document.createElement("p");p.textContent=job.error_message+" Nova tentativa automática, sem precisar clicar em Atualizar.";box.append(p);}
    if(job.next_retry_at){const p=document.createElement("p");p.textContent="Próxima tentativa: "+new Date(job.next_retry_at).toLocaleString("pt-BR");box.append(p);}
    if(job.status==="needs_review"){
-    if(job.stage==="source_unavailable"){const p=document.createElement("p");p.textContent="Fonte indisponível após três tentativas. Esta importação foi retirada da fila para não bloquear outros títulos. Cadastre uma nova importação com uma fonte autorizada e acessível.";box.append(p);}
+    if(job.stage==="source_unavailable"){const p=document.createElement("p");p.textContent="A fonte não respondeu após três tentativas. A importação está parada para não bloquear a fila. Você pode testar novamente, trocar a fonte ou excluir da lista.";box.append(p);}
     if(job.error_message){const p=document.createElement("p");p.textContent=job.error_message;box.append(p);}
     if(job.stage==="selection"&&Array.isArray(job.file_candidates)&&job.file_candidates.length){const select=document.createElement("select");select.setAttribute("aria-label","Arquivo de "+job.title);const placeholder=document.createElement("option");placeholder.value="";placeholder.textContent="Escolha o vídeo correto";select.append(placeholder);job.file_candidates.forEach(f=>{const o=document.createElement("option");o.value=String(f.index);o.textContent=f.name+" · "+(f.bytes/1024**2).toFixed(0)+" MB";select.append(o);});const button=document.createElement("button");button.type="button";button.textContent="Processar arquivo selecionado";button.disabled=true;select.onchange=()=>button.disabled=select.value==="";button.onclick=async()=>{button.disabled=true;const {data,error}=await client.rpc("novaplay_select_import_file",{p_job_id:job.id,p_index:Number(select.value)});if(error||!data){status("magnet-approval-status",error?errorText(error):"A seleção não foi confirmada. Atualize a lista.",true);button.disabled=false;}else await loadMagnetApprovals();};box.append(select,button);}
    }
@@ -1201,14 +1224,13 @@ async function loadMagnetApprovals(){
     sourceButton.onclick=()=>{$('magnet-title').value=job.title;$('magnet-license').value=job.license_reference||'';$('magnet-uri').value='';$('magnet-rights').checked=false;$('magnet-import-form').scrollIntoView({behavior:'smooth'});$('magnet-uri').focus();status('magnet-status','Cole outro magnet autorizado. O histórico anterior será preservado; não use o mesmo link que não respondeu.');};box.append(sourceButton);
    }
     if(job.status==="ready"&&job.r2_object_key&&!registered){const btn=document.createElement("button");btn.type="button";btn.className="primary";btn.textContent="Cadastrar no catálogo";btn.addEventListener("click",()=>openReadyMagnetInCatalog(job));box.appendChild(btn);}
-   if(job.status==="failed"||(job.status==="needs_review"&&job.stage==="capacity")){
+   if(job.status==="failed"||(job.status==="needs_review"&&["capacity","source_unavailable"].includes(job.stage))){
     if(job.stage==="capacity"){const hint=document.createElement("p");hint.className="muted";hint.textContent="Depois de liberar espa\u00e7o no computador ou ajustar o limite, tente novamente para retomar esta importa\u00e7\u00e3o.";box.appendChild(hint);}
     if(job.error_message){const err=document.createElement("p");err.style.cssText="color:#ffb3b3;overflow-wrap:anywhere";err.textContent="Motivo da falha: "+importFailureMessage(job);box.appendChild(err);}
     const btn=document.createElement("button");btn.type="button";btn.className="primary";btn.textContent="↻ Tentar novamente";
-    const needsChange=job.error_code==="MetadataUnavailable";
-    const eligible=!needsChange&&!job.duplicate_of&&job.approved_for_processing&&job.rights_confirmed&&Boolean(job.license_reference);
+    const eligible=!job.duplicate_of&&job.approved_for_processing&&job.rights_confirmed&&Boolean(job.license_reference);
     btn.disabled=!eligible;
-    if(!eligible)btn.title=needsChange?"Altere a fonte ou resolva a capacidade antes de repetir.":"É necessária autorização de processamento e licença válida.";
+    if(!eligible)btn.title="É necessária autorização de processamento e licença válida.";
     btn.addEventListener("click",async()=>{
      const feedback=document.createElement("p");feedback.className="muted";feedback.textContent="Enviando solicitação...";box.appendChild(feedback);
      btn.disabled=true;status("magnet-approval-status","Reenfileirando filme...");
@@ -1240,6 +1262,7 @@ async function loadMagnetApprovals(){
      }catch(e){status("magnet-approval-status","Falha: "+errorText(e),true);btn.disabled=false}
     });box.appendChild(btn);
    }
+   if(["failed","needs_review","duplicate"].includes(job.status)&&!job.r2_object_key&&!registered)box.appendChild(importArchiveButton(job,false));
    const target=job.duplicate_of||job.status==="duplicate"?"duplicate":job.status==="needs_review"?"review":job.status==="failed"?"failed":registered?"released":job.status==="ready"||!job.approved_for_processing?"awaiting":job.status==="processing"?"processing":"queued";
    const saved=cardState.get(job.id);
    if(saved){
@@ -1249,7 +1272,7 @@ async function loadMagnetApprovals(){
    }
    groups.find(g=>g.id===target).items.push(box);
   }
-  const order=["review","failed","awaiting","processing","queued","released","duplicate"];
+  const order=["review","failed","awaiting","processing","queued","released","duplicate","archived"];
   for(const id of order){
    const group=groups.find(g=>g.id===id);
    const details=document.createElement("details");details.style.cssText="border:1px solid #365075;border-radius:12px;margin:10px 0;background:#101f36";
