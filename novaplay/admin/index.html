@@ -5,7 +5,7 @@
 <meta name="theme-color" content="#080e1b"><meta name="robots" content="noindex,nofollow">
 <title>NPlay | Painel de conteúdo</title>
 <link rel="icon" href="../assets/icon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="./admin.css?v=0.43.0">
+<link rel="stylesheet" href="./admin.css?v=0.48.7">
 <style>
 .admin-nav{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin:16px 0 12px;padding:10px;background:#0d192b;border:1px solid #304461;border-radius:15px}
 .admin-tab{border:1px solid #2b405e;border-radius:10px;background:#11223a;color:#d6e4f7;font-weight:750;padding:13px 12px;min-width:0;text-align:center}
@@ -19,9 +19,9 @@
 </style>
 </head>
 <body>
-<header class="top"><a class="brand" href="../"><span class="mark">▶</span> N<span>Play</span></a><div class="top-right"><strong>Painel administrativo · NPlay V 0.47.0</strong><button id="logout" class="outline" hidden>Sair</button></div></header>
+<header class="top"><a class="brand" href="../"><span class="mark">▶</span> N<span>Play</span></a><div class="top-right"><strong>Painel administrativo · NPlay V 0.48.7</strong><button id="logout" class="outline" hidden>Sair</button></div></header>
 <main class="container">
-  <section id="loading" class="panel intro" hidden><div class="spin"></div><p>Preparando seu painel... <small>V 0.47.0</small></p><p id="loading-error" class="feedback" role="status"></p><button id="loading-retry" class="outline" type="button" hidden onclick="location.reload()">Tentar novamente</button></section>
+  <section id="loading" class="panel intro" hidden><div class="spin"></div><p>Preparando seu painel... <small>V 0.48.7</small></p><p id="loading-error" class="feedback" role="status"></p><button id="loading-retry" class="outline" type="button" hidden onclick="location.reload()">Tentar novamente</button></section>
   <section id="login-view" class="panel login">
     <div class="section-label">ACESSO RESTRITO</div>
     <h1>Gerencie sua NPlay</h1>
@@ -250,19 +250,6 @@
         <p id="review-summary" class="muted" style="margin:10px 0 3px">Buscando dados da biblioteca...</p>
         <p id="bulk-message" class="feedback" role="status" aria-live="polite"></p>
       </div>
-      <section class="quality-panel" aria-label="Interesse e tentativas de reprodução">
-        <h3>Audiência da NPlay · 30 dias</h3>
-        <p class="muted">Nova contagem por filme: aberturas da ficha e tentativas de assistir. Sem coletar nomes ou dados pessoais. <strong>Abrir um player do Drive ou YouTube não garante que o filme tenha sido reproduzido.</strong> Dados anteriores a esta versão não podem ser recuperados.</p>
-        <p id="activity-summary" class="quality-summary" role="status">Carregando métricas...</p>
-        <p id="activity-message" class="feedback" role="status" aria-live="polite"></p>
-      </section>
-      <section class="quality-panel" aria-label="Curadoria de filmes">
-        <h3>Curadoria do catálogo · notas de 1 a 10</h3>
-        <p class="muted">Nota mínima para permanecer: <strong>6/10</strong>. Filmes sem nota aguardam avaliação; nenhum título será retirado automaticamente.</p>
-        <p id="quality-summary" class="quality-summary" role="status">Carregando as avaliações...</p>
-        <div id="quality-groups" class="quality-groups" aria-label="Filtrar por nota"></div>
-        <p id="quality-message" class="feedback" role="status" aria-live="polite"></p>
-      </section>
       <label class="search-label">Buscar no catálogo<input type="search" id="filter-title" placeholder="Buscar pelo título..."></label>
       <label class="search-label" style="display:block;margin:10px 0 16px">Exibir conteúdo
         <select id="library-state-filter" style="display:block;width:100%;margin-top:8px">
@@ -357,7 +344,7 @@
  }
  function startAdmin(){
   if(!window.supabase||typeof window.supabase.createClient!=="function"){fail();return}
-  load("./admin.js?v=0.45.41",function(){},function(){if(msg)msg.textContent="Falha ao carregar o módulo administrativo. Atualize a página."});
+  load("./admin.js?v=0.48.7",function(){},function(){if(msg)msg.textContent="Falha ao carregar o módulo administrativo. Atualize a página."});
  }
  function fail(){if(msg)msg.textContent="Não foi possível carregar a biblioteca de autenticação. Confira a conexão e tente novamente.";}
  function attempt(i){

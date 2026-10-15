@@ -10,8 +10,6 @@ const $=id=>document.getElementById(id);
 let client=null,editing=null,items=[],busy=false,currentUpload=null,sessionUser=null;
 let magnetLoading=false;
 let libraryPage=0;
-let qualityFilter="all";
-let activityCounts=new Map(),activityLimitReached=false;
 let playbackIssues=[],issueSaving=false;
 const LIBRARY_PAGE_SIZE=48;
 const featuredDefaults=["lostworld","nosferatu","lua","caligari"];
@@ -65,7 +63,7 @@ async function checkSession(){
  try{
   const u=await Promise.race([hasAdmin(),new Promise((_,reject)=>setTimeout(()=>reject(new Error("A verificação de acesso demorou demais. Confira a conexão e tente novamente.")),12000))]);
   sessionUser=u||null;
-  if(u){show("dashboard");await loadLibrary();await Promise.all([loadActivity(),loadFeaturedConfig(),loadPlaybackIssues(),loadMagnetApprovals()]);}
+  if(u){show("dashboard");await loadLibrary();await Promise.all([loadFeaturedConfig(),loadPlaybackIssues(),loadMagnetApprovals()]);}
   else if(u===false){
    const v=await client.auth.getUser();
    $("pending-email").textContent=v.data.user?.email||"Conta aguardando aprovação";
@@ -323,31 +321,6 @@ async function uploadCover(file){
 }
 
 
-/* Métricas sem dados pessoais; play_attempt não significa reprodução confirmada. */
-async function loadActivity(){
- if(!client||!sessionUser)return;
- const since=new Date(Date.now()-30*86400000).toISOString();
- const seen=new Map();let total=0;let truncated=false;
- for(let offset=0;offset<10000;offset+=500){
-  const {data,error}=await client.from("novaplay_activity_events")
-   .select("media_id,event_type,created_at").gte("created_at",since)
-   .order("created_at",{ascending:false}).range(offset,offset+499);
-  if(error){status("activity-message","Não foi possível consultar métricas: "+errorText(error),true);return}
-  for(const event of data||[]){
-   const row=seen.get(event.media_id)||{detail:0,attempt:0};
-   if(event.event_type==="detail_open")row.detail++;
-   if(event.event_type==="play_attempt")row.attempt++;
-   seen.set(event.media_id,row);total++;
-  }
-  if(!data||data.length<500)break;
-  if(offset+500>=10000)truncated=true;
- }
- activityCounts=seen;activityLimitReached=truncated;
- status("activity-message",total?("Foram registrados "+total+" eventos anônimos de interesse no período. "+(truncated?"Consulta limitada a 10 mil eventos.":"")):"Medição iniciada nesta versão. Os números anteriores à atualização não estão disponíveis.",false,true);
- renderLibrary();
-}
-
-
 function isFeaturedSeries(row){
  return row.kind==="episode"||/s[eé]rie|anime/i.test(row.genre||"");
 }
@@ -597,7 +570,7 @@ function renderPlaybackIssues(){
 async function loadLibrary(){
  // Ler todas as páginas: o catálogo importado pode ter centenas de rascunhos.
  const gathered=[];
- const select="media_validated_at,auto_publish,season_number,import_job_id,r2_object_key,id,title,description,kind,series_title,episode_number,genre,production_year,video_path,youtube_id,google_drive_id,google_drive_resource_key,licensed_stream_url,netflix_reference_url,licensed_rights_confirmed,poster_path,is_published,rights_reviewed,rights_reviewed_at,catalog_only,review_queue_id,quality_score,quality_score_source,quality_score_note,quality_scored_at,file_size_bytes,mime_type,duration_seconds,created_at";
+ const select="media_validated_at,auto_publish,season_number,import_job_id,r2_object_key,id,title,description,kind,series_title,episode_number,genre,production_year,video_path,youtube_id,google_drive_id,google_drive_resource_key,licensed_stream_url,netflix_reference_url,licensed_rights_confirmed,poster_path,is_published,rights_reviewed,rights_reviewed_at,catalog_only,review_queue_id,file_size_bytes,mime_type,duration_seconds,created_at";
  for(let offset=0;offset<5000;offset+=500){
   const {data,error}=await client.from("novaplay_library").select(select).order("created_at",{ascending:false}).range(offset,offset+499);
   if(error){status("upload-message","Não foi possível ler a biblioteca: "+errorText(error),true);return}
@@ -636,31 +609,8 @@ function renderLibrary(){
  if(markAll){markAll.disabled=busy||!pendingReview.length;markAll.textContent="Marcar todos como conferidos ("+pendingReview.length+")";}
  const bulk=$("bulk-publish");if(bulk){bulk.disabled=busy||!available.length;bulk.textContent="Publicar autorizados ("+available.length+")";}
  const summary=$("review-summary");if(summary)summary.textContent=available.length+" prontos para publicar · "+pendingReview.length+" rascunhos sem autorização registrada";
- const activitySummary=$("activity-summary");
- if(activitySummary){
-  const events=[...activityCounts.values()];
-  activitySummary.textContent=events.reduce((sum,e)=>sum+e.detail,0)+" aberturas de detalhes · "+events.reduce((sum,e)=>sum+e.attempt,0)+" tentativas de reprodução nos últimos 30 dias. "+(activityLimitReached?"Leitura parcial.":"");
- }
  const filter=$("filter-title").value.trim().toLocaleLowerCase("pt-BR");
  const statusFilter=$("library-state-filter")?.value||"all";
- const ratingFilter=qualityFilter;
- const scores=items.filter(x=>Number.isInteger(x.quality_score));
- const notRated=items.length-scores.length;
- const below=items.filter(x=>Number.isInteger(x.quality_score)&&x.quality_score<6).length;
- const approved=items.filter(x=>Number.isInteger(x.quality_score)&&x.quality_score>=6).length;
- const label=$("quality-summary");
- if(label)label.textContent=scores.length+" de "+items.length+" filmes avaliados · "+approved+" com nota de 6 a 10 · "+below+" abaixo de 6 · "+notRated+" sem nota.";
- const chips=$("quality-groups");
- if(chips){
-  const groups=[["all","Todos",items.length],["pending","Sem nota",notRated],["passing","6 a 10",approved],["below6","Abaixo de 6",below]];
-  for(let n=10;n>=1;n--)groups.push(["score:"+n,"Nota "+n,items.filter(x=>x.quality_score===n).length]);
-  chips.replaceChildren();
-  groups.forEach(([id,name,n])=>{
-   const btn=document.createElement("button");btn.type="button";btn.className="quality-chip"+(ratingFilter===id?" quality-chip-active":"");
-   btn.textContent=name+" ("+n+")";btn.setAttribute("aria-pressed",String(ratingFilter===id));
-   btn.addEventListener("click",()=>{qualityFilter=id;libraryPage=0;renderLibrary()});chips.append(btn);
-  });
- }
  const shown=items.filter(x=>{
   if(!(x.title+" "+(x.series_title||"")).toLocaleLowerCase("pt-BR").includes(filter))return false;
   if(statusFilter==="imported"&&x.genre!=="Importado - revisão")return false;
@@ -670,10 +620,6 @@ function renderLibrary(){
   if(statusFilter==="draft"&&x.is_published)return false;
   if(statusFilter==="reviewed"&&(x.is_published||!hasPublicationAuthorization(x)))return false;
   if(statusFilter==="published"&&!x.is_published)return false;
-  if(ratingFilter==="pending"&&x.quality_score!==null)return false;
-  if(ratingFilter==="passing"&&!(x.quality_score>=6))return false;
-  if(ratingFilter==="below6"&&!(x.quality_score!==null&&x.quality_score<6))return false;
-  if(ratingFilter.startsWith("score:")&&x.quality_score!==Number(ratingFilter.slice(6)))return false;
   return true;
  });
  const list=$("library-list");list.replaceChildren();
@@ -687,26 +633,15 @@ function renderLibrary(){
    ||window.NovaPlayCover?.genrePoster?.(row.title,row.genre)
    ||window.NovaPlayCover?.titleCard(row.title)||"../assets/posters/autoral.svg";
   const source=row.catalog_only?"Aguardando vídeo autorizado":row.licensed_stream_url?"Licenciado · Streaming direto":row.youtube_id?"YouTube · Link":row.google_drive_id?"Google Drive · Link":(row.file_size_bytes?((row.file_size_bytes)/(1024*1024)).toFixed(1)+" MB":"Tamanho ainda não verificado");
-  const engagement=activityCounts.get(row.id)||{detail:0,attempt:0};
-  const metricBadge='<small>Ficha: '+engagement.detail+' · Tentativas de assistir: '+engagement.attempt+' (30 dias)</small>';
   const validationBadge=row.r2_object_key?"<small>"+(row.media_validated_at?"Vídeo validado":"Validação técnica pendente")+(row.auto_publish?" · Publicação automática ativada":"")+"</small>":"";
   const review=row.genre==="Importado - revisão";
   const displayState=row.catalog_only?(row.is_published?"NA GRADE · EM BREVE":"RASCUNHO · SEM VÍDEO"):row.is_published?"PUBLICADO":hasPublicationAuthorization(row)?"AUTORIZADO · AGUARDA PUBLICAÇÃO":review?"RASCUNHO · REVISAR DIREITOS":"RASCUNHO";
-  const grade=Number.isInteger(row.quality_score)?row.quality_score:null;
-  const gradeTag=grade===null?"SEM NOTA":grade<6?"NOTA "+grade+" · CANDIDATO À RETIRADA":"NOTA "+grade+" · MANTER";
-  const gradeBadge='<span class="quality-status'+(grade!==null&&grade<6?" quality-below":"")+'">'+gradeTag+'</span>';
-  const options='<option value="">Sem nota</option>'+Array.from({length:10},(_,i)=>i+1).map(n=>'<option value="'+n+'"'+(grade===n?' selected':'')+'>'+n+'/10</option>').join("");
-  const gradeEditor='<div class="quality-editor">'+
-   '<label class="quality-select-label">Nota <select class="quality-select" aria-label="Nota de '+esc(row.title)+'">'+options+'</select></label>'+
-   '<input type="text" class="quality-note" maxlength="500" placeholder="Motivo da nota (opcional)" value="'+esc(row.quality_score_note||"")+'" aria-label="Motivo da nota de '+esc(row.title)+'">'+
-   '<button type="button" class="quality-save">Salvar nota</button></div>';
-  item.innerHTML='<img class="movie-thumb" alt="" loading="lazy" src="'+esc(poster)+'"><div class="movie-main"><strong>'+esc(row.title)+'</strong><small>'+esc(row.catalog_only?(row.genre==="Anime · Série"?"Anime / série":"Anime / filme"):(row.kind==="episode"?(row.series_title+" · Ep. "+row.episode_number):"Filme/curta"))+' · '+esc(source)+'</small>'+metricBadge+validationBadge+'<span class="movie-state'+(row.is_published?"":" draft")+'">'+displayState+'</span>'+gradeBadge+gradeEditor+'<div class="movie-buttons"><button class="review">'+(row.rights_reviewed?'✓ Conferido':'Marcar como conferido')+'</button><button class="edit">Editar</button><button class="publish">'+(row.is_published?(row.catalog_only?"Ocultar Em breve":"Retirar do catálogo"):"Publicar")+'</button><button class="danger delete">Excluir</button></div></div>';
+  item.innerHTML='<img class="movie-thumb" alt="" loading="lazy" src="'+esc(poster)+'"><div class="movie-main"><strong>'+esc(row.title)+'</strong><small>'+esc(row.catalog_only?(row.genre==="Anime · Série"?"Anime / série":"Anime / filme"):(row.kind==="episode"?(row.series_title+" · Ep. "+row.episode_number):"Filme/curta"))+' · '+esc(source)+'</small>'+validationBadge+'<span class="movie-state'+(row.is_published?"":" draft")+'">'+displayState+'</span>'+'<div class="movie-buttons"><button class="review">'+(row.rights_reviewed?'✓ Conferido':'Marcar como conferido')+'</button><button class="edit">Editar</button><button class="publish">'+(row.is_published?(row.catalog_only?"Ocultar Em breve":"Retirar do catálogo"):"Publicar")+'</button><button class="danger delete">Excluir</button></div></div>';
   item.querySelector(".movie-thumb").addEventListener("error",function(){
    if(this.dataset.fallbackShown)return;
    this.dataset.fallbackShown="1";
    this.src=window.NovaPlayCover?.genrePoster?.(row.title,row.genre)||window.NovaPlayCover?.titleCard(row.title)||"../assets/posters/autoral.svg";
   });
-  item.querySelector(".quality-save").onclick=()=>saveQualityScore(row,item);
   item.querySelector(".review").onclick=()=>toggleReview(row);
   if(row.licensed_rights_confirmed&&(row.r2_object_key||row.licensed_stream_url)){item.querySelector(".review").disabled=true;item.querySelector(".review").textContent="✓ Autorização registrada";}
    item.querySelector(".edit").textContent=row.catalog_only?"Liberar para assistir":"Editar";
@@ -771,34 +706,6 @@ function resetForm(){
  $("submit-upload").textContent="Enviar para a NPlay";$("progress-box").hidden=true;$("publish").checked=false;
 }
 
-
-async function saveQualityScore(row,element){
- if(busy)return;
- const raw=element.querySelector(".quality-select").value;
- const score=raw===""?null:Number(raw);
- const note=element.querySelector(".quality-note").value.trim();
- if(score!==null&&(!Number.isInteger(score)||score<1||score>10)){
-  status("quality-message","A nota deve estar entre 1 e 10.",true);return;
- }
- const changes={
-  quality_score:score,
-  quality_score_source:score===null?null:"manual",
-  quality_score_note:score===null?null:(note||null),
-  quality_scored_at:score===null?null:new Date().toISOString()
- };
- busy=true;
- const button=element.querySelector(".quality-save");button.disabled=true;button.textContent="Salvando...";
- try{
-  const {data,error}=await client.from("novaplay_library").update(changes).eq("id",row.id).select("id").single();
-  if(error)throw error;
-  Object.assign(row,changes);
-  status("quality-message",score===null?"Nota de “"+row.title+"” apagada.":"Nota salva para “"+row.title+"”: "+score+"/10.",false,true);
-  renderLibrary();
- }catch(e){
-  status("quality-message","Falha ao salvar a nota: "+errorText(e),true);
-  button.disabled=false;button.textContent="Salvar nota";
- }finally{busy=false}
-}
 
 function isNetflixReference(row){return !!row.netflix_reference_url}
 function netflixReferenceUrl(value){try{const u=new URL(value.trim());if(u.protocol!=="https:"||u.hostname.replace(/^www\./,"")!=="netflix.com"||u.username||u.password)return null;const direct=u.pathname.match(/^\/(?:title|watch)\/(\d{5,12})(?:\/|$)/);const id=direct?.[1]||u.searchParams.get("jbv");if(!id||!/^\d{5,12}$/.test(id))return null;return u.href}catch{return null}}
@@ -1349,7 +1256,7 @@ function init(){
  $("featured-add").onclick=addFeaturedFilm;
  $("featured-defaults").onclick=restoreFeaturedFilms;
  $("issue-refresh").onclick=loadPlaybackIssues;
- $("refresh-list").onclick=()=>Promise.all([loadLibrary(),loadActivity(),loadFeaturedConfig(),loadPlaybackIssues()]);$("filter-title").oninput=()=>{libraryPage=0;renderLibrary()};if($("library-state-filter"))$("library-state-filter").onchange=()=>{libraryPage=0;renderLibrary()};
+ $("refresh-list").onclick=()=>Promise.all([loadLibrary(),loadFeaturedConfig(),loadPlaybackIssues()]);$("filter-title").oninput=()=>{libraryPage=0;renderLibrary()};if($("library-state-filter"))$("library-state-filter").onchange=()=>{libraryPage=0;renderLibrary()};
  $("video-file").onchange=()=>{$("video-file-label").textContent=$("video-file").files[0]?.name||"Selecionar vídeo do telefone"};
  $("poster-file").onchange=()=>{$("poster-file-label").textContent=$("poster-file").files[0]?.name||"Escolher capa (opcional)"};
  $("youtube-poster-file").onchange=()=>{$("youtube-poster-label").textContent=$("youtube-poster-file").files[0]?.name||"Adicionar capa personalizada (opcional)"};
