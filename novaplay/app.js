@@ -294,7 +294,7 @@ function stopHeroPreview(){
  $("hero-preview-feedback").textContent="";
 }
 async function openHeroPreview(item){
- window.NovaPlayHeroScenes?.stop?.();
+ window.NovaPlayHeroScenes?.stop?.();window.NPlayHeroLive?.stop?.();
  if(!item||item.catalogOnly){toast("Este título ainda não tem um vídeo para prévia.");return}
  stopHeroPreview();
  const seq=previewSequence;
@@ -350,6 +350,7 @@ async function openHeroPreview(item){
 }
 function updateHero(index){
  stopHeroPreview();
+ if(window.NPlayHeroLive)return;
  if(!featured.length)return;
  featuredIndex=(index+featured.length)%featured.length;const x=featured[featuredIndex];
  $("hero-art").style.backgroundImage="url('"+(x.backdrop||x.cover).replace(/'/g,"%27")+"')";
@@ -425,7 +426,7 @@ function renderSearch(){
  else list.forEach(x=>results.append(card(x,x.kind==="tv")));
 }
 function navigate(page){
- window.NovaPlayHeroScenes?.stop?.();
+ window.NovaPlayHeroScenes?.stop?.();window.NPlayHeroLive?.stop?.();
  window.NovaPlayHover?.close?.();
  stopHeroPreview();
  const genreLink=typeof page==="string"&&page.startsWith("genero:");
@@ -443,6 +444,7 @@ function navigate(page){
  else renderCategory(chosen);
  window.scrollTo({top:0,behavior:"instant"});
  if(location.hash!=="#"+chosen)history.replaceState(null,"","#"+chosen);
+ if(chosen==="inicio")window.NPlayHeroLive?.sync?.();
 }
 function refreshFavoriteButton(){
  const btn=$("detail-favorite");if(!selected)return;
@@ -468,7 +470,7 @@ function startWatching(item){
  }else play(item);
 }
 function openDetails(item){
- window.NovaPlayHeroScenes?.stop?.();
+ window.NovaPlayHeroScenes?.stop?.();window.NPlayHeroLive?.stop?.();
  window.NovaPlayHover?.close?.();
  stopHeroPreview();
  if(!item)return;selected=item;
@@ -757,7 +759,7 @@ function setResume(video,id,seq){
 function openLiveEmbed(url,title){
  let source;
  try{source=new URL(url);if(source.protocol!=="https:")return false}catch{return false}
- window.NovaPlayHeroScenes?.stop?.();window.NovaPlayHover?.close?.();stopHeroPreview();
+ window.NovaPlayHeroScenes?.stop?.();window.NPlayHeroLive?.stop?.();window.NovaPlayHover?.close?.();stopHeroPreview();
  $("detail-layer").hidden=true;selected=null;
  stopPlayback();
  current={item:{title:String(title||"Canal ao vivo"),kind:"tv",liveEmbedUrl:source.href},episode:null};
@@ -782,7 +784,7 @@ $("player-live-reload").onclick=()=>{if(current?.item?.liveEmbedUrl)openLiveEmbe
 function play(item,episode){
  if(item?.liveEmbedUrl){openLiveEmbed(item.liveEmbedUrl,item.title);return}
  if(item?.kind==="tv"&&item.mode==="external"){openOfficialChannel(item);return}
- window.NovaPlayHeroScenes?.stop?.();
+ window.NovaPlayHeroScenes?.stop?.();window.NPlayHeroLive?.stop?.();
  window.NovaPlayHover?.close?.();
  stopHeroPreview();
  if(!item)return;
@@ -972,7 +974,7 @@ document.addEventListener("keydown",e=>{
 document.addEventListener("visibilitychange",()=>{if(document.hidden){stopHeroPreview();if(!$("player-layer").hidden)$("video").pause()}});
 window.addEventListener("scroll",()=>$("app-header").classList.toggle("is-scrolled",window.scrollY>24),{passive:true});
 if("serviceWorker" in navigator&&location.protocol==="https:"){
- window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js?v=0.46.0",{updateViaCache:"none"}).catch(()=>{}));
+ window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js?v=0.46.1",{updateViaCache:"none"}).catch(()=>{}));
 }
 $("hero-play").onclick=()=>navigate("tv");
 $("hero-info").onclick=()=>navigate("filmes");

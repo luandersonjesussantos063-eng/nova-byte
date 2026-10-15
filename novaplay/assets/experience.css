@@ -98,3 +98,27 @@ button{transition:background .2s,color .2s,border-color .2s,transform .2s}
 }
 @media(max-width:360px){:root{--page-gutter:16px}.hero-content{left:16px;right:16px}.hero{height:580px}.hero h1{font-size:30px}.hero-buttons .btn{font-size:11px;padding-inline:12px}.nplay-discover{margin-inline:16px}.nplay-live-grid{gap:18px 9px}.nplay-live-badge{font-size:6px}.nplay-live-title{font-size:10px}}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;transition:none!important;animation:none!important}.hero-art{transform:none}}
+
+/* 0.46.1 — TV ao vivo como destaque principal. */
+.hero-live-media{position:absolute;inset:0;z-index:0;overflow:hidden;opacity:0;pointer-events:none;transition:opacity .5s;background:#070b13}
+.hero-live-video{display:block;width:100%;height:100%;object-fit:cover;object-position:center}
+.hero.hero-live-playing .hero-live-media{opacity:1}
+.hero.hero-live-mode .hero-content{max-width:650px;bottom:20%}
+.hero.hero-live-mode h1{font-size:clamp(38px,5vw,74px)}
+.hero-live-controls{position:absolute;z-index:5;right:var(--page-gutter);bottom:112px;width:min(360px,40%);padding:14px;border:1px solid #ffffff20;border-radius:15px;background:#0c1728cc;backdrop-filter:blur(18px);box-shadow:0 10px 30px #0003}
+.hero-live-controls[hidden]{display:none!important}
+.hero-live-status{display:block;color:#d7e4ff;font-size:10px;line-height:1.5;margin:0 0 10px}
+.hero-live-control-row{display:flex;gap:9px;align-items:center}
+.hero-live-picker{flex:1;min-width:0;display:flex;flex-direction:column;gap:5px}
+.hero-live-picker>span{font-size:8px;letter-spacing:1.8px;color:#93a9d1;font-weight:750}
+.hero-live-picker select{min-width:0;width:100%;max-width:100%;color:#f6f8ff;background:#101e35;border:1px solid #ffffff22;border-radius:8px;font:inherit;font-size:12px;padding:10px 25px 10px 10px;cursor:pointer}
+.hero-live-control-row>button{display:grid;place-items:center;flex:0 0 39px;width:39px;height:39px;margin-top:16px;border-radius:50%;border:1px solid #ffffff45;color:#fff;background:#ffffff0b;font-size:16px}
+.hero-live-control-row>button:hover{background:#ffffff20}.hero-live-control-row>button:disabled{opacity:.35;cursor:default}
+@media(max-width:760px){
+ .hero.hero-live-mode .hero-content{left:20px;right:20px;max-width:none;bottom:212px}
+ .hero.hero-live-mode h1{font-size:clamp(32px,8.7vw,46px)}
+ .hero-live-controls{left:20px;right:20px;bottom:65px;width:auto;padding:12px 14px;border-radius:13px}
+ .hero-live-status{font-size:9px;margin-bottom:8px}.hero-live-picker select{font-size:12px;min-height:38px}.hero-live-picker>span{font-size:7px}
+ .hero-live-control-row>button{width:36px;height:36px;flex-basis:36px;font-size:15px;margin-top:15px}
+}
+@media(prefers-reduced-motion:reduce){.hero-live-media{transition:none}}

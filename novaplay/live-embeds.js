@@ -28,6 +28,7 @@ async function load(){
   if(error)throw error;
   if(sequence!==loadSequence)return;
   const channels=(data||[]).filter(item=>item.embed_url);
+  window.NPlayHeroLive?.setChannels(channels);
   renderChannels(channels);
   note(channels.length?"":"Nenhum canal publicado no momento.");
  }catch(error){
@@ -93,7 +94,7 @@ function renderChannels(channels){
 function init(){
  $("nplay-live-search")?.addEventListener("input",()=>renderChannels(liveChannelData));
  window.addEventListener("nplay:tv-open",()=>{const panel=$("iframe-channels-panel");if(panel){panel.hidden=false;load()}});
- if(location.hash==="#tv")load();
+ load();
 
 }
 if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",init);else init();
