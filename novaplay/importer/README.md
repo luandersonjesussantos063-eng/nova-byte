@@ -28,7 +28,7 @@ O sistema não adivinha sinopses nem confirma a identidade de um filme apenas pe
 - `python worker.py --once --job-id UUID --local-file CAMINHO`: recuperação/teste de um trabalho autorizado já na fila. Não cria autorização nem publica o conteúdo.
 - `python validate_existing.py`: verifica importações já enviadas e preenche metadados técnicos; não altera a revisão editorial.
 
-`recovery/<id>.mp4` é reaproveitado quando existe. Os arquivos locais são preservados para recuperação; verifique o espaço antes de remover arquivos de tarefas comprovadamente concluídas. Fontes que não respondem após três tentativas vão para atenção, com opção de trocar o magnet. Limite de tamanho e falta de espaço exigem ajuste; não geram tentativas automáticas inúteis. O download reserva margem para manter o original e preparar o vídeo. O limite padrão é 16 GiB por vídeo e duas horas por etapa de download/conversão, ajustável no `.env`.
+`recovery/<id>.mp4` é reaproveitado quando existe. Arquivos de tarefas incompletas ou ainda em rascunho são preservados para recuperação. Fontes que não respondem após três tentativas vão para atenção, com opção de trocar o magnet. Limite de tamanho e falta de espaço exigem ajuste; não geram tentativas automáticas inúteis. O download reserva margem para manter o original e preparar o vídeo. O limite padrão é 16 GiB por vídeo e duas horas por etapa de download/conversão, ajustável no `.env`.
 
 Nunca envie `.env`, credenciais, logs privados ou vídeos ao Git. As chaves do processador ficam apenas no computador/servidor.
 
@@ -37,3 +37,19 @@ Nunca envie `.env`, credenciais, logs privados ou vídeos ao Git. As chaves do p
 Uma fonte que entrega menos de 32 KiB/s durante uma janela de cinco minutos libera a fila e é retomada após 15 minutos, com as partes preservadas. Ajuste `IMPORTER_SPEED_WINDOW_SECONDS` e `IMPORTER_MIN_DOWNLOAD_RATE` no `.env`; taxa zero desativa essa proteção. Falhas de metadados aguardam uma hora entre tentativas e, após três tentativas, exigem revisão da fonte. Os prazos de retomada e reserva usam o relógio do banco.
 
 Na preparação, H.264/yuv420p e áudio AAC são copiados sem recodificação quando somente o contêiner precisa mudar. Outros codecs continuam sendo convertidos e a saída passa pela mesma validação técnica.
+
+## Limpeza automática após publicação
+
+O processador verifica as importações concluídas ao iniciar, a cada minuto quando livre e após terminar um trabalho. Só remove os arquivos de `jobs/<id>/` e `recovery/<id>.mp4` quando o trabalho está `ready`, o item correspondente está publicado e validado no catálogo, a chave do objeto é a mesma e o R2 confirma tamanho e SHA-256. O pequeno `manifest.json` fica como comprovante, com `local_cleanup_at`.
+
+Rascunhos, falhas, downloads em andamento e arquivos pessoais fornecidos por `--local-file` fora dessas pastas não são apagados. A limpeza não remove nada do R2 ou do catálogo. Uma falha na consulta ou na conferência adia a limpeza; erro ao apagar tenta novamente na próxima verificação. Importações antigas sem comprovante completo exigem revisão manual.
+
+Para atualizar uma instalação existente no Windows, abra o PowerShell **dentro da pasta do importador**, onde ficam `pipeline.py` e `INICIAR-IMPORTADOR.bat`, e execute:
+
+```powershell
+& ([scriptblock]::Create((Invoke-WebRequest -UseBasicParsing 'https://novabytesolucoes.com.br/novaplay/importer/ATUALIZAR-LIMPEZA.ps1').Content))
+```
+
+O comando sinaliza parada, espera o supervisor terminar o trabalho atual, instala somente `pipeline.py` e `cleanup.py`, confere a sintaxe, executa a limpeza das tarefas publicadas elegíveis e abre o importador novamente. `.env` e credenciais são preservados. Não feche o FFmpeg durante a espera. Se houver um worker iniciado separadamente, aguarde esse worker parar antes de atualizar.
+
+Também é possível executar somente a conferência e limpeza: `python worker.py --cleanup-only` (com o supervisor parado). Os erros de capacidade existentes continuam exigindo a opção de tentar novamente no painel depois que houver espaço.

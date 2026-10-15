@@ -14,6 +14,7 @@ import subprocess
 import threading
 import time
 import uuid
+from cleanup import cleanup_published_imports
 from datetime import datetime, timedelta, timezone
 
 LOG = logging.getLogger('nplay-importer')
@@ -430,6 +431,7 @@ def main():
     load_dotenv(base/'.env')
     parser=argparse.ArgumentParser(description='NPlay importer v2: resumable stages and leased queue')
     parser.add_argument('--once',action='store_true')
+    parser.add_argument('--cleanup-only',action='store_true',help='Verify published imports and remove only their managed local files')
     parser.add_argument('--job-id')
     parser.add_argument('--local-file',help='Authorized local test/recovery file; requires --job-id')
     args=parser.parse_args()
@@ -444,10 +446,20 @@ def main():
     recovery=Path(os.getenv('IMPORTER_RECOVERY_DIR',str(base/'recovery')))
     max_bytes=int(os.getenv('IMPORTER_MAX_BYTES',str(16*1024**3)))
     timeout=int(os.getenv('IMPORTER_TIMEOUT_SECONDS','7200'))
+    bucket=os.getenv('R2_BUCKET','nplay-filmes')
+    if args.cleanup_only:
+        cleanup_published_imports(db,r2,bucket,root,recovery)
+        return
+    next_cleanup=0.0
     while not (base/'importer.stop').exists():
         try:
+            if time.monotonic() >= next_cleanup:
+                cleanup_published_imports(db,r2,bucket,root,recovery)
+                next_cleanup=time.monotonic()+60
             jobs=db.rpc('novaplay_claim_import',{'p_worker_id':worker,'p_job_id':args.job_id}).execute().data or []
-            if jobs:handle_job(db,r2,jobs[0],root,recovery,os.getenv('R2_BUCKET','nplay-filmes'),max_bytes,timeout,args.local_file)
+            if jobs:
+                handle_job(db,r2,jobs[0],root,recovery,bucket,max_bytes,timeout,args.local_file)
+                cleanup_published_imports(db,r2,bucket,root,recovery)
             elif not args.once:time.sleep(15)
         except Exception as exc:
             LOG.error('Queue unavailable (%s)',type(exc).__name__)
