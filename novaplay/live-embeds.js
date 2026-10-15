@@ -47,6 +47,22 @@ async function load(){
   {title:"HBO+ · Ao vivo",embed_url:"https://rdcanais.org/hboplus"},
   {title:"Gloob · Ao vivo",embed_url:"https://rdcanais.org/gloob"}
  ];
+ // Sincronização dinâmica: a API fornece os canais ativos.
+ // Em caso de falha de rede/CORS, os canais já cadastrados permanecem disponíveis.
+ try{
+  const response=await fetch("https://api.reidoscanais.si/channels",{headers:{Accept:"application/json"},cache:"no-store",signal:AbortSignal.timeout(12000)});
+  if(!response.ok)throw Error("HTTP "+response.status);
+  const payload=await response.json();
+  const records=Array.isArray(payload.data)?payload.data:payload.data?.channels;
+  if(payload.success!==true||!Array.isArray(records))throw Error("Formato inesperado");
+  const existing=new Set(channels.map(x=>x.embed_url));
+  for(const entry of records){
+   const url=entry?.embeds?.find(x=>typeof x?.embed_url==="string"&&x.embed_url.startsWith("https://"))?.embed_url;
+   if(!url||existing.has(url))continue;
+   existing.add(url);
+   channels.push({title:String(entry.name||entry.title||entry.id||"Canal"),embed_url:url,logo_url:entry.logo_url||"",category:entry.category||"",epg:entry.epg||null});
+  }
+ }catch(error){console.warn("NPlay: API de canais indisponível",error);note("Não foi possível sincronizar a API agora. Os canais existentes continuam disponíveis.");}
  if(window.supabase){
   try{
    const db=window.supabase.createClient("https://vajlhodqxskozuxxlujv.supabase.co","sb_publishable_uT0b4y0Bex1k1QWZoyIfKg_K0pm-yS3");
@@ -81,7 +97,7 @@ async function load(){
   const play=document.createElement("span");play.className="nplay-live-play";play.textContent="▶";
   button.append(art,badge,play);
   const title=document.createElement("strong");title.className="nplay-live-title";title.textContent=item.title;
-  const subtitle=document.createElement("span");subtitle.className="nplay-live-subtitle";subtitle.textContent="Canal ao vivo · Assistir agora";
+  const subtitle=document.createElement("span");subtitle.className="nplay-live-subtitle";subtitle.textContent=item.epg?.current?.title?("Agora: "+item.epg.current.title):(item.category?item.category+" · Ao vivo":"Canal ao vivo · Assistir agora");
   button.onclick=()=>openChannel(item.embed_url,item.title);
   card.append(button,title,subtitle);list.append(card);
  }
