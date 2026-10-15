@@ -662,7 +662,7 @@ $("cinema-fullscreen").onclick=()=>{
  }
  showCinemaUi();
 };
-function stopPlayback(){\n const shield=$("nplay-live-touch-shield"),toggle=$("nplay-live-touch-toggle");if(shield)shield.hidden=true;if(toggle)toggle.hidden=true;
+function stopPlayback(){\n clearNplayShieldTimer();const started=$("nplay-live-video-started");if(started){started.hidden=true;started.disabled=false;started.textContent="Vídeo começou"}\n const shield=$("nplay-live-touch-shield"),toggle=$("nplay-live-touch-toggle");if(shield)shield.hidden=true;if(toggle)toggle.hidden=true;
  if($("player-loading"))$("player-loading").hidden=true;
  $("player-live-reload").hidden=true;
  $("player-issue-panel").hidden=true;
@@ -756,9 +756,11 @@ function setResume(video,id,seq){
  };
  video.onended=()=>{delete progress[id];save(progressKey,progress);if(view==="inicio")renderRows()};
 }
+let nplayShieldTimer=null;
+function clearNplayShieldTimer(){if(nplayShieldTimer!==null){clearTimeout(nplayShieldTimer);nplayShieldTimer=null}}
 function setupLiveTouchShield(){
- const frame=$("fallback-frame");const wrap=frame?.parentElement;if(!wrap)return;
- let overlay=$("nplay-live-touch-shield"),toggle=$("nplay-live-touch-toggle");
+ const frame=$("fallback-frame"),wrap=frame?.parentElement;if(!wrap)return;
+ let overlay=$("nplay-live-touch-shield"),toggle=$("nplay-live-touch-toggle"),started=$("nplay-live-video-started");
  if(!overlay){
   overlay=document.createElement("div");overlay.id="nplay-live-touch-shield";
   overlay.style.cssText="position:absolute;inset:0;z-index:12;background:transparent;pointer-events:auto";
@@ -770,12 +772,30 @@ function setupLiveTouchShield(){
   toggle.style.cssText="position:fixed;z-index:2147483000;right:16px;bottom:22px;padding:12px 17px;border-radius:12px;background:#2364d5;color:#fff;border:1px solid #a8c6ff;font-weight:800;cursor:pointer;box-shadow:0 4px 18px #0009";
   document.body.appendChild(toggle);
   toggle.onclick=()=>{
-   const shield=$("nplay-live-touch-shield");const enabled=shield?.hidden;
+   clearNplayShieldTimer();
+   const shield=$("nplay-live-touch-shield"),enabled=shield?.hidden;
    if(shield)shield.hidden=!enabled;
    toggle.textContent=enabled?"Liberar controles do vídeo":"Proteger tela";
+   const confirm=$("nplay-live-video-started");if(confirm)confirm.hidden=true;
   };
  }
- overlay.hidden=true;toggle.hidden=false;toggle.textContent="Proteger tela";
+ if(!started){
+  started=document.createElement("button");started.id="nplay-live-video-started";started.type="button";
+  started.style.cssText="position:fixed;z-index:2147483000;left:16px;bottom:22px;padding:12px 17px;border-radius:12px;background:#152c4b;color:#fff;border:1px solid #a8c6ff;font-weight:800;cursor:pointer;box-shadow:0 4px 18px #0009";
+  document.body.appendChild(started);
+  started.onclick=()=>{
+   clearNplayShieldTimer();started.disabled=true;started.textContent="Proteção em 5 segundos…";
+   nplayShieldTimer=setTimeout(()=>{
+    nplayShieldTimer=null;const shield=$("nplay-live-touch-shield"),button=$("nplay-live-touch-toggle");
+    if(!$("player-layer")?.hidden&&current?.item?.liveEmbedUrl){
+     if(shield)shield.hidden=false;if(button)button.textContent="Liberar controles do vídeo";
+    }
+    started.hidden=true;started.disabled=false;started.textContent="Vídeo começou";
+   },5000);
+  };
+ }
+ clearNplayShieldTimer();overlay.hidden=true;toggle.hidden=false;toggle.textContent="Proteger tela";
+ started.hidden=false;started.disabled=false;started.textContent="Vídeo começou";
 }
 function openLiveEmbed(url,title){
  let source;
