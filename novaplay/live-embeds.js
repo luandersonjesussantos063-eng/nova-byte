@@ -42,6 +42,7 @@ async function load(){
   {title:"Premiere Clubes · Ao vivo",embed_url:PROVIDER},
   {title:"Paramount+ 2 · Ao vivo",embed_url:"https://rdcanais.org/paramountplus2"},
   {title:"TNT Novelas · Ao vivo",embed_url:"https://rdcanais.org/tntnovelas"},
+  {title:"HBO+ · Ao vivo",embed_url:"https://rdcanais.org/hboplus"},
   {title:"Gloob · Ao vivo",embed_url:"https://rdcanais.org/gloob"}
  ];
  if(window.supabase){
