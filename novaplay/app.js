@@ -599,6 +599,7 @@ function updateCinemaControls(){
    const currentTime=seekable?Math.max(0,Math.min(duration,v.currentTime||0)):0;
    $("cinema-elapsed").textContent=asClock(currentTime);
    $("cinema-seek").value=seekable?String(currentTime/duration*100):"0";
+   $("cinema-seek").style.setProperty("--played",$("cinema-seek").value+"%");
  }
 }
 function showCinemaUi(){
@@ -643,6 +644,7 @@ $("cinema-volume")?.addEventListener("input",e=>{
 $("cinema-seek").addEventListener("input",e=>{
  const v=$("video");if(!Number.isFinite(v.duration)||v.duration<=0)return;
  seekActive=true;
+ e.target.style.setProperty("--played",e.target.value+"%");
  const target=v.duration*Number(e.target.value)/100;
  $("cinema-elapsed").textContent=asClock(target);
  showCinemaUi();
@@ -1041,7 +1043,7 @@ document.addEventListener("keydown",e=>{
 document.addEventListener("visibilitychange",()=>{if(document.hidden){stopHeroPreview();if(!$("player-layer").hidden)$("video").pause()}});
 window.addEventListener("scroll",()=>$("app-header").classList.toggle("is-scrolled",window.scrollY>24),{passive:true});
 if("serviceWorker" in navigator&&location.protocol==="https:"){
- window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js?v=0.46.1",{updateViaCache:"none"}).catch(()=>{}));
+ window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js?v=0.47.1",{updateViaCache:"none"}).catch(()=>{}));
 }
 $("hero-play").onclick=()=>navigate("tv");
 $("hero-info").onclick=()=>navigate("filmes");
