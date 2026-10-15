@@ -356,7 +356,7 @@
  }
  function startAdmin(){
   if(!window.supabase||typeof window.supabase.createClient!=="function"){fail();return}
-  load("./admin.js?v=0.45.37",function(){},function(){if(msg)msg.textContent="Falha ao carregar o módulo administrativo. Atualize a página."});
+  load("./admin.js?v=0.45.38",function(){},function(){if(msg)msg.textContent="Falha ao carregar o módulo administrativo. Atualize a página."});
  }
  function fail(){if(msg)msg.textContent="Não foi possível carregar a biblioteca de autenticação. Confira a conexão e tente novamente.";}
  function attempt(i){
@@ -401,8 +401,8 @@
 })();
 </script>
 <script defer src="https://cdn.jsdelivr.net/npm/hls.js@1.7.3/dist/hls.min.js"></script>
-<script src="./m3u-core.js?v=0.45.37" defer></script>
-<script src="./signal-test.js?v=0.45.37" defer></script>
-<script src="./live-embeds.js?v=0.45.37" defer></script>
+<script src="./m3u-core.js?v=0.45.38" defer></script>
+<script src="./signal-test.js?v=0.45.38" defer></script>
+<script src="./live-embeds.js?v=0.45.38" defer></script>
 </body>
 </html>

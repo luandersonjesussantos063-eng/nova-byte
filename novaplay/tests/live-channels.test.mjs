@@ -73,3 +73,12 @@ test('public player routes explicit and inferred HLS to cinema HLS entry point',
  context.openChannel({embed_url:'https://example.org/live',title:'A',stream_type:'hls'});context.openChannel({embed_url:'https://example.org/list.m3u?x=1',title:'B'});context.openChannel({embed_url:'https://example.org/embed',title:'C'});
  assert.deepEqual(calls.map(x=>x[0]),['hls','hls','iframe']);
 });
+test('TV grade reads published channels only and never restores the fixed provider list',async()=>{
+ const source=read('live-embeds.js');
+ const load=source.slice(source.indexOf('async function load(){'),source.indexOf('function renderChannels(channels){'));
+ let result,notice,filter,failed=false;
+ const client={from:()=>({select:()=>({eq:(field,value)=>{filter=[field,value];return {order:async()=>failed?{error:Error('offline')}:{data:[{title:'Aprovado',embed_url:'https://example.org/live'}]}};}})})};
+ const context=vm.createContext({$:()=>({}),loadSequence:0,note:message=>notice=message,renderChannels:rows=>result=rows,window:{supabase:{createClient:()=>client}},fetch:()=>{throw Error('Provider must not auto-publish');},Error});
+ vm.runInContext(load,context);await context.load();assert.deepEqual(filter,['is_published',true]);assert.equal(result.length,1);assert.equal(result[0].title,'Aprovado');
+ failed=true;await context.load();assert.equal(result.length,0);assert.match(notice,/Não foi possível/);assert.equal(source.includes('CHANNEL_SNAPSHOT'),false);assert.equal(source.includes('fetch('),false);
+});
