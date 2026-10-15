@@ -2,7 +2,7 @@
 (function(){
 "use strict";
 const db=window.NovaPlayCatalog;
-const remoteDb=window.supabase?.createClient?.("https://vajlhodqxskozuxxlujv.supabase.co","sb_publishable_uT0b4y0Bex1k1QWZoyIfKg_K0pm-yS3",{auth:{persistSession:false,autoRefreshToken:false}});
+const remoteDb=window.NPlayAccessClient||window.supabase?.createClient?.("https://vajlhodqxskozuxxlujv.supabase.co","sb_publishable_uT0b4y0Bex1k1QWZoyIfKg_K0pm-yS3");
 let uploadedCatalog=[];
 if(!db){console.error("O catálogo não foi carregado.");return;}
 const $=id=>document.getElementById(id);
