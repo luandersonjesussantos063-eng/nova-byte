@@ -3,7 +3,7 @@ import vm from 'node:vm';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-function setup({native=false}={}){
+function setup({native=false,maxParallel=1}={}){
  const timers=new Map(),instances=[];let next=0,intersection;
  class Element extends EventTarget{
   hidden=false;muted=false;attributes={};children=[];rect={top:140,bottom:340,left:50,right:350,width:300,height:200};
@@ -29,7 +29,7 @@ function setup({native=false}={}){
  window.Hls=Hls;
  const context=vm.createContext({window,document,MutationObserver:class{observe(){}},IntersectionObserver:window.IntersectionObserver,setTimeout:(fn,ms)=>{timers.set(++next,{fn,ms});return next},clearTimeout:id=>timers.delete(id)});
  vm.runInContext(readFileSync(new URL('../assets/live-preview.js',import.meta.url),'utf8'),context);
- const manager=window.NPlayLivePreviews.create(root);
+ const manager=window.NPlayLivePreviews.create(root,{maxParallel});
  const flush=()=>{for(const [id,timer] of [...timers])if(timer.ms===180){timers.delete(id);timer.fn()}};
  const add=(title,left)=>{const entry={card:new Element(),cover:new Element(),sound:new Element(),url:'https://example.org/'+title+'.m3u8',title};entry.card.append(entry.sound);if(left!==undefined)entry.card.rect={...entry.card.rect,left,right:left+300};manager.register(entry);return entry};
  return {manager,add,flush,instances,document,window,root,gate,intersection:()=>intersection(),video:entry=>entry.cover.children.at(-1)};
@@ -60,4 +60,14 @@ test('native HLS starts muted and stops when the grade is hidden',()=>{
  const s=setup({native:true}),entry=s.add('A');s.flush();const video=s.video(entry);
  assert.equal(video.src,entry.url);assert.equal(video.playMuted,true);assert.equal(s.instances.length,0);
  s.root.parentElement.hidden=true;s.window.dispatchEvent(new Event('scroll'));assert.equal(video.removed,true);assert.equal(video.muted,true);
+});
+
+test('visible home cards play simultaneously within the limit and only one can have audio',()=>{
+ const s=setup({maxParallel:4}),entries=['A','B','C','D','E'].map(name=>s.add(name));s.flush();
+ assert.equal(s.instances.length,4);assert(s.instances.every(h=>h.video.playMuted&&h.video.defaultMuted));
+ const a=entries[0],b=entries[1];a.sound.dispatchEvent(new Event('click'));assert.equal(s.instances[0].video.muted,false);
+ b.sound.dispatchEvent(new Event('click'));assert.equal(s.instances[0].video.muted,true);assert.equal(s.instances[1].video.muted,false);assert.equal(a.sound.attributes['aria-pressed'],'false');
+ a.card.rect={top:900,bottom:1100,left:50,right:350,width:300,height:200};s.intersection();assert.equal(s.instances[0].destroyed,true);assert.equal(s.instances[1].destroyed,undefined);
+ s.flush();assert.equal(s.instances.length,5);assert.equal(s.instances[4].video.playMuted,true);
+ s.document.hidden=true;s.document.dispatchEvent(new Event('visibilitychange'));assert(s.instances.every(h=>h.destroyed&&h.video.muted));
 });

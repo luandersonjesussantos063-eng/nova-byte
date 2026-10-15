@@ -157,3 +157,10 @@ button{transition:background .2s,color .2s,border-color .2s,transform .2s}
 /* Shared white-and-blue NPlay wordmark, including the installed app. */
 .brand .nplay-wordmark{display:block;width:142px;height:51px;object-fit:contain}
 @media(max-width:540px){.brand .nplay-wordmark{width:110px;height:40px}}
+
+/* Home live cards show the program while keeping all controls above the video. */
+.channel-card .nplay-live-preview{z-index:2}
+.channel-card.nplay-live-preview-playing .channel-custom-label{opacity:0}
+.channel-card .cover-btn{z-index:3}
+.channel-card .onair{z-index:4}
+.channel-card .nplay-live-sound,.channel-card .card-direct-play{z-index:5}

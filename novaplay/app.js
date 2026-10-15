@@ -4,7 +4,7 @@
 const db=window.NovaPlayCatalog;
 const remoteDb=window.NPlayAccessClient||window.supabase?.createClient?.("https://vajlhodqxskozuxxlujv.supabase.co","sb_publishable_uT0b4y0Bex1k1QWZoyIfKg_K0pm-yS3");
 let uploadedCatalog=[];
-let homeLiveChannels=[];
+let homeLiveChannels=[],homeLivePreviews=null;
 if(!db){console.error("O catálogo não foi carregado.");return;}
 const $=id=>document.getElementById(id);
 const all=[...db.channels,...db.films,...db.series];
@@ -251,7 +251,9 @@ function upcomingFilms(){
  return upcoming.sort((a,b)=>Number(premium(b))-Number(premium(a))||a.title.localeCompare(b.title,"pt-BR"));
 }
 function renderRows(){
- const holder=$("home-rows");holder.replaceChildren();
+ const holder=$("home-rows");
+ if(!homeLivePreviews&&window.NPlayLivePreviews)homeLivePreviews=window.NPlayLivePreviews.create(holder,{maxParallel:4});
+ homeLivePreviews?.reset();holder.replaceChildren();
  const blocks=[
  ["Continuar assistindo",continued(),"continuar",false],
  ["TV ao vivo",[...homeLiveChannels,...db.channels],"tv",true],
@@ -265,7 +267,17 @@ function renderRows(){
  ["Ainda sem gênero",genreGroups().get("Não classificados").slice(0,80),"genero:Não classificados",false],
  ["Minha lista",all.filter(x=>favorite.has(x.id)),"favoritos",false]
  ];
- blocks.forEach(b=>{const row=shelf(b[0],b[1].slice(0,36),b[2],b[3]);if(row)holder.append(row)});
+ blocks.forEach(b=>{
+  const items=b[1].slice(0,36),row=shelf(b[0],items,b[2],b[3]);if(!row)return;holder.append(row);
+  if(!b[3]||!homeLivePreviews)return;
+  const cards=row.querySelectorAll(".poster-card");
+  items.forEach((item,index)=>{
+   if(item.mode!=="hls"||!item.src)return;
+   const card=cards[index],cover=card?.querySelector(".cover");if(!cover)return;
+   const sound=document.createElement("button");sound.type="button";sound.className="nplay-live-sound";sound.hidden=true;cover.append(sound);
+   homeLivePreviews.register({card,cover,sound,url:item.src,title:item.title});
+  });
+ });
 }
 // The home shelf reuses the published live catalog; it never imports or republishes a stream.
 function selectHomeLiveChannels(channels){
@@ -1112,7 +1124,7 @@ document.addEventListener("keydown",e=>{
 document.addEventListener("visibilitychange",()=>{if(document.hidden){stopHeroPreview();if(!$("player-layer").hidden)$("video").pause()}});
 window.addEventListener("scroll",()=>$("app-header").classList.toggle("is-scrolled",window.scrollY>24),{passive:true});
 if("serviceWorker" in navigator&&location.protocol==="https:"){
- window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js?v=0.48.3",{updateViaCache:"none"}).catch(()=>{}));
+ window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js?v=0.48.4",{updateViaCache:"none"}).catch(()=>{}));
 }
 $("hero-play").onclick=()=>navigate("tv");
 $("hero-info").onclick=()=>navigate("filmes");
