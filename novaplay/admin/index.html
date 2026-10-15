@@ -7,21 +7,21 @@
 <link rel="icon" href="../assets/icon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="./admin.css?v=0.43.0">
 <style>
-.admin-nav{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 10px;padding:8px;background:#0d192b;border:1px solid #304461;border-radius:15px}
-.admin-tab{border:1px solid transparent;border-radius:10px;background:transparent;color:#aabed9;font-weight:750;padding:12px 18px;flex:1 1 145px}
+.admin-nav{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin:16px 0 12px;padding:10px;background:#0d192b;border:1px solid #304461;border-radius:15px}
+.admin-tab{border:1px solid #2b405e;border-radius:10px;background:#11223a;color:#d6e4f7;font-weight:750;padding:13px 12px;min-width:0;text-align:center}
 .admin-tab:hover{background:#1b3150;color:#fff}
 .admin-tab.active{background:#356de0;color:#fff;box-shadow:0 4px 15px #0003}
 .admin-tab-help{color:#aabed9;font-size:13px;margin:0 0 18px}
 .admin-workspace{display:contents}
 .admin-workspace>.editor,.admin-workspace>.library{margin:16px 0}
 #dashboard .intro-text h1{font-size:clamp(25px,3vw,37px)}
-@media(max-width:650px){.admin-tab{flex:1 1 calc(50% - 8px);padding:11px 6px}.admin-nav{gap:6px}}
+@media(max-width:650px){.admin-nav{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.admin-tab{padding:12px 6px;font-size:13px}}
 </style>
 </head>
 <body>
-<header class="top"><a class="brand" href="../"><span class="mark">▶</span> N<span>Play</span></a><div class="top-right"><strong>Painel administrativo · NPlay V 0.44.8</strong><button id="logout" class="outline" hidden>Sair</button></div></header>
+<header class="top"><a class="brand" href="../"><span class="mark">▶</span> N<span>Play</span></a><div class="top-right"><strong>Painel administrativo · NPlay V 0.46.9</strong><button id="logout" class="outline" hidden>Sair</button></div></header>
 <main class="container">
-  <section id="loading" class="panel intro" hidden><div class="spin"></div><p>Preparando seu painel... <small>V 0.44.8</small></p><p id="loading-error" class="feedback" role="status"></p><button id="loading-retry" class="outline" type="button" hidden onclick="location.reload()">Tentar novamente</button></section>
+  <section id="loading" class="panel intro" hidden><div class="spin"></div><p>Preparando seu painel... <small>V 0.46.9</small></p><p id="loading-error" class="feedback" role="status"></p><button id="loading-retry" class="outline" type="button" hidden onclick="location.reload()">Tentar novamente</button></section>
   <section id="login-view" class="panel login">
     <div class="section-label">ACESSO RESTRITO</div>
     <h1>Gerencie sua NPlay</h1>
@@ -47,11 +47,11 @@
     <nav class="admin-nav" aria-label="Áreas do painel">
       <button type="button" class="admin-tab active" data-admin-tab="catalogo">Catálogo</button>
       <button type="button" class="admin-tab" data-admin-tab="importacoes">Importações</button>
-      <button type="button" class="admin-tab" data-admin-tab="canais">Canais iframe</button><button type="button" class="admin-tab" data-admin-tab="destaques">Destaques</button>
-      <button type="button" class="admin-tab" data-admin-tab="ferramentas">Ferramentas</button>
+      <button type="button" class="admin-tab" data-admin-tab="canais">TV ao vivo</button><button type="button" class="admin-tab" data-admin-tab="destaques">Destaques</button>
+      <button type="button" class="admin-tab" data-admin-tab="acessos">Autorizações</button>\n      <button type="button" class="admin-tab" data-admin-tab="ferramentas">Ferramentas</button>
     </nav>
     <p class="admin-tab-help" id="admin-tab-help">Pesquise, revise e publique os títulos do catálogo.</p>
-    <section id="nplay-access-admin" class="panel" style="margin:16px 0"><h2>Autorizações de acesso</h2><p class="muted">Aprove ou revogue dispositivos. Somente administradores podem alterar o acesso.</p><button id="nplay-access-refresh" type="button" class="outline">Atualizar solicitações</button><p id="nplay-access-admin-status"></p><div id="nplay-access-admin-list"></div></section><section id="live-embed-manager" class="panel" hidden><h2>Canais ao vivo · testar e publicar</h2><div id="live-embed-controls"></div></section>
+    <section id="nplay-access-admin" class="panel" hidden style="margin:16px 0"><h2>Autorizações de acesso</h2><p class="muted">Aprove ou revogue dispositivos. Somente administradores podem alterar o acesso.</p><button id="nplay-access-refresh" type="button" class="outline">Atualizar solicitações</button><p id="nplay-access-admin-status"></p><div id="nplay-access-admin-list"></div></section><section id="live-embed-manager" class="panel" hidden><h2>Canais ao vivo · testar e publicar</h2><div id="live-embed-controls"></div></section>
     <div class="intro-text"><span class="section-label">CENTRAL DE CONTEÚDO</span><h1>Seus filmes, suas regras.</h1><p>Escolha um vídeo do telefone, envie uma capa e publique dentro da NPlay.</p></div>
     <div class="stats">
       <div class="stat"><strong id="stat-total">0</strong><span>Total de vídeos</span></div>
@@ -374,11 +374,11 @@
   var groups={
    catalogo:[dash.querySelector(".workspace .library")],
    importacoes:[dash.querySelector(".workspace .editor")],
-   canais:[dash.querySelector("#live-embed-manager")],
+   canais:[dash.querySelector("#live-embed-manager")],\n   acessos:[dash.querySelector("#nplay-access-admin")],
    destaques:[dash.querySelector(".featured-manager")],
    ferramentas:[dash.querySelector('[aria-labelledby="r2-test-heading"]'),dash.querySelector(".licensed-manager"),dash.querySelector(".issue-manager")]
   };
-  var descriptions={catalogo:"Pesquise, revise e publique os títulos do catálogo.",importacoes:"Acompanhe download, preparação e envio. O rascunho é criado automaticamente; revise as informações pendentes para publicar.",canais:"Teste listas M3U e publique os canais aprovados.",destaques:"Organize as capas e os títulos da página inicial.",ferramentas:"Testes de armazenamento, links licenciados e avisos de reprodução."};
+  var descriptions={catalogo:"Pesquise, revise e publique os títulos do catálogo.",importacoes:"Acompanhe download, preparação e envio. O rascunho é criado automaticamente; revise as informações pendentes para publicar.",canais:"Importe, teste e publique canais ao vivo.",acessos:"Analise solicitações e autorize ou revogue dispositivos.",destaques:"Organize as capas e os títulos da página inicial.",ferramentas:"Testes de armazenamento, links licenciados e avisos de reprodução."};
   var workspace=dash.querySelector(".workspace");if(workspace)workspace.classList.add("admin-workspace");
   var intro=dash.querySelector(".intro-text"),stats=dash.querySelector(".stats"),source=dash.querySelector("#source-summary"),drive=dash.querySelector(".intro-text + .stats + #source-summary + .panel");
   function show(name){
