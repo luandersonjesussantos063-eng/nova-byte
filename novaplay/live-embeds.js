@@ -28,7 +28,7 @@ function openChannel(url,title){
  el.append(frame);
  $("iframe-channel-heading").textContent=title;
  $("iframe-channel-viewer").hidden=false;
- note(currentUrl===PROVIDER?"Transmissão incorporada. O fornecedor pode abrir anúncios em novas abas.":"Transmissão pelo player oficial da emissora.");
+ note(currentUrl.includes("rdcanais.org")?"Transmissão incorporada de site externo. O fornecedor pode exibir anúncios ou abrir outras abas.":"Transmissão incorporada de fonte externa.");
  $("iframe-channel-viewer").scrollIntoView({behavior:"smooth",block:"start"});
 }
 async function load(){
@@ -41,7 +41,8 @@ async function load(){
   {title:"TV Assembleia MT",embed_url:"https://owncast.al.mt.gov.br/embed/video",source_page:"https://www.al.mt.gov.br/institucional/tv/14/10/2026"},
   {title:"Premiere Clubes · Ao vivo",embed_url:PROVIDER},
   {title:"Paramount+ 2 · Ao vivo",embed_url:"https://rdcanais.org/paramountplus2"},
-  {title:"TNT Novelas · Ao vivo",embed_url:"https://rdcanais.org/tntnovelas"}
+  {title:"TNT Novelas · Ao vivo",embed_url:"https://rdcanais.org/tntnovelas"},
+  {title:"Gloob · Ao vivo",embed_url:"https://rdcanais.org/gloob"}
  ];
  if(window.supabase){
   try{
