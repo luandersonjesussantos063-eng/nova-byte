@@ -69,7 +69,7 @@ test('publishing rejects failed and expired tests and upserts approved metadata'
 });
 test('public player routes explicit and inferred HLS to cinema HLS entry point',()=>{
  const code=read('live-embeds.js').match(/function openChannel\(item\)\{[\s\S]*?\n\}/)[0];let calls=[];
- const context=vm.createContext({console,window:{NovaPlayPlayer:{openHls:(...args)=>{calls.push(['hls',...args]);return true;},openEmbed:(...args)=>{calls.push(['iframe',...args]);return true;}}}});vm.runInContext(code,context);
+ const context=vm.createContext({console,livePreviews:{stop:()=>{}},window:{NovaPlayPlayer:{openHls:(...args)=>{calls.push(['hls',...args]);return true;},openEmbed:(...args)=>{calls.push(['iframe',...args]);return true;}}}});vm.runInContext(code,context);
  context.openChannel({embed_url:'https://example.org/live',title:'A',stream_type:'hls'});context.openChannel({embed_url:'https://example.org/list.m3u?x=1',title:'B'});context.openChannel({embed_url:'https://example.org/embed',title:'C'});
  assert.deepEqual(calls.map(x=>x[0]),['hls','hls','iframe']);
 });

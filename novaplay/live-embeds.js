@@ -9,9 +9,10 @@ function imageUrl(value){
  try{const url=new URL(raw,"https://api.reidoscanais.si/");return url.protocol==="https:"?url.href:""}catch{return ""}
 }
 function channelKey(url){try{return new URL(url).pathname.replace(/\/+$/,"").split("/").pop()}catch{return ""}}
-let loadSequence=0;
+let loadSequence=0,livePreviews=null;
 function note(message){const el=$("nplay-channel-notice");if(el)el.textContent=message}
 function openChannel(item){
+ livePreviews?.stop();
  const hls=item.stream_type==="hls"||/\.m3u8?(?:\?|$)/i.test(item.embed_url);
  const open=hls?window.NovaPlayPlayer?.openHls:window.NovaPlayPlayer?.openEmbed;
  if(!open?.(item.embed_url,item.title))console.warn("NPlay: não foi possível abrir o player do canal.");
@@ -36,6 +37,8 @@ async function load(){
 }
 function renderChannels(channels){
  const list=$("iframe-channel-list");if(!list)return;
+ if(!livePreviews&&window.NPlayLivePreviews)livePreviews=window.NPlayLivePreviews.create(list);
+ livePreviews?.reset();
  list.replaceChildren();
  const count=$("nplay-live-count");if(count)count.textContent=channels.length+" canais na lista";
  for(const item of channels){
@@ -71,7 +74,12 @@ function renderChannels(channels){
   const title=document.createElement("strong");title.className="nplay-live-title";title.textContent=item.title;
   const subtitle=document.createElement("span");subtitle.className="nplay-live-subtitle";subtitle.textContent=item.epg?.current?.title?("Agora: "+item.epg.current.title):(item.category?item.category+" · Ao vivo":"Canal ao vivo · Assistir agora");
   button.onclick=()=>openChannel(item);
-  card.append(button,title,subtitle);list.append(card);
+  const media=document.createElement("div");media.className="nplay-live-media";media.append(button);
+  card.append(media,title,subtitle);list.append(card);
+  if(item.stream_type==="hls"||/\.m3u8?(?:\?|$)/i.test(item.embed_url)){
+   const sound=document.createElement("button");sound.type="button";sound.className="nplay-live-sound";sound.hidden=true;media.append(sound);
+   livePreviews?.register({card,cover:button,sound,url:item.embed_url,title:item.title});
+  }
  }
 }
 function init(){
