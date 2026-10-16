@@ -20,8 +20,14 @@ export default {
  async fetch(request,env){
   if(new URL(request.url).pathname!=='/import'||request.method!=='POST')return new Response('Not found',{status:404});
   const auth=request.headers.get('Authorization')||'';
-  if(!env.IMPORT_ADMIN_TOKEN||auth!=='Bearer '+env.IMPORT_ADMIN_TOKEN)return new Response('Unauthorized',{status:401});
-  if(!env.PLAYLIST_URL||!env.SUPABASE_URL||!env.SUPABASE_SERVICE_ROLE_KEY)return new Response('Missing configuration',{status:503});
+  if(!/^Bearer [A-Za-z0-9_.-]+$/.test(auth))return new Response('Unauthorized',{status:401});
+  if(!env.PLAYLIST_URL||!env.SUPABASE_URL||!env.SUPABASE_ANON_KEY)return new Response('Missing configuration',{status:503});
+  const base=env.SUPABASE_URL.replace(/\\/$/,'');
+  const headers={apikey:env.SUPABASE_ANON_KEY,Authorization:auth};
+  const check=await fetch(base+'/rest/v1/novaplay_admins?select=user_id&limit=1',{headers});
+  if(!check.ok)return new Response('Unauthorized',{status:401});
+  const admins=await check.json();
+  if(!Array.isArray(admins)||admins.length!==1)return new Response('Forbidden',{status:403});
   const source=new URL(env.PLAYLIST_URL);
   if(source.protocol!=='https:')return new Response('HTTPS playlist source required',{status:400});
   const upstream=await fetch(source.toString(),{redirect:'error',signal:AbortSignal.timeout(20000)});
@@ -36,8 +42,8 @@ export default {
   const records=channels.map((channel,index)=>({source_key:'m3uplus',source_index:index,title:channel.title,category:channel.category,logo_url:channel.logo_url,source_url:channel.source_url,status:'pending'}));
   let imported=0;
   for(let i=0;i<records.length;i+=100){
-   const response=await fetch(env.SUPABASE_URL.replace(/\/$/,'')+'/rest/v1/novaplay_import_staging?on_conflict=source_key,source_index',{
-    method:'POST',headers:{apikey:env.SUPABASE_SERVICE_ROLE_KEY,Authorization:'Bearer '+env.SUPABASE_SERVICE_ROLE_KEY,'Content-Type':'application/json',Prefer:'resolution=merge-duplicates,return=minimal'},
+   const response=await fetch(base+'/rest/v1/novaplay_import_staging?on_conflict=source_key,source_index',{
+    method:'POST',headers:{apikey:env.SUPABASE_ANON_KEY,Authorization:auth,'Content-Type':'application/json',Prefer:'resolution=merge-duplicates,return=minimal'},
     body:JSON.stringify(records.slice(i,i+100))
    });
    if(!response.ok)return Response.json({error:'Database staging failed',imported},{status:502});
