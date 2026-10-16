@@ -21,7 +21,7 @@ form.onsubmit=async event=>{
   db??=window.supabase.createClient('https://vajlhodqxskozuxxlujv.supabase.co','sb_publishable_uT0b4y0Bex1k1QWZoyIfKg_K0pm-yS3');
   const {data}=await db.auth.getSession();if(!data?.session?.access_token)throw Error('Entre no painel administrativo para testar.');
   const response=await fetch('https://nplay-portal-test.luandersonjesussantos063.workers.dev/test',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+data.session.access_token},body:JSON.stringify({portal:$('portal-url').value.trim(),mac:$('portal-mac').value.trim(),sn,dev1:$('portal-dev1').value.trim(),dev2:$('portal-dev2').value.trim(),endpoint:$('portal-endpoint').value}),signal:AbortSignal.timeout(40000)});
-  const result=await response.json();out.textContent=(result.ok?'✓ Autenticação confirmada. ':'Teste não confirmado. ')+(result.message||'O servidor não retornou um diagnóstico válido.');
+  const result=await response.json();out.textContent=(result.ok?'✓ Perfil recebido do portal. ':'Teste não confirmado. ')+(result.message||'O servidor não retornou um diagnóstico válido.');
  }catch(error){out.textContent=error.message==='Entre no painel administrativo para testar.'?error.message:'Não foi possível concluir o teste. Confira sua conexão e tente novamente.';}
  finally{busy=false;submit.disabled=false;$('portal-clear').disabled=false;$('portal-parse').disabled=false;}
 };

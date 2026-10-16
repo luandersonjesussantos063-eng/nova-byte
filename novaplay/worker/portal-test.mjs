@@ -44,7 +44,7 @@ export async function diagnose(config){
  const blocked=profile?.blocked===true||profile?.blocked===1||profile?.blocked==='1';
  const valid=profile&&typeof profile==='object'&&!Array.isArray(profile)&&/^\d+$/.test(String(profile.id||''))&&Number(profile.id)>0&&!blocked;
  if(!valid)return {ok:false,stage:'profile',message:blocked?'O portal informou que este acesso está bloqueado.':'Sessão recebida, mas o portal não confirmou um perfil autorizado. Confira o SN, os DEV e o tipo de API com o provedor.'};
- return {ok:true,stage:'authenticated',message:'O portal confirmou a autenticação e retornou um perfil autorizado. A reprodução dos vídeos ainda precisa de um teste separado.',elapsed_ms:Date.now()-started};
+ return {ok:true,stage:'profile_received',message:'O portal retornou um perfil para os dados enviados. Isso não confirma assinatura ativa nem reprodução dos vídeos.',elapsed_ms:Date.now()-started};
 }
 export default {async fetch(request,env){
  const route=new URL(request.url),origin=request.headers.get('Origin');
