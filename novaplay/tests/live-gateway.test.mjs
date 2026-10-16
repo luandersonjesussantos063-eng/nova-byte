@@ -68,3 +68,13 @@ test('private catalog shards supply HLS sources without relying on the KV daily 
  const env={HLS_MEDIA_KEY:hlsSecret,PULSE_CATALOG_1_00:encoded.slice(0,80),PULSE_CATALOG_1_01:encoded.slice(80),LIVE_SOURCES:{get:()=>{throw Error('KV must not be needed for this catalog');}}};
  await withFetch(async url=>String(url).includes('supabase.co')?Response.json([{embed_url:hlsSafe}]):new Response('#EXTM3U\n#EXTINF:6,\nsegment.ts\n'),async()=>{const r=await worker.fetch(new Request(hlsSafe+'?access_token=viewer'),env);assert.equal(r.status,200);assert.ok(!(await r.text()).includes('private-password'));});
 });
+test('HLS accepts public CDN IPv4 redirects while retaining private and metadata address protections',async()=>{
+ for(const [host,allowed] of [['93.184.216.34',true],['127.0.0.1',false],['10.0.0.1',false],['169.254.169.254',false],['100.100.100.200',false],['192.168.1.3',false],['172.16.0.1',false],['0.0.0.0',false],['168.63.129.16',false]]){
+  let cdnCalls=0;
+  await withFetch(async url=>{
+   if(String(url).includes('supabase.co'))return Response.json([{embed_url:hlsSafe}]);
+   if(String(url).startsWith('http://provider.example/'))return new Response(null,{status:302,headers:{Location:'http://'+host+'/stream/index.m3u8'}});
+   cdnCalls++;return new Response('#EXTM3U\n#EXTINF:4,\nsegment.ts\n');
+  },async()=>{const r=await worker.fetch(new Request(hlsSafe+'?access_token=viewer'),hlsEnv);assert.equal(r.status,allowed?200:502,host);assert.equal(cdnCalls,allowed?1:0,host);});
+ }
+});

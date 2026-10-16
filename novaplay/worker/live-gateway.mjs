@@ -2,9 +2,14 @@ import {relayHls,hlsSource} from './hls-relay.mjs';
 // Private provider URLs live in KV; viewers receive only channel IDs.
 const DB="https://vajlhodqxskozuxxlujv.supabase.co",KEY="sb_publishable_uT0b4y0Bex1k1QWZoyIfKg_K0pm-yS3";
 const uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+function publicIPv4(host){
+ const parts=host.split('.').map(Number);if(parts.length!==4||parts.some(n=>!Number.isInteger(n)||n<0||n>255))return false;
+ const [a,b,c]=parts;
+ return !(a===0||a===10||a===127||a>=224||(a===100&&b>=64&&b<=127)||(a===169&&b===254)||(a===172&&b>=16&&b<=31)||(a===192&&(b===168||(b===0&&(c===0||c===2))||(b===88&&c===99)))||(a===198&&(b===18||b===19||(b===51&&c===100)))||(a===203&&b===0&&c===113)||host==='168.63.129.16');
+}
 function sourceUrl(raw){
- const u=new URL(raw),h=u.hostname.toLowerCase();
- if(!['http:','https:'].includes(u.protocol)||u.username||u.password||!h.includes('.')||/^[\d.]+$/.test(h)||h.includes(':')||/\.(local|internal|localhost|home\.arpa)$/.test(h)||u.href.length>4096)throw Error('Invalid source');
+ const u=new URL(raw),h=u.hostname.toLowerCase().replace(/\.$/,'');
+ if(!['http:','https:'].includes(u.protocol)||u.username||u.password||!h.includes('.')||(/^[\d.]+$/.test(h)&&!publicIPv4(h))||h.includes(':')||/\.(local|internal|localhost|home\.arpa)$/.test(h)||u.href.length>4096)throw Error('Invalid source');
  return u;
 }
 async function readJson(response,max=400000){
