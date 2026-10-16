@@ -12,7 +12,7 @@ function setup(records,group,{deny=[],sharedFailure=false}={}){
  }})};
  const context=vm.createContext({document:{getElementById:get,createElement:node},URL,Date,Set,AbortController,NPlayM3u:{playable:x=>x},NPlaySignal:{testSource:async(_,url)=>{if(sharedFailure){const error=Error('Acesso ao servidor recusado');error.sharedFailure=true;throw error;}if(url.includes('bad'))throw Error('Sinal indisponível');return {playbackUrl:url};}}});
  let source=readFileSync(new URL('../admin/live-embeds.js',import.meta.url),'utf8');
- source=source.replace(/if\(document.readyState==='loading'\)[\s\S]*?\n\}\)\(\);\s*$/,`globalThis.lab={publishSaved,selectedSaved,refresh,savedVisible,count:()=>savedChannels.length,setup:(client,items,group)=>{db=client;savedChannels=items;selectedChannelGroup=group;}};\n})();`);
+ source=source.replace(/if\(document.readyState==='loading'\)[\s\S]*?\n\}\)\(\);\s*$/,`globalThis.lab={unpublishSaved,publishSaved,selectedSaved,refresh,savedVisible,count:()=>savedChannels.length,setup:(client,items,group)=>{db=client;savedChannels=items;selectedChannelGroup=group;}};\n})();`);
  vm.runInContext(source,context);context.lab.setup(db,records,group);return {lab:context.lab,writes,get};
 }
 const item=(id,group,published=false)=>({id,title:id,embed_url:group==='legacy'?'https://rdcanais.org/'+id:'https://example.org/'+id+'.m3u8',stream_type:group==='legacy'?'iframe':'hls',rights_confirmed:true,is_published:published});
@@ -50,4 +50,15 @@ test('three consecutive playback failures pause a large batch and preserve untes
  const records=Array.from({length:100},(_,i)=>item('bad-'+i,'m3u'));
  const {lab,writes,get}=setup(records,'m3u');await lab.publishSaved();
  assert.equal(writes.length,0);assert.match(get('live-saved-progress').textContent,/3 não publicados · 97 restantes/);assert.match(get('live-saved-progress').textContent,/3 falhas seguidas/);assert.match(get('live-saved-progress').textContent,/Sinal indisponível/);
+});
+
+test('removing selected published channels preserves other filters, drafts and saved rows',async()=>{
+ const records=[item('a','m3u',true),item('b','m3u',true),item('draft','m3u'),item('other','legacy',true)];
+ const {lab,writes,get}=setup(records,'m3u');get('live-channel-status').value='all';lab.selectedSaved.add('a');lab.selectedSaved.add('other');await lab.unpublishSaved(true);
+ assert.deepEqual(writes,['a']);assert.equal(records.length,4);assert.equal(records[0].is_published,false);assert.equal(records[1].is_published,true);assert.equal(records[3].is_published,true);
+});
+test('removing an entire filtered list uses batches beyond 1000 and counts only returned rows',async()=>{
+ const records=Array.from({length:1001},(_,i)=>item('channel-'+i,'m3u',true));records.push(item('other','legacy',true));
+ const {lab,writes,get}=setup(records,'m3u',{deny:['channel-3']});get('live-channel-status').value='published';await lab.unpublishSaved();
+ assert.equal(writes.length,1000);assert.equal(records[3].is_published,true);assert.equal(records.at(-1).is_published,true);assert.match(get('live-saved-progress').textContent,/1 não foram alterados/);
 });

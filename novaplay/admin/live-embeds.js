@@ -169,7 +169,32 @@ function savedActions(){
  $('live-saved-publish-all').disabled=!drafts.length||publishing||running;
  $('live-saved-publish-selected').textContent='Publicar selecionados ('+selected.length+')';
  $('live-saved-publish-selected').disabled=!selected.length||publishing||running;
+ const active=visible.filter(x=>x.is_published),activeSelected=active.filter(x=>selectedSaved.has(x.id));
+ $('live-saved-unpublish-selected').textContent='Retirar selecionados da grade ('+activeSelected.length+')';
+ $('live-saved-unpublish-selected').disabled=!activeSelected.length||publishing||running;
+ $('live-saved-unpublish-all').textContent='Retirar todos deste filtro ('+active.length+')';
+ $('live-saved-unpublish-all').disabled=!active.length||publishing||running;
  $('live-saved-selection').textContent=visible.filter(x=>selectedSaved.has(x.id)).length+' selecionados neste filtro';
+}
+async function unpublishSaved(onlySelected=false){
+ if(publishing||running)return;
+ const targets=savedVisible().filter(x=>x.is_published&&(!onlySelected||selectedSaved.has(x.id)));
+ if(!targets.length)return;
+ publishing=true;renderSaved();let done=0,errorMessage='';
+ try{
+  for(let offset=0;offset<targets.length;offset+=200){
+   const batch=targets.slice(offset,offset+200);
+   const {data,error}=await db.from('novaplay_live_embeds').update({is_published:false}).in('id',batch.map(x=>x.id)).select('id');
+   if(error)throw error;
+   const ids=new Set((data||[]).map(x=>x.id));
+   for(const item of batch)if(ids.has(item.id)){item.is_published=false;selectedSaved.delete(item.id);done++;}
+   message('live-saved-progress',done+' de '+targets.length+' canais retirados da grade…');
+  }
+ }catch(error){errorMessage=' '+error.message;}
+ finally{
+  publishing=false;await refresh();summary();
+  message('live-saved-progress',done+' canais retirados da grade. Os cadastros continuam como rascunhos no ADM.'+(targets.length>done?' '+(targets.length-done)+' não foram alterados.':'')+errorMessage);
+ }
 }
 async function publishSaved(onlySelected=false){
  if(publishing||running)return;
@@ -272,7 +297,7 @@ function init(){
  <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px"><button id="live-test-button" type="button" class="outline">Testar sinal HLS</button><button id="live-test-publish" type="button" class="primary" hidden>Publicar canal testado</button></div><p id="live-test-message" role="status" aria-live="polite"></p><video id="live-test-video" muted playsinline hidden style="width:100%;max-width:520px;background:#000"></video></details>
  <section id="live-pc-tv" style="border:1px solid #365075;border-radius:12px;padding:16px;margin:18px 0"></section><p id="live-embed-message" role="status" aria-live="polite"></p><h3>Canais publicados e rascunhos</h3><p class="muted">Os rascunhos ficam somente no ADM. Use Publicar para colocar um canal na grade TV ao vivo.</p><div style="display:flex;gap:8px;flex-wrap:wrap;margin:14px 0" aria-label="Origem dos canais"><button id="live-group-m3u" type="button" class="primary" aria-pressed="true">Canais M3U</button><button id="live-group-legacy" type="button" class="outline" aria-pressed="false">Canais antigos</button><button id="live-group-individual" type="button" class="outline" aria-pressed="false">Outros canais</button></div><p id="live-channel-help" class="muted"></p>
  <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:end"><label style="flex:1;min-width:180px">Buscar canal<input id="live-channel-search" type="search" placeholder="Nome ou categoria" maxlength="140"></label><label>Lista<select id="live-list-family"><option value="all">Todas as listas</option><option value="new-hls">Pulsando · nova lista HLS</option><option value="previous">Lista anterior e outros canais</option></select></label><label>Situação<select id="live-channel-status"><option value="all">Publicados e rascunhos</option><option value="published">Somente publicados</option><option value="draft">Somente rascunhos</option></select></label><button id="live-embed-refresh" type="button" class="outline">Atualizar canais</button></div><p id="live-channel-count" role="status" aria-live="polite"></p>
- <div style="display:flex;gap:10px;flex-wrap:wrap;margin:14px 0"><button id="live-saved-stop" type="button" class="outline" hidden>Parar testes</button><button id="live-saved-select-all" type="button" class="outline">Marcar todos</button><button id="live-saved-publish-selected" type="button" class="outline" disabled>Publicar selecionados</button><button id="live-saved-publish-all" type="button" class="primary" disabled>Publicar todos os rascunhos</button></div>
+ <div style="display:flex;gap:10px;flex-wrap:wrap;margin:14px 0"><button id="live-saved-stop" type="button" class="outline" hidden>Parar testes</button><button id="live-saved-select-all" type="button" class="outline">Marcar todos</button><button id="live-saved-publish-selected" type="button" class="outline" disabled>Publicar selecionados</button><button id="live-saved-unpublish-selected" type="button" class="outline" disabled>Retirar selecionados da grade</button><button id="live-saved-unpublish-all" type="button" class="outline" disabled>Retirar todos deste filtro</button><button id="live-saved-publish-all" type="button" class="primary" disabled>Publicar todos os rascunhos</button></div>
  <p class="muted">As ações usam o grupo, a busca e a situação selecionados. Canais M3U são testados antes de publicar; os que falharem continuam em rascunho.</p><p id="live-saved-selection" class="muted"></p><p id="live-saved-progress" role="status" aria-live="polite"></p><div id="live-saved-preview" style="display:flex;gap:10px;flex-wrap:wrap"></div><div id="live-embed-list"></div>`;
  $('live-plus-import').onclick=async()=>{
   const button=$('live-plus-import');button.disabled=true;message('live-plus-status','Solicitando importação segura...');
@@ -302,6 +327,7 @@ function init(){
  for(const group of ['m3u','legacy','individual'])$('live-group-'+group).onclick=()=>{selectedChannelGroup=group;renderSaved();};
  $('live-saved-select-all').onclick=()=>{const visible=savedVisible(),all=visible.every(x=>selectedSaved.has(x.id));visible.forEach(x=>{if(all)selectedSaved.delete(x.id);else selectedSaved.add(x.id);});renderSaved();};
  $('live-saved-stop').onclick=()=>{savedStopReason='Testes interrompidos por você. Os canais restantes continuam em rascunho.';savedController?.abort();};
+ $('live-saved-unpublish-selected').onclick=()=>unpublishSaved(true);$('live-saved-unpublish-all').onclick=()=>unpublishSaved(false);
  $('live-saved-publish-all').onclick=()=>publishSaved(false);$('live-saved-publish-selected').onclick=()=>publishSaved(true);
  $('live-list-family').onchange=()=>{savedLimit=60;selectedSaved.clear();renderSaved();};
  $('live-channel-search').oninput=()=>{savedLimit=60;renderSaved();};$('live-channel-status').onchange=()=>{savedLimit=60;renderSaved();};
