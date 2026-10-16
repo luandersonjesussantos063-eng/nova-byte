@@ -6,7 +6,7 @@ function setup(records,group,{deny=[]}={}){
  const elements=new Map(),writes=[];
  const node=()=>({style:{},value:'',checked:false,textContent:'',append(){},replaceChildren(){},setAttribute(){},remove(){},focus(){}});
  const get=id=>{if(!elements.has(id))elements.set(id,node());return elements.get(id);};get('live-channel-status').value='draft';
- const db={from:()=>({select:()=>({order:async()=>({data:records})}),update:payload=>{
+ const db={from:()=>({select:()=>{const query={order:()=>query,range:async(start,end)=>({data:records.slice(start,end+1)})};return query;},update:payload=>{
   const result=ids=>({select:async()=>{const data=[];for(const item of records)if(ids.includes(item.id)&&!deny.includes(item.id)){Object.assign(item,payload);writes.push(item.id);data.push({id:item.id});}return {data};}});
   return {in:(_,ids)=>result(ids),eq:(_,id)=>result([id])};
  }})};

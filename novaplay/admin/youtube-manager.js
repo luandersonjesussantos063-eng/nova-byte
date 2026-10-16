@@ -22,6 +22,22 @@ function payload(values,user,parseId){
 function init({client,getUser,parseId,refresh,errorText,isBusy=()=>false,setBusy=()=>{}}){
  const $=id=>document.getElementById(id),form=$("yt-admin-form");if(!form)return;
  let saving=false;
+ const featuredPanel=document.createElement("section");featuredPanel.className="yt-featured-admin";
+ const heading=document.createElement("h3");heading.textContent="Destaque da aba YouTube";
+ const select=document.createElement("select");select.setAttribute("aria-label","Vídeo em destaque no YouTube");
+ const save=document.createElement("button");save.type="button";save.className="outline";save.textContent="Salvar destaque";
+ const status=document.createElement("p");status.setAttribute("role","status");featuredPanel.append(heading,select,save,status);form.after(featuredPanel);
+ async function loadFeaturedChoice(){
+  save.disabled=true;
+  try{const [videos,pref]=await Promise.all([client.from("novaplay_library").select("id,title").eq("is_published",true).not("youtube_id","is",null).order("title"),client.from("novaplay_featured").select("youtube_featured_id").eq("id",1).maybeSingle()]);if(videos.error)throw videos.error;if(pref.error)throw pref.error;
+   select.replaceChildren();const auto=document.createElement("option");auto.value="";auto.textContent="Automático";select.append(auto);for(const video of videos.data||[]){const option=document.createElement("option");option.value=video.id;option.textContent=video.title;select.append(option);}select.value=pref.data?.youtube_featured_id||"";save.disabled=false;
+  }catch(error){status.textContent="Não foi possível carregar o destaque: "+errorText(error);}
+ }
+ save.onclick=async()=>{if(!getUser()?.id||saving||isBusy())return;save.disabled=true;try{const result=await client.from("novaplay_featured").update({youtube_featured_id:select.value||null}).eq("id",1).select("id");if(result.error)throw result.error;if(!result.data?.length)throw Error("Sua conta não pode editar o destaque.");status.textContent="Destaque da aba YouTube salvo.";}catch(error){status.textContent=errorText(error);}finally{save.disabled=false;}};
+ client.auth?.onAuthStateChange(()=>setTimeout(loadFeaturedChoice,0));
+ select.onfocus=loadFeaturedChoice;
+ loadFeaturedChoice();
+
  const message=(text,error=false)=>{const n=$("yt-admin-status");n.textContent=text;n.classList.toggle("error",error);n.classList.toggle("success",!error);};
  function preview(){
   const id=parseId($("yt-admin-url").value);$("yt-admin-preview").hidden=!id;
@@ -44,7 +60,7 @@ function init({client,getUser,parseId,refresh,errorText,isBusy=()=>false,setBusy
    if(result.error)throw result.error;
    const category=row.genre;form.reset();$("yt-admin-category").value=category;preview();
    message(result.data.is_published?"Vídeo publicado em YouTube → "+category+". Atualize o aplicativo para ver.":"Vídeo salvo como rascunho. Você pode editar e publicar pela aba Catálogo.");
-   try{await refresh();}catch(e){message("Vídeo salvo. Reabra Catálogo para atualizar a lista.");}
+   try{await refresh();await loadFeaturedChoice();}catch(e){message("Vídeo salvo. Reabra Catálogo para atualizar a lista.");}
   }catch(e){message("Não foi possível cadastrar: "+errorText(e),true);}
   finally{saving=false;setBusy(false);$("yt-admin-fields").disabled=false;}
  };

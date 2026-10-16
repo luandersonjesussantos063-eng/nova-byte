@@ -1,7 +1,7 @@
 (()=>{
 const $=id=>document.getElementById(id),core=()=>globalThis.NPlayM3u;
 let db,savedChannels=[],rows=[],batchController=null,singleController=null,singleItem=null,running=false,publishing=false,published=new Set();
-let selectedListFile=null;
+let selectedListFile=null,savedLimit=60;
 function parseBatch(offset,signal){
  return new Promise((resolve,reject)=>{
   if(signal.aborted){reject(new DOMException('Leitura interrompida.','AbortError'));return;}
@@ -209,9 +209,8 @@ async function publishSaved(onlySelected=false){
 }
 async function refresh(){
  const list=$('live-embed-list');if(!list)return;
- const {data,error}=await db.from('novaplay_live_embeds').select('*').order('created_at',{ascending:false});
- if(error){list.textContent='Não foi possível consultar os canais: '+error.message;return;}
- savedChannels=data||[];published=new Set(savedChannels.filter(x=>x.is_published).map(x=>x.embed_url));renderSaved();
+ const data=[];for(let offset=0;;offset+=500){const page=await db.from('novaplay_live_embeds').select('*').order('created_at',{ascending:false}).order('id').range(offset,offset+499);if(page.error){list.textContent='Não foi possível consultar os canais: '+page.error.message;return;}data.push(...(page.data||[]));if(!page.data||page.data.length<500)break;}
+ savedChannels=data;published=new Set(savedChannels.filter(x=>x.is_published).map(x=>x.embed_url));renderSaved();
 }
 function renderSaved(){
  const list=$('live-embed-list');list.replaceChildren();
@@ -223,8 +222,8 @@ function renderSaved(){
  const visibleIds=new Set(visible.map(x=>x.id));for(const id of selectedSaved)if(!visibleIds.has(id))selectedSaved.delete(id);
  const active=visible.filter(item=>item.is_published).length;
  message('live-channel-count',visible.length+' canais neste filtro · '+active+' publicados · '+(visible.length-active)+' rascunhos');
- message('live-channel-help',selectedChannelGroup==='m3u'?'Canais das listas M3U e sinais HLS que você cadastrou pelo testador.':selectedChannelGroup==='legacy'?'Canais antigos do provedor anterior. Os rascunhos ficam fora da grade; o botão Publicar canal antigo permite recuperá-los.':'Canais cadastrados individualmente por iframe, incluindo as emissoras oficiais.');
- for(const item of visible){
+ message('live-channel-help',selectedChannelGroup==='m3u'?'A lista comprada está aqui como rascunhos protegidos. Pesquise o canal e use Testar para publicar; os canais sem teste continuam fora da grade.':selectedChannelGroup==='legacy'?'Canais antigos do provedor anterior. Os rascunhos ficam fora da grade; o botão Publicar canal antigo permite recuperá-los.':'Canais cadastrados individualmente por iframe, incluindo as emissoras oficiais.');
+ for(const item of visible.slice(0,savedLimit)){
   const card=document.createElement('article');card.style.cssText='border:1px solid #365075;border-radius:10px;padding:12px;margin:10px 0';
   const group=channelGroup(item);
   const title=document.createElement('strong');title.textContent=item.title;
@@ -244,6 +243,7 @@ function renderSaved(){
   const remove=button('Excluir',async()=>{if(!confirm('Excluir o canal '+item.title+' do cadastro?'))return;const {error}=await db.from('novaplay_live_embeds').delete().eq('id',item.id);message('live-embed-message',error?error.message:'Canal excluído.');await refresh();});
   const actions=document.createElement('div');actions.style.cssText='display:flex;gap:10px;flex-wrap:wrap';toggle.disabled=publishing;remove.disabled=publishing;actions.append(toggle,remove);card.append(selection,badge,detail,actions);list.append(card);
  }
+ if(visible.length>savedLimit)list.append(button('Mostrar mais 60 canais',()=>{savedLimit+=60;renderSaved();}));
  if(!visible.length)list.textContent='Nenhum canal neste grupo com os filtros selecionados.';
  savedActions();
 }
@@ -297,7 +297,7 @@ function init(){
  for(const group of ['m3u','legacy','individual'])$('live-group-'+group).onclick=()=>{selectedChannelGroup=group;renderSaved();};
  $('live-saved-select-all').onclick=()=>{const visible=savedVisible(),all=visible.every(x=>selectedSaved.has(x.id));visible.forEach(x=>{if(all)selectedSaved.delete(x.id);else selectedSaved.add(x.id);});renderSaved();};
  $('live-saved-publish-all').onclick=()=>publishSaved(false);$('live-saved-publish-selected').onclick=()=>publishSaved(true);
- $('live-channel-search').oninput=renderSaved;$('live-channel-status').onchange=renderSaved;
+ $('live-channel-search').oninput=()=>{savedLimit=60;renderSaved();};$('live-channel-status').onchange=()=>{savedLimit=60;renderSaved();};
  $('live-embed-url').oninput=()=>{singleController?.abort();singleItem=null;$('live-test-publish').hidden=true;};
  $('live-test-publish').onclick=async()=>{if(!singleItem)return;singleItem.title=$('live-embed-title').value.trim();await publishOne(singleItem);if(singleItem?.published)$('live-test-publish').hidden=true;};
  $('live-embed-form').onsubmit=async event=>{

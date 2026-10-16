@@ -11,11 +11,13 @@ function imageUrl(value){
 function channelKey(url){try{return new URL(url).pathname.replace(/\/+$/,"").split("/").pop()}catch{return ""}}
 let loadSequence=0,livePreviews=null,liveChannelData=[],liveScope="tv";
 function note(message){const el=$("nplay-channel-notice");if(el)el.textContent=message}
-function openChannel(item){
+async function openChannel(item){
  livePreviews?.stop();
+ if(item.staticId){window.NovaPlayPlayer?.openStatic(item.staticId);return;}
+ let source;try{source=await window.NPlayLiveAuth?.authorize(item.embed_url)||item.embed_url;}catch(error){note(error.message);return;}
  const hls=item.stream_type==="hls"||/\.m3u8?(?:\?|$)/i.test(item.embed_url);
- const open=hls?window.NovaPlayPlayer?.openHls:window.NovaPlayPlayer?.openEmbed;
- if(!open?.(item.embed_url,item.title))console.warn("NPlay: não foi possível abrir o player do canal.");
+ const open=item.stream_type==="mpegts"?window.NovaPlayPlayer?.openMpegts:hls?window.NovaPlayPlayer?.openHls:window.NovaPlayPlayer?.openEmbed;
+ if(!open?.(source,item.title))console.warn("NPlay: não foi possível abrir o player do canal.");
 }
 async function load(){
  const list=$("iframe-channel-list");if(!list)return;
@@ -24,10 +26,10 @@ async function load(){
  try{
   if(!window.supabase)throw Error("Cadastro de canais indisponível");
   const db=window.NPlayAccessClient||window.supabase.createClient("https://vajlhodqxskozuxxlujv.supabase.co","sb_publishable_uT0b4y0Bex1k1QWZoyIfKg_K0pm-yS3");
-  const {data,error}=await db.from("novaplay_live_embeds").select("id,title,embed_url,stream_type,logo_url,category").eq("is_published",true).order("created_at",{ascending:false});
-  if(error)throw error;
+  const data=[];for(let offset=0;;offset+=500){const page=await db.from("novaplay_live_embeds").select("id,title,embed_url,stream_type,logo_url,category").eq("is_published",true).order("created_at",{ascending:false}).order("id").range(offset,offset+499);if(page.error)throw page.error;data.push(...(page.data||[]));if(!page.data||page.data.length<500)break;}
   if(sequence!==loadSequence)return;
   const channels=(data||[]).filter(item=>item.embed_url);
+  window.NPlayLiveCatalog?.setChannels(channels);
   const television=window.NPlayMusic?.select(channels,"tv")||channels;
   window.NPlayHeroLive?.setChannels(television);
   window.NPlayHomeLive?.setChannels(television);
@@ -45,20 +47,30 @@ function filterLiveChannels(channels,query){
  const terms=normalize(query).trim().split(/\s+/).filter(Boolean);
  return channels.filter(item=>terms.every(term=>normalize(item.title+" "+(item.category||"")).includes(term)));
 }
-let liveDisplayMode="all";
+let liveDisplayMode="Todos",liveRegion="Todos",liveLimit=60;
+const norm=value=>String(value||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase();
+function subject(item){const t=norm(item.category+" "+item.title);if(/esport|sport|espn|premiere|nba|nfl|dazn|combate|bein/.test(t))return "Esportes";if(/noticia|news|jornal/.test(t))return "Notícias";if(/infantil|kids|cartoon|gloob|disney|tooncast/.test(t))return "Infantil";if(/filme|serie|cinema|telecine|hbo/.test(t))return "Filmes e séries";if(/document|discovery|history/.test(t))return "Documentários";return "Variedades";}
+function international(item){return /portugal|usa|canada|latinos|argentina|uruguai|deportes|bein|ziggo|sky cinema|sky sports|africa/.test(norm(item.category));}
+function favoriteId(item){return item.staticId||"channel-"+item.id;}
+function allChannels(channels){const list=[...channels],seen=new Set(list.map(x=>x.embed_url));for(const item of window.NPlayLiveCatalog?.staticChannels()||[]){const url=item.src||item.sourcePage;if(url&&!seen.has(url)){list.push({id:item.id,staticId:item.id,title:item.title,category:item.category||"TV aberta",embed_url:url,stream_type:item.mode,logo_url:item.cover});seen.add(url);}}return list;}
+function renderFilters(){const host=$("nplay-live-mode");if(!host)return;host.replaceChildren();
+ for(const label of ["Todos","Favoritos","Notícias","Esportes","Infantil","Filmes e séries","Documentários","Variedades"]){const b=document.createElement("button");b.type="button";b.className="genre-chip"+(liveDisplayMode===label?" active":"");b.dataset.liveMode=label;b.textContent=label;b.setAttribute("aria-pressed",String(liveDisplayMode===label));host.append(b);}
+ const label=document.createElement("label");label.className="live-region";label.textContent="Região ";const select=document.createElement("select");select.setAttribute("aria-label","Região dos canais");for(const region of ["Todos","Brasil","Internacionais"]){const option=document.createElement("option");option.value=region;option.textContent=region;select.append(option);}select.value=liveRegion;select.onchange=()=>{liveRegion=select.value;liveLimit=60;renderChannels(liveChannelData);};label.append(select);host.append(label);
+}
 function renderChannels(channels){
  liveChannelData=channels;
- const scoped=window.NPlayMusic?.select(channels,liveScope)||channels;
+ const pool=liveScope==="tv"?allChannels(channels):channels;
+ const scoped=window.NPlayMusic?.select(pool,liveScope)||pool;
  const searched=filterLiveChannels(scoped,$("nplay-live-search")?.value||"");
- const direct=item=>item.stream_type==="hls"||/\\.m3u8?(?:\\?|$)/i.test(item.embed_url||"")||/\\.(?:mp4|webm)(?:\\?|$)/i.test(item.embed_url||"");
- const visibleChannels=searched.filter(item=>liveDisplayMode==="all"||(liveDisplayMode==="direct"?direct(item):!direct(item)));
+ const visibleChannels=searched.filter(item=>(liveDisplayMode==="Todos"||liveDisplayMode==="Favoritos"&&window.NPlayLiveCatalog?.isFavorite(favoriteId(item))||subject(item)===liveDisplayMode)&&(liveRegion==="Todos"||(liveRegion==="Internacionais"?international(item):!international(item))));
+ renderFilters();
  const list=$("iframe-channel-list");if(!list)return;
  if(!livePreviews&&window.NPlayLivePreviews)livePreviews=window.NPlayLivePreviews.create(list);
  livePreviews?.reset();
  list.replaceChildren();
  const count=$("nplay-live-count");if(count)count.textContent=visibleChannels.length+" de "+scoped.length+(liveScope==="musica"?" canais de música":" canais");
  if(!visibleChannels.length&&scoped.length){const empty=document.createElement("p");empty.className="nplay-channel-empty";empty.textContent="Nenhum canal encontrado. Tente outro nome ou categoria.";list.append(empty)}
- for(const item of visibleChannels){
+ for(const item of visibleChannels.slice(0,liveLimit)){
   const isPremiere=item.embed_url===PROVIDER;
   const card=document.createElement("article");
   card.className="nplay-live-card";
@@ -92,23 +104,26 @@ function renderChannels(channels){
   const subtitle=document.createElement("span");subtitle.className="nplay-live-subtitle";subtitle.textContent=item.epg?.current?.title?("Agora: "+item.epg.current.title):(item.category?item.category+" · Ao vivo":"Canal ao vivo · Assistir agora");
   button.onclick=()=>openChannel(item);
   const media=document.createElement("div");media.className="nplay-live-media";media.append(button);
-  card.append(media,title,subtitle);list.append(card);
+  const favorite=document.createElement("button");favorite.type="button";favorite.className="live-favorite";const saved=window.NPlayLiveCatalog?.isFavorite(favoriteId(item));favorite.textContent=saved?"♥":"♡";favorite.setAttribute("aria-label",(saved?"Remover dos favoritos: ":"Favoritar canal: ")+item.title);favorite.setAttribute("aria-pressed",String(!!saved));favorite.onclick=()=>{window.NPlayLiveCatalog?.toggleFavorite(favoriteId(item));renderChannels(liveChannelData);};
+  media.append(favorite);card.append(media,title,subtitle);list.append(card);
   if(item.stream_type==="hls"||/\.m3u8?(?:\?|$)/i.test(item.embed_url)){
    const sound=document.createElement("button");sound.type="button";sound.className="nplay-live-sound";sound.hidden=true;media.append(sound);
    livePreviews?.register({card,cover:button,sound,url:item.embed_url,title:item.title});
   }
  }
+ if(visibleChannels.length>liveLimit){const more=document.createElement("button");more.type="button";more.className="btn btn-secondary live-more";more.textContent="Mostrar mais canais";more.onclick=()=>{liveLimit+=60;renderChannels(liveChannelData);};list.append(more);}
 }
 function init(){
  $("nplay-live-mode")?.addEventListener("click",event=>{
   const button=event.target.closest("button[data-live-mode]");if(!button)return;
-  liveDisplayMode=button.dataset.liveMode;
+  liveDisplayMode=button.dataset.liveMode;liveLimit=60;
   document.querySelectorAll("#nplay-live-mode button").forEach(b=>{b.setAttribute("aria-pressed",String(b===button));b.style.background=b===button?"#3973df":"#172944";});
   renderChannels(liveChannelData);
  });
- $("nplay-live-search")?.addEventListener("input",()=>renderChannels(liveChannelData));
+ $("nplay-live-search")?.addEventListener("input",()=>{liveLimit=60;renderChannels(liveChannelData);});
+ window.addEventListener("nplay:channel-play",event=>openChannel(event.detail));
  const openScope=scope=>{
-  liveScope=scope;livePreviews?.stop();
+  liveScope=scope;liveDisplayMode="Todos";liveRegion="Todos";liveLimit=60;livePreviews?.stop();
   const panel=$("iframe-channels-panel");if(!panel)return;panel.hidden=false;
   const heading=$("nplay-live-heading");if(heading)heading.textContent=scope==="musica"?"Escolha seu canal de música":"Encontre seu canal";
   const search=$("nplay-live-search");if(search){search.value="";search.placeholder=scope==="musica"?"Buscar canal de música":"Buscar canal ou categoria";search.setAttribute("aria-label",scope==="musica"?"Buscar canal de música":"Buscar canal ao vivo");}

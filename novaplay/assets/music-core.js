@@ -6,7 +6,7 @@
  function isMusic(item){
   if(restoredIds.has(item.id))return true;
   // Include normal Portuguese, English category lists and old mojibake imports.
-  return /(?:^|[;|,/])\s*(?:musica|music|ma[ºo]sica)\s*(?:$|[;|,/])/.test(normalize(item.category));
+  return /(?:^|[;|,/])\s*(?:musicas?|music|radios?|ma[ºo]sica)\s*(?:$|[;|,/])/.test(normalize(item.category));
  }
  function select(channels,scope){
   const seen=new Set();

@@ -94,17 +94,17 @@ test('publishing rejects failed and expired tests and upserts approved metadata'
  const item={state:'passed',testedAt:new Date().toISOString(),title:'Canal A',playbackUrl:'https://example.org/live',logo_url:'https://example.org/logo.png',category:'Notícias'};
  await lab.publishItem(item);assert.equal(calls,1);assert.equal(options.onConflict,'embed_url');assert.equal(payload.stream_type,'hls');assert.equal(payload.logo_url,item.logo_url);assert.equal(payload.category,'Notícias');assert.equal(item.published,true);assert.equal(payload.is_published,true);
 });
-test('public player routes explicit and inferred HLS to cinema HLS entry point',()=>{
- const code=read('live-embeds.js').match(/function openChannel\(item\)\{[\s\S]*?\n\}/)[0];let calls=[];
+test('public player routes explicit and inferred HLS to cinema HLS entry point',async()=>{
+ const code=read('live-embeds.js').match(/async function openChannel\(item\)\{[\s\S]*?\n\}/)[0];let calls=[];
  const context=vm.createContext({console,livePreviews:{stop:()=>{}},window:{NovaPlayPlayer:{openHls:(...args)=>{calls.push(['hls',...args]);return true;},openEmbed:(...args)=>{calls.push(['iframe',...args]);return true;}}}});vm.runInContext(code,context);
- context.openChannel({embed_url:'https://example.org/live',title:'A',stream_type:'hls'});context.openChannel({embed_url:'https://example.org/list.m3u?x=1',title:'B'});context.openChannel({embed_url:'https://example.org/embed',title:'C'});
+ await context.openChannel({embed_url:'https://example.org/live',title:'A',stream_type:'hls'});await context.openChannel({embed_url:'https://example.org/list.m3u?x=1',title:'B'});await context.openChannel({embed_url:'https://example.org/embed',title:'C'});
  assert.deepEqual(calls.map(x=>x[0]),['hls','hls','iframe']);
 });
 test('TV grade reads published channels only and never restores the fixed provider list',async()=>{
  const source=read('live-embeds.js');
  const load=source.slice(source.indexOf('async function load(){'),source.indexOf('function renderChannels(channels){'));
  let result,notice,filter,failed=false;
- const client={from:()=>({select:()=>({eq:(field,value)=>{filter=[field,value];return {order:async()=>failed?{error:Error('offline')}:{data:[{title:'Aprovado',embed_url:'https://example.org/live'}]}};}})})};
+ const client={from:()=>({select:()=>({eq:(field,value)=>{filter=[field,value];const query={order:()=>query,range:async()=>failed?{error:Error('offline')}:{data:[{title:'Aprovado',embed_url:'https://example.org/live'}]}};return query;}})})};
  const context=vm.createContext({$:()=>({}),loadSequence:0,liveScope:"tv",note:message=>notice=message,renderChannels:rows=>result=rows,window:{supabase:{createClient:()=>client}},fetch:()=>{throw Error('Provider must not auto-publish');},Error});
  vm.runInContext(load,context);await context.load();assert.deepEqual(filter,['is_published',true]);assert.equal(result.length,1);assert.equal(result[0].title,'Aprovado');
  failed=true;await context.load();assert.equal(result.length,0);assert.match(notice,/Não foi possível/);assert.equal(source.includes('CHANNEL_SNAPSHOT'),false);assert.equal(source.includes('fetch('),false);

@@ -19,7 +19,7 @@ test('invalid sources, categories, durations, missing rights and signed-out user
  for(const url of ['https://www.youtube.com/watch?v=WhWc3b3KhnY','https://www.youtube.com/shorts/WhWc3b3KhnY','https://youtu.be/WhWc3b3KhnY?si=test'])assert.equal(parse(url),'WhWc3b3KhnY');
 });
 function harness({duplicate=false,fail=false}={}){
- const nodes=new Map();const get=id=>{if(!nodes.has(id))nodes.set(id,{value:'',checked:false,hidden:false,disabled:false,textContent:'',classList:{toggle(){}},addEventListener(){},removeAttribute(){}});return nodes.get(id)};
+ const nodes=new Map();const get=id=>{if(!nodes.has(id))nodes.set(id,{value:'',checked:false,hidden:false,disabled:false,textContent:'',classList:{toggle(){}},addEventListener(){},after(){},removeAttribute(){}});return nodes.get(id)};
  get('yt-admin-form').reset=()=>{get('yt-admin-url').value='';};
  for(const [key,id] of Object.entries({url:'url',title:'title',category:'category',channel:'channel',description:'description',minutes:'duration'}))get('yt-admin-'+id).value=values[key];
  get('yt-admin-rights').checked=true;get('yt-admin-publish').checked=false;
@@ -28,7 +28,7 @@ function harness({duplicate=false,fail=false}={}){
   select:()=>({eq:()=>({limit:async()=>({data:duplicate?[{id:'existing'}]:[],error:null})})}),
   insert(row){writes.push(row);return {select:()=>({single:async()=>fail?{error:new Error('Falha de rede')}:{data:{id:'new',is_published:row.is_published}}})};}
  };}};
- const ctx=vm.createContext({window:{},document:{getElementById:get}});vm.runInContext(read('admin/youtube-manager.js'),ctx);
+ const ctx=vm.createContext({window:{},document:{createElement:()=>({append(){},setAttribute(){},replaceChildren(){}}),getElementById:get}});vm.runInContext(read('admin/youtube-manager.js'),ctx);
  ctx.window.NPlayYouTubeAdmin.init({client,getUser:()=>({id:'owner'}),parseId:parse,refresh:async()=>{refreshed++},errorText:e=>e.message,isBusy:()=>locked,setBusy:v=>{locked=v}});
  return {get,writes,refreshed:()=>refreshed,submit:()=>get('yt-admin-form').onsubmit({preventDefault(){}})};
 }

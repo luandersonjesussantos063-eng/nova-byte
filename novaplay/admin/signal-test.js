@@ -47,7 +47,7 @@ async function testSource(video,source,{signal,onAttempt=()=>{},...options}={}){
   for(const url of urls){
    if(signal?.aborted)throw new DOMException('Teste interrompido.','AbortError');
    if(attempted.has(url))continue;attempted.add(url);onAttempt(url);
-   try{return {...await testSignal(video,url,{...options,signal}),playbackUrl:url};}
+   try{return {...await testSignal(video,await globalThis.NPlayLiveAuth?.authorize(url)||url,{...options,signal}),playbackUrl:url};}
    catch(error){if(error.name==='AbortError')throw error;failures.push({protocol:new URL(url).protocol==='https:'?'HTTPS':'HTTP',message:error.message});}
   }
  };

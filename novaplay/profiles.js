@@ -31,7 +31,14 @@ function paint(el,id){el.classList.add("nplay-avatar-art");el.style.setProperty(
 function activeIndex(){try{const i=Number(localStorage.getItem(activeKey));return Number.isInteger(i)&&profiles[i]?i:0}catch{return 0}}
 function updateHeader(i){window.dispatchEvent(new Event("nplay-profile-change"));if(!avatar)return;const p=profiles[i]||profiles[0];avatar.textContent="";paint(avatar,p.avatar);avatar.title="Trocar perfil: "+p.name;avatar.setAttribute("aria-label","Trocar perfil: "+p.name)}
 const edit=document.getElementById("nplay-profile-edit"),form=document.getElementById("nplay-profile-form"),slot=document.getElementById("nplay-profile-slot"),name=document.getElementById("nplay-profile-name"),dialog=document.getElementById("nplay-profile-dialog"),picker=document.getElementById("nplay-avatar-picker"),feedback=document.getElementById("nplay-profile-feedback");
-const show=()=>{render();gate.hidden=false;document.body.style.overflow="hidden"};
+let adminLink=null,adminCheck=0;
+async function refreshAdminLink(){
+ const seq=++adminCheck;if(adminLink)adminLink.hidden=true;
+ try{const client=window.NPlayAccessClient;if(!client)return;const session=(await client.auth.getSession()).data?.session;if(!session)return;const result=await client.from("novaplay_admins").select("user_id").eq("user_id",session.user.id).limit(1);if(seq!==adminCheck||result.error||!result.data?.length)return;
+ if(!adminLink){adminLink=document.createElement("a");adminLink.href="./admin/";adminLink.textContent="Painel administrativo ↗";adminLink.className="profile-admin-link";document.querySelector(".nplay-profile-body")?.append(adminLink);}adminLink.hidden=false;
+ }catch{}
+}
+const show=()=>{render();gate.hidden=false;document.body.style.overflow="hidden";refreshAdminLink();};
 const hide=()=>{gate.hidden=true;document.body.style.overflow=""};
 function render(){
  grid.replaceChildren();
@@ -91,7 +98,7 @@ remove.onclick=()=>{
  try{localStorage.setItem(activeKey,String(nextActive))}catch{}
  options(nextActive);loadDraft();render();updateHeader(nextActive);feedback.textContent="Perfil removido.";
 };
-if(avatar){avatar.onclick=show;updateHeader(activeIndex())}
+if(avatar){avatar.onclick=show;updateHeader(activeIndex());refreshAdminLink()}
 let selected=false;try{selected=sessionStorage.getItem("nplay-profile-selected")==="1"}catch{}
 if(!selected)show();
 })();

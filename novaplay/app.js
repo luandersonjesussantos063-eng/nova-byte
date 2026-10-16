@@ -36,7 +36,7 @@ let progress=read(progressKey,{});
 if(!progress||typeof progress!=="object"||Array.isArray(progress))progress={};
 const save=(key,x)=>{try{localStorage.setItem(key,JSON.stringify(x))}catch(e){}};
 const escapeText=x=>String(x??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-let view="inicio",selected=null,featuredIndex=0,current=null,hls=null,timer=0,attempt=0,timeSaved=0,toastTimeout=null;
+let view="inicio",selected=null,featuredIndex=0,current=null,hls=null,tsPlayer=null,timer=0,attempt=0,timeSaved=0,toastTimeout=null;
 let playerUiTimer=null,seekActive=false;
 let fullscreenOwned=false,closingFullscreen=false,lockedLandscape=false,playerClosing=false,cinemaSession=0;
 let issueReportBusy=false;
@@ -74,11 +74,11 @@ async function loadUploadedCatalog(){
   data.sort((a,b)=>Number(!!a.catalog_only)-Number(!!b.catalog_only));
   (data||[]).forEach(record=>{
    const cover=posterUrl(record.poster_path,record.youtube_id,record.title,record.google_drive_id,record.genre);
-   const title=record.title||"Sem título";
+   const title=(record.title||"Sem título").replace(/\bTorrent\b/ig,"").replace(/\s*\((?:19|20)\d{2}\)\s*$/,"").replace(/\s{2,}/g," ").trim();
    const desc=record.description||(record.catalog_only?"Título confirmado na NPlay. Aguardando inclusão de vídeo autorizado.":"Conteúdo disponível na NPlay.");
    if(record.kind==="movie"){
     const film={id:"upload-"+record.id,title,kind:"film",category:record.genre||"Autoral",description:desc,
-      year:record.production_year,duration:record.catalog_only?"Em breve":durationText(record.duration_seconds),cover,backdrop:cover,catalogOnly:!!record.catalog_only,
+      year:record.production_year||Number((record.title||"").match(/\((19\d{2}|20\d{2})\)\s*$/)?.[1])||null,duration:record.catalog_only?"Em breve":durationText(record.duration_seconds),cover,backdrop:cover,catalogOnly:!!record.catalog_only,
       mode:record.catalog_only?"catalog-only":record.r2_object_key?"r2":record.licensed_stream_url?"licensed":record.google_drive_id?"google-drive":record.youtube_id?"youtube":"private",video_path:record.video_path,r2_object_key:record.r2_object_key,youtube_id:record.youtube_id,google_drive_id:record.google_drive_id,google_drive_resource_key:record.google_drive_resource_key,licensed_stream_url:record.licensed_stream_url,src:null,sourcePage:record.youtube_id?"https://www.youtube.com/watch?v="+record.youtube_id:null,uploaded:true,live:false};
     db.films.push(film);all.push(film);map.set(film.id,film);additions.push(film);
    }else if(record.kind==="episode"&&record.series_title){
@@ -145,6 +145,11 @@ function card(item,channel=false){
   const duration=document.createElement("span");duration.className="youtube-duration";duration.textContent=item.duration||"YouTube";
   el.querySelector(".cover").append(duration);
   el.querySelector("img")?.setAttribute("alt","Miniatura de "+item.title);
+ }
+ if(item.progress){
+  el.querySelector("p").textContent=Math.max(1,Math.ceil((item.progress.duration-item.progress.position)/60))+" min restantes · "+pct+"% assistido";
+  const remove=document.createElement("button");remove.type="button";remove.className="continue-remove";remove.textContent="×";remove.setAttribute("aria-label","Remover "+item.title+" de Continuar assistindo");
+  remove.onclick=event=>{event.stopPropagation();delete progress[item.id];save(progressKey,progress);renderRows();};el.querySelector(".cover").append(remove);
  }
  el.querySelector(".cover-btn").addEventListener("click",()=>item.kind==="tv"&&item.mode==="external"?startWatching(item):isEpisode?play(item.show,item.episode):openDetails(item));
  el.querySelector(".card-direct-play")?.addEventListener("click",e=>{e.stopPropagation();if(isEpisode)play(item.show,item.episode);else startWatching(item)});
@@ -318,8 +323,9 @@ async function loadFeatured(){
  if(!remoteDb)return;
  try{
   const {data,error}=await remoteDb.from("novaplay_featured")
-   .select("film_ids").eq("id",1).maybeSingle();
+   .select("film_ids,youtube_featured_id").eq("id",1).maybeSingle();
   if(error)throw error;
+  youtubeFeaturedId=data?.youtube_featured_id?"upload-"+data.youtube_featured_id:null;
   const films=(Array.isArray(data?.film_ids)?data.film_ids:defaultFeatured)
    .map(id=>byId(id)).filter(x=>x&&(x.kind==="film"||x.kind==="series")&&!x.catalogOnly).slice(0,6);
   featured=films.length?films:uploadedCatalog.filter(x=>(x.kind==="film"||x.kind==="series")&&!x.catalogOnly).slice(0,6);
@@ -427,7 +433,7 @@ function updateHero(index){
  window.NovaPlayHeroScenes?.show?.(x);
 }
 function youtubeFilms(){return window.NPlayYouTube.select(db.films)}
-let selectedYouTubeCategory="Todos";
+let selectedYouTubeCategory="Todos",youtubeFeaturedId=null;
 function renderYouTubeSelection(content,list){
  content.className="category-grid youtube-selection";
  content.replaceChildren();
@@ -446,7 +452,7 @@ function renderYouTubeSelection(content,list){
  const visible=selectedYouTubeCategory==="Todos"?list:list.filter(item=>core.category(item)===selectedYouTubeCategory);
  const count=document.createElement("p");count.className="youtube-count";count.setAttribute("role","status");count.textContent=visible.length+" vídeo"+(visible.length===1?"":"s")+" na seleção";content.append(count);
  if(!visible.length){content.append(empty("Nenhum vídeo nesta categoria","Os vídeos cadastrados no painel aparecerão aqui conforme o gênero escolhido."));return;}
- const featured=visible[0];
+ const featured=visible.find(item=>item.id===youtubeFeaturedId)||visible[0];
  const hero=document.createElement("section");hero.className="youtube-feature";hero.setAttribute("aria-label","Vídeo em destaque");
  hero.innerHTML='<img decoding="async" src="'+escapeText(featured.cover)+'" alt=""><div class="youtube-feature-copy"><span class="youtube-eyebrow">EM DESTAQUE · '+escapeText(core.category(featured))+'</span><h2>'+escapeText(featured.title)+'</h2><p>'+escapeText(core.channel(featured))+' · '+escapeText(featured.duration)+'</p><div class="youtube-feature-actions"><button type="button" class="btn btn-primary youtube-feature-play">'+icon("play")+' Assistir</button><button type="button" class="btn btn-secondary youtube-feature-details">Detalhes</button></div></div>';
  hero.querySelector(".youtube-feature-play").onclick=()=>startWatching(featured);
@@ -459,7 +465,7 @@ function renderYouTubeSelection(content,list){
 }
 const categories={
  musica:["MÚSICA · NPLAY","Música","Canais musicais ao vivo para ouvir e assistir. Escolha seu canal e dê o play.",[]],
- tv:["TV AO VIVO","TV aberta","Canais gratuitos com reprodução configurada dentro da NPlay. A disponibilidade depende das emissoras.",db.channels],
+ tv:["TV AO VIVO","TV ao vivo","Encontre seus canais por nome, categoria ou região.",db.channels],
  filmes:["NOSSO ACERVO","Filmes","Filmes com áudio em português.",db.films.filter(x=>x.mode!=="youtube")],
  youtube:["YOUTUBE · NPLAY","Seleção YouTube","Filmes, documentários e boas histórias para descobrir. Escolha uma categoria e assista pelo player oficial do YouTube.",[]],
  "em-breve":["LANÇAMENTOS · NPLAY","Em breve","Prévias de animes e filmes anunciados. Estes títulos ainda não têm vídeo autorizado para reprodução.",[]],
@@ -491,19 +497,33 @@ function renderCategory(kind){
   $("category-heading").textContent=selectedGenre==="Todos"?"Filmes por gênero":selectedGenre;
   $("genre-filter-count").textContent=list.length+" título"+(list.length===1?"":"s")+" nesta categoria";
  }
- if(kind==="musica")return;
+ content.hidden=kind==="tv"||kind==="musica";
+ if(kind==="musica"||kind==="tv")return;
  if(kind==="youtube"){renderYouTubeSelection(content,list);return;}
  if(!list.length)content.append(empty("Nenhum título nesta categoria","Selecione outro gênero ou classifique títulos no painel administrativo."));
  else list.forEach(item=>content.append(card(item,item.kind==="tv")));
 }
+let searchKind="Tudo";
+const recentSearchKey="nplay-recent-searches-v1";
+function rememberSearch(){const q=$("search-input").value.trim().slice(0,100);if(!q)return;const old=read(recentSearchKey,[]);save(recentSearchKey,[q,...(Array.isArray(old)?old:[]).filter(x=>x!==q)].slice(0,6));}
 function renderSearch(){
- const q=searchText($("search-input").value.trim());
- const results=$("search-results");results.replaceChildren();
- const list=all.filter(x=>searchText(x.title+" "+x.description+" "+x.category+" "+(x.year||"")).includes(q));
- $("search-summary").textContent=q?(list.length+" resultado"+(list.length===1?"":"s")+" para “"+q.slice(0,70)+"”"):"Explore filmes, séries e TV aberta no catálogo.";
- if(!list.length)results.append(empty("Nenhum título encontrado","Tente outro nome, gênero ou ano."));
- else list.forEach(x=>results.append(card(x,x.kind==="tv")));
+ const q=searchText($("search-input").value.trim()),results=$("search-results");results.replaceChildren();
+ const filters=document.createElement("div");filters.className="search-filters";filters.setAttribute("aria-label","Tipo de conteúdo");
+ for(const kind of ["Tudo","Filmes","Séries","TV","YouTube"]){const b=document.createElement("button");b.type="button";b.className="genre-chip"+(searchKind===kind?" active":"");b.textContent=kind;b.setAttribute("aria-pressed",String(searchKind===kind));b.onclick=()=>{searchKind=kind;renderSearch()};filters.append(b);}
+ results.append(filters);
+ if(!q){
+  $("search-summary").textContent="O que você quer assistir hoje?";
+  const intro=document.createElement("div");intro.className="search-discover";
+  for(const [page,label] of [["filmes","Explorar filmes"],["series","Explorar séries"],["tv","TV ao vivo"],["youtube","Seleção YouTube"]]){const b=document.createElement("button");b.type="button";b.textContent=label;b.onclick=()=>navigate(page);intro.append(b);}
+  results.append(intro);
+  const recent=read(recentSearchKey,[]);
+  if(Array.isArray(recent)&&recent.length){const panel=document.createElement("div");panel.className="search-recent";const h=document.createElement("h2");h.textContent="Buscas recentes";panel.append(h);for(const term of recent.filter(x=>typeof x==="string")){const b=document.createElement("button");b.type="button";b.className="genre-chip";b.textContent=term;b.onclick=()=>{$("search-input").value=term;renderSearch()};panel.append(b);}const clear=document.createElement("button");clear.type="button";clear.className="genre-chip";clear.textContent="Limpar histórico";clear.onclick=()=>{save(recentSearchKey,[]);renderSearch()};panel.append(clear);results.append(panel);}return;
+ }
+ const list=all.filter(x=>(searchKind==="Tudo"||searchKind==="Filmes"&&x.kind==="film"&&x.mode!=="youtube"||searchKind==="Séries"&&x.kind==="series"||searchKind==="TV"&&x.kind==="tv"||searchKind==="YouTube"&&x.mode==="youtube")&&searchText(x.title+" "+x.description+" "+x.category+" "+(x.year||"")).includes(q));
+ $("search-summary").textContent=list.length+" resultado"+(list.length===1?"":"s")+" para “"+q.slice(0,70)+"”";
+ if(!list.length)results.append(empty("Nenhum título encontrado","Tente outro nome, gênero ou ano."));else list.forEach(x=>results.append(card(x,x.kind==="tv")));
 }
+$("search-input").addEventListener("keydown",event=>{if(event.key==="Enter"){rememberSearch();renderSearch();}});
 function navigate(page){
  window.NovaPlayHeroScenes?.stop?.();window.NPlayHeroLive?.stop?.();
  window.NovaPlayHover?.close?.();
@@ -538,6 +558,7 @@ function openOfficialChannel(item){
 }
 function startWatching(item){
  if(!item)return;
+ if(item.liveRecord){window.dispatchEvent(new CustomEvent("nplay:channel-play",{detail:item.liveRecord}));return;}
  if(item.kind==="tv"&&item.mode==="external"){
   openOfficialChannel(item);return;
  }
@@ -761,6 +782,7 @@ function stopPlayback(){
  ++attempt;clearTimeout(timer);timer=0;const video=$("video");
  video.pause();video.onerror=null;video.onplaying=null;video.onwaiting=null;video.oncanplay=null;video.onloadedmetadata=null;video.ontimeupdate=null;video.onended=null;
  if(hls){hls.destroy();hls=null}
+ if(tsPlayer){tsPlayer.destroy();tsPlayer=null}
  video.removeAttribute("src");video.load();video.hidden=false;
  $("fallback-frame").src="about:blank";$("fallback-frame").hidden=true;current=null;
 }
@@ -907,11 +929,16 @@ function openLiveEmbed(url,title){
  frame.referrerPolicy="no-referrer";frame.hidden=false;frame.src=source.href;
  setupLiveTouchShield();enterCinema();$("player-close").focus();return true;
 }
-function openLiveHls(url,title){
+function openLiveHls(url,title,mode="hls"){
  let source;try{source=new URL(url);if(source.protocol!=="https:"||source.username||source.password)return false}catch{return false}
- play({id:"live-"+source.href,title:String(title||"Canal ao vivo"),kind:"tv",src:source.href,mode:"hls",live:true});return true;
+ play({id:"live-"+source.href,title:String(title||"Canal ao vivo"),kind:"tv",src:source.href,mode,live:true});return true;
 }
-window.NovaPlayPlayer={openHls:openLiveHls,openEmbed:openLiveEmbed,closeEmbed:()=>{if(current?.item?.liveEmbedUrl)closePlayer()}};
+window.NPlayLiveCatalog={staticChannels:()=>db.channels,isFavorite:id=>favorite.has(id),toggleFavorite:id=>{const item=map.get(id);if(item)toggleFavorite(item);},setChannels(channels){
+ for(let i=all.length-1;i>=0;i--)if(all[i].liveRecord){map.delete(all[i].id);all.splice(i,1);}
+ for(const record of channels){const id="channel-"+record.id;const item={id,title:record.title,kind:"tv",live:true,mode:record.stream_type,category:record.category||"TV ao vivo",description:"Transmissão ao vivo · "+(record.category||"TV"),cover:record.logo_url||"",customLabel:record.logo_url?null:record.title,liveRecord:record};all.push(item);map.set(id,item);}
+ if(view==="buscar")renderSearch();if(view==="favoritos")renderCategory("favoritos");
+}};
+window.NovaPlayPlayer={openStatic:id=>{const item=byId(id);if(!item)return false;startWatching(item);return true;},openHls:openLiveHls,openMpegts:(url,title)=>openLiveHls(url,title,"mpegts"),openEmbed:openLiveEmbed,closeEmbed:()=>{if(current?.item?.liveEmbedUrl)closePlayer()}};
 $("player-live-reload").onclick=()=>{if(current?.item?.liveEmbedUrl)openLiveEmbed(current.item.liveEmbedUrl,current.item.title)};
 function play(item,episode){
  if(item?.liveEmbedUrl){openLiveEmbed(item.liveEmbedUrl,item.title);return}
@@ -976,7 +1003,7 @@ function play(item,episode){
  const progressId=item.kind==="tv"?null:episode?episode.id:item.id;
  setResume(v,progressId,seq);
  if(item.kind==="tv")timer=setTimeout(()=>{if(seq===attempt&&(!v.videoWidth||v.readyState<2))fail("O canal está demorando para carregar. Verifique a conexão ou tente novamente.")},22000);
- if(!media.youtube_id&&!media.google_drive_id)window.NPlayCasting?.configure({
+ if(!media.youtube_id&&!media.google_drive_id&&!window.NPlayLiveAuth?.protectedUrl(media.src))window.NPlayCasting?.configure({
   title:episode?item.title+" · "+episode.label:item.title,live:item.kind==="tv",
   onChange:updateCinemaControls,
   onProgress(position,duration){
@@ -1017,7 +1044,12 @@ function play(item,episode){
  function startSource(){
   if(seq!==attempt)return;
   if(!src){fail("Não foi possível localizar o arquivo de vídeo.");return}
-  if(media.mode==="hls"||/\.m3u8?(?:\?|$)/i.test(src)){
+  if(media.mode==="mpegts"){
+   if(!window.mpegts?.isSupported()){fail("Este navegador não suporta este sinal ao vivo. Use uma versão atual do Chrome ou Edge.");return;}
+   tsPlayer=window.mpegts.createPlayer({type:"mpegts",isLive:true,url:src},{enableWorker:true,lazyLoad:false});
+   tsPlayer.on(window.mpegts.Events.ERROR,()=>fail("Não foi possível receber o sinal. Tente novamente ou avise o administrador."));
+   tsPlayer.attachMediaElement(v);tsPlayer.load();startAutoplay(v,seq);
+  }else if(media.mode==="hls"||/\.m3u8?(?:\?|$)/i.test(src)){
     const nativeHls=v.canPlayType("application/vnd.apple.mpegurl");
     const managedHls=window.Hls&&window.Hls.isSupported();
     if(nativeHls&&!(item.kind==="tv"&&managedHls)){
@@ -1166,7 +1198,7 @@ document.addEventListener("keydown",e=>{
 document.addEventListener("visibilitychange",()=>{if(document.hidden){stopHeroPreview();if(!$("player-layer").hidden)$("video").pause()}});
 window.addEventListener("scroll",()=>$("app-header").classList.toggle("is-scrolled",window.scrollY>24),{passive:true});
 if("serviceWorker" in navigator&&location.protocol==="https:"){
- window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js?v=0.49.12",{updateViaCache:"none"}).catch(()=>{}));
+ window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js?v=0.49.22",{updateViaCache:"none"}).catch(()=>{}));
 }
 $("hero-play").onclick=()=>navigate("tv");
 $("hero-info").onclick=()=>navigate("filmes");

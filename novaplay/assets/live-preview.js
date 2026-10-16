@@ -6,7 +6,7 @@ const soundIcon='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5 6 9H
 function create(root,options={}){
  const limit=Math.max(1,Math.min(4,Number(options.maxParallel)||1));
  let entries=[],active=new Map(),pinned=null,timer=null,observer=null;
- const blocked=()=>document.hidden||!!root.closest('[hidden]')||document.body.classList.contains('modal-open')||document.getElementById('nplay-profile-gate')?.hidden===false||document.getElementById('nplay-access-wall')?.hidden===false;
+ const blocked=()=>window.matchMedia?.('(hover: none), (pointer: coarse)').matches||document.hidden||!!root.closest('[hidden]')||document.body.classList.contains('modal-open')||document.getElementById('nplay-profile-gate')?.hidden===false||document.getElementById('nplay-access-wall')?.hidden===false;
  function soundButton(entry,enabled){
   entry.sound.innerHTML=enabled?soundIcon:mutedIcon;
   entry.sound.setAttribute('aria-pressed',String(enabled));
