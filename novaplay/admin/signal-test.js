@@ -1,13 +1,13 @@
 (()=>{
 function testSignal(video,url,{signal,timeout=25000,seconds=2}={}){
  return new Promise((resolve,reject)=>{
-  let hls=null,done=false,started=null,ticks=0;
+  let hls=null,tsPlayer=null,done=false,started=null,ticks=0;
   const timer=setTimeout(()=>finish(Error('Nenhum vídeo contínuo confirmado em '+Math.round(timeout/1000)+' segundos. Pode ser falha da fonte, conexão, CORS ou bloqueio do navegador.')),timeout);
   function finish(error){
    if(done)return;done=true;clearTimeout(timer);
    video.removeEventListener('timeupdate',progress);video.removeEventListener('error',mediaError);signal?.removeEventListener('abort',abort);
    const info={width:video.videoWidth,height:video.videoHeight,seconds:started===null?0:Math.max(0,video.currentTime-started)};
-   video.pause();if(hls)hls.destroy();video.removeAttribute('src');video.load();
+   video.pause();if(hls)hls.destroy();if(tsPlayer)tsPlayer.destroy();video.removeAttribute('src');video.load();
    if(error)reject(error);else resolve(info);
   }
   function abort(){const error=Error('Teste interrompido.');error.name='AbortError';finish(error);}
