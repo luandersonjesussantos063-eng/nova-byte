@@ -18,20 +18,24 @@ function parsePlaylist(text){
 }
 export default {
  async fetch(request,env){
-  if(new URL(request.url).pathname!=='/import'||request.method!=='POST')return new Response('Not found',{status:404});
+  const origin=request.headers.get('Origin');
+  const allowedOrigin='https://novabytesolucoes.com.br';
+  const cors=origin===allowedOrigin?{'Access-Control-Allow-Origin':allowedOrigin,'Vary':'Origin','Access-Control-Allow-Headers':'Authorization','Access-Control-Allow-Methods':'POST, OPTIONS'}:{};
+  if(request.method==='OPTIONS')return new Response(null,{status:origin===allowedOrigin?204:403,headers:cors});
+  if(new URL(request.url).pathname!=='/import'||request.method!=='POST')return new Response('Not found',{status:404,headers:cors});
   const auth=request.headers.get('Authorization')||'';
-  if(!/^Bearer [A-Za-z0-9_.-]+$/.test(auth))return new Response('Unauthorized',{status:401});
-  if(!env.PLAYLIST_URL||!env.SUPABASE_URL||!env.SUPABASE_ANON_KEY)return new Response('Missing configuration',{status:503});
+  if(!/^Bearer [A-Za-z0-9_.-]+$/.test(auth))return new Response('Unauthorized',{status:401,headers:cors});
+  if(!env.PLAYLIST_URL||!env.SUPABASE_URL||!env.SUPABASE_ANON_KEY)return new Response('Missing configuration',{status:503,headers:cors});
   const base=env.SUPABASE_URL.replace(/\/$/,'');
   const headers={apikey:env.SUPABASE_ANON_KEY,Authorization:auth};
   const check=await fetch(base+'/rest/v1/novaplay_admins?select=user_id&limit=1',{headers});
-  if(!check.ok)return new Response('Unauthorized',{status:401});
+  if(!check.ok)return new Response('Unauthorized',{status:401,headers:cors});
   const admins=await check.json();
-  if(!Array.isArray(admins)||admins.length!==1)return new Response('Forbidden',{status:403});
+  if(!Array.isArray(admins)||admins.length!==1)return new Response('Forbidden',{status:403,headers:cors});
   const source=new URL(env.PLAYLIST_URL);
   if(source.protocol!=='https:')return new Response('HTTPS playlist source required',{status:400});
   const upstream=await fetch(source.toString(),{redirect:'error',signal:AbortSignal.timeout(20000)});
-  if(!upstream.ok)return new Response('Playlist unavailable: '+upstream.status,{status:502});
+  if(!upstream.ok)return new Response('Playlist unavailable: '+upstream.status,{status:502,headers:cors});
   const declared=Number(upstream.headers.get('content-length')||0);
   if(declared>5*1024*1024)return new Response('Playlist too large',{status:413});
   const content=await upstream.text();
@@ -46,9 +50,9 @@ export default {
     method:'POST',headers:{apikey:env.SUPABASE_ANON_KEY,Authorization:auth,'Content-Type':'application/json',Prefer:'resolution=merge-duplicates,return=minimal'},
     body:JSON.stringify(records.slice(i,i+100))
    });
-   if(!response.ok)return Response.json({error:'Database staging failed',imported},{status:502});
+   if(!response.ok)return Response.json({error:'Database staging failed',imported},{status:502,headers:cors});
    imported+=Math.min(100,records.length-i);
   }
-  return Response.json({imported,published:0,message:'Imported as private pending records. Test and approve before publication.'});
+  return Response.json({imported,published:0,message:'Imported as private pending records. Test and approve before publication.'},{headers:cors});
  }
 };
