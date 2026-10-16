@@ -167,6 +167,7 @@
         </div>
         <button id="auto-genre" type="button" class="outline">Detectar gênero automaticamente</button><label>Gênero ou categoria<input id="genre" list="novaplay-genre-options" maxlength="90" placeholder="Escolha ou digite o gênero principal" value="Autoral"></label>
         <datalist id="novaplay-genre-options">
+          <option value="Filmes completos"></option><option value="Documentários"></option><option value="Humor"></option><option value="Curtas e animações"></option>
           <option value="Ação"></option><option value="Animação"></option><option value="Aventura"></option>
           <option value="Comédia"></option><option value="Drama"></option><option value="Fantasia"></option>
           <option value="Ficção científica"></option><option value="Romance"></option>
@@ -178,7 +179,7 @@
           <label for="source-type">Como deseja adicionar o vídeo?</label>
           <select id="source-type">
             <option value="upload">Enviar arquivo do celular (até 50 MB)</option>
-            <option value="youtube">Filme grande pelo YouTube (colar link)</option>
+            <option value="youtube">Vídeo pelo YouTube (colar link)</option>
             <option value="google-drive">Vídeo do Google Drive (colar link)</option>
             <option value="licensed">Filme licenciado — link MP4 ou HLS (.m3u8)</option>
             <option value="r2">Vídeo armazenado no Cloudflare R2 (rascunho)</option>
@@ -187,9 +188,10 @@
         </div>
         <div id="r2-catalog-fields" class="youtube-fields" hidden><label for="r2-catalog-key">Chave do vídeo já enviado ao R2<input id="r2-catalog-key" type="text" autocomplete="off" placeholder="Cole a chave completa do R2"></label><p class="muted">A autorização registrada abaixo é suficiente para publicar, sem uma segunda conferência de direitos.</p><label class="publish-check"><input id="r2-rights" type="checkbox"><span>Confirmo que tenho autorização para distribuir este vídeo</span></label></div>
         <div id="youtube-fields" class="youtube-fields" hidden>
-          <label for="youtube-url">Link do filme no YouTube <span class="required">*</span>
+          <label for="youtube-url">Link do vídeo no YouTube <span class="required">*</span>
             <input id="youtube-url" type="url" inputmode="url" placeholder="https://youtu.be/xxxxxxxxxxx" autocomplete="off">
           </label>
+          <p class="muted">Na Seleção YouTube, use a categoria Filmes completos, Documentários, Humor ou Curtas e animações. Para exibir o canal, acrescente uma linha na sinopse com “Canal: nome do canal”.</p>
           <div class="youtube-howto">
             <strong>Como publicar um filme grande grátis:</strong>
             <ol>

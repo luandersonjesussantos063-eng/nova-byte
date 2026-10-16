@@ -79,7 +79,7 @@ async function loadUploadedCatalog(){
    if(record.kind==="movie"){
     const film={id:"upload-"+record.id,title,kind:"film",category:record.genre||"Autoral",description:desc,
       year:record.production_year,duration:record.catalog_only?"Em breve":durationText(record.duration_seconds),cover,backdrop:cover,catalogOnly:!!record.catalog_only,
-      mode:record.catalog_only?"catalog-only":record.r2_object_key?"r2":record.licensed_stream_url?"licensed":record.google_drive_id?"google-drive":record.youtube_id?"youtube":"private",video_path:record.video_path,r2_object_key:record.r2_object_key,youtube_id:record.youtube_id,google_drive_id:record.google_drive_id,google_drive_resource_key:record.google_drive_resource_key,licensed_stream_url:record.licensed_stream_url,src:null,sourcePage:null,uploaded:true,live:false};
+      mode:record.catalog_only?"catalog-only":record.r2_object_key?"r2":record.licensed_stream_url?"licensed":record.google_drive_id?"google-drive":record.youtube_id?"youtube":"private",video_path:record.video_path,r2_object_key:record.r2_object_key,youtube_id:record.youtube_id,google_drive_id:record.google_drive_id,google_drive_resource_key:record.google_drive_resource_key,licensed_stream_url:record.licensed_stream_url,src:null,sourcePage:record.youtube_id?"https://www.youtube.com/watch?v="+record.youtube_id:null,uploaded:true,live:false};
     db.films.push(film);all.push(film);map.set(film.id,film);additions.push(film);
    }else if(record.kind==="episode"&&record.series_title){
     const key=searchText(record.series_title.trim())+"/"+(record.season_number||1);
@@ -125,6 +125,7 @@ function byId(id){return map.get(id)||null}
 function card(item,channel=false){
  const isEpisode=item.kind==="episode";const cover=item.cover||"./assets/icon.svg";
  const el=document.createElement("article");el.className="poster-card"+(channel?" channel-card":"");
+ if(item.mode==="youtube")el.classList.add("youtube-card");
  el.dataset.id=item.id;
  if(channel){
   const color=/^#[0-9a-fA-F]{6}$/.test(item.brandColor||"")?item.brandColor:"#102a45";
@@ -139,6 +140,12 @@ function card(item,channel=false){
  +(item.catalogOnly?'':'<button type="button" class="card-direct-play" aria-label="Assistir '+escapeText(item.title)+'">'+icon("play")+'</button>')
  +(pct?'<span class="card-progress"><span style="width:'+pct+'%"></span></span>':'')+'</div>'
  +'<h3>'+escapeText(item.title)+'</h3><p>'+escapeText(isEpisode?(Math.max(1,Math.round((item.progress.duration-item.progress.position)/60))+" min restantes"):(item.kind==="tv"?(item.mode==="external"?"Acessar transmissão no site oficial":"TV ao vivo • Assista grátis"):(item.catalogOnly?"Em breve":(item.year||(item.kind==="series"?"Série":"Filme")))+" • "+(item.category||"Acervo clássico")))+'</p>';
+ if(item.mode==="youtube"){
+  el.querySelector("p").textContent=window.NPlayYouTube.channel(item);
+  const duration=document.createElement("span");duration.className="youtube-duration";duration.textContent=item.duration||"YouTube";
+  el.querySelector(".cover").append(duration);
+  el.querySelector("img")?.setAttribute("alt","Miniatura de "+item.title);
+ }
  el.querySelector(".cover-btn").addEventListener("click",()=>item.kind==="tv"&&item.mode==="external"?startWatching(item):isEpisode?play(item.show,item.episode):openDetails(item));
  el.querySelector(".card-direct-play")?.addEventListener("click",e=>{e.stopPropagation();if(isEpisode)play(item.show,item.episode);else startWatching(item)});
  el.querySelector("img")?.addEventListener("error",function(){
@@ -260,7 +267,7 @@ function renderRows(){
  ["Filmes licenciados",uploadedCatalog.filter(x=>x.mode==="licensed"&&!x.catalogOnly),"filmes",false],
  ["Sua próxima sessão",uploadedCatalog.filter(x=>x.kind==="film"&&x.mode==="r2"&&!x.catalogOnly),"filmes",false],
  ["Séries para acompanhar",uploadedCatalog.filter(x=>x.kind==="series"&&!x.catalogOnly),"series",false],
- ["Filmes do YouTube",youtubeFilms(),"youtube",false],
+ ["Seleção YouTube",youtubeFilms(),"youtube",false],
  ["Animes e estreias · Em breve",upcomingFilms(),"em-breve",false],
  ...genreOrder.filter(name=>name!=="Não classificados")
   .map(name=>[name,genreGroups().get(name),"genero:"+name,false]).filter(b=>b[1].length>=3),
@@ -419,12 +426,42 @@ function updateHero(index){
  featured.forEach((film,i)=>{const b=document.createElement("button");b.className="hero-dot"+(i===featuredIndex?" active":"");b.setAttribute("aria-label","Destacar "+film.title);b.addEventListener("click",()=>updateHero(i));dots.append(b)});
  window.NovaPlayHeroScenes?.show?.(x);
 }
-function youtubeFilms(){return db.films.filter(x=>!x.catalogOnly && x.mode==="youtube" && /^[A-Za-z0-9_-]{11}$/.test(x.youtube_id||""))}
+function youtubeFilms(){return window.NPlayYouTube.select(db.films)}
+let selectedYouTubeCategory="Todos";
+function renderYouTubeSelection(content,list){
+ content.className="category-grid youtube-selection";
+ content.replaceChildren();
+ const core=window.NPlayYouTube;
+ const filters=document.createElement("div");filters.className="youtube-filters";
+ filters.setAttribute("role","group");filters.setAttribute("aria-label","Categorias do YouTube");
+ for(const name of ["Todos",...core.categories]){
+  const count=name==="Todos"?list.length:list.filter(item=>core.category(item)===name).length;
+  const button=document.createElement("button");button.type="button";
+  button.className="genre-chip"+(selectedYouTubeCategory===name?" active":"");
+  button.textContent=name+" ("+count+")";button.setAttribute("aria-pressed",String(selectedYouTubeCategory===name));
+  button.onclick=()=>{selectedYouTubeCategory=name;renderYouTubeSelection(content,list)};
+  filters.append(button);
+ }
+ content.append(filters);
+ const visible=selectedYouTubeCategory==="Todos"?list:list.filter(item=>core.category(item)===selectedYouTubeCategory);
+ const count=document.createElement("p");count.className="youtube-count";count.setAttribute("role","status");count.textContent=visible.length+" vídeo"+(visible.length===1?"":"s")+" na seleção";content.append(count);
+ if(!visible.length){content.append(empty("Nenhum vídeo nesta categoria","Os vídeos cadastrados no painel aparecerão aqui conforme o gênero escolhido."));return;}
+ const featured=visible[0];
+ const hero=document.createElement("section");hero.className="youtube-feature";hero.setAttribute("aria-label","Vídeo em destaque");
+ hero.innerHTML='<img decoding="async" src="'+escapeText(featured.cover)+'" alt=""><div class="youtube-feature-copy"><span class="youtube-eyebrow">EM DESTAQUE · '+escapeText(core.category(featured))+'</span><h2>'+escapeText(featured.title)+'</h2><p>'+escapeText(core.channel(featured))+' · '+escapeText(featured.duration)+'</p><div class="youtube-feature-actions"><button type="button" class="btn btn-primary youtube-feature-play">'+icon("play")+' Assistir</button><button type="button" class="btn btn-secondary youtube-feature-details">Detalhes</button></div></div>';
+ hero.querySelector(".youtube-feature-play").onclick=()=>startWatching(featured);
+ hero.querySelector(".youtube-feature-details").onclick=()=>openDetails(featured);
+ content.append(hero);
+ for(const name of core.categories){
+  const items=visible.filter(item=>core.category(item)===name);
+  const row=shelf(name,items,"continuar");if(row)content.append(row);
+ }
+}
 const categories={
  musica:["MÚSICA · NPLAY","Música","Canais musicais ao vivo para ouvir e assistir. Escolha seu canal e dê o play.",[]],
  tv:["TV AO VIVO","TV aberta","Canais gratuitos com reprodução configurada dentro da NPlay. A disponibilidade depende das emissoras.",db.channels],
  filmes:["NOSSO ACERVO","Filmes","Filmes com áudio em português.",db.films.filter(x=>x.mode!=="youtube")],
- youtube:["YOUTUBE · NPLAY","Filmes do YouTube","Assista por meio do player oficial do YouTube. A disponibilidade depende do canal e das permissões de reprodução.",[]],
+ youtube:["YOUTUBE · NPLAY","Seleção YouTube","Filmes, documentários e boas histórias para descobrir. Escolha uma categoria e assista pelo player oficial do YouTube.",[]],
  "em-breve":["LANÇAMENTOS · NPLAY","Em breve","Prévias de animes e filmes anunciados. Estes títulos ainda não têm vídeo autorizado para reprodução.",[]],
  series:["CAPÍTULO POR CAPÍTULO","Séries","Escolha uma série com áudio em português.",db.series],
  favoritos:["SUA SELEÇÃO","Minha lista","Tudo o que você marcou como favorito.",[]]
@@ -432,7 +469,7 @@ const categories={
 function renderCategory(kind){
  const conf=categories[kind]||categories.filmes;
  $("category-kicker").textContent=conf[0];$("category-heading").textContent=conf[1];$("category-subtitle").textContent=conf[2];
- const content=$("category-grid");content.replaceChildren();
+ const content=$("category-grid");content.className="category-grid";content.replaceChildren();
  let list=kind==="series"?db.series:kind==="favoritos"?all.filter(x=>favorite.has(x.id)):kind==="youtube"?youtubeFilms():kind==="em-breve"?upcomingFilms():conf[3];
  if(kind==="tv")window.dispatchEvent(new Event("nplay:tv-open"));
  if(kind==="musica")window.dispatchEvent(new Event("nplay:music-open"));
@@ -455,7 +492,8 @@ function renderCategory(kind){
   $("genre-filter-count").textContent=list.length+" título"+(list.length===1?"":"s")+" nesta categoria";
  }
  if(kind==="musica")return;
- if(!list.length)content.append(empty(kind==="youtube"?"Em breve: filmes do YouTube":"Nenhum título nesta categoria",kind==="youtube"?"Os filmes autorizados cadastrados com um link do YouTube aparecerão automaticamente aqui.":"Selecione outro gênero ou classifique títulos no painel administrativo."));
+ if(kind==="youtube"){renderYouTubeSelection(content,list);return;}
+ if(!list.length)content.append(empty("Nenhum título nesta categoria","Selecione outro gênero ou classifique títulos no painel administrativo."));
  else list.forEach(item=>content.append(card(item,item.kind==="tv")));
 }
 function renderSearch(){
@@ -1127,7 +1165,7 @@ document.addEventListener("keydown",e=>{
 document.addEventListener("visibilitychange",()=>{if(document.hidden){stopHeroPreview();if(!$("player-layer").hidden)$("video").pause()}});
 window.addEventListener("scroll",()=>$("app-header").classList.toggle("is-scrolled",window.scrollY>24),{passive:true});
 if("serviceWorker" in navigator&&location.protocol==="https:"){
- window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js?v=0.48.6",{updateViaCache:"none"}).catch(()=>{}));
+ window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js?v=0.49.11",{updateViaCache:"none"}).catch(()=>{}));
 }
 $("hero-play").onclick=()=>navigate("tv");
 $("hero-info").onclick=()=>navigate("filmes");
