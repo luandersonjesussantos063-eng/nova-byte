@@ -1,4 +1,4 @@
-import {relayHls,hlsSource} from './hls-relay.mjs';
+import {relayHls,hlsSource,xtreamTsSource} from './hls-relay.mjs';
 import {bridgeUrl,encryptBridge,decryptBridge,bridgeUpstream,checkBridge,pcFailureMessages} from './pc-bridge.mjs';
 // Private provider URLs live in KV; viewers receive only channel IDs.
 const DB="https://vajlhodqxskozuxxlujv.supabase.co",KEY="sb_publishable_uT0b4y0Bex1k1QWZoyIfKg_K0pm-yS3";
@@ -28,7 +28,8 @@ async function admin(jwt){
 async function published(id,jwt,origin,format="ts"){
  const r=await fetch(DB+'/rest/v1/novaplay_live_embeds?id=eq.'+id+'&select=embed_url&limit=1',{headers:dbHeaders(jwt)});
  if(!r.ok)return false;const rows=await readJson(r,5000);
- return rows?.[0]?.embed_url===origin+'/live/'+id+(format==='hls'?'/index.m3u8':'/stream.ts');
+ const saved=rows?.[0]?.embed_url;
+ return saved===origin+'/live/'+id+(format==='hls'?'/index.m3u8':'/stream.ts')||(format==='ts'&&saved===origin+'/live/'+id+'/index.m3u8');
 }
 async function upstream(raw,signal,range){
  let url=sourceUrl(raw);
@@ -112,9 +113,11 @@ export default {async fetch(request,env){
   const match=route.pathname.match(/^\/live\/([0-9a-f-]{36})\/stream\.ts$/i);
   if(!match||!['GET','HEAD'].includes(request.method)||!uuid.test(match[1]))return json({error:'Canal não encontrado.'},404);
   if(!await published(match[1],jwt,route.origin))return json({error:'Canal não liberado para este aparelho.'},403);
-  const entry=await env.LIVE_SOURCES.get(match[1],'json');if(!entry)return json({error:'Fonte indisponível.'},404);
+  const entry=await hlsSource(env,match[1]);if(!entry)return json({error:'Fonte indisponível.'},404);
+  const source=/\.m3u8$/i.test(new URL(entry.url).pathname)?xtreamTsSource(entry.url):entry.url;
+  if(!source)return json({error:'Esta fonte não oferece a alternativa MPEG-TS.'},422);
   const deliver=await configuredUpstream(env,jwt);
-  const r=await deliver(entry.url,request.signal,request.headers.get('Range'));
+  const r=await deliver(source,request.signal,request.headers.get('Range'),{xtream:true});
   if(!r.ok){await r.body?.cancel();return json({error:'O fornecedor não disponibilizou o sinal deste canal.'},502);}
   const type=r.headers.get('Content-Type')||'';if(/text\/|json|html/i.test(type)){await r.body?.cancel();return json({error:'A fonte não retornou um vídeo compatível.'},502);}
   const headers=new Headers({...cors,'Content-Type':'video/mp2t'});

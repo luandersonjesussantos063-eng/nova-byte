@@ -986,9 +986,24 @@ function play(item,episode){
  const seq=++attempt;
  let src=media.licensed_stream_url||media.src;
  let hasFailed=false,networkRecoveries=0,r2ExpiresAt=0,r2Refreshing=false;
+ let playbackMode=media.mode,formatFallbackUsed=false,switchingFormat=false;
+ function tryMpegts(){
+  if(seq!==attempt||formatFallbackUsed||switchingFormat||item.kind!=="tv"||playbackMode!=="hls"||!window.NPlayLiveAuth?.protectedUrl(src)||!window.mpegts?.isSupported())return false;
+  const next=new URL(src);if(!next.pathname.endsWith('/index.m3u8'))return false;
+  formatFallbackUsed=true;switchingFormat=true;playbackMode="mpegts";
+  clearTimeout(timer);if(hls){hls.destroy();hls=null;}
+  const previousError=v.onerror;v.onerror=null;v.pause();v.removeAttribute("src");v.load();
+  next.pathname=next.pathname.replace(/index\.m3u8$/,"stream.ts");src=next.href;
+  hasFailed=false;playerStatus("Tentando outro formato do canal…");
+  // Release the previous request before opening a second format: some accounts
+  // permit only one live connection. Closing the player cancels this attempt.
+  timer=setTimeout(()=>{if(seq!==attempt)return;switchingFormat=false;v.onerror=previousError;timer=setTimeout(()=>{if(seq===attempt&&((!item.audioOnly&&!v.videoWidth)||v.readyState<2))fail("Não foi possível iniciar este canal em nenhum dos formatos disponíveis.");},22000);startSource();},400);
+  return true;
+ }
  const fail=msg=>{if(!hasFailed){hasFailed=true;playbackFailed(msg,seq)}};
  v.onerror=()=>{
   if(media.r2_object_key&&r2ExpiresAt&&Date.now()>=r2ExpiresAt-30000&&!r2Refreshing){loadR2(true);return;}
+  if(tryMpegts())return;
   fail(v.error?.code===3?"O navegador não conseguiu decodificar este vídeo. O arquivo precisa de uma versão compatível.":"Não foi possível carregar o vídeo. Tente novamente ou informe o problema ao administrador.");
  };
  v.onplaying=()=>{
@@ -1002,7 +1017,7 @@ function play(item,episode){
  v.oncanplay=()=>{if(seq===attempt&&!hasFailed){if(item.kind!=="tv")clearTimeout(timer);playerStatus(v.paused?"Preparando reprodução automática...":"▶ Reproduzindo")}};
  const progressId=item.kind==="tv"?null:episode?episode.id:item.id;
  setResume(v,progressId,seq);
- if(item.kind==="tv")timer=setTimeout(()=>{if(seq===attempt&&((!item.audioOnly&&!v.videoWidth)||v.readyState<2))fail("O canal está demorando para carregar. Verifique a conexão ou tente novamente.")},22000);
+ if(item.kind==="tv")timer=setTimeout(()=>{if(seq===attempt&&((!item.audioOnly&&!v.videoWidth)||v.readyState<2)&&!tryMpegts())fail("O canal está demorando para carregar. Verifique a conexão ou tente novamente.")},22000);
  if(!media.youtube_id&&!media.google_drive_id&&!window.NPlayLiveAuth?.protectedUrl(media.src))window.NPlayCasting?.configure({
   title:episode?item.title+" · "+episode.label:item.title,live:item.kind==="tv",
   onChange:updateCinemaControls,
@@ -1044,12 +1059,12 @@ function play(item,episode){
  function startSource(){
   if(seq!==attempt)return;
   if(!src){fail("Não foi possível localizar o arquivo de vídeo.");return}
-  if(media.mode==="mpegts"){
+  if(playbackMode==="mpegts"){
    if(!window.mpegts?.isSupported()){fail("Este navegador não suporta este sinal ao vivo. Use uma versão atual do Chrome ou Edge.");return;}
    tsPlayer=window.mpegts.createPlayer({type:"mpegts",isLive:true,url:src},{enableWorker:true,lazyLoad:false});
    tsPlayer.on(window.mpegts.Events.ERROR,()=>fail("Não foi possível receber o sinal. Tente novamente ou avise o administrador."));
    tsPlayer.attachMediaElement(v);tsPlayer.load();startAutoplay(v,seq);
-  }else if(media.mode==="hls"||/\.m3u8?(?:\?|$)/i.test(src)){
+  }else if(playbackMode==="hls"||/\.m3u8?(?:\?|$)/i.test(src)){
     const nativeHls=v.canPlayType("application/vnd.apple.mpegurl");
     const managedHls=window.Hls&&window.Hls.isSupported();
     if(nativeHls&&!(item.kind==="tv"&&managedHls)){
@@ -1059,7 +1074,12 @@ function play(item,episode){
       hls.on(window.Hls.Events.ERROR,(event,data)=>{
         if(seq!==attempt||!data.fatal)return;
         const gatewayFailure=window.NPlayLiveAuth?.failureMessage?.(data.networkDetails?.getResponseHeader?.("X-NPlay-Error"));
-        if(window.NPlayLiveAuth?.protectedUrl(src)&&gatewayFailure){fail(gatewayFailure);return;}
+        if(window.NPlayLiveAuth?.protectedUrl(src)&&gatewayFailure){
+          const code=data.networkDetails?.getResponseHeader?.("X-NPlay-Error");
+          if(["PC_SOURCE_RESET","PC_SOURCE_UNAVAILABLE"].includes(code)&&tryMpegts())return;
+          fail(gatewayFailure);return;
+        }
+        if(data.type===window.Hls.ErrorTypes.NETWORK_ERROR&&tryMpegts())return;
         if(item.kind==="tv"&&nativeHls&&data.type===window.Hls.ErrorTypes.NETWORK_ERROR){
           hls.destroy();hls=null;playerStatus("Tentando o modo de reprodução do navegador…");
           v.src=src;startAutoplay(v,seq);return;
@@ -1200,7 +1220,7 @@ document.addEventListener("keydown",e=>{
 document.addEventListener("visibilitychange",()=>{if(document.hidden){stopHeroPreview();if(!$("player-layer").hidden)$("video").pause()}});
 window.addEventListener("scroll",()=>$("app-header").classList.toggle("is-scrolled",window.scrollY>24),{passive:true});
 if("serviceWorker" in navigator&&location.protocol==="https:"){
- window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js?v=0.49.28",{updateViaCache:"none"}).catch(()=>{}));
+ window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js?v=0.49.29",{updateViaCache:"none"}).catch(()=>{}));
 }
 $("hero-play").onclick=()=>navigate("tv");
 $("hero-info").onclick=()=>navigate("filmes");

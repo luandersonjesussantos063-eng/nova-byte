@@ -39,12 +39,12 @@ export async function checkBridge(url,secret,readJson){
  return {ok:true,status};
 }
 export async function bridgeUpstream(config,validateUrl){
- return async(raw,signal,range)=>{
+ return async(raw,signal,range,options={})=>{
   validateUrl(raw);
   let r;const timeout=new AbortController(),timer=setTimeout(()=>timeout.abort(),20000);
-  try{r=await fetch(config.url+'/fetch',{method:'POST',headers:{Authorization:'Bearer '+config.secret,'Content-Type':'application/json'},body:JSON.stringify({url:raw,range}),signal:AbortSignal.any([signal||new AbortController().signal,timeout.signal]),redirect:'manual'});}catch{const error=Error('PC bridge unavailable');error.code='PC_BRIDGE_OFFLINE';throw error;}finally{clearTimeout(timer);}
+  try{r=await fetch(config.url+'/fetch',{method:'POST',headers:{Authorization:'Bearer '+config.secret,'Content-Type':'application/json'},body:JSON.stringify({url:raw,range,xtream:options.xtream===true}),signal:AbortSignal.any([signal||new AbortController().signal,timeout.signal]),redirect:'manual'});}catch{const error=Error('PC bridge unavailable');error.code='PC_BRIDGE_OFFLINE';throw error;}finally{clearTimeout(timer);}
   if(r.status>=300&&r.status<400){await r.body?.cancel();const error=Error('PC bridge redirect refused');error.code='PC_BRIDGE_OFFLINE';throw error;}
-  if(!r.ok){
+  if(!r.ok&&!r.headers.has('X-NPlay-Upstream-Url')){
    const reasons={UPSTREAM_TLS:'PC_SOURCE_TLS',UPSTREAM_RESET:'PC_SOURCE_RESET',UPSTREAM_DNS:'PC_SOURCE_DNS',UPSTREAM_TIMEOUT:'PC_SOURCE_TIMEOUT',UPSTREAM_DESTINATION:'PC_SOURCE_UNAVAILABLE',UPSTREAM_CONNECTION:'PC_SOURCE_UNAVAILABLE'};
    let reason=r.headers.get('X-NPlay-Bridge-Error');
    if(!reason&&r.status===502){
@@ -53,9 +53,11 @@ export async function bridgeUpstream(config,validateUrl){
    const code=reasons[reason]||(r.status===502?'PC_SOURCE_UNAVAILABLE':r.status===401?'PC_BRIDGE_AUTH':'PC_BRIDGE_OFFLINE');
    await r.body?.cancel();const error=Error('PC bridge source failure');error.code=code;throw error;
   }
-  // The bridge must not expose the provider URL in response headers.
-  // The requested URL is already validated and is sufficient for relative HLS resolution.
-  Object.defineProperty(r,'url',{value:raw});return r;
+  // This is private bridge-to-gateway metadata. relayHls builds a fresh response
+  // and encrypts every resolved URL; this header never reaches the viewer.
+  const finalUrl=r.headers.get('X-NPlay-Upstream-Url');
+  if(!finalUrl){await r.body?.cancel();const error=Error('Bridge response missing manifest base');error.code='PC_SOURCE_UNAVAILABLE';throw error;}
+  validateUrl(finalUrl);Object.defineProperty(r,'url',{value:finalUrl});return r;
  };
 }
 export const pcFailureMessages={

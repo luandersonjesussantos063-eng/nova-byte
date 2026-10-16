@@ -14,7 +14,7 @@ export async function hlsSource(env,id){
 export async function relayHls({request,env,id,jwt,origin,rootUrl,locator,upstream,validateUrl,cors}){
  const source=locator?await unseal(locator,id,env.HLS_MEDIA_KEY):rootUrl;
  validateUrl(source);
- const r=await upstream(source,request.signal,request.headers.get('Range'));
+ const r=await upstream(source,request.signal,request.headers.get('Range'),{xtream:!locator});
  if(!r.ok){await r.body?.cancel();return Response.json({error:'O fornecedor não disponibilizou o sinal deste canal.'},{status:502,headers:{...cors,'X-NPlay-Error':'UPSTREAM_HTTP','X-NPlay-Upstream-Status':String(r.status)}});}
  const type=r.headers.get('Content-Type')||'',manifest=!locator||/mpegurl/i.test(type)||/\.m3u8?$/i.test(new URL(source).pathname);
  if(manifest){
@@ -40,4 +40,11 @@ export async function relayHls({request,env,id,jwt,origin,rootUrl,locator,upstre
  for(const name of ['Content-Length','Content-Range','Accept-Ranges'])if(r.headers.has(name))headers.set(name,r.headers.get(name));
  if(request.method==='HEAD'){await r.body?.cancel();return new Response(null,{status:r.status,headers});}
  return new Response(r.body,{status:r.status,headers});
+}
+
+// Derive only standard Xtream live roots, never arbitrary HLS assets or VOD.
+export function xtreamTsSource(raw){
+ const u=new URL(raw);
+ if(u.search||u.hash||!/^\/(?:live\/)?[^/]+\/[^/]+\/\d+\.m3u8$/.test(u.pathname))return null;
+ u.pathname=u.pathname.replace(/\.m3u8$/,'.ts');return u.href;
 }

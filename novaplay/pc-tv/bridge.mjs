@@ -23,7 +23,7 @@ export async function fetchMedia(raw,range,signal){
  for(let hop=0;hop<5;hop++){
   const {url,address}=await destination(raw);
   const response=await new Promise((resolve,reject)=>{
-   const headers={'Accept-Encoding':'identity','Accept':'*/*','User-Agent':'NPlay-TV-PC/0.49.28','Connection':'close'};if(range)headers.Range=range;
+   const headers={'Accept-Encoding':'identity','Accept':'*/*','User-Agent':'NPlay-TV-PC/0.49.29','Connection':'close'};if(range)headers.Range=range;
    const request=(url.protocol==='https:'?https:http).request(url,{method:'GET',headers,signal,lookup:(_host,options,callback)=>callback(null,options.all?[{address,family:4}]:address,4)},resolve);
    request.on('error',error=>{const failure=Error('UPSTREAM_CONNECTION');failure.code=error.code;reject(failure);});
    request.setTimeout(20000,()=>request.destroy(Object.assign(Error('UPSTREAM_TIMEOUT'),{code:'ETIMEDOUT'})));request.end();
@@ -34,6 +34,26 @@ export async function fetchMedia(raw,range,signal){
   return {response,url:url.href};
  }
  throw Error('UPSTREAM_REDIRECT_LIMIT');
+}
+// Only roots explicitly selected by the gateway use Xtream routes. Never rewrite
+// segment, key, movie, series or signed CDN requests.
+export function xtreamCandidates(raw){
+ const u=new URL(raw);
+ if(u.search||u.hash||!/^\/(?:live\/)?[^/]+\/[^/]+\/\d+\.(?:m3u8|ts)$/.test(u.pathname))return [u.href];
+ const canonical=new URL(u);if(!canonical.pathname.startsWith('/live/'))canonical.pathname='/live'+canonical.pathname;
+ return [...new Set([canonical.href,u.href])];
+}
+export async function fetchXtream(raw,range,signal,fetcher=fetchMedia){
+ const candidates=xtreamCandidates(raw);
+ for(let i=0;i<candidates.length;i++){
+  try{
+   const media=await fetcher(candidates[i],range,signal);
+   if(media.response.statusCode===404&&i<candidates.length-1){media.response.destroy();continue;}
+   return media;
+  }catch(error){
+   if(signal?.aborted||error.code!=='ECONNRESET'||i===candidates.length-1)throw error;
+  }
+ }
 }
 function authorized(value,secret){
  const a=Buffer.from(value||''),b=Buffer.from('Bearer '+secret);
@@ -47,12 +67,12 @@ export function upstreamReason(error){
  if(error?.message==='INVALID_DESTINATION')return 'UPSTREAM_DESTINATION';
  return 'UPSTREAM_CONNECTION';
 }
-export function createBridge({secret,fetchUpstream=fetchMedia}){
+export function createBridge({secret,fetchUpstream=fetchMedia,fetchRoot=fetchXtream}){
  if(!/^[a-f0-9]{64}$/.test(secret||''))throw Error('NPLAY_BRIDGE_KEY must contain 64 hex characters');
  return http.createServer(async(req,res)=>{
   const json=(status,data)=>{if(res.headersSent||res.destroyed)return;const headers={'Content-Type':'application/json','Cache-Control':'no-store'};if(data.reason)headers['X-NPlay-Bridge-Error']=data.reason;res.writeHead(status,headers);res.end(JSON.stringify(data));};
   if(!authorized(req.headers.authorization,secret)){req.resume();json(401,{error:'AUTH_REQUIRED'});return;}
-  if(req.url==='/health'&&req.method==='GET'){json(200,{service:'nplay-pc-tv',version:'0.49.28'});return;}
+  if(req.url==='/health'&&req.method==='GET'){json(200,{service:'nplay-pc-tv',version:'0.49.29'});return;}
   if(req.url!=='/fetch'||req.method!=='POST'){req.resume();json(404,{error:'NOT_FOUND'});return;}
   const controller=new AbortController();req.on('aborted',()=>controller.abort());
   res.on('close',()=>{if(!res.writableFinished)controller.abort();});
@@ -62,7 +82,8 @@ export function createBridge({secret,fetchUpstream=fetchMedia}){
    for await(const chunk of req){length+=chunk.length;if(length>8192){json(413,{error:'REQUEST_TOO_LARGE'});req.destroy();return;}chunks.push(chunk);}
    const input=JSON.parse(Buffer.concat(chunks).toString());
    if(typeof input.url!=='string'||(input.range&&!/^bytes=\d*-\d*$/.test(input.range))){json(400,{error:'INVALID_REQUEST'});return;}
-   media=await fetchUpstream(input.url,input.range,controller.signal);
+   if(input.xtream!==undefined&&typeof input.xtream!=='boolean'){json(400,{error:'INVALID_REQUEST'});return;}
+   media=await (input.xtream?fetchRoot:fetchUpstream)(input.url,input.range,controller.signal);
    const {response,url}=media;
    const headers={'Cache-Control':'no-store','X-NPlay-Upstream-Url':url};
    for(const name of ['content-type','content-length','content-range','accept-ranges'])if(response.headers[name])headers[name]=response.headers[name];

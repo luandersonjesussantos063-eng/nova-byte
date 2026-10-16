@@ -22,3 +22,13 @@ rejeita requisicoes sem chave, destinos locais, metadata, enderecos privados,
 IPv6 e DNS com respostas privadas; cada redirect e resolvido e validado.
 As conexoes DNS sao fixadas ao IPv4 validado, sem desativar verificacao TLS.
 URLs do fornecedor e credenciais nao aparecem nos logs.
+
+## Reprodução Xtream (0.49.29)
+O gateway usa os canais já cadastrados, sem uma nova importação. Ao abrir um canal,
+a ponte tenta a rota padrão Xtream `/live/` e mantém a rota original como alternativa
+apenas para 404 ou conexão encerrada. Não troca DNS, não ignora certificados e não
+repete pedidos rejeitados com 401/403. As requisições de segmentos e chaves não são
+reescritas. O player tenta HLS e, se suportado pelo navegador, MPEG-TS em sequência.
+O endereço final de redirecionamento é usado internamente para resolver segmentos
+relativos e nunca é encaminhado para o cliente. A reprodução no PC precisa ser
+confirmada após atualizar a ponte; testes locais não provam acesso ao fornecedor.

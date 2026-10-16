@@ -116,7 +116,7 @@ test('live playback prefers managed HLS and registers autoplay before loading a 
  let loaded,played=0,nativeSrc,attached=false,instance;
  class Hls{static isSupported=()=>true;static Events={ERROR:'error',MANIFEST_PARSED:'manifest'};static ErrorTypes={NETWORK_ERROR:'network'};constructor(){instance=this;this.handlers={};}destroy(){this.destroyed=true;}on(e,fn){this.handlers[e]=fn;}attachMedia(){attached=true;}loadSource(url){assert.equal(attached,true);loaded=url;assert.equal(typeof this.handlers.manifest,'function');this.handlers.manifest();}}
  const video={canPlayType:()=>true,set src(value){nativeSrc=value;}};
- const context=vm.createContext({window:{Hls},seq:1,attempt:1,src:'https://example.org/live.m3u8',media:{mode:'hls'},item:{kind:'tv'},v:video,hls:null,networkRecoveries:0,fail:message=>{throw Error(message)},playerStatus:()=>{},startAutoplay:()=>played++});
+ const context=vm.createContext({window:{Hls},seq:1,attempt:1,src:'https://example.org/live.m3u8',media:{mode:'hls'},playbackMode:'hls',tryMpegts:()=>false,item:{kind:'tv'},v:video,hls:null,networkRecoveries:0,fail:message=>{throw Error(message)},playerStatus:()=>{},startAutoplay:()=>played++});
  vm.runInContext(code,context);context.startSource();assert.equal(nativeSrc,undefined);assert.equal(loaded,'https://example.org/live.m3u8');assert.equal(played,1);
  instance.handlers.error(null,{fatal:true,type:'network'});assert.equal(instance.destroyed,true);assert.equal(nativeSrc,loaded);assert.equal(played,2);
  Hls.isSupported=()=>false;context.startSource();assert.equal(nativeSrc,loaded);assert.equal(played,3);
