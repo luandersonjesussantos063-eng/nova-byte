@@ -21,6 +21,7 @@ function summary(){
  message('live-batch-status',`${rows.length} canais · ${tested} analisados · ${passed} com vídeo confirmado · ${rows.filter(x=>x.published).length} publicados`+(running?' · testes em andamento':''));
  $('live-batch-publish').textContent=`Publicar ${ready.length} aprovados`;
  $('live-batch-publish').disabled=!ready.length||running||publishing;
+ const exportButton=$('live-batch-export');if(exportButton)exportButton.disabled=!passed||running;
  $('live-batch-stop').hidden=!running;
 }
 async function checkItem(item,video,signal){
