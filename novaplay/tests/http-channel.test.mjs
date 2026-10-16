@@ -118,3 +118,9 @@ test('protected radio tests accept moving audio without requiring video dimensio
  c.mpegts={isSupported:()=>true,Events:{ERROR:'error'},createPlayer:({url})=>({on(){},attachMediaElement(v){v.src=url;},load(){},destroy(){}})};
  const result=await c.NPlaySignal.testSource(video,protectedStream,{audioOnly:true});assert.equal(result.audioOnly,true);assert.ok(result.seconds>=2);assert.equal(result.playbackUrl,protectedStream);assert.ok(!result.playbackUrl.includes('access_token'));
 });
+
+test('provider IP incompatibility pauses the batch without attempting playback',async()=>{
+ const c=setup(),video=new Video(()=>true);c.NPlayLiveAuth={authorize:async url=>url};
+ c.fetch=async()=>new Response(null,{status:502,headers:{'X-NPlay-Error':'UPSTREAM_IP_HOSTNAME_REQUIRED'}});
+ await assert.rejects(c.NPlaySignal.testSource(video,'https://nplay-live-gateway.luandersonjesussantos063.workers.dev/live/11111111-1111-5111-8111-111111111111/index.m3u8'),error=>error.sharedFailure&&error.code==='UPSTREAM_IP_HOSTNAME_REQUIRED');assert.equal(video.attempts.length,0);
+});

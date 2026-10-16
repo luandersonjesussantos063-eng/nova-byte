@@ -75,6 +75,6 @@ test('HLS accepts public CDN IPv4 redirects while retaining private and metadata
    if(String(url).includes('supabase.co'))return Response.json([{embed_url:hlsSafe}]);
    if(String(url).startsWith('http://provider.example/'))return new Response(null,{status:302,headers:{Location:'http://'+host+'/stream/index.m3u8'}});
    cdnCalls++;return new Response('#EXTM3U\n#EXTINF:4,\nsegment.ts\n');
-  },async()=>{const r=await worker.fetch(new Request(hlsSafe+'?access_token=viewer'),hlsEnv);assert.equal(r.status,allowed?200:502,host);assert.equal(cdnCalls,allowed?1:0,host);});
+  },async()=>{const r=await worker.fetch(new Request(hlsSafe+'?access_token=viewer'),hlsEnv);assert.equal(r.status,502,host);assert.equal(cdnCalls,0,host);assert.equal(r.headers.get('X-NPlay-Error'),allowed?'UPSTREAM_IP_HOSTNAME_REQUIRED':'GATEWAY_INTERNAL');});
  }
 });

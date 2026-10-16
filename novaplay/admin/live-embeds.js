@@ -106,7 +106,7 @@ async function runBatch(){
   await renderRows(batchController.signal);
   let next=0;const signal=batchController.signal;
   async function worker(){while(!signal.aborted&&next<rows.length){const item=rows[next++];await checkItem(item,item.dom.video,signal);}}
-  await Promise.all([worker(),worker()]);
+  await worker();
  }catch(error){message('live-batch-parse',error.name==='AbortError'?'Leitura interrompida.':error.message);}
  finally{running=false;batchController=null;$('live-batch-run').disabled=false;rows.forEach(update);summary();}
 }
@@ -178,7 +178,7 @@ async function publishSaved(onlySelected=false){
  if(drafts.some(x=>!x.rights_confirmed)&&!authorized())return;
  publishing=true;savedStopReason='';savedController=new AbortController();renderSaved();summary();
  const host=$('live-saved-preview');host.replaceChildren();
- let done=0,failed=0;const failures=[];
+ let done=0,failed=0,consecutiveFailures=0;const failures=[];
  const progress=()=>message('live-saved-progress',`${done} publicados · ${failed} não publicados · ${drafts.length-done-failed} restantes.`+(failures.length?' '+failures.slice(-3).join(' | '):'')+(savedStopReason?' '+savedStopReason:''));
  try{
   const direct=drafts.filter(x=>channelGroup(x)!=='m3u');
@@ -194,21 +194,21 @@ async function publishSaved(onlySelected=false){
    while(next<signals.length&&!savedController.signal.aborted){
     const item=signals[next++];
     try{
-     message('live-saved-progress','Testando '+item.title+'… '+done+' publicados · '+failed+' não publicados.');
+     message('live-saved-progress','Testando '+item.title+'… '+done+' publicados · '+failed+' não publicados.'+(failures.length?' Último erro: '+failures.at(-1):''));
      const result=await NPlaySignal.testSource(video,item.embed_url,{signal:savedController.signal,audioOnly:/r[aá]dios?/i.test((item.category||'')+' '+item.title)});
      if(!result.playbackUrl.startsWith('https:'))throw Error('A publicação exige HTTPS ou gateway autorizado.');
      const {data,error}=await db.from('novaplay_live_embeds').update({embed_url:result.playbackUrl,is_published:true,rights_confirmed:true,last_tested_at:new Date().toISOString()}).eq('id',item.id).select('id');
      if(error)throw error;if(!data?.length)throw Error('O canal não foi atualizado.');
-     item.is_published=true;selectedSaved.delete(item.id);done++;
+     item.is_published=true;selectedSaved.delete(item.id);done++;consecutiveFailures=0;
     }catch(error){
      if(error.name==='AbortError')return;
-     failed++;failures.push(item.title+': '+error.message);
-     if(error.sharedFailure){savedStopReason='Lote pausado por falha comum de acesso. Os canais restantes não foram testados e continuam em rascunho.';savedController.abort();}
+     failed++;consecutiveFailures++;failures.push(item.title+': '+error.message);
+     if(error.sharedFailure||consecutiveFailures>=3){savedStopReason=error.sharedFailure?'Lote pausado por falha comum de acesso. Os canais restantes não foram testados e continuam em rascunho.':'Lote pausado após 3 falhas seguidas. Confira o último erro antes de continuar; os demais canais não foram testados.';savedController.abort();}
     }
     progress();
    }
   }
-  if(signals.length)await Promise.all([worker(),worker()]);
+  if(signals.length)await worker();
  }catch(error){failures.push(error.message);}
  finally{publishing=false;savedController=null;host.replaceChildren();await refresh();summary();progress();}
 }
@@ -226,7 +226,7 @@ function renderSaved(){
  const visible=savedVisible();
  const visibleIds=new Set(visible.map(x=>x.id));for(const id of selectedSaved)if(!visibleIds.has(id))selectedSaved.delete(id);
  const active=visible.filter(item=>item.is_published).length;
- message('live-channel-count','ADM 0.49.24 · '+savedChannels.length+' canais carregados · '+visible.length+' neste filtro · '+active+' publicados · '+(visible.length-active)+' rascunhos');
+ message('live-channel-count','ADM 0.49.25 · '+savedChannels.length+' canais carregados · '+visible.length+' neste filtro · '+active+' publicados · '+(visible.length-active)+' rascunhos');
  message('live-channel-help',selectedChannelGroup==='m3u'?'As listas estão aqui como rascunhos protegidos. Use o filtro Lista para separar a nova conta HLS da anterior. Pesquise o canal e use Testar para publicar; os canais sem teste continuam fora da grade.':selectedChannelGroup==='legacy'?'Canais antigos do provedor anterior. Os rascunhos ficam fora da grade; o botão Publicar canal antigo permite recuperá-los.':'Canais cadastrados individualmente por iframe, incluindo as emissoras oficiais.');
  for(const item of visible.slice(0,savedLimit)){
   const card=document.createElement('article');card.style.cssText='border:1px solid #365075;border-radius:10px;padding:12px;margin:10px 0';

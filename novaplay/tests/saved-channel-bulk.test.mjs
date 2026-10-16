@@ -33,7 +33,7 @@ test('bulk publication counts only rows returned by the database',async()=>{
 test('a shared gateway failure pauses the batch without marking every remaining channel as failed',async()=>{
  const records=Array.from({length:1000},(_,i)=>item('channel-'+i,'m3u'));
  const {lab,writes,get}=setup(records,'m3u',{sharedFailure:true});await lab.publishSaved();
- assert.equal(writes.length,0);assert.match(get('live-saved-progress').textContent,/Lote pausado por falha comum/);assert.match(get('live-saved-progress').textContent,/99[89] restantes/);assert.ok(records.every(x=>!x.is_published));
+ assert.equal(writes.length,0);assert.match(get('live-saved-progress').textContent,/Lote pausado por falha comum/);assert.match(get('live-saved-progress').textContent,/999 restantes/);assert.ok(records.every(x=>!x.is_published));
 });
 test('admin pagination retrieves all 2807 saved channels instead of stopping at 1000',async()=>{
  const records=Array.from({length:2807},(_,i)=>item('channel-'+i,'m3u'));
@@ -44,4 +44,10 @@ test('the new HLS source filter separates the replacement account from prior and
  const owned='https://nplay-live-gateway.luandersonjesussantos063.workers.dev/live/';
  const records=[{...item('new','m3u'),embed_url:owned+'new/index.m3u8'},{...item('previous','m3u'),embed_url:owned+'previous/stream.ts',stream_type:'mpegts'},item('other','m3u')];
  const {lab,get}=setup(records,'m3u');get('live-list-family').value='new-hls';assert.deepEqual(Array.from(lab.savedVisible(),x=>x.id),['new']);get('live-list-family').value='previous';assert.deepEqual(Array.from(lab.savedVisible(),x=>x.id),['previous','other']);
+});
+
+test('three consecutive playback failures pause a large batch and preserve untested drafts',async()=>{
+ const records=Array.from({length:100},(_,i)=>item('bad-'+i,'m3u'));
+ const {lab,writes,get}=setup(records,'m3u');await lab.publishSaved();
+ assert.equal(writes.length,0);assert.match(get('live-saved-progress').textContent,/3 não publicados · 97 restantes/);assert.match(get('live-saved-progress').textContent,/3 falhas seguidas/);assert.match(get('live-saved-progress').textContent,/Sinal indisponível/);
 });

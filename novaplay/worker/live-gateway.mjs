@@ -32,6 +32,7 @@ async function published(id,jwt,origin,format="ts"){
 async function upstream(raw,signal,range){
  let url=sourceUrl(raw);
  for(let hop=0;hop<4;hop++){
+  if(/^[\d.]+$/.test(url.hostname)){const error=Error('Provider CDN requires a DNS hostname');error.code='UPSTREAM_IP_HOSTNAME_REQUIRED';throw error;}
   const headers=new Headers();if(range)headers.set('Range',range);
   const r=await fetch(url.href,{headers,redirect:'manual',signal,cf:{cacheTtl:0}});
   if(![301,302,303,307,308].includes(r.status))return r;
@@ -49,7 +50,7 @@ async function equalSecret(a,b){
 export default {async fetch(request,env){
  const route=new URL(request.url),origin=request.headers.get('Origin')||'';
  const allowed=['https://novabytesolucoes.com.br','https://www.novabytesolucoes.com.br'];
- const cors={'Access-Control-Allow-Origin':allowed.includes(origin)?origin:allowed[0],'Access-Control-Allow-Headers':'Authorization,Content-Type,Range','Access-Control-Allow-Methods':'GET,HEAD,POST,OPTIONS','Access-Control-Expose-Headers':'Content-Length,Content-Range,Accept-Ranges','Cache-Control':'no-store','Referrer-Policy':'no-referrer','Vary':'Origin','X-Content-Type-Options':'nosniff'};
+ const cors={'Access-Control-Allow-Origin':allowed.includes(origin)?origin:allowed[0],'Access-Control-Allow-Headers':'Authorization,Content-Type,Range','Access-Control-Allow-Methods':'GET,HEAD,POST,OPTIONS','Access-Control-Expose-Headers':'Content-Length,Content-Range,Accept-Ranges,X-NPlay-Error,X-NPlay-Upstream-Status','Cache-Control':'no-store','Referrer-Policy':'no-referrer','Vary':'Origin','X-Content-Type-Options':'nosniff'};
  const json=(data,status=200)=>Response.json(data,{status,headers:cors});
  if(origin&&!allowed.includes(origin))return json({error:'Origem não autorizada.'},403);
  if(request.method==='OPTIONS')return new Response(null,{status:204,headers:cors});
@@ -97,5 +98,10 @@ export default {async fetch(request,env){
   for(const name of ['Content-Length','Content-Range','Accept-Ranges'])if(r.headers.has(name))headers.set(name,r.headers.get(name));
   if(request.method==='HEAD'){await r.body?.cancel();return new Response(null,{status:r.status,headers});}
   return new Response(r.body,{status:r.status,headers});
- }catch{return json({error:'Não foi possível conectar à fonte. Tente novamente em instantes.'},502);}
+ }catch(error){
+  const code=error?.code==='UPSTREAM_IP_HOSTNAME_REQUIRED'?error.code:'GATEWAY_INTERNAL';
+  console.error(JSON.stringify({event:'live_delivery_failed',code}));
+  return Response.json({error:code==='UPSTREAM_IP_HOSTNAME_REQUIRED'?'O servidor de vídeo do fornecedor usa IP direto. É necessário um domínio DNS para reproduzir pelo NPlay.':'Falha interna ao preparar o sinal. O lote deve ser pausado.',code},{status:502,headers:{...cors,'X-NPlay-Error':code}});
+ }
+
 }};
