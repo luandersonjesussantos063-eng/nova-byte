@@ -257,6 +257,7 @@ function init(){
  <section style="border:1px solid #3a6396;border-radius:12px;padding:16px;margin:18px 0">
  <h3>Testar lista M3U e publicar canais</h3><p class="muted">Até 500 canais por lote, dois testes simultâneos. Nomes, capas e categorias são extraídos da lista. Endereços repetidos são ignorados. Para links HTTP, o testador tenta HTTPS e procura gateways autorizados configurados antes de indicar que não conseguiu reproduzir. HTTP direto é testado quando permitido pela página.</p>
  <label>Lista completa<textarea id="live-batch-input" rows="10" maxlength="104857600" placeholder="#EXTM3U&#10;#EXTINF:-1 tvg-logo=&quot;https://exemplo.com/logo.png&quot;,Nome do canal&#10;https://exemplo.com/ao-vivo.m3u8" style="width:100%"></textarea></label>
+ <div style="padding:12px;border:1px solid #365075;border-radius:10px;margin:12px 0"><strong>Importação M3U Plus do servidor</strong><p class="muted">Importa a lista cadastrada na Cloudflare como rascunhos privados. É necessário estar conectado como administrador.</p><button id="live-plus-import" type="button" class="outline">Importar M3U Plus</button><p id="live-plus-status" role="status" aria-live="polite"></p></div>
  <label>Abrir arquivo M3U<input id="live-batch-file" type="file" accept=".m3u,.m3u8,.txt"></label><p id="live-batch-file-status" class="muted" role="status"></p><p class="muted">Links get.php baixam listas, não são canais. Importe o arquivo da sua lista ou cole seu conteúdo. Base64 e páginas paste.sh não são sinais de vídeo.</p>
  <label>Lote a testar<input id="live-batch-number" type="number" min="1" step="1" value="1"></label><p class="muted">Arquivos de até 100 MB. Cada lote contém até 500 canais; dois canais são testados por vez.</p>
  <div style="display:flex;gap:10px;flex-wrap:wrap"><button id="live-batch-run" class="primary" type="button">Carregar e testar lista</button><button id="live-batch-stop" class="outline" type="button" hidden>Parar testes</button><button id="live-batch-export" class="outline" type="button" disabled>Baixar M3U dos confirmados</button><button id="live-batch-publish" class="primary" type="button" disabled>Publicar aprovados</button></div>
@@ -268,6 +269,18 @@ function init(){
  <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:end"><label style="flex:1;min-width:180px">Buscar canal<input id="live-channel-search" type="search" placeholder="Nome ou categoria" maxlength="140"></label><label>Situação<select id="live-channel-status"><option value="all">Publicados e rascunhos</option><option value="published">Somente publicados</option><option value="draft">Somente rascunhos</option></select></label><button id="live-embed-refresh" type="button" class="outline">Atualizar canais</button></div><p id="live-channel-count" role="status" aria-live="polite"></p>
  <div style="display:flex;gap:10px;flex-wrap:wrap;margin:14px 0"><button id="live-saved-select-all" type="button" class="outline">Marcar todos</button><button id="live-saved-publish-selected" type="button" class="outline" disabled>Publicar selecionados</button><button id="live-saved-publish-all" type="button" class="primary" disabled>Publicar todos os rascunhos</button></div>
  <p class="muted">As ações usam o grupo, a busca e a situação selecionados. Canais M3U são testados antes de publicar; os que falharem continuam em rascunho.</p><p id="live-saved-selection" class="muted"></p><p id="live-saved-progress" role="status" aria-live="polite"></p><div id="live-saved-preview" style="display:flex;gap:10px;flex-wrap:wrap"></div><div id="live-embed-list"></div>`;
+ $('live-plus-import').onclick=async()=>{
+  const button=$('live-plus-import');button.disabled=true;message('live-plus-status','Solicitando importação segura...');
+  try{
+   const {data:{session},error}=await db.auth.getSession();
+   if(error||!session?.access_token)throw Error('Entre novamente com sua conta de administrador da NPlay.');
+   const response=await fetch('https://nplay-m3uplus-import.luandersonjesussantos063.workers.dev/import',{method:'POST',headers:{Authorization:'Bearer '+session.access_token}});
+   const result=await response.json().catch(()=>({}));
+   if(!response.ok)throw Error(result.error||({401:'Sessão inválida.',403:'Conta sem permissão administrativa.',502:'Lista indisponível ou erro no banco.',503:'Servidor ainda não configurado.'}[response.status])||'Falha na importação ('+response.status+').');
+   message('live-plus-status',result.imported+' canais recebidos em rascunhos privados. Nenhum publicado.');
+  }catch(error){message('live-plus-status','Importação não concluída: '+error.message);}
+  finally{button.disabled=false;}
+ };
  $('live-batch-run').onclick=runBatch;$('live-batch-stop').onclick=()=>batchController?.abort();$('live-batch-publish').onclick=publishBatch;$('live-batch-export').onclick=exportConfirmed;
  $('live-batch-input').oninput=()=>{selectedListFile=null;message('live-batch-file-status','Usando o texto colado no campo.');};
  $('live-batch-file').onchange=async event=>{
