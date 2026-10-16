@@ -13,3 +13,5 @@ novaplay/importer/*.stop
 novaplay/importer/drafts/
 supabase/.temp/
 /novaplay/importer/validation-results.json
+
+novaplay/pc-tv/CONEXAO-ADM.txt

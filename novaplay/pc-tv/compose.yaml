@@ -1,0 +1,25 @@
+services:
+  bridge:
+    build: .
+    restart: unless-stopped
+    environment:
+      NPLAY_BRIDGE_KEY: ${NPLAY_BRIDGE_KEY:?Execute INICIAR-TV-PC.ps1 primeiro}
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 256m
+    pids_limit: 64
+    logging:
+      driver: json-file
+      options: {max-size: 5m, max-file: "2"}
+  tunnel:
+    image: cloudflare/cloudflared:2026.10.1
+    command: tunnel --no-autoupdate --protocol http2 --url http://bridge:8788
+    restart: unless-stopped
+    depends_on: [bridge]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 128m
+    logging:
+      driver: json-file
+      options: {max-size: 5m, max-file: "2"}

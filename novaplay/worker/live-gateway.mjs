@@ -1,4 +1,5 @@
 import {relayHls,hlsSource} from './hls-relay.mjs';
+import {bridgeUrl,encryptBridge,decryptBridge,bridgeUpstream} from './pc-bridge.mjs';
 // Private provider URLs live in KV; viewers receive only channel IDs.
 const DB="https://vajlhodqxskozuxxlujv.supabase.co",KEY="sb_publishable_uT0b4y0Bex1k1QWZoyIfKg_K0pm-yS3";
 const uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -40,6 +41,12 @@ async function upstream(raw,signal,range){
  }
  throw Error('Redirect limit');
 }
+async function configuredUpstream(env,jwt){
+ const r=await fetch(DB+'/rest/v1/novaplay_featured?id=eq.1&select=pc_bridge_config',{headers:dbHeaders(jwt)});
+ if(!r.ok){await r.body?.cancel();throw Error('Bridge settings unavailable');}
+ const rows=await readJson(r,16000),cipher=rows?.[0]?.pc_bridge_config;
+ return cipher?await bridgeUpstream(await decryptBridge(cipher,env.HLS_MEDIA_KEY),sourceUrl):upstream;
+}
 async function channelId(url){
  const hash=new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(url))).slice(0,16);hash[6]=(hash[6]&15)|80;hash[8]=(hash[8]&63)|128;
  const hex=[...hash].map(x=>x.toString(16).padStart(2,'0')).join('');return hex.slice(0,8)+'-'+hex.slice(8,12)+'-'+hex.slice(12,16)+'-'+hex.slice(16,20)+'-'+hex.slice(20);
@@ -57,6 +64,20 @@ export default {async fetch(request,env){
  if(route.pathname==='/health')return json({service:'NPlay live gateway',protected:true});
  const jwt=token(request);if(!jwt||jwt===KEY||jwt.length>8192)return json({error:'Entre no NPlay para continuar.'},401);
  try{
+  if(route.pathname==='/admin/pc-bridge'&&request.method==='POST'){
+   if(!await admin(jwt))return json({error:'Acesso administrativo necessário.'},403);
+   const input=await readJson(request,4000);let cipher=null;
+   if(input.enabled!==false){
+    let url;try{url=bridgeUrl(input.url);}catch{return json({error:'Cole o endereço HTTPS trycloudflare.com gerado pelo PC, sem caminho adicional.'},400);}
+    if(!/^[a-f0-9]{64}$/.test(input.secret||''))return json({error:'Cole a chave de 64 caracteres gerada pelo PC.'},400);
+    let health;try{health=await fetch(url+'/health',{headers:{Authorization:'Bearer '+input.secret},redirect:'error',signal:AbortSignal.timeout(12000)});if(!health.ok)throw Error('offline');const info=await readJson(health,2000);if(info.service!=='nplay-pc-tv')throw Error('not bridge');}catch{return json({error:'O PC não respondeu. Confira Docker, endereço e chave antes de conectar.'},502);}
+    cipher=await encryptBridge({url,secret:input.secret},env.HLS_MEDIA_KEY);
+   }
+   const saved=await fetch(DB+'/rest/v1/novaplay_featured?id=eq.1&select=id',{method:'PATCH',headers:{...dbHeaders(jwt),Prefer:'return=representation'},body:JSON.stringify({pc_bridge_config:cipher})});
+   if(!saved.ok){await saved.body?.cancel();return json({error:'Não foi possível salvar a conexão do PC.'},502);}
+   const rows=await readJson(saved,20000);if(!rows.length)return json({error:'A configuração não foi atualizada.'},502);
+   return json({connected:!!cipher});
+  }
   if(route.pathname==='/admin/import'&&request.method==='POST'){
    if(!await admin(jwt))return json({error:'Acesso administrativo necessário.'},403);
    const input=await readJson(request);if(!input.rights_confirmed||!Array.isArray(input.channels)||input.channels.length>100||!input.channels.length)return json({error:'Lote inválido. Use até 100 canais com autorização confirmada.'},400);
@@ -85,13 +106,14 @@ export default {async fetch(request,env){
   if(hls&&['GET','HEAD'].includes(request.method)&&uuid.test(hls[1])){
    if(!await published(hls[1],jwt,route.origin,'hls'))return json({error:'Canal não liberado para este aparelho.'},403);
    const entry=await hlsSource(env,hls[1]);if(!entry)return json({error:'Fonte indisponível.'},404);
-   return await relayHls({request,env,id:hls[1],jwt,origin:route.origin,rootUrl:entry.url,locator:hls[2],upstream,validateUrl:sourceUrl,cors});
+   return await relayHls({request,env,id:hls[1],jwt,origin:route.origin,rootUrl:entry.url,locator:hls[2],upstream:await configuredUpstream(env,jwt),validateUrl:sourceUrl,cors});
   }
   const match=route.pathname.match(/^\/live\/([0-9a-f-]{36})\/stream\.ts$/i);
   if(!match||!['GET','HEAD'].includes(request.method)||!uuid.test(match[1]))return json({error:'Canal não encontrado.'},404);
   if(!await published(match[1],jwt,route.origin))return json({error:'Canal não liberado para este aparelho.'},403);
   const entry=await env.LIVE_SOURCES.get(match[1],'json');if(!entry)return json({error:'Fonte indisponível.'},404);
-  const r=await upstream(entry.url,request.signal,request.headers.get('Range'));
+  const deliver=await configuredUpstream(env,jwt);
+  const r=await deliver(entry.url,request.signal,request.headers.get('Range'));
   if(!r.ok){await r.body?.cancel();return json({error:'O fornecedor não disponibilizou o sinal deste canal.'},502);}
   const type=r.headers.get('Content-Type')||'';if(/text\/|json|html/i.test(type)){await r.body?.cancel();return json({error:'A fonte não retornou um vídeo compatível.'},502);}
   const headers=new Headers({...cors,'Content-Type':'video/mp2t'});
@@ -99,9 +121,9 @@ export default {async fetch(request,env){
   if(request.method==='HEAD'){await r.body?.cancel();return new Response(null,{status:r.status,headers});}
   return new Response(r.body,{status:r.status,headers});
  }catch(error){
-  const code=error?.code==='UPSTREAM_IP_HOSTNAME_REQUIRED'?error.code:'GATEWAY_INTERNAL';
+  const code=['UPSTREAM_IP_HOSTNAME_REQUIRED','PC_BRIDGE_OFFLINE'].includes(error?.code)?error.code:'GATEWAY_INTERNAL';
   console.error(JSON.stringify({event:'live_delivery_failed',code}));
-  return Response.json({error:code==='UPSTREAM_IP_HOSTNAME_REQUIRED'?'O servidor de vídeo do fornecedor usa IP direto. É necessário um domínio DNS para reproduzir pelo NPlay.':'Falha interna ao preparar o sinal. O lote deve ser pausado.',code},{status:502,headers:{...cors,'X-NPlay-Error':code}});
+  return Response.json({error:code==='PC_BRIDGE_OFFLINE'?'A TV pelo PC está desconectada. Mantenha o Docker ligado e confira o endereço no ADM.':code==='UPSTREAM_IP_HOSTNAME_REQUIRED'?'O servidor de vídeo do fornecedor usa IP direto. É necessário um domínio DNS para reproduzir pelo NPlay.':'Falha interna ao preparar o sinal. O lote deve ser pausado.',code},{status:502,headers:{...cors,'X-NPlay-Error':code}});
  }
 
 }};
