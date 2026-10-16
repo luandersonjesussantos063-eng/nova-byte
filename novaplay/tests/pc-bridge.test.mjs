@@ -2,9 +2,21 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {Readable} from 'node:stream';
 import {createBridge,publicIP,destination} from '../pc-tv/bridge.mjs';
-import {bridgeUrl,encryptBridge,decryptBridge,bridgeUpstream} from '../worker/pc-bridge.mjs';
+import {bridgeUrl,encryptBridge,decryptBridge,bridgeUpstream,checkBridge} from '../worker/pc-bridge.mjs';
 import worker from '../worker/live-gateway.mjs';
 const secret='a'.repeat(64),key=Buffer.from(crypto.getRandomValues(new Uint8Array(32))).toString('base64url');
+test('PC health diagnostics distinguish key rejection, tunnel denial, origin failure and invalid replies without leaking secrets',async()=>{
+ const previous=globalThis.fetch;
+ try{
+  for(const [status,code] of [[401,'PC_KEY_REJECTED'],[403,'PC_TUNNEL_DENIED'],[502,'PC_LOCAL_UNREACHABLE'],[530,'PC_TUNNEL_ADDRESS']]){
+   globalThis.fetch=async()=>new Response('private provider contents',{status});
+   const result=await checkBridge('https://test.trycloudflare.com',secret,r=>r.json());assert.equal(result.code,code);assert.equal(result.status,status);assert.ok(!JSON.stringify(result).includes(secret));assert.ok(!JSON.stringify(result).includes('private provider'));
+  }
+  globalThis.fetch=async()=>new Response('<html>not the bridge</html>');assert.equal((await checkBridge('https://test.trycloudflare.com',secret,r=>r.json())).code,'PC_RESPONSE_INVALID');
+  globalThis.fetch=async()=>{throw new DOMException('private URL','TimeoutError');};assert.equal((await checkBridge('https://test.trycloudflare.com',secret,r=>r.json())).code,'PC_TUNNEL_TIMEOUT');
+  globalThis.fetch=async()=>{throw Error('private key');};assert.equal((await checkBridge('https://test.trycloudflare.com',secret,r=>r.json())).code,'PC_TUNNEL_CONNECTION');
+ }finally{globalThis.fetch=previous;}
+});
 test('PC destinations reject private, loopback, metadata, IPv6 and mixed DNS answers',async()=>{
  for(const ip of ['127.0.0.1','10.0.0.1','169.254.169.254','192.168.1.2','172.16.1.1','100.64.1.1','168.63.129.16','::1'])assert.equal(publicIP(ip),false,ip);
  assert.equal(publicIP('93.184.216.34'),true);

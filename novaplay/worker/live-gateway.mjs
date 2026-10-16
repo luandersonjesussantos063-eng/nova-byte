@@ -1,5 +1,5 @@
 import {relayHls,hlsSource} from './hls-relay.mjs';
-import {bridgeUrl,encryptBridge,decryptBridge,bridgeUpstream} from './pc-bridge.mjs';
+import {bridgeUrl,encryptBridge,decryptBridge,bridgeUpstream,checkBridge} from './pc-bridge.mjs';
 // Private provider URLs live in KV; viewers receive only channel IDs.
 const DB="https://vajlhodqxskozuxxlujv.supabase.co",KEY="sb_publishable_uT0b4y0Bex1k1QWZoyIfKg_K0pm-yS3";
 const uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -70,7 +70,8 @@ export default {async fetch(request,env){
    if(input.enabled!==false){
     let url;try{url=bridgeUrl(input.url);}catch{return json({error:'Cole o endereço HTTPS trycloudflare.com gerado pelo PC, sem caminho adicional.'},400);}
     if(!/^[a-f0-9]{64}$/.test(input.secret||''))return json({error:'Cole a chave de 64 caracteres gerada pelo PC.'},400);
-    let health;try{health=await fetch(url+'/health',{headers:{Authorization:'Bearer '+input.secret},redirect:'error',signal:AbortSignal.timeout(12000)});if(!health.ok)throw Error('offline');const info=await readJson(health,2000);if(info.service!=='nplay-pc-tv')throw Error('not bridge');}catch{return json({error:'O PC não respondeu. Confira Docker, endereço e chave antes de conectar.'},502);}
+    const health=await checkBridge(url,input.secret,readJson);
+    if(!health.ok){console.error(JSON.stringify({event:'pc_bridge_check_failed',code:health.code,status:health.status}));return json({error:health.error+' Código: '+health.code+'.',code:health.code,upstream_status:health.status},502);}
     cipher=await encryptBridge({url,secret:input.secret},env.HLS_MEDIA_KEY);
    }
    const saved=await fetch(DB+'/rest/v1/novaplay_featured?id=eq.1&select=id',{method:'PATCH',headers:{...dbHeaders(jwt),Prefer:'return=representation'},body:JSON.stringify({pc_bridge_config:cipher})});
