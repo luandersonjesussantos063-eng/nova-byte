@@ -97,3 +97,24 @@ test('authorized TS stream forwards configured source only, with TLS verificatio
   assert.equal(result.status,200);assert.equal(result.headers.get('content-type'),'video/mp2t');assert.equal(await result.text(),'video');
  }finally{globalThis.fetch=original;}
 });
+
+const protectedStream='https://nplay-live-gateway.luandersonjesussantos063.workers.dev/live/11111111-1111-5111-8111-111111111111/stream.ts';
+function protectedSetup(){const c=setup();c.NPlayLiveAuth={authorize:async url=>url+'?access_token=test-session'};return c;}
+test('protected gateway rejects access before launching media and exposes no session in its error',async()=>{
+ const c=protectedSetup(),video=new Video(()=>true);let calls=0;
+ c.fetch=async(url,options)=>{calls++;assert.equal(options.method,'HEAD');assert.equal(options.referrerPolicy,'no-referrer');assert.ok(url.includes('access_token='));return new Response(null,{status:403});};
+ await assert.rejects(c.NPlaySignal.testSource(video,protectedStream),error=>error.code==='GATEWAY_ACCESS'&&error.sharedFailure&&!error.message.includes('test-session'));
+ assert.equal(calls,1);assert.equal(video.attempts.length,0);
+});
+test('a protected gateway network failure pauses the batch; provider failures remain channel-specific',async()=>{
+ const c=protectedSetup(),video=new Video(()=>true);c.fetch=async()=>{throw TypeError('Failed to fetch');};
+ await assert.rejects(c.NPlaySignal.testSource(video,protectedStream),error=>error.code==='GATEWAY_CONNECTION'&&error.sharedFailure);
+ c.fetch=async()=>new Response(null,{status:502});
+ await assert.rejects(c.NPlaySignal.testSource(video,protectedStream),error=>!error.sharedFailure&&/fornecedor/.test(error.message));assert.equal(video.attempts.length,0);
+});
+test('protected radio tests accept moving audio without requiring video dimensions and keep the saved URL clean',async()=>{
+ const c=protectedSetup(),video=new Video(()=>true);video.videoWidth=0;video.videoHeight=0;
+ c.fetch=async()=>new Response(null,{headers:{'Content-Type':'video/mp2t'}});
+ c.mpegts={isSupported:()=>true,Events:{ERROR:'error'},createPlayer:({url})=>({on(){},attachMediaElement(v){v.src=url;},load(){},destroy(){}})};
+ const result=await c.NPlaySignal.testSource(video,protectedStream,{audioOnly:true});assert.equal(result.audioOnly,true);assert.ok(result.seconds>=2);assert.equal(result.playbackUrl,protectedStream);assert.ok(!result.playbackUrl.includes('access_token'));
+});

@@ -96,9 +96,10 @@ test('publishing rejects failed and expired tests and upserts approved metadata'
 });
 test('public player routes explicit and inferred HLS to cinema HLS entry point',async()=>{
  const code=read('live-embeds.js').match(/async function openChannel\(item\)\{[\s\S]*?\n\}/)[0];let calls=[];
- const context=vm.createContext({console,livePreviews:{stop:()=>{}},window:{NovaPlayPlayer:{openHls:(...args)=>{calls.push(['hls',...args]);return true;},openEmbed:(...args)=>{calls.push(['iframe',...args]);return true;}}}});vm.runInContext(code,context);
+ const context=vm.createContext({console,livePreviews:{stop:()=>{}},window:{NovaPlayPlayer:{openHls:(...args)=>{calls.push(['hls',...args]);return true;},openRadio:(...args)=>{calls.push(['radio',...args]);return true;},openEmbed:(...args)=>{calls.push(['iframe',...args]);return true;}}}});vm.runInContext(code,context);
  await context.openChannel({embed_url:'https://example.org/live',title:'A',stream_type:'hls'});await context.openChannel({embed_url:'https://example.org/list.m3u?x=1',title:'B'});await context.openChannel({embed_url:'https://example.org/embed',title:'C'});
- assert.deepEqual(calls.map(x=>x[0]),['hls','hls','iframe']);
+ await context.openChannel({embed_url:'https://example.org/radio.ts',title:'Rádio A',category:'Radios',stream_type:'mpegts'});
+ assert.deepEqual(calls.map(x=>x[0]),['hls','hls','iframe','radio']);
 });
 test('TV grade reads published channels only and never restores the fixed provider list',async()=>{
  const source=read('live-embeds.js');

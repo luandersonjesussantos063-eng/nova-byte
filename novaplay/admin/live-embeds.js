@@ -1,7 +1,7 @@
 (()=>{
 const $=id=>document.getElementById(id),core=()=>globalThis.NPlayM3u;
 let db,savedChannels=[],rows=[],batchController=null,singleController=null,singleItem=null,running=false,publishing=false,published=new Set();
-let selectedListFile=null,savedLimit=60;
+let selectedListFile=null,savedLimit=60,savedStopReason="";
 function parseBatch(offset,signal){
  return new Promise((resolve,reject)=>{
   if(signal.aborted){reject(new DOMException('Leitura interrompida.','AbortError'));return;}
@@ -47,9 +47,9 @@ async function checkItem(item,video,signal){
  try{
   if(item.isPlaylist){item.state='list';item.detail='Este endereço fornece uma lista de canais, não um vídeo. Baixe o arquivo da sua lista e use Abrir arquivo M3U ou cole o conteúdo abaixo. Nenhuma conta foi testada.';return;}
   if(item.unsupported){item.state='unsupported';item.detail='Este formato não é compatível com o testador de transmissões ao vivo.';return;}
-  const result=await NPlaySignal.testSource(video,item.url,{signal,onAttempt:url=>{item.detail=url?'Testando alternativa de reprodução…':'Procurando gateway autorizado…';update(item);}});
+  const result=await NPlaySignal.testSource(video,item.url,{signal,audioOnly:/r[aá]dios?/i.test((item.category||'')+' '+item.title),onAttempt:url=>{item.detail=url?'Testando alternativa de reprodução…':'Procurando gateway autorizado…';update(item);}});
   item.playbackUrl=result.playbackUrl;item.published=published.has(item.playbackUrl);
-  item.state='passed';item.testedAt=new Date().toISOString();item.detail=`Imagem recebida: ${result.width} × ${result.height}. Reprodução confirmada por ${result.seconds.toFixed(1)} segundos. O teste vale por 30 minutos e não garante estabilidade contínua.`;
+  item.state='passed';item.testedAt=new Date().toISOString();item.detail=`${result.audioOnly?"Áudio recebido":"Imagem recebida: "+result.width+" × "+result.height}. Reprodução confirmada por ${result.seconds.toFixed(1)} segundos. O teste vale por 30 minutos e não garante estabilidade contínua.`;
  }catch(error){item.state=error.name==='AbortError'?'cancelled':error.code==='HTTP_UNRESOLVED'?'http':'failed';item.detail=error.message;}
  finally{update(item);summary();}
 }
@@ -162,6 +162,7 @@ const selectedSaved=new Set();let savedController=null;
 function savedVisible(){return filterChannels(savedChannels,selectedChannelGroup,$('live-channel-status').value,$('live-channel-search').value);}
 function savedActions(){
  const visible=savedVisible(),drafts=visible.filter(x=>!x.is_published),selected=drafts.filter(x=>selectedSaved.has(x.id));
+ const stop=$('live-saved-stop');if(stop)stop.hidden=!publishing;
  $('live-saved-select-all').textContent=visible.length&&visible.every(x=>selectedSaved.has(x.id))?'Desmarcar todos':'Marcar todos';
  $('live-saved-select-all').disabled=!visible.length||publishing;
  $('live-saved-publish-all').textContent='Publicar todos os rascunhos ('+drafts.length+')';
@@ -175,10 +176,10 @@ async function publishSaved(onlySelected=false){
  const drafts=savedVisible().filter(x=>!x.is_published&&(!onlySelected||selectedSaved.has(x.id)));
  if(!drafts.length)return;
  if(drafts.some(x=>!x.rights_confirmed)&&!authorized())return;
- publishing=true;savedController=new AbortController();renderSaved();summary();
+ publishing=true;savedStopReason='';savedController=new AbortController();renderSaved();summary();
  const host=$('live-saved-preview');host.replaceChildren();
  let done=0,failed=0;const failures=[];
- const progress=()=>message('live-saved-progress',`${done} publicados · ${failed} não publicados · ${drafts.length-done-failed} restantes.`+(failures.length?' '+failures.slice(-3).join(' | '):''));
+ const progress=()=>message('live-saved-progress',`${done} publicados · ${failed} não publicados · ${drafts.length-done-failed} restantes.`+(failures.length?' '+failures.slice(-3).join(' | '):'')+(savedStopReason?' '+savedStopReason:''));
  try{
   const direct=drafts.filter(x=>channelGroup(x)!=='m3u');
   if(direct.length){
@@ -194,12 +195,16 @@ async function publishSaved(onlySelected=false){
     const item=signals[next++];
     try{
      message('live-saved-progress','Testando '+item.title+'… '+done+' publicados · '+failed+' não publicados.');
-     const result=await NPlaySignal.testSource(video,item.embed_url,{signal:savedController.signal});
+     const result=await NPlaySignal.testSource(video,item.embed_url,{signal:savedController.signal,audioOnly:/r[aá]dios?/i.test((item.category||'')+' '+item.title)});
      if(!result.playbackUrl.startsWith('https:'))throw Error('A publicação exige HTTPS ou gateway autorizado.');
      const {data,error}=await db.from('novaplay_live_embeds').update({embed_url:result.playbackUrl,is_published:true,rights_confirmed:true,last_tested_at:new Date().toISOString()}).eq('id',item.id).select('id');
      if(error)throw error;if(!data?.length)throw Error('O canal não foi atualizado.');
      item.is_published=true;selectedSaved.delete(item.id);done++;
-    }catch(error){failed++;failures.push(item.title+': '+error.message);}
+    }catch(error){
+     if(error.name==='AbortError')return;
+     failed++;failures.push(item.title+': '+error.message);
+     if(error.sharedFailure){savedStopReason='Lote pausado por falha comum de acesso. Os canais restantes não foram testados e continuam em rascunho.';savedController.abort();}
+    }
     progress();
    }
   }
@@ -221,7 +226,7 @@ function renderSaved(){
  const visible=savedVisible();
  const visibleIds=new Set(visible.map(x=>x.id));for(const id of selectedSaved)if(!visibleIds.has(id))selectedSaved.delete(id);
  const active=visible.filter(item=>item.is_published).length;
- message('live-channel-count',visible.length+' canais neste filtro · '+active+' publicados · '+(visible.length-active)+' rascunhos');
+ message('live-channel-count','ADM 0.49.23 · '+savedChannels.length+' canais carregados · '+visible.length+' neste filtro · '+active+' publicados · '+(visible.length-active)+' rascunhos');
  message('live-channel-help',selectedChannelGroup==='m3u'?'A lista comprada está aqui como rascunhos protegidos. Pesquise o canal e use Testar para publicar; os canais sem teste continuam fora da grade.':selectedChannelGroup==='legacy'?'Canais antigos do provedor anterior. Os rascunhos ficam fora da grade; o botão Publicar canal antigo permite recuperá-los.':'Canais cadastrados individualmente por iframe, incluindo as emissoras oficiais.');
  for(const item of visible.slice(0,savedLimit)){
   const card=document.createElement('article');card.style.cssText='border:1px solid #365075;border-radius:10px;padding:12px;margin:10px 0';
@@ -267,7 +272,7 @@ function init(){
  <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px"><button id="live-test-button" type="button" class="outline">Testar sinal HLS</button><button id="live-test-publish" type="button" class="primary" hidden>Publicar canal testado</button></div><p id="live-test-message" role="status" aria-live="polite"></p><video id="live-test-video" muted playsinline hidden style="width:100%;max-width:520px;background:#000"></video></details>
  <p id="live-embed-message" role="status" aria-live="polite"></p><h3>Canais publicados e rascunhos</h3><p class="muted">Os rascunhos ficam somente no ADM. Use Publicar para colocar um canal na grade TV ao vivo.</p><div style="display:flex;gap:8px;flex-wrap:wrap;margin:14px 0" aria-label="Origem dos canais"><button id="live-group-m3u" type="button" class="primary" aria-pressed="true">Canais M3U</button><button id="live-group-legacy" type="button" class="outline" aria-pressed="false">Canais antigos</button><button id="live-group-individual" type="button" class="outline" aria-pressed="false">Outros canais</button></div><p id="live-channel-help" class="muted"></p>
  <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:end"><label style="flex:1;min-width:180px">Buscar canal<input id="live-channel-search" type="search" placeholder="Nome ou categoria" maxlength="140"></label><label>Situação<select id="live-channel-status"><option value="all">Publicados e rascunhos</option><option value="published">Somente publicados</option><option value="draft">Somente rascunhos</option></select></label><button id="live-embed-refresh" type="button" class="outline">Atualizar canais</button></div><p id="live-channel-count" role="status" aria-live="polite"></p>
- <div style="display:flex;gap:10px;flex-wrap:wrap;margin:14px 0"><button id="live-saved-select-all" type="button" class="outline">Marcar todos</button><button id="live-saved-publish-selected" type="button" class="outline" disabled>Publicar selecionados</button><button id="live-saved-publish-all" type="button" class="primary" disabled>Publicar todos os rascunhos</button></div>
+ <div style="display:flex;gap:10px;flex-wrap:wrap;margin:14px 0"><button id="live-saved-stop" type="button" class="outline" hidden>Parar testes</button><button id="live-saved-select-all" type="button" class="outline">Marcar todos</button><button id="live-saved-publish-selected" type="button" class="outline" disabled>Publicar selecionados</button><button id="live-saved-publish-all" type="button" class="primary" disabled>Publicar todos os rascunhos</button></div>
  <p class="muted">As ações usam o grupo, a busca e a situação selecionados. Canais M3U são testados antes de publicar; os que falharem continuam em rascunho.</p><p id="live-saved-selection" class="muted"></p><p id="live-saved-progress" role="status" aria-live="polite"></p><div id="live-saved-preview" style="display:flex;gap:10px;flex-wrap:wrap"></div><div id="live-embed-list"></div>`;
  $('live-plus-import').onclick=async()=>{
   const button=$('live-plus-import');button.disabled=true;message('live-plus-status','Solicitando importação segura...');
@@ -296,6 +301,7 @@ function init(){
  $('live-test-button').onclick=testSingle;$('live-embed-refresh').onclick=refresh;
  for(const group of ['m3u','legacy','individual'])$('live-group-'+group).onclick=()=>{selectedChannelGroup=group;renderSaved();};
  $('live-saved-select-all').onclick=()=>{const visible=savedVisible(),all=visible.every(x=>selectedSaved.has(x.id));visible.forEach(x=>{if(all)selectedSaved.delete(x.id);else selectedSaved.add(x.id);});renderSaved();};
+ $('live-saved-stop').onclick=()=>{savedStopReason='Testes interrompidos por você. Os canais restantes continuam em rascunho.';savedController?.abort();};
  $('live-saved-publish-all').onclick=()=>publishSaved(false);$('live-saved-publish-selected').onclick=()=>publishSaved(true);
  $('live-channel-search').oninput=()=>{savedLimit=60;renderSaved();};$('live-channel-status').onchange=()=>{savedLimit=60;renderSaved();};
  $('live-embed-url').oninput=()=>{singleController?.abort();singleItem=null;$('live-test-publish').hidden=true;};

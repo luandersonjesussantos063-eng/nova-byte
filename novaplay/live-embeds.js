@@ -16,6 +16,8 @@ async function openChannel(item){
  if(item.staticId){window.NovaPlayPlayer?.openStatic(item.staticId);return;}
  let source;try{source=await window.NPlayLiveAuth?.authorize(item.embed_url)||item.embed_url;}catch(error){note(error.message);return;}
  const hls=item.stream_type==="hls"||/\.m3u8?(?:\?|$)/i.test(item.embed_url);
+ const audioOnly=/r[aá]dios?/i.test((item.category||"")+" "+item.title);
+ if(audioOnly&&["mpegts","hls"].includes(item.stream_type)){window.NovaPlayPlayer?.openRadio(source,item.title,item.stream_type);return;}
  const open=item.stream_type==="mpegts"?window.NovaPlayPlayer?.openMpegts:hls?window.NovaPlayPlayer?.openHls:window.NovaPlayPlayer?.openEmbed;
  if(!open?.(source,item.title))console.warn("NPlay: não foi possível abrir o player do canal.");
 }
