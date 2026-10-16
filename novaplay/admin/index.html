@@ -5,7 +5,7 @@
 <meta name="theme-color" content="#080e1b"><meta name="robots" content="noindex,nofollow">
 <title>NPlay | Painel de conteúdo</title>
 <link rel="icon" href="../assets/icon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="./admin.css?v=0.48.7">
+<link rel="stylesheet" href="./admin.css?v=0.48.8">
 <style>
 .admin-nav{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin:16px 0 12px;padding:10px;background:#0d192b;border:1px solid #304461;border-radius:15px}
 .admin-tab{border:1px solid #2b405e;border-radius:10px;background:#11223a;color:#d6e4f7;font-weight:750;padding:13px 12px;min-width:0;text-align:center}
@@ -19,9 +19,9 @@
 </style>
 </head>
 <body>
-<header class="top"><a class="brand" href="../"><span class="mark">▶</span> N<span>Play</span></a><div class="top-right"><strong>Painel administrativo · NPlay V 0.48.7</strong><button id="logout" class="outline" hidden>Sair</button></div></header>
+<header class="top"><a class="brand" href="../"><span class="mark">▶</span> N<span>Play</span></a><div class="top-right"><strong>Painel administrativo · NPlay V 0.48.8</strong><button id="logout" class="outline" hidden>Sair</button></div></header>
 <main class="container">
-  <section id="loading" class="panel intro" hidden><div class="spin"></div><p>Preparando seu painel... <small>V 0.48.7</small></p><p id="loading-error" class="feedback" role="status"></p><button id="loading-retry" class="outline" type="button" hidden onclick="location.reload()">Tentar novamente</button></section>
+  <section id="loading" class="panel intro" hidden><div class="spin"></div><p>Preparando seu painel... <small>V 0.48.8</small></p><p id="loading-error" class="feedback" role="status"></p><button id="loading-retry" class="outline" type="button" hidden onclick="location.reload()">Tentar novamente</button></section>
   <section id="login-view" class="panel login">
     <div class="section-label">ACESSO RESTRITO</div>
     <h1>Gerencie sua NPlay</h1>
@@ -48,10 +48,12 @@
       <button type="button" class="admin-tab active" data-admin-tab="catalogo">Catálogo</button>
       <button type="button" class="admin-tab" data-admin-tab="importacoes">Importações</button>
       <button type="button" class="admin-tab" data-admin-tab="canais">TV ao vivo</button><button type="button" class="admin-tab" data-admin-tab="destaques">Destaques</button>
+      <button type="button" class="admin-tab" data-admin-tab="online">Perfis online</button>
       <button type="button" class="admin-tab" data-admin-tab="acessos">Autorizações</button>
       <button type="button" class="admin-tab" data-admin-tab="ferramentas">Ferramentas</button>
     </nav>
     <p class="admin-tab-help" id="admin-tab-help">Pesquise, revise e publique os títulos do catálogo.</p>
+    <section id="nplay-presence-admin" class="panel" hidden style="margin:16px 0"><h2>Perfis online</h2><p class="muted">Veja quem está com a NPlay aberta e o tempo aproximado de uso. Conta o tempo com o aplicativo visível; não confirma reprodução. Atualização a cada 30 segundos. Sem sinal por 75 segundos, o perfil aparece offline. O total de hoje usa o horário de Mato Grosso e começa nesta versão.</p><button id="presence-refresh" class="outline" type="button">Atualizar perfis</button><p id="presence-status" role="status" aria-live="polite"></p><div id="presence-list" class="presence-list"></div></section>
     <section id="nplay-access-admin" class="panel" hidden style="margin:16px 0"><h2>Autorizações de acesso</h2><p class="muted">Aprove ou revogue dispositivos. Somente administradores podem alterar o acesso.</p><button id="nplay-access-refresh" type="button" class="outline">Atualizar solicitações</button><p id="nplay-access-admin-status"></p><div id="nplay-access-admin-list"></div></section><section id="live-embed-manager" class="panel" hidden><h2>Canais ao vivo · testar e publicar</h2><div id="live-embed-controls"></div></section>
     <div class="intro-text"><span class="section-label">CENTRAL DE CONTEÚDO</span><h1>Seus filmes, suas regras.</h1><p>Escolha um vídeo do telefone, envie uma capa e publique dentro da NPlay.</p></div>
     <div class="stats">
@@ -344,7 +346,7 @@
  }
  function startAdmin(){
   if(!window.supabase||typeof window.supabase.createClient!=="function"){fail();return}
-  load("./admin.js?v=0.48.7",function(){},function(){if(msg)msg.textContent="Falha ao carregar o módulo administrativo. Atualize a página."});
+  load("./admin.js?v=0.48.8",function(){},function(){if(msg)msg.textContent="Falha ao carregar o módulo administrativo. Atualize a página."});
  }
  function fail(){if(msg)msg.textContent="Não foi possível carregar a biblioteca de autenticação. Confira a conexão e tente novamente.";}
  function attempt(i){
@@ -363,11 +365,12 @@
    catalogo:[dash.querySelector(".workspace .library")],
    importacoes:[dash.querySelector(".workspace .editor")],
    canais:[dash.querySelector("#live-embed-manager")],
+   online:[dash.querySelector("#nplay-presence-admin")],
    acessos:[dash.querySelector("#nplay-access-admin")],
    destaques:[dash.querySelector(".featured-manager")],
    ferramentas:[dash.querySelector(".licensed-manager"),dash.querySelector(".issue-manager")]
   };
-  var descriptions={catalogo:"Pesquise, revise e publique os títulos do catálogo.",importacoes:"Acompanhe download, preparação e envio. O rascunho é criado automaticamente; revise as informações pendentes para publicar.",canais:"Importe, teste e publique canais ao vivo.",acessos:"Analise solicitações e autorize ou revogue dispositivos.",destaques:"Organize as capas e os títulos da página inicial.",ferramentas:"Gerencie links licenciados e problemas relatados na reprodução."};
+  var descriptions={online:"Acompanhe o tempo de conexão de cada perfil e o total de hoje.",catalogo:"Pesquise, revise e publique os títulos do catálogo.",importacoes:"Acompanhe download, preparação e envio. O rascunho é criado automaticamente; revise as informações pendentes para publicar.",canais:"Importe, teste e publique canais ao vivo.",acessos:"Analise solicitações e autorize ou revogue dispositivos.",destaques:"Organize as capas e os títulos da página inicial.",ferramentas:"Gerencie links licenciados e problemas relatados na reprodução."};
   var workspace=dash.querySelector(".workspace");if(workspace)workspace.classList.add("admin-workspace");
   var intro=dash.querySelector(".intro-text"),stats=dash.querySelector(".stats"),source=dash.querySelector("#source-summary"),drive=dash.querySelector(".intro-text + .stats + #source-summary + .panel");
   function show(name){
@@ -394,5 +397,6 @@
 <script src="./signal-test.js?v=0.45.41" defer></script>
 <script src="./live-embeds.js?v=0.47.0" defer></script>
 <script src="./access-admin.js?v=0.47.0" defer></script>
+<script src="./presence-admin.js?v=0.48.8" defer></script>
 </body>
 </html>

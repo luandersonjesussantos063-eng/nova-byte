@@ -14,7 +14,7 @@ const key="nplay-profiles-v2",legacyKey="nplay-profiles-v1",activeKey="nplay-act
 const characters=["Robô cósmico","Navegadora","Raposa aventureira","Dinossauro","Leão","Coelha espacial","Herói futurista","Exploradora","Astronauta"];
 const defaults=[{name:"Meu perfil",avatar:0}];
 const validAvatar=n=>Number.isInteger(n)&&n>=0&&n<characters.length;
-const normalize=p=>({name:typeof p?.name==="string"&&p.name.trim()?p.name.trim().slice(0,20):"Meu perfil",avatar:validAvatar(p?.avatar)?p.avatar:0,kids:p?.kids===true});
+const normalize=p=>({id:/^[0-9a-f-]{36}$/i.test(p?.id||"")?p.id:crypto.randomUUID(),name:typeof p?.name==="string"&&p.name.trim()?p.name.trim().slice(0,20):"Meu perfil",avatar:validAvatar(p?.avatar)?p.avatar:0,kids:p?.kids===true});
 let profiles;
 try{
  const stored=JSON.parse(localStorage.getItem(key));
@@ -24,10 +24,12 @@ try{
   profiles=[normalize(Array.isArray(legacy)?legacy[0]:defaults[0])];
   localStorage.setItem(key,JSON.stringify(profiles));localStorage.setItem(activeKey,"0");
  }
-}catch{profiles=defaults.map(p=>({...p}))}
+}catch{profiles=defaults.map(normalize)}
+try{localStorage.setItem(key,JSON.stringify(profiles))}catch{}
+window.NPlayProfiles={current:()=>({...profiles[activeIndex()]})};
 function paint(el,id){el.classList.add("nplay-avatar-art");el.style.setProperty("--avatar-x",(id%3)*50+"%");el.style.setProperty("--avatar-y",Math.floor(id/3)*50+"%")}
 function activeIndex(){try{const i=Number(localStorage.getItem(activeKey));return Number.isInteger(i)&&profiles[i]?i:0}catch{return 0}}
-function updateHeader(i){if(!avatar)return;const p=profiles[i]||profiles[0];avatar.textContent="";paint(avatar,p.avatar);avatar.title="Trocar perfil: "+p.name;avatar.setAttribute("aria-label","Trocar perfil: "+p.name)}
+function updateHeader(i){window.dispatchEvent(new Event("nplay-profile-change"));if(!avatar)return;const p=profiles[i]||profiles[0];avatar.textContent="";paint(avatar,p.avatar);avatar.title="Trocar perfil: "+p.name;avatar.setAttribute("aria-label","Trocar perfil: "+p.name)}
 const edit=document.getElementById("nplay-profile-edit"),form=document.getElementById("nplay-profile-form"),slot=document.getElementById("nplay-profile-slot"),name=document.getElementById("nplay-profile-name"),dialog=document.getElementById("nplay-profile-dialog"),picker=document.getElementById("nplay-avatar-picker"),feedback=document.getElementById("nplay-profile-feedback");
 const show=()=>{render();gate.hidden=false;document.body.style.overflow="hidden"};
 const hide=()=>{gate.hidden=true;document.body.style.overflow=""};
@@ -76,7 +78,7 @@ slot.onchange=loadDraft;
 function persist(next){try{localStorage.setItem(key,JSON.stringify(next));return true}catch{feedback.textContent="Não foi possível salvar neste navegador. Tente novamente.";return false}}
 form.onsubmit=e=>{
  e.preventDefault();const n=name.value.trim();if(!n){name.focus();return}
- const i=Number(slot.value),next=creating?[...profiles,{name:n,avatar:draftAvatar}]:profiles.map((p,j)=>j===i?{...p,name:n,avatar:draftAvatar}:p);
+ const i=Number(slot.value),next=creating?[...profiles,normalize({name:n,avatar:draftAvatar})]:profiles.map((p,j)=>j===i?{...p,name:n,avatar:draftAvatar}:p);
  if(!persist(next))return;
  profiles=next;render();updateHeader(activeIndex());dialog.close();edit.focus();
 };
