@@ -3,20 +3,24 @@ const $=id=>document.getElementById(id),core=()=>globalThis.NPlayM3u;
 let db,savedChannels=[],rows=[],batchController=null,singleController=null,singleItem=null,running=false,publishing=false,published=new Set();
 const fresh=item=>item.state==='passed'&&item.testedAt&&Date.now()-Date.parse(item.testedAt)<30*60*1000;
 function message(id,text){$(id).textContent=text;}
-function source(raw){const iframe=raw.match(/<iframe[^>]+src=["']([^"']+)/i);return core().url(iframe?iframe[1]:raw.trim());}
+function source(raw){
+ const iframe=raw.match(/<iframe[^>]+src=["']([^"']+)/i),value=iframe?iframe[1]:raw.trim();
+ if(!iframe&&!/^https?:\/\//i.test(value))throw Error('Cole uma URL HTTP/HTTPS de transmissão. Texto Base64 ou uma lista de canais deve ser aberto ou decodificado antes do teste.');
+ return core().url(value);
+}
 function authorized(){if($('live-embed-rights').checked)return true;message('live-embed-message','Confirme a autorização de exibição antes de publicar.');$('live-embed-rights').focus();return false;}
 function button(label,fn,style='outline'){const b=document.createElement('button');b.type='button';b.className=style;b.textContent=label;b.onclick=fn;return b;}
-function stateLabel(item){return ({idle:'Não testado',testing:'Testando vídeo…',passed:'Vídeo confirmado',failed:'Não confirmado',http:'HTTP sem gateway',unsupported:'Outro formato',cancelled:'Interrompido'})[item.state]||'Não testado';}
+function stateLabel(item){return ({idle:'Não testado',testing:'Testando vídeo…',passed:'Vídeo confirmado',failed:'Não confirmado',http:'Inválido para reprodução neste site',list:'Lista M3U · importar conteúdo',unsupported:'Outro formato',cancelled:'Interrompido'})[item.state]||'Não testado';}
 function update(item){
  if(!item.dom)return;
  const d=item.dom;d.status.textContent=(item.published?'Publicado · ':'')+stateLabel(item);
  d.status.style.color=item.state==='passed'?'#85e2b4':item.state==='failed'?'#ffc5bd':'#c5d8f5';
  d.detail.textContent=item.detail||'';d.video.hidden=item.state!=='testing';
- d.publish.hidden=!fresh(item)||item.published;d.publish.disabled=publishing;
+ d.publish.hidden=!fresh(item)||item.published||!item.playbackUrl?.startsWith('https:');d.publish.disabled=publishing;
  d.retry.disabled=item.state==='testing'||running||publishing;d.retry.textContent=item.state==='idle'?'Testar canal':'Testar novamente';
 }
 function summary(){
- const ready=rows.filter(x=>fresh(x)&&!x.published),passed=rows.filter(x=>x.state==='passed').length;
+ const ready=rows.filter(x=>fresh(x)&&!x.published&&x.playbackUrl?.startsWith('https:')),passed=rows.filter(x=>x.state==='passed').length;
  const tested=rows.filter(x=>!['idle','testing'].includes(x.state)).length;
  message('live-batch-status',`${rows.length} canais · ${tested} analisados · ${passed} com vídeo confirmado · ${rows.filter(x=>x.published).length} publicados`+(running?' · testes em andamento':''));
  $('live-batch-publish').textContent=`Publicar ${ready.length} aprovados`;
@@ -27,15 +31,17 @@ function summary(){
 async function checkItem(item,video,signal){
  item.testedAt=null;item.state='testing';item.detail='Aguardando pelo menos 2 segundos de vídeo em movimento.';update(item);summary();
  try{
+  if(item.isPlaylist){item.state='list';item.detail='Este endereço fornece uma lista de canais, não um vídeo. Baixe o arquivo da sua lista e use Abrir arquivo M3U ou cole o conteúdo abaixo. Nenhuma conta foi testada.';return;}
   if(item.unsupported){item.state='unsupported';item.detail='Este formato não é compatível com o testador de transmissões ao vivo.';return;}
-  try{item.playbackUrl=core().playable(item.url);item.published=published.has(item.playbackUrl);}catch(error){item.state='http';item.detail='HTTP sem gateway autorizado: '+error.message;return;}
-  const result=await NPlaySignal.testSignal(video,item.playbackUrl,{signal});
+  const result=await NPlaySignal.testSource(video,item.url,{signal,onAttempt:url=>{item.detail=url?'Testando alternativa de reprodução…':'Procurando gateway autorizado…';update(item);}});
+  item.playbackUrl=result.playbackUrl;item.published=published.has(item.playbackUrl);
   item.state='passed';item.testedAt=new Date().toISOString();item.detail=`Imagem recebida: ${result.width} × ${result.height}. Reprodução confirmada por ${result.seconds.toFixed(1)} segundos. O teste vale por 30 minutos e não garante estabilidade contínua.`;
- }catch(error){item.state=error.name==='AbortError'?'cancelled':'failed';item.detail=error.message;}
+ }catch(error){item.state=error.name==='AbortError'?'cancelled':error.code==='HTTP_UNRESOLVED'?'http':'failed';item.detail=error.message;}
  finally{update(item);summary();}
 }
 async function publishItem(item){
  if(!fresh(item))throw Error('Teste este canal novamente antes de publicar.');
+ if(!item.playbackUrl.startsWith('https:'))throw Error('HTTP confirmado nesta conexão. A publicação no site HTTPS exige uma alternativa HTTPS ou gateway autorizado.');
  if(item.dom)item.title=item.dom.title.value.trim();
  if(!item.title)throw Error('Informe o nome do canal.');
  const payload={title:item.title.slice(0,140),embed_url:item.playbackUrl,logo_url:item.logo_url||null,category:item.category||'',stream_type:/\.ts$/i.test(new URL(item.playbackUrl).pathname)?'mpegts':'hls',last_tested_at:item.testedAt,rights_confirmed:true,is_published:true};
@@ -57,7 +63,7 @@ function renderRows(){
   if(item.logo_url){const image=document.createElement('img');image.src=item.logo_url;image.alt='';image.loading='lazy';image.referrerPolicy='no-referrer';image.style.cssText='width:64px;height:44px;object-fit:contain;float:right;background:#172a44;border-radius:6px';image.onerror=()=>image.remove();card.append(image);}
   const label=document.createElement('label');label.textContent='Nome do canal';const title=document.createElement('input');title.value=item.title;title.maxLength=140;label.append(title);
   const status=document.createElement('strong');status.style.cssText='display:block;margin-top:12px';
-  const url=document.createElement('p');url.className='muted';url.textContent=item.category?item.category+' · '+item.url:item.url;
+  const url=document.createElement('p');url.className='muted';const address=core().displayUrl(item.url);url.textContent=item.category?item.category+' · '+address:address;
   const detail=document.createElement('p');
   const video=document.createElement('video');video.hidden=true;video.muted=true;video.playsInline=true;video.style.cssText='width:100%;max-width:420px;max-height:235px;background:#000;border-radius:8px';
   const publish=button('Publicar',()=>publishOne(item),'primary');
@@ -96,7 +102,7 @@ function exportConfirmed(){
 async function publishBatch(){
  if(running||publishing||!authorized())return;
  publishing=true;let done=0,failed=0;
- try{for(const item of rows.filter(x=>fresh(x)&&!x.published)){
+ try{for(const item of rows.filter(x=>fresh(x)&&!x.published&&x.playbackUrl?.startsWith('https:'))){
   try{await publishItem(item);done++;}catch(error){failed++;item.detail='Falha na publicação: '+error.message;update(item);}
   message('live-embed-message',`${done} publicados; ${failed} com erro na publicação.`);
  }await refresh();}
@@ -106,14 +112,15 @@ async function testSingle(){
  singleController?.abort();singleItem=null;$('live-test-publish').hidden=true;
  try{
   const url=source($('live-embed-url').value);
-  if(/\/get\.php(?:\?|$)/i.test(url))throw Error('Este endereço fornece uma lista. Cole o conteúdo M3U no teste em lote.');
+  if(core().isPlaylist(url))throw Error('Este endereço fornece uma lista. Use Abrir arquivo M3U ou cole o conteúdo M3U no teste em lote.');
   const saved=savedChannels.find(x=>x.embed_url===url);
   const item={logo_url:saved?.logo_url||null,category:saved?.category||'',title:$('live-embed-title').value.trim()||'Canal',url,state:'idle'};
-  const playbackUrl=core().playable(url);singleController=new AbortController();
+  singleController=new AbortController();
   message('live-test-message','Testando alguns segundos de vídeo…');$('live-test-video').hidden=false;$('live-test-button').disabled=true;
-  const result=await NPlaySignal.testSignal($('live-test-video'),playbackUrl,{signal:singleController.signal});
-  item.playbackUrl=playbackUrl;item.testedAt=new Date().toISOString();item.state='passed';singleItem=item;
-  message('live-test-message',`Vídeo confirmado: ${result.width} × ${result.height}. Você pode publicar este canal.`);$('live-test-publish').hidden=false;
+  const result=await NPlaySignal.testSource($('live-test-video'),url,{signal:singleController.signal,onAttempt:target=>message('live-test-message',target?'Testando alternativa de reprodução…':'Procurando gateway autorizado…')});
+  item.playbackUrl=result.playbackUrl;item.testedAt=new Date().toISOString();item.state='passed';singleItem=item;
+  const publishable=result.playbackUrl.startsWith('https:');
+  message('live-test-message',`Vídeo confirmado: ${result.width} × ${result.height}. `+(publishable?'Você pode publicar este canal.':'HTTP funciona nesta conexão; para publicar no site HTTPS, configure um gateway autorizado.'));$('live-test-publish').hidden=!publishable;
  }catch(error){message('live-test-message',error.message);}
  finally{$('live-test-button').disabled=false;$('live-test-video').hidden=true;}
 }
@@ -164,8 +171,9 @@ async function publishSaved(onlySelected=false){
     const item=signals[next++];
     try{
      message('live-saved-progress','Testando '+item.title+'… '+done+' publicados · '+failed+' não publicados.');
-     await NPlaySignal.testSignal(video,core().playable(item.embed_url),{signal:savedController.signal});
-     const {data,error}=await db.from('novaplay_live_embeds').update({is_published:true,rights_confirmed:true,last_tested_at:new Date().toISOString()}).eq('id',item.id).select('id');
+     const result=await NPlaySignal.testSource(video,item.embed_url,{signal:savedController.signal});
+     if(!result.playbackUrl.startsWith('https:'))throw Error('A publicação exige HTTPS ou gateway autorizado.');
+     const {data,error}=await db.from('novaplay_live_embeds').update({embed_url:result.playbackUrl,is_published:true,rights_confirmed:true,last_tested_at:new Date().toISOString()}).eq('id',item.id).select('id');
      if(error)throw error;if(!data?.length)throw Error('O canal não foi atualizado.');
      item.is_published=true;selectedSaved.delete(item.id);done++;
     }catch(error){failed++;failures.push(item.title+': '+error.message);}
@@ -224,8 +232,9 @@ function init(){
  <p>Cole uma lista M3U para testar os canais nesta conexão. Um canal só fica apto a publicar depois de receber imagem e avançar pelo menos dois segundos no navegador.</p>
  <label class="publish-check"><input id="live-embed-rights" type="checkbox"><span>Confirmo autorização para exibir na NPlay os canais que eu publicar.</span></label>
  <section style="border:1px solid #3a6396;border-radius:12px;padding:16px;margin:18px 0">
- <h3>Testar lista M3U e publicar canais</h3><p class="muted">Até 500 canais por lote, dois testes simultâneos. Nomes, capas e categorias são extraídos da lista. Endereços repetidos são ignorados. Links HTTP sem gateway ficam identificados como “Precisa de HTTPS”.</p>
+ <h3>Testar lista M3U e publicar canais</h3><p class="muted">Até 500 canais por lote, dois testes simultâneos. Nomes, capas e categorias são extraídos da lista. Endereços repetidos são ignorados. Para links HTTP, o testador tenta HTTPS e procura gateways autorizados configurados antes de indicar que não conseguiu reproduzir. HTTP direto é testado quando permitido pela página.</p>
  <label>Lista completa<textarea id="live-batch-input" rows="10" maxlength="2097152" placeholder="#EXTM3U&#10;#EXTINF:-1 tvg-logo=&quot;https://exemplo.com/logo.png&quot;,Nome do canal&#10;https://exemplo.com/ao-vivo.m3u8" style="width:100%"></textarea></label>
+ <label>Abrir arquivo M3U<input id="live-batch-file" type="file" accept=".m3u,.m3u8,.txt"></label><p class="muted">Links get.php baixam listas, não são canais. Importe o arquivo da sua lista ou cole seu conteúdo. Base64 e páginas paste.sh não são sinais de vídeo.</p>
  <div style="display:flex;gap:10px;flex-wrap:wrap"><button id="live-batch-run" class="primary" type="button">Carregar e testar lista</button><button id="live-batch-stop" class="outline" type="button" hidden>Parar testes</button><button id="live-batch-export" class="outline" type="button" disabled>Baixar M3U dos confirmados</button><button id="live-batch-publish" class="primary" type="button" disabled>Publicar aprovados</button></div>
  <p id="live-batch-parse" class="muted" role="status"></p><p id="live-batch-status" role="status" aria-live="polite"></p><div id="live-batch-results"></div></section>
  <details style="border:1px solid #365075;border-radius:12px;padding:16px"><summary>Testar ou cadastrar um canal individual</summary>
@@ -236,6 +245,16 @@ function init(){
  <div style="display:flex;gap:10px;flex-wrap:wrap;margin:14px 0"><button id="live-saved-select-all" type="button" class="outline">Marcar todos</button><button id="live-saved-publish-selected" type="button" class="outline" disabled>Publicar selecionados</button><button id="live-saved-publish-all" type="button" class="primary" disabled>Publicar todos os rascunhos</button></div>
  <p class="muted">As ações usam o grupo, a busca e a situação selecionados. Canais M3U são testados antes de publicar; os que falharem continuam em rascunho.</p><p id="live-saved-selection" class="muted"></p><p id="live-saved-progress" role="status" aria-live="polite"></p><div id="live-saved-preview" style="display:flex;gap:10px;flex-wrap:wrap"></div><div id="live-embed-list"></div>`;
  $('live-batch-run').onclick=runBatch;$('live-batch-stop').onclick=()=>batchController?.abort();$('live-batch-publish').onclick=publishBatch;$('live-batch-export').onclick=exportConfirmed;
+ $('live-batch-file').onchange=async event=>{
+  const input=event.target,file=input.files?.[0];if(!file)return;
+  try{
+   if(running||publishing)throw Error('Aguarde o teste atual terminar antes de importar outra lista.');
+   if(file.size>2*1024*1024)throw Error('O arquivo excedeu 2 MB. Divida a lista em partes menores.');
+   const text=await file.text();
+   if(running||publishing)throw Error('Aguarde o teste atual terminar antes de importar outra lista.');
+   $('live-batch-input').value=text;message('live-batch-parse','Arquivo carregado. Clique em Carregar e testar lista.');
+  }catch(error){message('live-batch-parse',error.message);}finally{input.value='';}
+ };
  $('live-test-button').onclick=testSingle;$('live-embed-refresh').onclick=refresh;
  for(const group of ['m3u','legacy','individual'])$('live-group-'+group).onclick=()=>{selectedChannelGroup=group;renderSaved();};
  $('live-saved-select-all').onclick=()=>{const visible=savedVisible(),all=visible.every(x=>selectedSaved.has(x.id));visible.forEach(x=>{if(all)selectedSaved.delete(x.id);else selectedSaved.add(x.id);});renderSaved();};

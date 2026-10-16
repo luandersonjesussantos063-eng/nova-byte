@@ -38,5 +38,32 @@ function testSignal(video,url,{signal,timeout=25000,seconds=2}={}){
   }catch(error){finish(error);}
  });
 }
-globalThis.NPlaySignal={testSignal};
+async function testSource(video,source,{signal,onAttempt=()=>{},...options}={}){
+ const core=globalThis.NPlayM3u,attempted=new Set(),failures=[];
+ source=core.url(source);
+ if(core.isPlaylist(source))throw Error('Este endereço baixa uma lista M3U, não transmite um canal. Baixe o arquivo da sua lista e use Abrir arquivo M3U ou cole o conteúdo no teste em lote.');
+ if(/(^|\.)paste\.sh$/i.test(new URL(source).hostname))throw Error('Este link é uma página de texto do paste.sh, não um sinal de vídeo. Abra a página e cole a lista M3U ou os endereços dos canais no testador.');
+ const attempt=async urls=>{
+  for(const url of urls){
+   if(signal?.aborted)throw new DOMException('Teste interrompido.','AbortError');
+   if(attempted.has(url))continue;attempted.add(url);onAttempt(url);
+   try{return {...await testSignal(video,url,{...options,signal}),playbackUrl:url};}
+   catch(error){if(error.name==='AbortError')throw error;failures.push({protocol:new URL(url).protocol==='https:'?'HTTPS':'HTTP',message:error.message});}
+  }
+ };
+ let result=await attempt(core.candidates(source));
+ if(result)return result;
+ let gatewayCount=0;
+ if(new URL(source).protocol==='http:'){
+  onAttempt(null);
+  const gateways=await core.gateways(source,{signal});gatewayCount=gateways.length;
+  result=await attempt(gateways);
+  if(result)return result;
+ }
+ const http=new URL(source).protocol==='http:';
+ const details=failures.map(failure=>failure.protocol+': '+failure.message).join(' ');
+ const error=Error(http?'Não foi possível confirmar vídeo para este canal. '+details+' '+(gatewayCount?'Nenhum gateway encontrado confirmou reprodução.':'Nenhum gateway autorizado disponível para esta fonte.')+' Em páginas HTTPS, o HTTP direto é bloqueado pelo navegador; isso não comprova que o canal esteja fora do ar.':details||'Nenhum vídeo confirmado.');
+ error.code=http?'HTTP_UNRESOLVED':'SIGNAL_UNCONFIRMED';throw error;
+}
+globalThis.NPlaySignal={testSignal,testSource};
 })();

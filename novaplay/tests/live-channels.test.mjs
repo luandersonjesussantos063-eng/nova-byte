@@ -17,6 +17,13 @@ test('M3U handles more than 100 entries, reports 500 cap and duplicates',()=>{
  assert.equal(result.entries.length,500);assert.equal(result.total,505);assert.equal(result.truncated,5);assert.equal(result.duplicates,1);
  assert.equal(core.parseList(list,600).entries.length,505);
 });
+test('plain lists preserve channel names, commas in URLs and skip comments',()=>{
+ const parsed=core.parseList('# Lista\nPremiere Clubes SD\nhttp://example.org/a.m3u8?channels=1,2\n\nCanal B\nhttps://example.org/b.m3u8');
+ assert.equal(parsed.entries.length,2);assert.equal(parsed.invalid,0);
+ assert.equal(parsed.entries[0].title,'Premiere Clubes SD');assert.equal(parsed.entries[0].url,'http://example.org/a.m3u8?channels=1,2');
+ assert.equal(parsed.entries[1].title,'Canal B');
+ assert.equal(core.parseList('https://example.org/a.m3u8?channels=1,2').entries[0].title,'Canal 1');
+});
 test('URL validation, HTTPS, gateway and unsupported formats',()=>{
  assert.throws(()=>core.url('javascript:alert(1)'));assert.throws(()=>core.url('https://user:password@example.org/live'));
  assert.throws(()=>core.playable('http://example.org/live.m3u8'),/HTTPS/);
@@ -58,7 +65,7 @@ test('fatal HLS error destroys the HLS instance',async()=>{
 });
 test('publishing rejects failed and expired tests and upserts approved metadata',async()=>{
  const elements=new Map(),get=id=>{if(!elements.has(id))elements.set(id,{});return elements.get(id);};let payload,options,calls=0;
- const context=vm.createContext({document:{getElementById:get},Date,Set,console});
+ const context=vm.createContext({document:{getElementById:get},URL,Date,Set,console});
  const code=read('admin/live-embeds.js').replace(/if\(document.readyState==='loading'\)[\s\S]*?\n\}\)\(\);\s*$/, `globalThis.lab={publishItem,fresh,setDb:value=>db=value};\n})();`);
  vm.runInContext(code,context);const lab=context.lab;
  lab.setDb({from:()=>({upsert:async(p,o)=>{calls++;payload=p;options=o;return {error:null};}})});
