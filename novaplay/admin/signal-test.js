@@ -1,6 +1,6 @@
 (()=>{
 function signalError(message,code,sharedFailure=false){const error=Error(message);error.code=code;error.sharedFailure=sharedFailure;return error;}
-const protectedSource=url=>{try{const u=new URL(url);return u.origin==='https://nplay-live-gateway.luandersonjesussantos063.workers.dev'&&/^\/live\/[0-9a-f-]{36}\/stream\.ts$/i.test(u.pathname);}catch{return false;}};
+const protectedSource=url=>{try{const u=new URL(url);return u.origin==='https://nplay-live-gateway.luandersonjesussantos063.workers.dev'&&/^\/live\/[0-9a-f-]{36}\/(?:stream\.ts|index\.m3u8)$/i.test(u.pathname);}catch{return false;}};
 async function checkProtectedSource(url,signal){
  const control=new AbortController(),abort=()=>control.abort();signal?.addEventListener('abort',abort,{once:true});
  if(signal?.aborted)control.abort();const timer=setTimeout(abort,12000);
@@ -11,7 +11,7 @@ async function checkProtectedSource(url,signal){
   if(status===403)throw signalError('Acesso recusado pelo servidor protegido (HTTP 403). Pode ser bloqueio de segurança ou falta de permissão; a lista não foi validada.','GATEWAY_ACCESS',true);
   if(status===429||status>=503)throw signalError('Servidor protegido indisponível ou limitando requisições (HTTP '+status+'). Aguarde antes de testar novamente.','GATEWAY_UNAVAILABLE',true);
   if(!response.ok)throw signalError(status===502?'O servidor protegido respondeu, mas não conseguiu receber o vídeo do fornecedor (HTTP 502).':'Não foi possível consultar este canal (HTTP '+status+').','SOURCE_UNAVAILABLE');
-  if(!/^(video\/mp2t|application\/octet-stream)(?:;|$)/i.test(response.headers.get('Content-Type')||''))throw signalError('O servidor protegido retornou uma resposta que não é um sinal TS.','GATEWAY_RESPONSE',true);
+  if(!/^(video\/mp2t|application\/(?:octet-stream|vnd\.apple\.mpegurl|x-mpegurl))(?:;|$)/i.test(response.headers.get('Content-Type')||''))throw signalError('O servidor protegido retornou uma resposta que não é um sinal de vídeo compatível.','GATEWAY_RESPONSE',true);
  }catch(error){
   if(signal?.aborted)throw new DOMException('Teste interrompido.','AbortError');
   if(Object.prototype.hasOwnProperty.call(error,'sharedFailure'))throw error;
@@ -69,7 +69,7 @@ async function testSource(video,source,{signal,onAttempt=()=>{},...options}={}){
    try{
     let playback=url;
     if(protectedSource(url)){
-     if(!globalThis.NPlayLiveAuth)throw signalError('O módulo de acesso está desatualizado. Reabra o ADM e confirme a versão 0.49.23.','ADMIN_UPDATE_REQUIRED',true);
+     if(!globalThis.NPlayLiveAuth)throw signalError('O módulo de acesso está desatualizado. Reabra o ADM e confirme a versão 0.49.24.','ADMIN_UPDATE_REQUIRED',true);
      try{playback=await NPlayLiveAuth.authorize(url);}catch{throw signalError('Sua sessão não está disponível. Entre novamente no ADM antes de testar.','GATEWAY_SESSION',true);}
      await checkProtectedSource(playback,signal);
     }else playback=await globalThis.NPlayLiveAuth?.authorize(url)||url;

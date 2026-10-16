@@ -29,3 +29,42 @@ test('viewer tokens are attached only to the owned gateway, never arbitrary prov
  assert.equal(await window.NPlayLiveAuth.authorize('https://provider.example/live.ts'),'https://provider.example/live.ts');assert.equal(sessions,0);
  const protectedUrl=await window.NPlayLiveAuth.authorize(safe);assert.equal(new URL(protectedUrl).searchParams.get('access_token'),'viewer-secret');assert.equal(sessions,1);
 });
+const hlsSafe=origin+'/live/'+id+'/index.m3u8';
+const hlsSecret=Buffer.from(crypto.getRandomValues(new Uint8Array(32))).toString('base64url');
+const hlsEnv={HLS_MEDIA_KEY:hlsSecret,LIVE_SOURCES:{get:async()=>({url:'http://provider.example/private-user/private-password/index.m3u8'})}};
+test('HLS manifests rewrite segments, variants and key URIs as encrypted authenticated locators',async()=>{
+ let segmentCalls=0;
+ await withFetch(async(url,options)=>{
+  if(String(url).includes('supabase.co'))return Response.json([{embed_url:hlsSafe}]);
+  assert.equal(options.headers.get('Authorization'),null);
+  if(String(url).endsWith('/index.m3u8'))return new Response('#EXTM3U\n#EXT-X-KEY:METHOD=AES-128,URI="key.bin"\n#EXT-X-MEDIA:TYPE=AUDIO,URI="audio.m3u8"\n#EXTINF:6,private-user\nsegment.ts\n',{headers:{'Content-Type':'application/x-mpegurl'}});
+  segmentCalls++;assert.equal(url,'http://provider.example/private-user/private-password/segment.ts');return new Response(new Uint8Array([71,1,2,3]),{headers:{'Content-Type':'video/mp2t'}});
+ },async()=>{
+  const r=await worker.fetch(new Request(hlsSafe+'?access_token=viewer-secret'),hlsEnv);assert.equal(r.status,200);const manifest=await r.text();assert.ok(!manifest.includes('provider.example'));assert.ok(!manifest.includes('private-user'));assert.ok(!manifest.includes('private-password'));assert.equal((manifest.match(/\/asset\//g)||[]).length,3);
+  const segment=manifest.split('\n').find(x=>x.startsWith('https:'));assert.equal(new URL(segment).searchParams.get('access_token'),'viewer-secret');
+  const media=await worker.fetch(new Request(segment),hlsEnv);assert.equal(media.status,200);assert.equal((await media.arrayBuffer()).byteLength,4);assert.equal(segmentCalls,1);
+ });
+});
+test('encrypted HLS locators reject tampering and cannot be reused under another channel ID',async()=>{
+ const id2='22222222-2222-5222-8222-222222222222';let mediaCalls=0;
+ await withFetch(async url=>{
+  if(String(url).includes('supabase.co'))return Response.json([{embed_url:String(url).includes(id2)?hlsSafe.replace(id,id2):hlsSafe}]);
+  mediaCalls++;return new Response('#EXTM3U\n#EXTINF:4,\nsegment.ts\n',{headers:{'Content-Type':'application/x-mpegurl'}});
+ },async()=>{
+  const r=await worker.fetch(new Request(hlsSafe+'?access_token=viewer'),hlsEnv),text=await r.text();const segment=text.split('\n').find(x=>x.startsWith('https:'));
+  const wrong=await worker.fetch(new Request(segment.replace(id,id2)),hlsEnv);assert.equal(wrong.status,502);assert.equal(mediaCalls,1);
+  const u=new URL(segment);u.pathname=u.pathname.slice(0,-5)+'AAAAA';const altered=await worker.fetch(new Request(u),hlsEnv);assert.equal(altered.status,502);assert.equal(mediaCalls,1);
+ });
+});
+test('HLS resources require a session and RLS access before decrypting or fetching provider media',async()=>{
+ const without=await worker.fetch(new Request(hlsSafe),hlsEnv);assert.equal(without.status,401);
+ await withFetch(async()=>Response.json([]),async()=>{const r=await worker.fetch(new Request(hlsSafe+'?access_token=denied'),hlsEnv);assert.equal(r.status,403);});
+});
+test('HLS manifest reads are bounded instead of buffering unlimited input',async()=>{
+ await withFetch(async url=>String(url).includes('supabase.co')?Response.json([{embed_url:hlsSafe}]):new Response('#EXTM3U\n'+'a'.repeat(513000)),async()=>{const r=await worker.fetch(new Request(hlsSafe+'?access_token=viewer'),hlsEnv);assert.equal(r.status,502);assert.ok(!(await r.text()).includes('provider.example'));});
+});
+test('private catalog shards supply HLS sources without relying on the KV daily write quota',async()=>{
+ const {gzipSync}=await import('node:zlib');const encoded=gzipSync(JSON.stringify({[id]:'http://provider.example/private-user/private-password/index.m3u8'})).toString('base64');
+ const env={HLS_MEDIA_KEY:hlsSecret,PULSE_CATALOG_1_00:encoded.slice(0,80),PULSE_CATALOG_1_01:encoded.slice(80),LIVE_SOURCES:{get:()=>{throw Error('KV must not be needed for this catalog');}}};
+ await withFetch(async url=>String(url).includes('supabase.co')?Response.json([{embed_url:hlsSafe}]):new Response('#EXTM3U\n#EXTINF:6,\nsegment.ts\n'),async()=>{const r=await worker.fetch(new Request(hlsSafe+'?access_token=viewer'),env);assert.equal(r.status,200);assert.ok(!(await r.text()).includes('private-password'));});
+});

@@ -1,7 +1,7 @@
 /* Viewer sessions stay on the NPlay gateway, never on provider hosts. */
 (()=>{
  const origin="https://nplay-live-gateway.luandersonjesussantos063.workers.dev";
- function protectedUrl(raw){try{const u=new URL(raw);return u.origin===origin&&/^\/live\/[0-9a-f-]{36}\/stream\.ts$/i.test(u.pathname);}catch{return false;}}
+ function protectedUrl(raw){try{const u=new URL(raw);return u.origin===origin&&/^\/live\/[0-9a-f-]{36}\/(?:stream\.ts|index\.m3u8)$/i.test(u.pathname);}catch{return false;}}
  async function authorize(raw){
   if(!protectedUrl(raw))return raw;
   const client=window.NPlayAccessClient||window.supabase?.createClient("https://vajlhodqxskozuxxlujv.supabase.co","sb_publishable_uT0b4y0Bex1k1QWZoyIfKg_K0pm-yS3");

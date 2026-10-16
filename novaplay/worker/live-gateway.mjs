@@ -1,3 +1,4 @@
+import {relayHls,hlsSource} from './hls-relay.mjs';
 // Private provider URLs live in KV; viewers receive only channel IDs.
 const DB="https://vajlhodqxskozuxxlujv.supabase.co",KEY="sb_publishable_uT0b4y0Bex1k1QWZoyIfKg_K0pm-yS3";
 const uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -18,10 +19,10 @@ async function admin(jwt){
  const r=await fetch(DB+'/rest/v1/novaplay_admins?select=user_id&limit=1',{headers:dbHeaders(jwt)});
  return r.ok&&(await readJson(r,4000))?.length===1;
 }
-async function published(id,jwt,origin){
+async function published(id,jwt,origin,format="ts"){
  const r=await fetch(DB+'/rest/v1/novaplay_live_embeds?id=eq.'+id+'&select=embed_url&limit=1',{headers:dbHeaders(jwt)});
  if(!r.ok)return false;const rows=await readJson(r,5000);
- return rows?.[0]?.embed_url===origin+'/live/'+id+'/stream.ts';
+ return rows?.[0]?.embed_url===origin+'/live/'+id+(format==='hls'?'/index.m3u8':'/stream.ts');
 }
 async function upstream(raw,signal,range){
  let url=sourceUrl(raw);
@@ -73,6 +74,12 @@ export default {async fetch(request,env){
    const r=await upstream(entry.url,AbortSignal.timeout(15000),'bytes=0-1023');
    const reader=r.body?.getReader();const first=reader?await reader.read():null;await reader?.cancel();
    const b=first?.value||new Uint8Array();return json({status:r.status,type:r.headers.get('Content-Type'),bytes:b.length,mpegts:b[0]===71,hls:new TextDecoder().decode(b.slice(0,10)).startsWith('#EXTM3U')});
+  }
+  const hls=route.pathname.match(/^\/live\/([0-9a-f-]{36})\/(?:index\.m3u8|asset\/([A-Za-z0-9_-]{1,7000}))$/i);
+  if(hls&&['GET','HEAD'].includes(request.method)&&uuid.test(hls[1])){
+   if(!await published(hls[1],jwt,route.origin,'hls'))return json({error:'Canal não liberado para este aparelho.'},403);
+   const entry=await hlsSource(env,hls[1]);if(!entry)return json({error:'Fonte indisponível.'},404);
+   return await relayHls({request,env,id:hls[1],jwt,origin:route.origin,rootUrl:entry.url,locator:hls[2],upstream,validateUrl:sourceUrl,cors});
   }
   const match=route.pathname.match(/^\/live\/([0-9a-f-]{36})\/stream\.ts$/i);
   if(!match||!['GET','HEAD'].includes(request.method)||!uuid.test(match[1]))return json({error:'Canal não encontrado.'},404);

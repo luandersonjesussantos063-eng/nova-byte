@@ -12,7 +12,7 @@ function setup(records,group,{deny=[],sharedFailure=false}={}){
  }})};
  const context=vm.createContext({document:{getElementById:get,createElement:node},URL,Date,Set,AbortController,NPlayM3u:{playable:x=>x},NPlaySignal:{testSource:async(_,url)=>{if(sharedFailure){const error=Error('Acesso ao servidor recusado');error.sharedFailure=true;throw error;}if(url.includes('bad'))throw Error('Sinal indisponível');return {playbackUrl:url};}}});
  let source=readFileSync(new URL('../admin/live-embeds.js',import.meta.url),'utf8');
- source=source.replace(/if\(document.readyState==='loading'\)[\s\S]*?\n\}\)\(\);\s*$/,`globalThis.lab={publishSaved,selectedSaved,refresh,count:()=>savedChannels.length,setup:(client,items,group)=>{db=client;savedChannels=items;selectedChannelGroup=group;}};\n})();`);
+ source=source.replace(/if\(document.readyState==='loading'\)[\s\S]*?\n\}\)\(\);\s*$/,`globalThis.lab={publishSaved,selectedSaved,refresh,savedVisible,count:()=>savedChannels.length,setup:(client,items,group)=>{db=client;savedChannels=items;selectedChannelGroup=group;}};\n})();`);
  vm.runInContext(source,context);context.lab.setup(db,records,group);return {lab:context.lab,writes,get};
 }
 const item=(id,group,published=false)=>({id,title:id,embed_url:group==='legacy'?'https://rdcanais.org/'+id:'https://example.org/'+id+'.m3u8',stream_type:group==='legacy'?'iframe':'hls',rights_confirmed:true,is_published:published});
@@ -38,4 +38,10 @@ test('a shared gateway failure pauses the batch without marking every remaining 
 test('admin pagination retrieves all 2807 saved channels instead of stopping at 1000',async()=>{
  const records=Array.from({length:2807},(_,i)=>item('channel-'+i,'m3u'));
  const {lab,get}=setup(records,'m3u');await lab.refresh();assert.equal(lab.count(),2807);assert.match(get('live-channel-count').textContent,/2807 canais carregados/);
+});
+
+test('the new HLS source filter separates the replacement account from prior and other streams',()=>{
+ const owned='https://nplay-live-gateway.luandersonjesussantos063.workers.dev/live/';
+ const records=[{...item('new','m3u'),embed_url:owned+'new/index.m3u8'},{...item('previous','m3u'),embed_url:owned+'previous/stream.ts',stream_type:'mpegts'},item('other','m3u')];
+ const {lab,get}=setup(records,'m3u');get('live-list-family').value='new-hls';assert.deepEqual(Array.from(lab.savedVisible(),x=>x.id),['new']);get('live-list-family').value='previous';assert.deepEqual(Array.from(lab.savedVisible(),x=>x.id),['previous','other']);
 });

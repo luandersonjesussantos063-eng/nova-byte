@@ -33,8 +33,9 @@ async function load(){
   const channels=(data||[]).filter(item=>item.embed_url);
   window.NPlayLiveCatalog?.setChannels(channels);
   const television=window.NPlayMusic?.select(channels,"tv")||channels;
-  window.NPlayHeroLive?.setChannels(television);
-  window.NPlayHomeLive?.setChannels(television);
+  const previews=television.filter(item=>!window.NPlayLiveAuth?.protectedUrl(item.embed_url));
+  window.NPlayHeroLive?.setChannels(previews);
+  window.NPlayHomeLive?.setChannels(previews);
   renderChannels(channels);
   const scoped=window.NPlayMusic?.select(channels,liveScope)||channels;
   note(scoped.length?"":liveScope==="musica"?"Nenhum canal de música publicado no momento.":"Nenhum canal publicado no momento.");
@@ -108,7 +109,7 @@ function renderChannels(channels){
   const media=document.createElement("div");media.className="nplay-live-media";media.append(button);
   const favorite=document.createElement("button");favorite.type="button";favorite.className="live-favorite";const saved=window.NPlayLiveCatalog?.isFavorite(favoriteId(item));favorite.textContent=saved?"♥":"♡";favorite.setAttribute("aria-label",(saved?"Remover dos favoritos: ":"Favoritar canal: ")+item.title);favorite.setAttribute("aria-pressed",String(!!saved));favorite.onclick=()=>{window.NPlayLiveCatalog?.toggleFavorite(favoriteId(item));renderChannels(liveChannelData);};
   media.append(favorite);card.append(media,title,subtitle);list.append(card);
-  if(item.stream_type==="hls"||/\.m3u8?(?:\?|$)/i.test(item.embed_url)){
+  if(!window.NPlayLiveAuth?.protectedUrl(item.embed_url)&&(item.stream_type==="hls"||/\.m3u8?(?:\?|$)/i.test(item.embed_url))){
    const sound=document.createElement("button");sound.type="button";sound.className="nplay-live-sound";sound.hidden=true;media.append(sound);
    livePreviews?.register({card,cover:button,sound,url:item.embed_url,title:item.title});
   }
