@@ -67,3 +67,16 @@ fechados se a conta permitir somente uma conexão.
 Para preservar o vídeo original em um PC de baixa capacidade, a configuração
 opcional `NPLAY_MEDIA_MODE=copy` no `.env` evita transcodificar vídeo (mantém áudio
 AAC). A compatibilidade do codec de vídeo original passa a depender do navegador.
+
+### Reconectar sem copiar a chave
+
+`REPARAR-CONEXAO.ps1` pode ser baixado do site e executado isoladamente. Ele nao
+recria os containers nem troca a chave. Le a chave do container em execucao,
+confere `/health` localmente e pelo tunel atual e so entao regrava
+`CONEXAO-ADM.txt`. Isso evita divergencias entre `.env`, variaveis de ambiente
+do Windows/Docker Compose e a chave realmente usada pela ponte. O instalador
+agora usa esse mesmo procedimento apos iniciar o Docker.
+
+A chave e capturada em memoria; o script nao a imprime no terminal. Carregue o
+arquivo atualizado no ADM e clique em **Conectar PC**. A verificacao da ponte
+nao testa o fornecedor: falhas no login Xtream continuam sendo uma etapa distinta.
