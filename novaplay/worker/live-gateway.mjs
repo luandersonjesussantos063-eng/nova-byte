@@ -1,5 +1,5 @@
 import {relayHls,hlsSource} from './hls-relay.mjs';
-import {bridgeUrl,encryptBridge,decryptBridge,bridgeUpstream,checkBridge} from './pc-bridge.mjs';
+import {bridgeUrl,encryptBridge,decryptBridge,bridgeUpstream,checkBridge,pcFailureMessages} from './pc-bridge.mjs';
 // Private provider URLs live in KV; viewers receive only channel IDs.
 const DB="https://vajlhodqxskozuxxlujv.supabase.co",KEY="sb_publishable_uT0b4y0Bex1k1QWZoyIfKg_K0pm-yS3";
 const uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -122,9 +122,9 @@ export default {async fetch(request,env){
   if(request.method==='HEAD'){await r.body?.cancel();return new Response(null,{status:r.status,headers});}
   return new Response(r.body,{status:r.status,headers});
  }catch(error){
-  const code=['UPSTREAM_IP_HOSTNAME_REQUIRED','PC_BRIDGE_OFFLINE'].includes(error?.code)?error.code:'GATEWAY_INTERNAL';
+  const code=error?.code==='UPSTREAM_IP_HOSTNAME_REQUIRED'||Object.hasOwn(pcFailureMessages,error?.code)?error.code:'GATEWAY_INTERNAL';
   console.error(JSON.stringify({event:'live_delivery_failed',code}));
-  return Response.json({error:code==='PC_BRIDGE_OFFLINE'?'A TV pelo PC está desconectada. Mantenha o Docker ligado e confira o endereço no ADM.':code==='UPSTREAM_IP_HOSTNAME_REQUIRED'?'O servidor de vídeo do fornecedor usa IP direto. É necessário um domínio DNS para reproduzir pelo NPlay.':'Falha interna ao preparar o sinal. O lote deve ser pausado.',code},{status:502,headers:{...cors,'X-NPlay-Error':code}});
+  return Response.json({error:pcFailureMessages[code]||(code==='UPSTREAM_IP_HOSTNAME_REQUIRED'?'O servidor de vídeo do fornecedor usa IP direto. É necessário um domínio DNS para reproduzir pelo NPlay.':'Falha interna ao preparar o sinal. O lote deve ser pausado.'),code},{status:502,headers:{...cors,'X-NPlay-Error':code}});
  }
 
 }};

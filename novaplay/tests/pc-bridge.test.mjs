@@ -1,10 +1,23 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {Readable} from 'node:stream';
-import {createBridge,publicIP,destination} from '../pc-tv/bridge.mjs';
+import {createBridge,publicIP,destination,upstreamReason} from '../pc-tv/bridge.mjs';
 import {bridgeUrl,encryptBridge,decryptBridge,bridgeUpstream,checkBridge} from '../worker/pc-bridge.mjs';
 import worker from '../worker/live-gateway.mjs';
 const secret='a'.repeat(64),key=Buffer.from(crypto.getRandomValues(new Uint8Array(32))).toString('base64url');
+test('provider transport failures retain safe reasons without misreporting a connected PC as offline',async()=>{
+ for(const [code,reason] of [['ECONNRESET','UPSTREAM_RESET'],['DEPTH_ZERO_SELF_SIGNED_CERT','UPSTREAM_TLS'],['ENOTFOUND','UPSTREAM_DNS'],['ETIMEDOUT','UPSTREAM_TIMEOUT']])assert.equal(upstreamReason({code}),reason);
+ const previous=globalThis.fetch;
+ try{
+  const transport=await bridgeUpstream({url:'https://test.trycloudflare.com',secret},url=>new URL(url));
+  for(const [reason,code] of [['UPSTREAM_RESET','PC_SOURCE_RESET'],['UPSTREAM_TLS','PC_SOURCE_TLS'],['UPSTREAM_DNS','PC_SOURCE_DNS']]){
+   globalThis.fetch=async()=>Response.json({error:'UPSTREAM_UNAVAILABLE'},{status:502,headers:{'X-NPlay-Bridge-Error':reason}});
+   await assert.rejects(transport('http://provider.example/private',new AbortController().signal),{code});
+  }
+  globalThis.fetch=async()=>Response.json({error:'UPSTREAM_UNAVAILABLE'},{status:502});
+  await assert.rejects(transport('http://provider.example/private',new AbortController().signal),{code:'PC_SOURCE_UNAVAILABLE'});
+ }finally{globalThis.fetch=previous;}
+});
 test('PC health and media use Workers-compatible redirect modes and refuse redirects without forwarding the key',async()=>{
  const previous=globalThis.fetch;let calls=0;
  try{

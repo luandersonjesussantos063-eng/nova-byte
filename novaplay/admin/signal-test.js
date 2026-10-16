@@ -8,6 +8,7 @@ async function checkProtectedSource(url,signal){
   const response=await fetch(url,{method:'HEAD',signal:control.signal,cache:'no-store',credentials:'omit',referrerPolicy:'no-referrer'});
   const status=response.status;
   const diagnostic=response.headers.get('X-NPlay-Error');
+  const pcFailure=globalThis.NPlayLiveAuth?.failureMessage?.(diagnostic);if(pcFailure)throw signalError(pcFailure,diagnostic,true);
   if(diagnostic==='PC_BRIDGE_OFFLINE')throw signalError('A TV pelo PC está desconectada. Confira Docker e o endereço em TV pelo PC no ADM.','PC_BRIDGE_OFFLINE',true);
   if(diagnostic==='UPSTREAM_IP_HOSTNAME_REQUIRED')throw signalError('O fornecedor redireciona o vídeo para IP direto, incompatível com o servidor NPlay. Solicite ao fornecedor HLS com domínio DNS nos manifestos e segmentos. O lote foi pausado.','UPSTREAM_IP_HOSTNAME_REQUIRED',true);
   if(diagnostic==='GATEWAY_INTERNAL')throw signalError('Falha interna no servidor NPlay ao preparar o sinal. O lote foi pausado para diagnóstico.','GATEWAY_INTERNAL',true);
@@ -75,7 +76,7 @@ async function testSource(video,source,{signal,onAttempt=()=>{},...options}={}){
    try{
     let playback=url;
     if(protectedSource(url)){
-     if(!globalThis.NPlayLiveAuth)throw signalError('O módulo de acesso está desatualizado. Reabra o ADM e confirme a versão 0.49.27.','ADMIN_UPDATE_REQUIRED',true);
+     if(!globalThis.NPlayLiveAuth)throw signalError('O módulo de acesso está desatualizado. Reabra o ADM e confirme a versão 0.49.28.','ADMIN_UPDATE_REQUIRED',true);
      try{playback=await NPlayLiveAuth.authorize(url);}catch{throw signalError('Sua sessão não está disponível. Entre novamente no ADM antes de testar.','GATEWAY_SESSION',true);}
      await checkProtectedSource(playback,signal);
     }else playback=await globalThis.NPlayLiveAuth?.authorize(url)||url;

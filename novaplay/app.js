@@ -1058,6 +1058,8 @@ function play(item,episode){
       hls=new window.Hls({enableWorker:true,lowLatencyMode:false,maxBufferLength:item.kind==="tv"?20:60,maxMaxBufferLength:180,maxBufferSize:64*1024*1024,backBufferLength:30,startLevel:0,capLevelToPlayerSize:true,abrEwmaDefaultEstimate:400000});
       hls.on(window.Hls.Events.ERROR,(event,data)=>{
         if(seq!==attempt||!data.fatal)return;
+        const gatewayFailure=window.NPlayLiveAuth?.failureMessage?.(data.networkDetails?.getResponseHeader?.("X-NPlay-Error"));
+        if(window.NPlayLiveAuth?.protectedUrl(src)&&gatewayFailure){fail(gatewayFailure);return;}
         if(item.kind==="tv"&&nativeHls&&data.type===window.Hls.ErrorTypes.NETWORK_ERROR){
           hls.destroy();hls=null;playerStatus("Tentando o modo de reprodução do navegador…");
           v.src=src;startAutoplay(v,seq);return;
@@ -1198,7 +1200,7 @@ document.addEventListener("keydown",e=>{
 document.addEventListener("visibilitychange",()=>{if(document.hidden){stopHeroPreview();if(!$("player-layer").hidden)$("video").pause()}});
 window.addEventListener("scroll",()=>$("app-header").classList.toggle("is-scrolled",window.scrollY>24),{passive:true});
 if("serviceWorker" in navigator&&location.protocol==="https:"){
- window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js?v=0.49.27",{updateViaCache:"none"}).catch(()=>{}));
+ window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js?v=0.49.28",{updateViaCache:"none"}).catch(()=>{}));
 }
 $("hero-play").onclick=()=>navigate("tv");
 $("hero-info").onclick=()=>navigate("filmes");

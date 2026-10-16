@@ -23,10 +23,10 @@ export async function fetchMedia(raw,range,signal){
  for(let hop=0;hop<5;hop++){
   const {url,address}=await destination(raw);
   const response=await new Promise((resolve,reject)=>{
-   const headers={'Accept-Encoding':'identity'};if(range)headers.Range=range;
+   const headers={'Accept-Encoding':'identity','Accept':'*/*','User-Agent':'NPlay-TV-PC/0.49.28','Connection':'close'};if(range)headers.Range=range;
    const request=(url.protocol==='https:'?https:http).request(url,{method:'GET',headers,signal,lookup:(_host,options,callback)=>callback(null,options.all?[{address,family:4}]:address,4)},resolve);
-   request.on('error',()=>reject(Error('UPSTREAM_CONNECTION')));
-   request.setTimeout(20000,()=>request.destroy(Error('UPSTREAM_TIMEOUT')));request.end();
+   request.on('error',error=>{const failure=Error('UPSTREAM_CONNECTION');failure.code=error.code;reject(failure);});
+   request.setTimeout(20000,()=>request.destroy(Object.assign(Error('UPSTREAM_TIMEOUT'),{code:'ETIMEDOUT'})));request.end();
   });
   if([301,302,303,307,308].includes(response.statusCode)){
    const location=response.headers.location;response.destroy();if(!location)throw Error('UPSTREAM_REDIRECT');raw=new URL(location,url).href;continue;
@@ -39,12 +39,20 @@ function authorized(value,secret){
  const a=Buffer.from(value||''),b=Buffer.from('Bearer '+secret);
  return a.length===b.length&&timingSafeEqual(a,b);
 }
+export function upstreamReason(error){
+ if(['DEPTH_ZERO_SELF_SIGNED_CERT','SELF_SIGNED_CERT_IN_CHAIN','CERT_HAS_EXPIRED','UNABLE_TO_VERIFY_LEAF_SIGNATURE','UNABLE_TO_GET_ISSUER_CERT_LOCALLY','ERR_TLS_CERT_ALTNAME_INVALID'].includes(error?.code))return 'UPSTREAM_TLS';
+ if(error?.code==='ECONNRESET')return 'UPSTREAM_RESET';
+ if(['EAI_AGAIN','ENOTFOUND'].includes(error?.code))return 'UPSTREAM_DNS';
+ if(error?.code==='ETIMEDOUT')return 'UPSTREAM_TIMEOUT';
+ if(error?.message==='INVALID_DESTINATION')return 'UPSTREAM_DESTINATION';
+ return 'UPSTREAM_CONNECTION';
+}
 export function createBridge({secret,fetchUpstream=fetchMedia}){
  if(!/^[a-f0-9]{64}$/.test(secret||''))throw Error('NPLAY_BRIDGE_KEY must contain 64 hex characters');
  return http.createServer(async(req,res)=>{
-  const json=(status,data)=>{if(res.headersSent||res.destroyed)return;res.writeHead(status,{'Content-Type':'application/json','Cache-Control':'no-store'});res.end(JSON.stringify(data));};
+  const json=(status,data)=>{if(res.headersSent||res.destroyed)return;const headers={'Content-Type':'application/json','Cache-Control':'no-store'};if(data.reason)headers['X-NPlay-Bridge-Error']=data.reason;res.writeHead(status,headers);res.end(JSON.stringify(data));};
   if(!authorized(req.headers.authorization,secret)){req.resume();json(401,{error:'AUTH_REQUIRED'});return;}
-  if(req.url==='/health'&&req.method==='GET'){json(200,{service:'nplay-pc-tv',version:'0.49.26'});return;}
+  if(req.url==='/health'&&req.method==='GET'){json(200,{service:'nplay-pc-tv',version:'0.49.28'});return;}
   if(req.url!=='/fetch'||req.method!=='POST'){req.resume();json(404,{error:'NOT_FOUND'});return;}
   const controller=new AbortController();req.on('aborted',()=>controller.abort());
   res.on('close',()=>{if(!res.writableFinished)controller.abort();});
@@ -59,8 +67,10 @@ export function createBridge({secret,fetchUpstream=fetchMedia}){
    const headers={'Cache-Control':'no-store','X-NPlay-Upstream-Url':url};
    for(const name of ['content-type','content-length','content-range','accept-ranges'])if(response.headers[name])headers[name]=response.headers[name];
    res.writeHead(response.statusCode,headers);await pipeline(response,res,{signal:controller.signal});
-  }catch{
-   media?.response.destroy();json(502,{error:'UPSTREAM_UNAVAILABLE'});
+  }catch(error){
+   media?.response.destroy();if(controller.signal.aborted)return;
+   const reason=upstreamReason(error);console.error(JSON.stringify({event:'upstream_failed',code:reason}));
+   json(502,{error:'UPSTREAM_UNAVAILABLE',reason});
    if(res.headersSent&&!res.writableEnded)res.destroy();
   }
  });

@@ -1,4 +1,4 @@
-const CACHE="novaplay-v0.49.27";
+const CACHE="novaplay-v0.49.28";
 const CORE=["./","./index.html","./styles.css","./assets/experience.css","./assets/hero-live.js","./assets/casting.js","./access.js","./app.js","./live-embeds.js","./assets/music-core.js","./assets/youtube-core.js","./assets/live-preview.js","./assets/live-auth.js","./profiles.js","./presence.js","./install.js","./catalog.js","./manifest.webmanifest","./assets/icon.svg","./assets/brand/nplay-wordmark-v0482.svg","./assets/brand/nplay-icon-192-v0482.png","./assets/brand/nplay-icon-512-v0482.png"];
 self.addEventListener("install",event=>{
  event.waitUntil(caches.open(CACHE).then(async cache=>{
