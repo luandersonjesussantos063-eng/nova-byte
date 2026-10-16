@@ -5,7 +5,7 @@
 <meta name="theme-color" content="#080e1b"><meta name="robots" content="noindex,nofollow">
 <title>NPlay | Painel de conteúdo</title>
 <link rel="icon" href="../assets/icon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="./admin.css?v=0.48.8">
+<link rel="stylesheet" href="./admin.css?v=0.48.9">
 <style>
 .admin-nav{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin:16px 0 12px;padding:10px;background:#0d192b;border:1px solid #304461;border-radius:15px}
 .admin-tab{border:1px solid #2b405e;border-radius:10px;background:#11223a;color:#d6e4f7;font-weight:750;padding:13px 12px;min-width:0;text-align:center}
@@ -248,7 +248,7 @@
       </form>
 </div>
 
-        <section class="panel" aria-labelledby="magnet-import-heading" style="margin:18px 0"><div class="section-label">IMPORTAÇÃO LICENCIADA · TORRENT</div><h2 id="magnet-import-heading">Importar filme por magnet</h2><p class="muted">Cadastre o magnet e a licença para preparar a importação. O arquivo não é baixado automaticamente até que o processador de torrents esteja conectado.</p><form id="magnet-import-form"><label for="magnet-title">Título do filme<input id="magnet-title" required minlength="2" maxlength="140" placeholder="Nome do filme"></label><label for="magnet-uri">Link magnet<textarea id="magnet-uri" required rows="3" maxlength="8192" placeholder="magnet:?xt=urn:btih:..."></textarea></label><label for="magnet-license">Referência da licença / contrato<input id="magnet-license" required minlength="5" maxlength="500" placeholder="Número do contrato ou documento de autorização"></label><label class="publish-check"><input id="magnet-rights" type="checkbox" required><span><strong>Confirmo que possuo autorização válida para obter e distribuir este filme pela NPlay</strong><small>A autorização será mantida no cadastro. A publicação depende da preparação do vídeo e dos dados do catálogo.</small></span></label><button type="submit" id="magnet-submit" class="primary">Cadastrar importação por magnet</button><p id="magnet-status" class="feedback" role="status" aria-live="polite"></p></form><div style="margin-top:20px;padding-top:16px;border-top:1px solid #365075"><h3>Importações e vídeos prontos para cadastro</h3><p class="muted">O processador cria o rascunho e preenche os dados técnicos automaticamente. Revise apenas as informações pendentes. A fila se atualiza a cada 15 segundos. Atualizar apenas consulta o andamento; novas tentativas temporárias são automáticas. Fontes indisponíveis ou falta de espaço exigem a ação indicada no cartão.</p><button id="magnet-refresh" type="button" class="outline">Atualizar solicitações</button><div id="magnet-pending-list" style="margin-top:14px"></div><p id="magnet-approval-status" class="feedback" role="status"></p></div></section>
+        <section class="panel" aria-labelledby="magnet-import-heading" style="margin:18px 0"><div class="section-label">IMPORTAÇÃO LICENCIADA · TORRENT</div><h2 id="magnet-import-heading">Importar filme ou pacote por magnet</h2><p class="muted">Cadastre o magnet e a licença para preparar a importação. Quando houver vários vídeos, abra o pacote na lista abaixo e escolha “Importar todos os vídeos” ou selecione os arquivos desejados. Cada um terá uma tarefa própria. O download começa com o processador conectado.</p><form id="magnet-import-form"><label for="magnet-title">Título do filme ou pacote<input id="magnet-title" required minlength="2" maxlength="140" placeholder="Nome do filme"></label><label for="magnet-uri">Link magnet<textarea id="magnet-uri" required rows="3" maxlength="8192" placeholder="magnet:?xt=urn:btih:..."></textarea></label><label for="magnet-license">Referência da licença / contrato<input id="magnet-license" required minlength="5" maxlength="500" placeholder="Número do contrato ou documento de autorização"></label><label class="publish-check"><input id="magnet-rights" type="checkbox" required><span><strong>Confirmo que possuo autorização válida para obter e distribuir este filme pela NPlay</strong><small>A autorização será mantida no cadastro. A publicação depende da preparação do vídeo e dos dados do catálogo.</small></span></label><button type="submit" id="magnet-submit" class="primary">Cadastrar importação por magnet</button><p id="magnet-status" class="feedback" role="status" aria-live="polite"></p></form><div style="margin-top:20px;padding-top:16px;border-top:1px solid #365075"><h3>Importações e vídeos prontos para cadastro</h3><p class="muted">O processador cria o rascunho e preenche os dados técnicos automaticamente. Revise apenas as informações pendentes. A fila se atualiza a cada 15 segundos. Atualizar apenas consulta o andamento; novas tentativas temporárias são automáticas. Fontes indisponíveis ou falta de espaço exigem a ação indicada no cartão.</p><button id="magnet-refresh" type="button" class="outline">Atualizar solicitações</button><div id="magnet-pending-list" style="margin-top:14px"></div><p id="magnet-approval-status" class="feedback" role="status"></p></div></section>
     </section>
     <section class="panel library">
       <div class="section-title"><div><span class="section-label">BIBLIOTECA</span><h2>Seus uploads</h2></div><button id="refresh-list" class="outline compact">Atualizar</button></div>
@@ -364,7 +364,7 @@
  }
  function startAdmin(){
   if(!window.supabase||typeof window.supabase.createClient!=="function"){fail();return}
-  load("./admin.js?v=0.48.8",function(){},function(){if(msg)msg.textContent="Falha ao carregar o módulo administrativo. Atualize a página."});
+  load("./admin.js?v=0.48.9",function(){},function(){if(msg)msg.textContent="Falha ao carregar o módulo administrativo. Atualize a página."});
  }
  function fail(){if(msg)msg.textContent="Não foi possível carregar a biblioteca de autenticação. Confira a conexão e tente novamente.";}
  function attempt(i){
@@ -417,7 +417,7 @@
 <script src="./signal-test.js?v=0.49.6" defer></script>
 <script src="./live-embeds.js?v=0.49.6" defer></script>
 <script src="./access-admin.js?v=0.47.0" defer></script>
-<script src="./presence-admin.js?v=0.48.8" defer></script>
+<script src="./presence-admin.js?v=0.48.9" defer></script>
 <script src="./portal-test.js?v=0.49.7" defer></script>
 </body>
 </html>

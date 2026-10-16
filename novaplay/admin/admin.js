@@ -8,7 +8,7 @@ const VIDEO_BUCKET="novaplay-videos",POSTER_BUCKET="novaplay-posters";
 const MAX_VIDEO=50*1024*1024,MAX_POSTER=5*1024*1024;
 const $=id=>document.getElementById(id);
 let client=null,editing=null,items=[],busy=false,currentUpload=null,sessionUser=null;
-let magnetLoading=false;
+let magnetLoading=false,packSaving=false;
 let libraryPage=0;
 let playbackIssues=[],issueSaving=false;
 const LIBRARY_PAGE_SIZE=48;
@@ -1061,8 +1061,39 @@ function importArchiveButton(job,restore){
   catch(e){status("magnet-approval-status",errorText(e),true);button.disabled=false;}
  };return button;
 }
+function appendMagnetPack(box,job,allJobs){
+ if(job.batch_parent_id||job.duplicate_of||job.archived_at||job.status==="processing"||!job.approved_for_processing)return;
+ const files=(job.file_candidates||[]).filter(f=>/\.(mp4|mkv|webm|mov|avi|m4v|ts|ogv)$/i.test(f.name)&&!/(?:^|[ /\\_.-])(sample|trailer|extras?)(?:[ /\\_.-]|$)/i.test(f.name));
+ if(files.length<2)return;
+ const details=document.createElement("details");details.dataset.pack=job.id;details.style.cssText="margin:12px 0;padding:12px;border:1px solid #57769e;border-radius:10px";
+ const summary=document.createElement("summary");summary.textContent="Pacote com "+files.length+" vídeos · selecionar arquivos";details.append(summary);
+ const saved=new Set([job.selected_file_index,...allJobs.filter(x=>x.batch_parent_id===job.id).map(x=>x.selected_file_index)].filter(x=>x!==null&&x!==undefined));
+ const note=document.createElement("p");note.textContent=saved.size+" arquivo(s) já importado(s) ou na fila. Cada vídeo será processado separadamente, com seu próprio título.";details.append(note);
+ const inputs=[];
+ for(const f of files){
+  const label=document.createElement("label");label.style.cssText="display:flex;gap:10px;align-items:flex-start;margin:10px 0;overflow-wrap:anywhere";
+  const cb=document.createElement("input");cb.type="checkbox";cb.dataset.packIndex=f.index;cb.disabled=saved.has(f.index);cb.checked=!cb.disabled;
+  const text=document.createElement("span");text.textContent=f.name.split(/[\\/]/).pop()+" · "+(f.bytes/1024**3).toFixed(2)+" GB"+(cb.disabled?" · Já adicionado":"");
+  label.append(cb,text);details.append(label);inputs.push(cb);
+ }
+ const send=async(indexes,button)=>{
+  button.disabled=true;packSaving=true;
+  try{
+   const {data,error}=await client.rpc("novaplay_select_import_files",{p_job_id:job.id,p_indexes:indexes});
+   if(error)throw error;if(!data)throw Error("A fila não confirmou o pacote.");
+   const feedback=document.createElement("p");feedback.setAttribute("role","status");feedback.textContent=data.created+" vídeo(s) adicionado(s) à fila; "+data.existing+" já estavam cadastrados.";details.append(feedback);
+   packSaving=false;await loadMagnetApprovals();
+  }catch(e){status("magnet-approval-status","Falha ao importar pacote: "+errorText(e),true);button.disabled=false;}finally{packSaving=false;}
+ };
+ const selected=document.createElement("button");selected.type="button";selected.className="primary";selected.textContent="Importar vídeos selecionados";
+ const all=document.createElement("button");all.type="button";all.textContent="Importar todos os vídeos ("+files.length+")";
+ const refresh=()=>{selected.disabled=!inputs.some(x=>x.checked&&!x.disabled);all.disabled=inputs.every(x=>x.disabled);};inputs.forEach(x=>x.onchange=refresh);refresh();
+ selected.onclick=()=>send(inputs.filter(x=>x.checked&&!x.disabled).map(x=>Number(x.dataset.packIndex)),selected);
+ all.onclick=()=>send(files.map(x=>x.index),all);
+ details.append(selected,all);box.append(details);
+}
 async function loadMagnetApprovals(){
- const list=$("magnet-pending-list");if(!list||!client||!sessionUser||magnetLoading)return;
+ const list=$("magnet-pending-list");if(!list||!client||!sessionUser||magnetLoading||packSaving)return;
  magnetLoading=true;
  if(!list.children.length)list.textContent="Consultando solicitações...";
  list.setAttribute('aria-busy','true');
@@ -1072,7 +1103,7 @@ async function loadMagnetApprovals(){
   const pageSize=500;
   for(let offset=0;offset<50000;offset+=pageSize){
    const {data:page,error}=await client.from("novaplay_magnet_imports")
-    .select("archived_at,diagnostics,id,title,status,stage,progress_percent,heartbeat_at,worker_id,attempts,next_retry_at,error_code,duplicate_of,file_candidates,selected_file_index,approved_for_processing,created_at,r2_object_key,error_message,rights_confirmed,license_reference")
+    .select("batch_parent_id,archived_at,diagnostics,id,title,status,stage,progress_percent,heartbeat_at,worker_id,attempts,next_retry_at,error_code,duplicate_of,file_candidates,selected_file_index,approved_for_processing,created_at,r2_object_key,error_message,rights_confirmed,license_reference")
     .order("created_at",{ascending:false}).range(offset,offset+pageSize-1);
    if(error)throw error;
    data.push(...(page||[]));
@@ -1084,13 +1115,14 @@ async function loadMagnetApprovals(){
   const registeredByKey=new Map((catalog||[]).filter(x=>x.r2_object_key).map(x=>[x.r2_object_key,x]));
   // Capture immediately before rendering: the user may expand a group during the request.
   const groupState=new Map([...list.querySelectorAll('details[data-group]')].map(x=>[x.dataset.group,x.open]));
+  const packState=new Map([...list.querySelectorAll("details[data-pack]")].map(x=>[x.dataset.pack,{open:x.open,selected:[...x.querySelectorAll("input:checked:not(:disabled)")].map(cb=>cb.dataset.packIndex)}]));
   const cardState=new Map([...list.querySelectorAll('[data-import-id]')].map(x=>[x.dataset.importId,{
-   open:x.querySelector('details')?.open,
+   open:x.querySelector('details:not([data-pack])')?.open,
    selected:x.querySelector('select')?.value,
-   checked:x.querySelector('input[type="checkbox"]')?.checked
+   checked:x.querySelector('input[type="checkbox"]:not([data-pack-index])')?.checked
   }]));
   // Leave controls being edited intact; the next poll will apply fresh data.
-  if(list.contains(document.activeElement)&&document.activeElement.matches('select'))return;
+  if(list.contains(document.activeElement)&&document.activeElement.matches('select,input'))return;
   const activeCard=document.activeElement.closest?.('[data-import-id]');
   const activeGroup=document.activeElement.closest?.('details[data-group]');
   const focusIndex=activeCard?[...activeCard.querySelectorAll('button,input,select,summary')].indexOf(document.activeElement):-1;
@@ -1118,6 +1150,8 @@ async function loadMagnetApprovals(){
    if(job.stage){const p=document.createElement("p");p.textContent=stages[job.stage]||job.stage;box.append(p);}
    if(job.status==="processing"&&job.worker_id){const progress=document.createElement("progress");progress.max=100;if(job.stage!=="metadata")progress.value=job.progress_percent||0;progress.setAttribute("aria-label","Progresso de "+job.title);box.append(progress);const p=document.createElement("p");const age=job.heartbeat_at?Math.round((Date.now()-Date.parse(job.heartbeat_at))/1000):null;p.textContent=(job.stage==="metadata"?"Aguardando a fonte · ":Math.round(job.progress_percent||0)+"% da etapa · ")+(age===null?"Aguardando comunicação":age>120?"Sem comunicação recente · retomada automática após expirar a reserva":"Processador conectado");box.append(p);}
    appendImportDiagnostics(box,job);
+   appendMagnetPack(box,job,data);
+   if(job.batch_parent_id){const p=document.createElement("p");p.className="muted";p.textContent="Vídeo do pacote #"+job.batch_parent_id.slice(0,8);box.append(p);}
    if(["failed","needs_review"].includes(job.status)){const diagnosis=document.createElement("p");diagnosis.textContent=importErrorDiagnosis(job);box.appendChild(diagnosis);}
    if(job.status==="queued"&&job.error_message){const p=document.createElement("p");p.textContent=job.error_message+" Nova tentativa automática, sem precisar clicar em Atualizar.";box.append(p);}
    if(job.next_retry_at){const p=document.createElement("p");p.textContent="Próxima tentativa: "+new Date(job.next_retry_at).toLocaleString("pt-BR");box.append(p);}
@@ -1171,11 +1205,13 @@ async function loadMagnetApprovals(){
    }
    if(["failed","needs_review","duplicate"].includes(job.status)&&!job.r2_object_key&&!registered)box.appendChild(importArchiveButton(job,false));
    const target=job.duplicate_of||job.status==="duplicate"?"duplicate":job.status==="needs_review"?"review":job.status==="failed"?"failed":registered?"released":job.status==="ready"||!job.approved_for_processing?"awaiting":job.status==="processing"?"processing":"queued";
+   const pack=box.querySelector("details[data-pack]"),oldPack=packState.get(job.id);
+   if(pack&&oldPack){pack.open=oldPack.open;pack.querySelectorAll("input:not(:disabled)").forEach(cb=>{cb.checked=oldPack.selected.includes(cb.dataset.packIndex);cb.dispatchEvent(new Event("change"));});}
    const saved=cardState.get(job.id);
    if(saved){
-    const diagnostic=box.querySelector('details');if(diagnostic&&saved.open!==undefined)diagnostic.open=saved.open;
+    const diagnostic=box.querySelector('details:not([data-pack])');if(diagnostic&&saved.open!==undefined)diagnostic.open=saved.open;
     const select=box.querySelector('select');if(select&&saved.selected!==undefined){select.value=saved.selected;select.dispatchEvent(new Event('change'));}
-    const checkbox=box.querySelector('input[type="checkbox"]');if(checkbox&&saved.checked!==undefined){checkbox.checked=saved.checked;checkbox.dispatchEvent(new Event('change'));}
+    const checkbox=box.querySelector('input[type="checkbox"]:not([data-pack-index])');if(checkbox&&saved.checked!==undefined){checkbox.checked=saved.checked;checkbox.dispatchEvent(new Event('change'));}
    }
    groups.find(g=>g.id===target).items.push(box);
   }
