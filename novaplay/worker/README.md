@@ -10,6 +10,9 @@ essas entradas sem tentar autenticar contas. Importe o arquivo da sua lista por
 **Abrir arquivo M3U** ou cole seu conteúdo (até 100 MB; seleção de lotes com até 500 canais). Listas simples podem ter o
 nome do canal acima da URL. Páginas paste.sh e texto Base64 não são sinais de
 vídeo. Os resultados ocultam parâmetros de usuário, senha e token.
+O arquivo selecionado fica fora da caixa de texto. A leitura e análise acontecem
+em um Web Worker, que retorna somente o lote de até 500 canais. O botão **Parar
+testes** também interrompe a leitura. A interface monta os resultados em etapas.
 
 Configure `../admin/gateway-config.js` antes de publicar o site:
 

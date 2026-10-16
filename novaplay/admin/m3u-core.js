@@ -58,33 +58,37 @@ const MAX_LIST_BYTES=100*1024*1024;
 function parseList(input,limit=500,offset=0){
  if(input.length>MAX_LIST_BYTES)throw Error('A lista excedeu 100 MB. Divida em partes menores.');
  if(!Number.isSafeInteger(offset)||offset<0)throw Error('Lote inválido.');
- const text=input.replace(/\r/g,'').replace(/^\uFEFF/,'');
- const blocks=[];
- if(/#EXTINF\s*:/i.test(text)){
-  for(const block of text.split(/(?=#EXTINF\s*:)/i).filter(x=>/^#EXTINF\s*:/i.test(x)))blocks.push({block});
- }else{
+ // Iterate blocks instead of copying the whole file into arrays of strings.
+ function* blocks(){
+  const markers=input.matchAll(/#EXTINF\s*:/ig);let start=null;
+  for(const match of markers){
+   if(start!==null)yield {block:input.slice(start,match.index)};
+   start=match.index;
+  }
+  if(start!==null){yield {block:input.slice(start)};return;}
   let title='';
-  for(const raw of text.split('\n')){
-   const line=raw.trim();if(!line||line.startsWith('#'))continue;
-   if(/^https?:\/\//i.test(line)){blocks.push({block:line,title});title='';}
+  for(const match of input.matchAll(/[^\r\n]+/g)){
+   const line=match[0].trim();if(!line||line.startsWith('#'))continue;
+   if(/^https?:\/\//i.test(line)){yield {block:line,title};title='';}
    else title=line;
   }
  }
- const entries=[],seen=new Set();let duplicates=0,invalid=0;
- for(const {block,title:plainTitle} of blocks){
+ const entries=[],seen=new Set();let duplicates=0,invalid=0,total=0;
+ for(const {block,title:plainTitle} of blocks()){
   const separator=/^#EXTINF\s*:/i.test(block)?commaOutsideQuotes(block):-1,metadata=separator<0?'':block.slice(0,separator),rest=separator<0?block:block.slice(separator+1);
   const match=rest.match(/https?:\/\/[^\s<>"']+/i);
   if(!match){invalid++;continue;}
   try{
    const source=url(match[0]);if(seen.has(source)){duplicates++;continue;}seen.add(source);
    const attr=name=>metadata.match(new RegExp(name+'\\s*=\\s*["\']([^"\']*)["\']','i'))?.[1]||'';
-   const title=plainTitle||(separator<0?'':rest.slice(0,match.index).trim().split('\n')[0])||attr('tvg-name')||'Canal '+(entries.length+1);
+   const index=total++;if(index<offset||entries.length>=limit)continue;
+   const title=plainTitle||(separator<0?'':rest.slice(0,match.index).trim().split('\n')[0])||attr('tvg-name')||'Canal '+(index+1);
    let logo=null;try{const candidate=url(attr('tvg-logo'));if(candidate.startsWith('https:'))logo=candidate;}catch{}
    const path=new URL(source).pathname;
    entries.push({title:title.slice(0,140),url:source,logo_url:logo,category:attr('group-title').slice(0,100),isPlaylist:isPlaylist(source),unsupported:/\.(mp4|webm|ogv|flv|m4v)$/i.test(path)});
   }catch{invalid++;}
  }
- return {entries:entries.slice(offset,offset+limit),duplicates,invalid,total:entries.length,truncated:Math.max(0,entries.length-offset-limit)};
+ return {entries,duplicates,invalid,total,truncated:Math.max(0,total-offset-limit)};
 }
 globalThis.NPlayM3u={url,isPlaylist,displayUrl,playable,candidates,gateways,parseList,MAX_LIST_BYTES};
 })();

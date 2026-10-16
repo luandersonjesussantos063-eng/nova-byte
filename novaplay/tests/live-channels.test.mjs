@@ -33,6 +33,17 @@ test('files above 2 MB load and every batch remains accessible without overlap',
  assert.equal(last.entries.length,1);assert.equal(last.entries[0].title,'Canal 10000');assert.equal(last.truncated,0);
  assert.throws(()=>core.parseList(list,500,-1),/Lote inválido/);
 });
+test('background reader returns only the requested batch and reports invalid files',async()=>{
+ let response;
+ const context=vm.createContext({URL,Set,self:{postMessage:value=>response=value},importScripts:()=>{}});
+ vm.runInContext(read('admin/m3u-core.js'),context);
+ vm.runInContext(read('admin/m3u-worker.js'),context);
+ const list=Array.from({length:1001},(_,i)=>`#EXTINF:-1,Canal ${i}\nhttps://example.org/${i}.m3u8`).join('\n');
+ await context.self.onmessage({data:{file:{size:list.length,text:async()=>list},offset:500}});
+ assert.equal(response.result.total,1001);assert.equal(response.result.entries.length,500);assert.equal(response.result.entries[0].title,'Canal 500');
+ await context.self.onmessage({data:{file:{size:core.MAX_LIST_BYTES+1,text:()=>{throw Error('must not read');}},offset:0}});
+ assert.match(response.error,/100 MB/);
+});
 test('URL validation, HTTPS, gateway and unsupported formats',()=>{
  assert.throws(()=>core.url('javascript:alert(1)'));assert.throws(()=>core.url('https://user:password@example.org/live'));
  assert.throws(()=>core.playable('http://example.org/live.m3u8'),/HTTPS/);

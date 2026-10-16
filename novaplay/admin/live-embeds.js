@@ -1,6 +1,20 @@
 (()=>{
 const $=id=>document.getElementById(id),core=()=>globalThis.NPlayM3u;
 let db,savedChannels=[],rows=[],batchController=null,singleController=null,singleItem=null,running=false,publishing=false,published=new Set();
+let selectedListFile=null;
+function parseBatch(offset,signal){
+ return new Promise((resolve,reject)=>{
+  if(signal.aborted){reject(new DOMException('Leitura interrompida.','AbortError'));return;}
+  if(!globalThis.Worker){reject(Error('Seu navegador não suporta leitura em segundo plano. Atualize o navegador.'));return;}
+  const reader=new Worker(new URL('./m3u-worker.js?v=0.49.6',document.baseURI));
+  const finish=(error,result)=>{reader.terminate();signal.removeEventListener('abort',abort);error?reject(error):resolve(result);};
+  const abort=()=>finish(new DOMException('Leitura interrompida.','AbortError'));
+  signal.addEventListener('abort',abort,{once:true});
+  reader.onmessage=event=>event.data.error?finish(Error(event.data.error)):finish(null,event.data.result);
+  reader.onerror=()=>finish(Error('Não foi possível ler a lista em segundo plano. Recarregue o painel e tente novamente.'));
+  try{reader.postMessage({file:selectedListFile,text:selectedListFile?undefined:$('live-batch-input').value,offset});}catch(error){finish(error);}
+ });
+}
 const fresh=item=>item.state==='passed'&&item.testedAt&&Date.now()-Date.parse(item.testedAt)<30*60*1000;
 function message(id,text){$(id).textContent=text;}
 function source(raw){
@@ -56,10 +70,12 @@ async function publishOne(item){
  catch(error){message('live-embed-message','Não foi possível publicar: '+error.message);}
  finally{publishing=false;update(item);summary();}
 }
-function renderRows(){
+async function renderRows(signal){
  const host=$('live-batch-results');host.replaceChildren();
+ let count=0;
  for(const item of rows){
-  const card=document.createElement('article');card.style.cssText='border:1px solid #365075;border-radius:12px;padding:14px;margin:12px 0;overflow-wrap:anywhere';
+  if(signal?.aborted)break;
+  const card=document.createElement('article');card.style.cssText='border:1px solid #365075;border-radius:12px;padding:14px;margin:12px 0;overflow-wrap:anywhere;content-visibility:auto;contain-intrinsic-size:auto 250px';
   if(item.logo_url){const image=document.createElement('img');image.src=item.logo_url;image.alt='';image.loading='lazy';image.referrerPolicy='no-referrer';image.style.cssText='width:64px;height:44px;object-fit:contain;float:right;background:#172a44;border-radius:6px';image.onerror=()=>image.remove();card.append(image);}
   const label=document.createElement('label');label.textContent='Nome do canal';const title=document.createElement('input');title.value=item.title;title.maxLength=140;label.append(title);
   const status=document.createElement('strong');status.style.cssText='display:block;margin-top:12px';
@@ -70,6 +86,7 @@ function renderRows(){
   const retry=button('Testar canal',async()=>{retry.disabled=true;const control=new AbortController();await checkItem(item,video,control.signal);update(item);});
   const actions=document.createElement('div');actions.style.cssText='display:flex;gap:10px;flex-wrap:wrap';actions.append(retry,publish);
   item.dom={card,title,status,detail,video,publish,retry};card.append(label,status,url,detail,video,actions);host.append(card);update(item);
+  if(++count%25===0)await new Promise(resolve=>setTimeout(resolve,0));
  }
  summary();
 }
@@ -78,17 +95,19 @@ async function runBatch(){
  try{
   const batch=Number($('live-batch-number').value||1);
   if(!Number.isSafeInteger(batch)||batch<1)throw Error('Informe um número de lote a partir de 1.');
-  const parsed=core().parseList($('live-batch-input').value,500,(batch-1)*500);
+  running=true;batchController=new AbortController();$('live-batch-run').disabled=true;summary();
+  message('live-batch-parse','Lendo a lista em segundo plano… Você pode interromper pelo botão Parar testes.');
+  const parsed=await parseBatch((batch-1)*500,batchController.signal);
   const batches=Math.max(1,Math.ceil(parsed.total/500));
   if(batch>batches)throw Error(`Esta lista tem ${batches} lotes. Escolha um lote entre 1 e ${batches}.`);
   if(!parsed.entries.length)throw Error('Nenhum endereço de canal encontrado. Cole a lista M3U ou uma URL por linha.');
   rows=parsed.entries.map(x=>({...x,state:'idle',published:published.has(x.url)}));
   message('live-batch-parse',`Lote ${batch} de ${batches}: ${parsed.entries.length} endereços carregados de ${parsed.total}; ${parsed.duplicates} repetidos ignorados; ${parsed.invalid} entradas inválidas.`+(batches>1?' Para testar os demais canais, altere o número do lote. Publique ou exporte os aprovados antes de trocar de lote.':''));
-  running=true;batchController=new AbortController();$('live-batch-run').disabled=true;renderRows();
+  await renderRows(batchController.signal);
   let next=0;const signal=batchController.signal;
   async function worker(){while(!signal.aborted&&next<rows.length){const item=rows[next++];await checkItem(item,item.dom.video,signal);}}
   await Promise.all([worker(),worker()]);
- }catch(error){message('live-batch-parse',error.message);}
+ }catch(error){message('live-batch-parse',error.name==='AbortError'?'Leitura interrompida.':error.message);}
  finally{running=false;batchController=null;$('live-batch-run').disabled=false;rows.forEach(update);summary();}
 }
 function exportConfirmed(){
@@ -238,7 +257,7 @@ function init(){
  <section style="border:1px solid #3a6396;border-radius:12px;padding:16px;margin:18px 0">
  <h3>Testar lista M3U e publicar canais</h3><p class="muted">Até 500 canais por lote, dois testes simultâneos. Nomes, capas e categorias são extraídos da lista. Endereços repetidos são ignorados. Para links HTTP, o testador tenta HTTPS e procura gateways autorizados configurados antes de indicar que não conseguiu reproduzir. HTTP direto é testado quando permitido pela página.</p>
  <label>Lista completa<textarea id="live-batch-input" rows="10" maxlength="104857600" placeholder="#EXTM3U&#10;#EXTINF:-1 tvg-logo=&quot;https://exemplo.com/logo.png&quot;,Nome do canal&#10;https://exemplo.com/ao-vivo.m3u8" style="width:100%"></textarea></label>
- <label>Abrir arquivo M3U<input id="live-batch-file" type="file" accept=".m3u,.m3u8,.txt"></label><p class="muted">Links get.php baixam listas, não são canais. Importe o arquivo da sua lista ou cole seu conteúdo. Base64 e páginas paste.sh não são sinais de vídeo.</p>
+ <label>Abrir arquivo M3U<input id="live-batch-file" type="file" accept=".m3u,.m3u8,.txt"></label><p id="live-batch-file-status" class="muted" role="status"></p><p class="muted">Links get.php baixam listas, não são canais. Importe o arquivo da sua lista ou cole seu conteúdo. Base64 e páginas paste.sh não são sinais de vídeo.</p>
  <label>Lote a testar<input id="live-batch-number" type="number" min="1" step="1" value="1"></label><p class="muted">Arquivos de até 100 MB. Cada lote contém até 500 canais; dois canais são testados por vez.</p>
  <div style="display:flex;gap:10px;flex-wrap:wrap"><button id="live-batch-run" class="primary" type="button">Carregar e testar lista</button><button id="live-batch-stop" class="outline" type="button" hidden>Parar testes</button><button id="live-batch-export" class="outline" type="button" disabled>Baixar M3U dos confirmados</button><button id="live-batch-publish" class="primary" type="button" disabled>Publicar aprovados</button></div>
  <p id="live-batch-parse" class="muted" role="status"></p><p id="live-batch-status" role="status" aria-live="polite"></p><div id="live-batch-results"></div></section>
@@ -250,14 +269,15 @@ function init(){
  <div style="display:flex;gap:10px;flex-wrap:wrap;margin:14px 0"><button id="live-saved-select-all" type="button" class="outline">Marcar todos</button><button id="live-saved-publish-selected" type="button" class="outline" disabled>Publicar selecionados</button><button id="live-saved-publish-all" type="button" class="primary" disabled>Publicar todos os rascunhos</button></div>
  <p class="muted">As ações usam o grupo, a busca e a situação selecionados. Canais M3U são testados antes de publicar; os que falharem continuam em rascunho.</p><p id="live-saved-selection" class="muted"></p><p id="live-saved-progress" role="status" aria-live="polite"></p><div id="live-saved-preview" style="display:flex;gap:10px;flex-wrap:wrap"></div><div id="live-embed-list"></div>`;
  $('live-batch-run').onclick=runBatch;$('live-batch-stop').onclick=()=>batchController?.abort();$('live-batch-publish').onclick=publishBatch;$('live-batch-export').onclick=exportConfirmed;
+ $('live-batch-input').oninput=()=>{selectedListFile=null;message('live-batch-file-status','Usando o texto colado no campo.');};
  $('live-batch-file').onchange=async event=>{
   const input=event.target,file=input.files?.[0];if(!file)return;
   try{
    if(running||publishing)throw Error('Aguarde o teste atual terminar antes de importar outra lista.');
    if(file.size>core().MAX_LIST_BYTES)throw Error('O arquivo excedeu 100 MB. Divida a lista em partes menores.');
-   const text=await file.text();
-   if(running||publishing)throw Error('Aguarde o teste atual terminar antes de importar outra lista.');
-   $('live-batch-input').value=text;$('live-batch-number').value='1';message('live-batch-parse','Arquivo carregado. Clique em Carregar e testar lista.');
+   selectedListFile=file;$('live-batch-input').value='';$('live-batch-number').value='1';
+   message('live-batch-file-status',`Arquivo selecionado: ${file.name} (${(file.size/1024/1024).toFixed(1)} MB). Ele será lido em segundo plano, sem preencher a caixa de texto.`);
+   message('live-batch-parse','Arquivo selecionado. Clique em Carregar e testar lista.');
   }catch(error){message('live-batch-parse',error.message);}finally{input.value='';}
  };
  $('live-test-button').onclick=testSingle;$('live-embed-refresh').onclick=refresh;
