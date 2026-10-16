@@ -22,7 +22,7 @@ export default {
   const auth=request.headers.get('Authorization')||'';
   if(!/^Bearer [A-Za-z0-9_.-]+$/.test(auth))return new Response('Unauthorized',{status:401});
   if(!env.PLAYLIST_URL||!env.SUPABASE_URL||!env.SUPABASE_ANON_KEY)return new Response('Missing configuration',{status:503});
-  const base=env.SUPABASE_URL.replace(/\\/$/,'');
+  const base=env.SUPABASE_URL.replace(/\/$/,'');
   const headers={apikey:env.SUPABASE_ANON_KEY,Authorization:auth};
   const check=await fetch(base+'/rest/v1/novaplay_admins?select=user_id&limit=1',{headers});
   if(!check.ok)return new Response('Unauthorized',{status:401});
