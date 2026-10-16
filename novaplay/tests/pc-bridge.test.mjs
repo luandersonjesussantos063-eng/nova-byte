@@ -5,6 +5,22 @@ import {createBridge,publicIP,destination} from '../pc-tv/bridge.mjs';
 import {bridgeUrl,encryptBridge,decryptBridge,bridgeUpstream,checkBridge} from '../worker/pc-bridge.mjs';
 import worker from '../worker/live-gateway.mjs';
 const secret='a'.repeat(64),key=Buffer.from(crypto.getRandomValues(new Uint8Array(32))).toString('base64url');
+test('PC health and media use Workers-compatible redirect modes and refuse redirects without forwarding the key',async()=>{
+ const previous=globalThis.fetch;let calls=0;
+ try{
+  globalThis.fetch=async(_url,options)=>{
+   // workerd supports only follow/manual; Node alone also accepts error.
+   if(!['follow','manual'].includes(options.redirect))throw TypeError('Invalid redirect value');
+   assert.equal(options.redirect,'manual');calls++;
+   return new Response(null,{status:302,headers:{Location:'https://foreign.example/private','X-NPlay-Upstream-Url':'http://provider.example/private'}});
+  };
+  const health=await checkBridge('https://test.trycloudflare.com',secret,r=>r.json());assert.equal(health.code,'PC_TUNNEL_REDIRECT');assert.equal(calls,1);
+  const transport=await bridgeUpstream({url:'https://test.trycloudflare.com',secret},url=>new URL(url));
+  await assert.rejects(transport('http://provider.example/private',new AbortController().signal),{code:'PC_BRIDGE_OFFLINE'});assert.equal(calls,2);
+  globalThis.fetch=async(_url,options)=>{assert.equal(options.redirect,'manual');return Response.json({service:'nplay-pc-tv'});};
+  assert.equal((await checkBridge('https://test.trycloudflare.com',secret,r=>r.json())).ok,true);
+ }finally{globalThis.fetch=previous;}
+});
 test('PC health diagnostics distinguish key rejection, tunnel denial, origin failure and invalid replies without leaking secrets',async()=>{
  const previous=globalThis.fetch;
  try{
