@@ -1,5 +1,6 @@
 {
   "published_ids": [
+    "tag:blogger.com,1999:blog-6755709643044947179.post-6854566470509824044",
     "https://developer.chrome.com/blog/new-in-devtools-october-2026?hl=en",
     "https://developer.chrome.com/blog/html-in-canvas-ot-changes?hl=en",
     "https://developer.chrome.com/blog/connection-allowlist-announcement?hl=en",
@@ -42,6 +43,15 @@
     "tag:blogger.com,1999:blog-6755709643044947179.post-3564094472242054542"
   ],
   "posts": [
+    {
+      "slug": "android-developers-blog-is-moving",
+      "title": "Android Developers Blog is moving",
+      "description": "Android Developers Blog is moving. Entenda a novidade e o impacto prático para empresas, sites, aplicativos e profissionais.",
+      "date": "2026-10-15",
+      "category": "Android e aplicativos",
+      "image": "/assets/news/android-developers-blog-is-moving.svg",
+      "source": "https://android-developers.googleblog.com/2026/10/android-developers-blog-is-moving.html"
+    },
     {
       "slug": "new-in-devtools-october-2026",
       "title": "New in DevTools - October 2026",
