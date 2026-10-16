@@ -23,7 +23,13 @@ function testSignal(video,url,{signal,timeout=25000,seconds=2}={}){
   if(signal?.aborted){abort();return;}
   const play=()=>video.play().catch(()=>finish(Error('A reprodução automática foi bloqueada. Clique em Testar novamente neste canal.')));
   try{
-   if(video.canPlayType('application/vnd.apple.mpegurl')){video.src=url;play();}
+   if(new URL(url).pathname.toLowerCase().endsWith('.ts')){
+    if(!globalThis.mpegts?.isSupported())throw Error('Reprodução MPEG-TS não suportada neste navegador.');
+    tsPlayer=mpegts.createPlayer({type:'mpegts',isLive:true,url:url});
+    tsPlayer.on(mpegts.Events.ERROR,()=>finish(Error('Sinal TS não confirmado: rede, CORS ou fonte indisponível.')));
+    tsPlayer.attachMediaElement(video);
+    tsPlayer.load();play();
+   }else if(video.canPlayType('application/vnd.apple.mpegurl')){video.src=url;play();}
    else if(globalThis.Hls?.isSupported()){
     hls=new Hls({enableWorker:true,startLevel:0,maxBufferLength:5,maxBufferSize:8*1024*1024,backBufferLength:0});
     hls.on(Hls.Events.ERROR,(_,data)=>{if(data.fatal)finish(Error(data.response?.code?'Servidor retornou HTTP '+data.response.code+'.':'Sinal não confirmado: '+data.details+'. Pode haver erro na fonte, rede ou permissão CORS.'));});
