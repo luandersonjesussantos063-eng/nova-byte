@@ -19,9 +19,9 @@
 </style>
 </head>
 <body>
-<header class="top"><a class="brand" href="../"><span class="mark">▶</span> N<span>Play</span></a><div class="top-right"><strong>Painel administrativo · NPlay V 0.48.8</strong><button id="logout" class="outline" hidden>Sair</button></div></header>
+<header class="top"><a class="brand" href="../"><span class="mark">▶</span> N<span>Play</span></a><div class="top-right"><strong>Painel administrativo · NPlay V 0.49.7</strong><button id="logout" class="outline" hidden>Sair</button></div></header>
 <main class="container">
-  <section id="loading" class="panel intro" hidden><div class="spin"></div><p>Preparando seu painel... <small>V 0.48.8</small></p><p id="loading-error" class="feedback" role="status"></p><button id="loading-retry" class="outline" type="button" hidden onclick="location.reload()">Tentar novamente</button></section>
+  <section id="loading" class="panel intro" hidden><div class="spin"></div><p>Preparando seu painel... <small>V 0.49.7</small></p><p id="loading-error" class="feedback" role="status"></p><button id="loading-retry" class="outline" type="button" hidden onclick="location.reload()">Tentar novamente</button></section>
   <section id="login-view" class="panel login">
     <div class="section-label">ACESSO RESTRITO</div>
     <h1>Gerencie sua NPlay</h1>
@@ -53,6 +53,24 @@
       <button type="button" class="admin-tab" data-admin-tab="ferramentas">Ferramentas</button>
     </nav>
     <p class="admin-tab-help" id="admin-tab-help">Pesquise, revise e publique os títulos do catálogo.</p>
+
+<section id="portal-auth-manager" class="panel" hidden style="margin:16px 0">
+<h2>Autenticação por MAC / SN / DEV</h2>
+<p class="muted">Teste a conexão com seu portal Ministra/Stalker. Os identificadores ficam apenas nesta tela e são enviados ao portal durante o teste. A autenticação não publica canais nem confirma reprodução.</p>
+<form id="portal-test-form" autocomplete="off">
+<details><summary>Preencher a partir de um bloco de dados</summary><label>Cole os dados recebidos do provedor<textarea id="portal-paste" rows="5" maxlength="8192" spellcheck="false" autocomplete="off"></textarea></label><button id="portal-parse" class="outline" type="button">Preencher campos</button></details>
+<label>URL do portal<input id="portal-url" type="url" placeholder="http://seu-portal:8080/c/" maxlength="512" required autocomplete="off"></label>
+<p class="muted">Se o portal usa HTTP, o trecho entre nosso servidor e o provedor também usa HTTP.</p>
+<label>Tipo de API<select id="portal-endpoint"><option value="portal">Portal na raiz · portal.php</option><option value="load">Stalker · server/load.php</option></select></label>
+<label>MAC<input id="portal-mac" type="password" placeholder="00:1A:79:XX:XX:XX" maxlength="17" required autocomplete="off"></label>
+<label>SN completo<input id="portal-sn" type="password" maxlength="64" autocomplete="off"></label>
+<label>SN curto (SNCUT)<input id="portal-sncut" type="password" maxlength="64" autocomplete="off"></label>
+<label>SN a enviar<select id="portal-serial-mode"><option value="full">SN completo</option><option value="short">SN curto (SNCUT)</option></select></label>
+<label>DEV1<input id="portal-dev1" type="password" maxlength="64" minlength="64" required autocomplete="off"></label>
+<label>DEV2<input id="portal-dev2" type="password" maxlength="64" minlength="64" required autocomplete="off"></label>
+<div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:16px"><button type="submit" class="primary">Testar autenticação</button><button id="portal-clear" type="button" class="outline">Limpar dados</button></div>
+<p id="portal-test-result" class="feedback" role="status" aria-live="polite"></p>
+</form></section>
     <section id="nplay-presence-admin" class="panel" hidden style="margin:16px 0"><h2>Perfis online</h2><p class="muted">Veja quem está com a NPlay aberta e o tempo aproximado de uso. Conta o tempo com o aplicativo visível; não confirma reprodução. Atualização a cada 30 segundos. Sem sinal por 75 segundos, o perfil aparece offline. O total de hoje usa o horário de Mato Grosso e começa nesta versão.</p><button id="presence-refresh" class="outline" type="button">Atualizar perfis</button><p id="presence-status" role="status" aria-live="polite"></p><div id="presence-list" class="presence-list"></div></section>
     <section id="nplay-access-admin" class="panel" hidden style="margin:16px 0"><h2>Autorizações de acesso</h2><p class="muted">Aprove ou revogue dispositivos. Somente administradores podem alterar o acesso.</p><button id="nplay-access-refresh" type="button" class="outline">Atualizar solicitações</button><p id="nplay-access-admin-status"></p><div id="nplay-access-admin-list"></div></section><section id="live-embed-manager" class="panel" hidden><h2>Canais ao vivo · testar e publicar</h2><div id="live-embed-controls"></div></section>
     <div class="intro-text"><span class="section-label">CENTRAL DE CONTEÚDO</span><h1>Seus filmes, suas regras.</h1><p>Escolha um vídeo do telefone, envie uma capa e publique dentro da NPlay.</p></div>
@@ -368,9 +386,9 @@
    online:[dash.querySelector("#nplay-presence-admin")],
    acessos:[dash.querySelector("#nplay-access-admin")],
    destaques:[dash.querySelector(".featured-manager")],
-   ferramentas:[dash.querySelector(".licensed-manager"),dash.querySelector(".issue-manager")]
+   ferramentas:[dash.querySelector("#portal-auth-manager"),dash.querySelector(".licensed-manager"),dash.querySelector(".issue-manager")]
   };
-  var descriptions={online:"Acompanhe o tempo de conexão de cada perfil e o total de hoje.",catalogo:"Pesquise, revise e publique os títulos do catálogo.",importacoes:"Acompanhe download, preparação e envio. O rascunho é criado automaticamente; revise as informações pendentes para publicar.",canais:"Importe, teste e publique canais ao vivo.",acessos:"Analise solicitações e autorize ou revogue dispositivos.",destaques:"Organize as capas e os títulos da página inicial.",ferramentas:"Gerencie links licenciados e problemas relatados na reprodução."};
+  var descriptions={online:"Acompanhe o tempo de conexão de cada perfil e o total de hoje.",catalogo:"Pesquise, revise e publique os títulos do catálogo.",importacoes:"Acompanhe download, preparação e envio. O rascunho é criado automaticamente; revise as informações pendentes para publicar.",canais:"Importe, teste e publique canais ao vivo.",acessos:"Analise solicitações e autorize ou revogue dispositivos.",destaques:"Organize as capas e os títulos da página inicial.",ferramentas:"Teste autenticação MAC/SN/DEV e gerencie links e problemas de reprodução."};
   var workspace=dash.querySelector(".workspace");if(workspace)workspace.classList.add("admin-workspace");
   var intro=dash.querySelector(".intro-text"),stats=dash.querySelector(".stats"),source=dash.querySelector("#source-summary"),drive=dash.querySelector(".intro-text + .stats + #source-summary + .panel");
   function show(name){
@@ -400,5 +418,6 @@
 <script src="./live-embeds.js?v=0.49.6" defer></script>
 <script src="./access-admin.js?v=0.47.0" defer></script>
 <script src="./presence-admin.js?v=0.48.8" defer></script>
+<script src="./portal-test.js?v=0.49.7" defer></script>
 </body>
 </html>
