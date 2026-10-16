@@ -81,6 +81,18 @@ async function runBatch(){
  }catch(error){message('live-batch-parse',error.message);}
  finally{running=false;batchController=null;$('live-batch-run').disabled=false;rows.forEach(update);summary();}
 }
+function exportConfirmed(){
+ const approved=rows.filter(item=>fresh(item));
+ if(!approved.length)return;
+ const lines=['#EXTM3U'];
+ for(const item of approved){
+  const name=(item.dom?.title.value||item.title).replace(/[\r\n]/g,' ').trim();
+  const category=(item.category||'').replace(/"/g,'');
+  lines.push('#EXTINF:-1 group-title="'+category+'",'+name,item.playbackUrl);
+ }
+ const blob=new Blob([lines.join('\n')+'\n'],{type:'audio/x-mpegurl;charset=utf-8'});
+ const link=document.createElement('a');link.href=URL.createObjectURL(blob);link.download='nplay-canais-confirmados.m3u';link.click();setTimeout(()=>URL.revokeObjectURL(link.href),2000);
+}
 async function publishBatch(){
  if(running||publishing||!authorized())return;
  publishing=true;let done=0,failed=0;
@@ -223,7 +235,7 @@ function init(){
  <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:end"><label style="flex:1;min-width:180px">Buscar canal<input id="live-channel-search" type="search" placeholder="Nome ou categoria" maxlength="140"></label><label>Situação<select id="live-channel-status"><option value="all">Publicados e rascunhos</option><option value="published">Somente publicados</option><option value="draft">Somente rascunhos</option></select></label><button id="live-embed-refresh" type="button" class="outline">Atualizar canais</button></div><p id="live-channel-count" role="status" aria-live="polite"></p>
  <div style="display:flex;gap:10px;flex-wrap:wrap;margin:14px 0"><button id="live-saved-select-all" type="button" class="outline">Marcar todos</button><button id="live-saved-publish-selected" type="button" class="outline" disabled>Publicar selecionados</button><button id="live-saved-publish-all" type="button" class="primary" disabled>Publicar todos os rascunhos</button></div>
  <p class="muted">As ações usam o grupo, a busca e a situação selecionados. Canais M3U são testados antes de publicar; os que falharem continuam em rascunho.</p><p id="live-saved-selection" class="muted"></p><p id="live-saved-progress" role="status" aria-live="polite"></p><div id="live-saved-preview" style="display:flex;gap:10px;flex-wrap:wrap"></div><div id="live-embed-list"></div>`;
- $('live-batch-run').onclick=runBatch;$('live-batch-stop').onclick=()=>batchController?.abort();$('live-batch-publish').onclick=publishBatch;
+ $('live-batch-run').onclick=runBatch;$('live-batch-stop').onclick=()=>batchController?.abort();$('live-batch-publish').onclick=publishBatch;$('live-batch-export').onclick=exportConfirmed;
  $('live-test-button').onclick=testSingle;$('live-embed-refresh').onclick=refresh;
  for(const group of ['m3u','legacy','individual'])$('live-group-'+group).onclick=()=>{selectedChannelGroup=group;renderSaved();};
  $('live-saved-select-all').onclick=()=>{const visible=savedVisible(),all=visible.every(x=>selectedSaved.has(x.id));visible.forEach(x=>{if(all)selectedSaved.delete(x.id);else selectedSaved.add(x.id);});renderSaved();};
