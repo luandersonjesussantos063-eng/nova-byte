@@ -76,10 +76,14 @@ function renderRows(){
 async function runBatch(){
  if(running||publishing)return;
  try{
-  const parsed=core().parseList($('live-batch-input').value);
+  const batch=Number($('live-batch-number').value||1);
+  if(!Number.isSafeInteger(batch)||batch<1)throw Error('Informe um número de lote a partir de 1.');
+  const parsed=core().parseList($('live-batch-input').value,500,(batch-1)*500);
+  const batches=Math.max(1,Math.ceil(parsed.total/500));
+  if(batch>batches)throw Error(`Esta lista tem ${batches} lotes. Escolha um lote entre 1 e ${batches}.`);
   if(!parsed.entries.length)throw Error('Nenhum endereço de canal encontrado. Cole a lista M3U ou uma URL por linha.');
   rows=parsed.entries.map(x=>({...x,state:'idle',published:published.has(x.url)}));
-  message('live-batch-parse',`${parsed.entries.length} endereços carregados; ${parsed.duplicates} repetidos ignorados; ${parsed.invalid} entradas inválidas.`+(parsed.truncated?` A lista tem ${parsed.total} canais; este lote contém os primeiros 500. Divida o restante em outro lote.`:''));
+  message('live-batch-parse',`Lote ${batch} de ${batches}: ${parsed.entries.length} endereços carregados de ${parsed.total}; ${parsed.duplicates} repetidos ignorados; ${parsed.invalid} entradas inválidas.`+(batches>1?' Para testar os demais canais, altere o número do lote. Publique ou exporte os aprovados antes de trocar de lote.':''));
   running=true;batchController=new AbortController();$('live-batch-run').disabled=true;renderRows();
   let next=0;const signal=batchController.signal;
   async function worker(){while(!signal.aborted&&next<rows.length){const item=rows[next++];await checkItem(item,item.dom.video,signal);}}
@@ -233,8 +237,9 @@ function init(){
  <label class="publish-check"><input id="live-embed-rights" type="checkbox"><span>Confirmo autorização para exibir na NPlay os canais que eu publicar.</span></label>
  <section style="border:1px solid #3a6396;border-radius:12px;padding:16px;margin:18px 0">
  <h3>Testar lista M3U e publicar canais</h3><p class="muted">Até 500 canais por lote, dois testes simultâneos. Nomes, capas e categorias são extraídos da lista. Endereços repetidos são ignorados. Para links HTTP, o testador tenta HTTPS e procura gateways autorizados configurados antes de indicar que não conseguiu reproduzir. HTTP direto é testado quando permitido pela página.</p>
- <label>Lista completa<textarea id="live-batch-input" rows="10" maxlength="2097152" placeholder="#EXTM3U&#10;#EXTINF:-1 tvg-logo=&quot;https://exemplo.com/logo.png&quot;,Nome do canal&#10;https://exemplo.com/ao-vivo.m3u8" style="width:100%"></textarea></label>
+ <label>Lista completa<textarea id="live-batch-input" rows="10" maxlength="52428800" placeholder="#EXTM3U&#10;#EXTINF:-1 tvg-logo=&quot;https://exemplo.com/logo.png&quot;,Nome do canal&#10;https://exemplo.com/ao-vivo.m3u8" style="width:100%"></textarea></label>
  <label>Abrir arquivo M3U<input id="live-batch-file" type="file" accept=".m3u,.m3u8,.txt"></label><p class="muted">Links get.php baixam listas, não são canais. Importe o arquivo da sua lista ou cole seu conteúdo. Base64 e páginas paste.sh não são sinais de vídeo.</p>
+ <label>Lote a testar<input id="live-batch-number" type="number" min="1" step="1" value="1"></label><p class="muted">Arquivos de até 50 MB. Cada lote contém até 500 canais; dois canais são testados por vez.</p>
  <div style="display:flex;gap:10px;flex-wrap:wrap"><button id="live-batch-run" class="primary" type="button">Carregar e testar lista</button><button id="live-batch-stop" class="outline" type="button" hidden>Parar testes</button><button id="live-batch-export" class="outline" type="button" disabled>Baixar M3U dos confirmados</button><button id="live-batch-publish" class="primary" type="button" disabled>Publicar aprovados</button></div>
  <p id="live-batch-parse" class="muted" role="status"></p><p id="live-batch-status" role="status" aria-live="polite"></p><div id="live-batch-results"></div></section>
  <details style="border:1px solid #365075;border-radius:12px;padding:16px"><summary>Testar ou cadastrar um canal individual</summary>
@@ -249,10 +254,10 @@ function init(){
   const input=event.target,file=input.files?.[0];if(!file)return;
   try{
    if(running||publishing)throw Error('Aguarde o teste atual terminar antes de importar outra lista.');
-   if(file.size>2*1024*1024)throw Error('O arquivo excedeu 2 MB. Divida a lista em partes menores.');
+   if(file.size>core().MAX_LIST_BYTES)throw Error('O arquivo excedeu 50 MB. Divida a lista em partes menores.');
    const text=await file.text();
    if(running||publishing)throw Error('Aguarde o teste atual terminar antes de importar outra lista.');
-   $('live-batch-input').value=text;message('live-batch-parse','Arquivo carregado. Clique em Carregar e testar lista.');
+   $('live-batch-input').value=text;$('live-batch-number').value='1';message('live-batch-parse','Arquivo carregado. Clique em Carregar e testar lista.');
   }catch(error){message('live-batch-parse',error.message);}finally{input.value='';}
  };
  $('live-test-button').onclick=testSingle;$('live-embed-refresh').onclick=refresh;

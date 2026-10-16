@@ -54,8 +54,10 @@ function playable(value){
  throw Error('Este endereço usa HTTP. O teste dentro do site precisa de uma versão HTTPS ou de um gateway autorizado já configurado. Isso não significa que o canal esteja fora do ar.');
 }
 function commaOutsideQuotes(text){let quote=null;for(let i=0;i<text.length;i++){const c=text[i];if(quote){if(c===quote)quote=null;}else if(c==='"'||c==="'")quote=c;else if(c===',')return i;}return -1;}
-function parseList(input,limit=500){
- if(input.length>2*1024*1024)throw Error('A lista excedeu 2 MB. Divida em partes menores.');
+const MAX_LIST_BYTES=50*1024*1024;
+function parseList(input,limit=500,offset=0){
+ if(input.length>MAX_LIST_BYTES)throw Error('A lista excedeu 50 MB. Divida em partes menores.');
+ if(!Number.isSafeInteger(offset)||offset<0)throw Error('Lote inválido.');
  const text=input.replace(/\r/g,'').replace(/^\uFEFF/,'');
  const blocks=[];
  if(/#EXTINF\s*:/i.test(text)){
@@ -82,7 +84,7 @@ function parseList(input,limit=500){
    entries.push({title:title.slice(0,140),url:source,logo_url:logo,category:attr('group-title').slice(0,100),isPlaylist:isPlaylist(source),unsupported:/\.(mp4|webm|ogv|flv|m4v)$/i.test(path)});
   }catch{invalid++;}
  }
- return {entries:entries.slice(0,limit),duplicates,invalid,total:entries.length,truncated:Math.max(0,entries.length-limit)};
+ return {entries:entries.slice(offset,offset+limit),duplicates,invalid,total:entries.length,truncated:Math.max(0,entries.length-offset-limit)};
 }
-globalThis.NPlayM3u={url,isPlaylist,displayUrl,playable,candidates,gateways,parseList};
+globalThis.NPlayM3u={url,isPlaylist,displayUrl,playable,candidates,gateways,parseList,MAX_LIST_BYTES};
 })();

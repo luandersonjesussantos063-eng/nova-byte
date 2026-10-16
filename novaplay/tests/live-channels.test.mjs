@@ -24,13 +24,22 @@ test('plain lists preserve channel names, commas in URLs and skip comments',()=>
  assert.equal(parsed.entries[1].title,'Canal B');
  assert.equal(core.parseList('https://example.org/a.m3u8?channels=1,2').entries[0].title,'Canal 1');
 });
+test('files above 2 MB load and every batch remains accessible without overlap',()=>{
+ const list=Array.from({length:10001},(_,i)=>`#EXTINF:-1 group-title="${'a'.repeat(180)}",Canal ${i}\nhttps://example.org/${i}.m3u8`).join('\n');
+ assert.ok(list.length>2*1024*1024);
+ const first=core.parseList(list),second=core.parseList(list,500,500),last=core.parseList(list,500,10000);
+ assert.equal(first.total,10001);assert.equal(first.entries.length,500);assert.equal(second.entries.length,500);
+ assert.equal(first.entries[499].title,'Canal 499');assert.equal(second.entries[0].title,'Canal 500');
+ assert.equal(last.entries.length,1);assert.equal(last.entries[0].title,'Canal 10000');assert.equal(last.truncated,0);
+ assert.throws(()=>core.parseList(list,500,-1),/Lote inválido/);
+});
 test('URL validation, HTTPS, gateway and unsupported formats',()=>{
  assert.throws(()=>core.url('javascript:alert(1)'));assert.throws(()=>core.url('https://user:password@example.org/live'));
  assert.throws(()=>core.playable('http://example.org/live.m3u8'),/HTTPS/);
  assert.match(core.playable('http://95.211.149.215:8081/look/sptv/playlist.m3u8'),/^https:\/\/nplay-sptv/);
  const items=core.parseList('https://example.org/video.mp4\nhttps://example.org/hls?token=123').entries;
  assert.equal(items[0].unsupported,true);assert.equal(items[1].url,'https://example.org/hls?token=123');
- assert.throws(()=>core.parseList('x'.repeat(2097153)),/2 MB/);
+ assert.throws(()=>core.parseList('x'.repeat(core.MAX_LIST_BYTES+1)),/50 MB/);
 });
 class Video extends EventTarget{
  readyState=3;videoWidth=1280;videoHeight=720;currentTime=0;paused=true;cleaned=false;
