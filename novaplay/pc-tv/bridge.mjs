@@ -23,7 +23,7 @@ export function createBridge({secret,fetchUpstream=fetchMedia,fetchRoot=fetchXtr
  return http.createServer(async(req,res)=>{
   const json=(status,data)=>{if(res.headersSent||res.destroyed)return;const headers={'Content-Type':'application/json','Cache-Control':'no-store'};if(data.reason)headers['X-NPlay-Bridge-Error']=data.reason;res.writeHead(status,headers);res.end(JSON.stringify(data));};
   if(!authorized(req.headers.authorization,secret)){req.resume();json(401,{error:'AUTH_REQUIRED'});return;}
-  if(req.url==='/health'&&req.method==='GET'){json(200,{service:'nplay-pc-tv',version:'0.50.0',capabilities:{xtream:!!engine,media_engine:!!engine}});return;}
+  if(req.url==='/health'&&req.method==='GET'){json(200,{service:'nplay-pc-tv',version:'0.50.1',capabilities:{xtream:!!engine,media_engine:!!engine}});return;}
   if(req.url==='/engine/status'&&req.method==='GET'){json(200,engine?engine.status():{stage:'unavailable',code:'ENGINE_NOT_INSTALLED'});return;}
   if(!['/fetch','/engine/start','/xtream/inspect'].includes(req.url)||req.method!=='POST'){req.resume();json(404,{error:'NOT_FOUND'});return;}
   const controller=new AbortController();req.on('aborted',()=>controller.abort());

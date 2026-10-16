@@ -1,6 +1,7 @@
 import {fetchMedia} from './transport.mjs';
+import {providerUrl} from './provider-tls.mjs';
 export function xtreamIdentity(raw){
- const u=new URL(raw),m=/^\/(?:live\/)?([^/]+)\/([^/]+)\/(\d+)\.(m3u8|ts)$/.exec(u.pathname);
+ const u=providerUrl(raw),m=/^\/(?:live\/)?([^/]+)\/([^/]+)\/(\d+)\.(m3u8|ts)$/.exec(u.pathname);
  if(!m||u.search||u.hash||!['http:','https:'].includes(u.protocol)||u.username||u.password)throw Object.assign(Error('Invalid live root'),{code:'XTREAM_ROOT_INVALID'});
  return {origin:u.origin,user:decodeURIComponent(m[1]),password:decodeURIComponent(m[2]),id:m[3],format:m[4]};
 }

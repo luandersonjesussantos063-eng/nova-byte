@@ -23,6 +23,32 @@ IPv6 e DNS com respostas privadas; cada redirect e resolvido e validado.
 As conexoes DNS sao fixadas ao IPv4 validado, sem desativar verificacao TLS.
 URLs do fornecedor e credenciais nao aparecem nos logs.
 
+## HTTPS com certificado conferido (receptor 0.50.1)
+
+O instalador aceita `-HttpsFornecedorConfirmado` para o certificado público cuja
+SHA-256 foi comparada no PC e no celular do proprietário. A opção grava somente
+`NPLAY_TLS_PINNED_HOST` e `NPLAY_TLS_PINNED_SHA256` no `.env` local. Sem essa
+opção, nenhuma exceção é habilitada. A chave da ponte e os canais não mudam.
+
+O opt-in atual se limita a `pulsando23cod07.fyi:443` e ao certificado SHA-256
+`E2624F0B26B7600C5745CE096D7EB8168928B21BD7C9874F3E208BCBEC6C25D2`.
+URLs HTTP desse domínio na porta padrão passam a HTTPS, incluindo o login
+Xtream e o vídeo. Outros domínios e portas mantêm a validação TLS normal.
+
+Uma conexão preliminar recebe apenas o certificado público, sem pedidos HTTP,
+login, cookies ou mídia. Se a impressão digital ou a validade não corresponder,
+o receptor para antes de enviar as credenciais. O certificado conferido é usado
+como âncora de confiança exclusiva nessa origem; a requisição de login exige
+`rejectUnauthorized: true` e confere novamente a impressão digital. Como o CN
+do certificado é genérico, a identidade nessa origem é a SHA-256 aprovada.
+O Windows e o armazenamento global de certificados não são modificados.
+Redirecionamentos de HTTPS para HTTP são rejeitados, salvo a normalização do
+próprio domínio confirmado de volta a HTTPS. Uma troca de certificado requer
+nova conferência e configuração; não existe aceitação automática da nova chave.
+
+Após atualizar, use um rascunho no ADM para conferir conta/grade e testar o vídeo.
+Testes de TLS locais não comprovam que a origem fornecerá um canal real.
+
 ## Reprodução Xtream (0.49.29)
 O gateway usa os canais já cadastrados, sem uma nova importação. Ao abrir um canal,
 a ponte tenta a rota padrão Xtream `/live/` e mantém a rota original como alternativa

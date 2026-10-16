@@ -2,6 +2,7 @@ import http from 'node:http';
 import https from 'node:https';
 import dns from 'node:dns/promises';
 import {isIP} from 'node:net';
+import {providerTrust,providerUrl} from './provider-tls.mjs';
 
 // Only the authenticated gateway knows this key. No provider URLs are logged.
 export function publicIP(host){
@@ -18,18 +19,22 @@ export async function destination(raw,lookup=dns.lookup){
 }
 export async function fetchMedia(raw,range,signal,session={}){
  for(let hop=0;hop<5;hop++){
-  const {url,address}=await destination(raw);
+  const {url,address}=await destination(providerUrl(raw).href);
+  const tlsOptions=providerTrust?await providerTrust.options(url,address,signal):{};
   const response=await new Promise((resolve,reject)=>{
-   const headers={'Accept-Encoding':'identity','Accept':'*/*','User-Agent':'NPlay-TV-PC/0.50.0','Connection':'close'};if(range)headers.Range=range;
+   const headers={'Accept-Encoding':'identity','Accept':'*/*','User-Agent':'NPlay-TV-PC/0.50.1','Connection':'close'};if(range)headers.Range=range;
    if(session.cookie&&session.origin===url.origin)headers.Cookie=session.cookie;
-   const request=(url.protocol==='https:'?https:http).request(url,{method:'GET',headers,signal,lookup:(_host,options,callback)=>callback(null,options.all?[{address,family:4}]:address,4)},resolve);
+   const request=(url.protocol==='https:'?https:http).request(url,{...tlsOptions,method:'GET',headers,signal,lookup:(_host,options,callback)=>callback(null,options.all?[{address,family:4}]:address,4)},resolve);
    const headTimer=setTimeout(()=>request.destroy(Object.assign(Error('UPSTREAM_TIMEOUT'),{code:'ETIMEDOUT'})),session.headerTimeout||15000);
    request.once('response',()=>clearTimeout(headTimer));
    request.on('error',error=>{clearTimeout(headTimer);const failure=Error('UPSTREAM_CONNECTION');failure.code=error.code;reject(failure);});
    request.setTimeout(20000,()=>request.destroy(Object.assign(Error('UPSTREAM_TIMEOUT'),{code:'ETIMEDOUT'})));request.end();
   });
   if([301,302,303,307,308].includes(response.statusCode)){
-   const location=response.headers.location;response.destroy();if(!location)throw Error('UPSTREAM_REDIRECT');raw=new URL(location,url).href;continue;
+   const location=response.headers.location;response.destroy();if(!location)throw Error('UPSTREAM_REDIRECT');
+   const next=providerUrl(new URL(location,url).href);
+   if(url.protocol==='https:'&&next.protocol!=='https:')throw Error('UPSTREAM_REDIRECT_DOWNGRADE');
+   raw=next.href;continue;
   }
   return {response,url:url.href};
  }

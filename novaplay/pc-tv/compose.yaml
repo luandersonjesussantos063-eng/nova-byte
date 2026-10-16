@@ -4,6 +4,8 @@ services:
     restart: unless-stopped
     environment:
       NPLAY_MEDIA_MODE: ${NPLAY_MEDIA_MODE:-compatible}
+      NPLAY_TLS_PINNED_HOST: ${NPLAY_TLS_PINNED_HOST:-}
+      NPLAY_TLS_PINNED_SHA256: ${NPLAY_TLS_PINNED_SHA256:-}
       NPLAY_BRIDGE_KEY: ${NPLAY_BRIDGE_KEY:?Execute INICIAR-TV-PC.ps1 primeiro}
     read_only: true
     cap_drop: [ALL]
