@@ -3,7 +3,7 @@ function signalError(message,code,sharedFailure=false){const error=Error(message
 const protectedSource=url=>{try{const u=new URL(url);return u.origin==='https://nplay-live-gateway.luandersonjesussantos063.workers.dev'&&/^\/live\/[0-9a-f-]{36}\/(?:stream\.ts|index\.m3u8)$/i.test(u.pathname);}catch{return false;}};
 async function checkProtectedSource(url,signal){
  const control=new AbortController(),abort=()=>control.abort();signal?.addEventListener('abort',abort,{once:true});
- if(signal?.aborted)control.abort();const timer=setTimeout(abort,12000);
+ if(signal?.aborted)control.abort();const timer=setTimeout(abort,40000);
  try{
   const response=await fetch(url,{method:'HEAD',signal:control.signal,cache:'no-store',credentials:'omit',referrerPolicy:'no-referrer'});
   const status=response.status;
@@ -76,7 +76,7 @@ async function testSource(video,source,{signal,onAttempt=()=>{},...options}={}){
    try{
     let playback=url;
     if(protectedSource(url)){
-     if(!globalThis.NPlayLiveAuth)throw signalError('O módulo de acesso está desatualizado. Reabra o ADM e confirme a versão 0.49.29.','ADMIN_UPDATE_REQUIRED',true);
+     if(!globalThis.NPlayLiveAuth)throw signalError('O módulo de acesso está desatualizado. Reabra o ADM e confirme a versão 0.50.0.','ADMIN_UPDATE_REQUIRED',true);
      try{playback=await NPlayLiveAuth.authorize(url);}catch{throw signalError('Sua sessão não está disponível. Entre novamente no ADM antes de testar.','GATEWAY_SESSION',true);}
      await checkProtectedSource(playback,signal);
     }else playback=await globalThis.NPlayLiveAuth?.authorize(url)||url;

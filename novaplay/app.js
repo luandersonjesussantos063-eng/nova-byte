@@ -1017,7 +1017,7 @@ function play(item,episode){
  v.oncanplay=()=>{if(seq===attempt&&!hasFailed){if(item.kind!=="tv")clearTimeout(timer);playerStatus(v.paused?"Preparando reprodução automática...":"▶ Reproduzindo")}};
  const progressId=item.kind==="tv"?null:episode?episode.id:item.id;
  setResume(v,progressId,seq);
- if(item.kind==="tv")timer=setTimeout(()=>{if(seq===attempt&&((!item.audioOnly&&!v.videoWidth)||v.readyState<2)&&!tryMpegts())fail("O canal está demorando para carregar. Verifique a conexão ou tente novamente.")},22000);
+ if(item.kind==="tv")timer=setTimeout(()=>{if(seq===attempt&&((!item.audioOnly&&!v.videoWidth)||v.readyState<2)&&!tryMpegts())fail("O canal está demorando para carregar. Verifique a conexão ou tente novamente.")},window.NPlayLiveAuth?.protectedUrl(src)?45000:22000);
  if(!media.youtube_id&&!media.google_drive_id&&!window.NPlayLiveAuth?.protectedUrl(media.src))window.NPlayCasting?.configure({
   title:episode?item.title+" · "+episode.label:item.title,live:item.kind==="tv",
   onChange:updateCinemaControls,
@@ -1070,7 +1070,7 @@ function play(item,episode){
     if(nativeHls&&!(item.kind==="tv"&&managedHls)){
       v.src=src;startAutoplay(v,seq);
     }else if(window.Hls&&window.Hls.isSupported()){
-      hls=new window.Hls({enableWorker:true,lowLatencyMode:false,maxBufferLength:item.kind==="tv"?20:60,maxMaxBufferLength:180,maxBufferSize:64*1024*1024,backBufferLength:30,startLevel:0,capLevelToPlayerSize:true,abrEwmaDefaultEstimate:400000});
+      hls=new window.Hls({...(window.NPlayLiveAuth?.protectedUrl(src)?{manifestLoadPolicy:{default:{maxTimeToFirstByteMs:40000,maxLoadTimeMs:45000,timeoutRetry:null,errorRetry:null}}}:{}),enableWorker:true,lowLatencyMode:false,maxBufferLength:item.kind==="tv"?20:60,maxMaxBufferLength:180,maxBufferSize:64*1024*1024,backBufferLength:30,startLevel:0,capLevelToPlayerSize:true,abrEwmaDefaultEstimate:400000});
       hls.on(window.Hls.Events.ERROR,(event,data)=>{
         if(seq!==attempt||!data.fatal)return;
         const gatewayFailure=window.NPlayLiveAuth?.failureMessage?.(data.networkDetails?.getResponseHeader?.("X-NPlay-Error"));
@@ -1220,7 +1220,7 @@ document.addEventListener("keydown",e=>{
 document.addEventListener("visibilitychange",()=>{if(document.hidden){stopHeroPreview();if(!$("player-layer").hidden)$("video").pause()}});
 window.addEventListener("scroll",()=>$("app-header").classList.toggle("is-scrolled",window.scrollY>24),{passive:true});
 if("serviceWorker" in navigator&&location.protocol==="https:"){
- window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js?v=0.49.29",{updateViaCache:"none"}).catch(()=>{}));
+ window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js?v=0.50.0",{updateViaCache:"none"}).catch(()=>{}));
 }
 $("hero-play").onclick=()=>navigate("tv");
 $("hero-info").onclick=()=>navigate("filmes");

@@ -4,7 +4,7 @@ $folder = Join-Path $env:LOCALAPPDATA 'NPlay\TV-PC'
 New-Item -ItemType Directory -Force -Path $folder | Out-Null
 Set-Location $folder
 $source = 'https://raw.githubusercontent.com/luandersonjesussantos063-eng/nova-byte/main/novaplay/pc-tv/'
-foreach ($name in @('bridge.mjs','Dockerfile','compose.yaml','INICIAR-TV-PC.ps1','PARAR-TV-PC.bat','README.md')) {
+foreach ($name in @('bridge.mjs','transport.mjs','xtream-client.mjs','media-engine.mjs','Dockerfile','compose.yaml','INICIAR-TV-PC.ps1','PARAR-TV-PC.bat','README.md')) {
     Invoke-WebRequest -UseBasicParsing ($source + $name) -OutFile (Join-Path $folder $name)
 }
 if (-not (Get-Command docker -ErrorAction SilentlyContinue)) { throw 'Instale/abra o Docker Desktop antes de iniciar a TV-PC.' }

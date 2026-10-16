@@ -32,3 +32,38 @@ reescritas. O player tenta HLS e, se suportado pelo navegador, MPEG-TS em sequê
 O endereço final de redirecionamento é usado internamente para resolver segmentos
 relativos e nunca é encaminhado para o cliente. A reprodução no PC precisa ser
 confirmada após atualizar a ponte; testes locais não provam acesso ao fornecedor.
+
+## Receptor IPTV Xtream + FFmpeg (0.50.0)
+
+O receptor autentica a conta em `player_api.php`, confere situação e limite de
+conexões e só então abre um canal MPEG-TS. Cookies de login ficam restritos à
+origem do fornecedor. O sinal entra no FFmpeg por um pipe: o processo de mídia
+não recebe endereços do fornecedor e não pode abrir URLs de playlists ou arquivos
+escolhidos pelo usuário. A saída padrão é H.264/AAC, até 720p, com dois threads.
+Isso usa mais CPU que a ponte antiga e foi limitado a um canal recebido por PC.
+
+O HLS gerado contém somente nomes de segmentos temporários. O gateway os entrega
+por identificadores cifrados e exige a sessão e as permissões normais do NPlay.
+Um canal é recebido sob demanda; várias consultas à mesma sessão reaproveitam o
+processo. Sessões de proprietários diferentes não substituem um canal ativo.
+Após 25 segundos sem consulta, o receptor encerra o processo e limpa seus arquivos.
+O diretório temporário do contêiner tem limite de 128 MB, sem persistência.
+
+Na primeira atualização para 0.50.0, baixe a versão atual de `INICIAR-TV-PC.ps1`
+do site NPlay e execute-a (o instalador antigo ainda não conhece os módulos novos).
+Reconecte o arquivo `CONEXAO-ADM.txt`
+se o túnel mudar. No ADM, use **Verificar receptor IPTV** para consultar login,
+recebimento, processamento, quantidade de dados e o código de eventual falha.
+Teste primeiro um rascunho com **Testar para publicar**; só publique após confirmar
+sinal. Não é preciso republicar toda a lista para testar o receptor.
+
+A conversão não garante acesso a uma origem que encerre a conexão. Os códigos
+`XTREAM_LOGIN_RESET` e `ENGINE_SOURCE_RESET` distinguem se o encerramento ocorreu
+no login da API ou na abertura do vídeo. A validação local com FFmpeg verifica
+HLS decodificável com H.264 e AAC; o acesso real a este fornecedor precisa ser
+confirmado no PC onde o receptor está instalado. Mantenha os outros players
+fechados se a conta permitir somente uma conexão.
+
+Para preservar o vídeo original em um PC de baixa capacidade, a configuração
+opcional `NPLAY_MEDIA_MODE=copy` no `.env` evita transcodificar vídeo (mantém áudio
+AAC). A compatibilidade do codec de vídeo original passa a depender do navegador.

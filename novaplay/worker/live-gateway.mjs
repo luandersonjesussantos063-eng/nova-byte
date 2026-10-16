@@ -1,5 +1,5 @@
 import {relayHls,hlsSource,xtreamTsSource} from './hls-relay.mjs';
-import {bridgeUrl,encryptBridge,decryptBridge,bridgeUpstream,checkBridge,pcFailureMessages} from './pc-bridge.mjs';
+import {bridgeUrl,encryptBridge,decryptBridge,bridgeUpstream,checkBridge,pcFailureMessages,bridgeEngineStatus,inspectBridgeXtream} from './pc-bridge.mjs';
 // Private provider URLs live in KV; viewers receive only channel IDs.
 const DB="https://vajlhodqxskozuxxlujv.supabase.co",KEY="sb_publishable_uT0b4y0Bex1k1QWZoyIfKg_K0pm-yS3";
 const uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -42,11 +42,17 @@ async function upstream(raw,signal,range){
  }
  throw Error('Redirect limit');
 }
-async function configuredUpstream(env,jwt){
+async function storedBridge(env,jwt){
  const r=await fetch(DB+'/rest/v1/novaplay_featured?id=eq.1&select=pc_bridge_config',{headers:dbHeaders(jwt)});
  if(!r.ok){await r.body?.cancel();throw Error('Bridge settings unavailable');}
  const rows=await readJson(r,16000),cipher=rows?.[0]?.pc_bridge_config;
- return cipher?await bridgeUpstream(await decryptBridge(cipher,env.HLS_MEDIA_KEY),sourceUrl):upstream;
+ return cipher?await decryptBridge(cipher,env.HLS_MEDIA_KEY):null;
+}
+async function configuredUpstream(env,jwt){
+ const config=await storedBridge(env,jwt);
+ const hash=new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(jwt)));
+ const owner=[...hash].map(x=>x.toString(16).padStart(2,'0')).join('');
+ return config?await bridgeUpstream(config,sourceUrl,owner):upstream;
 }
 async function channelId(url){
  const hash=new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(url))).slice(0,16);hash[6]=(hash[6]&15)|80;hash[8]=(hash[8]&63)|128;
@@ -65,6 +71,19 @@ export default {async fetch(request,env){
  if(route.pathname==='/health')return json({service:'NPlay live gateway',protected:true});
  const jwt=token(request);if(!jwt||jwt===KEY||jwt.length>8192)return json({error:'Entre no NPlay para continuar.'},401);
  try{
+  if(route.pathname==='/admin/xtream-inspect'&&request.method==='POST'){
+   if(!await admin(jwt))return json({error:'Acesso administrativo necessário.'},403);
+   const input=await readJson(request,2000);if(!uuid.test(input.id||''))return json({error:'Canal inválido.'},400);
+   if(!await published(input.id,jwt,route.origin,'hls'))return json({error:'Canal não disponível no ADM.'},403);
+   const entry=await hlsSource(env,input.id),config=await storedBridge(env,jwt);
+   if(!entry||!config)return json({error:'Conecte o PC e escolha um canal cadastrado.'},409);
+   return json(await inspectBridgeXtream(config,entry.url));
+  }
+  if(route.pathname==='/admin/pc-status'&&request.method==='POST'){
+   if(!await admin(jwt))return json({error:'Acesso administrativo necessário.'},403);
+   const config=await storedBridge(env,jwt);if(!config)return json({error:'Conecte o PC primeiro.'},409);
+   return json(await bridgeEngineStatus(config));
+  }
   if(route.pathname==='/admin/pc-bridge'&&request.method==='POST'){
    if(!await admin(jwt))return json({error:'Acesso administrativo necessário.'},403);
    const input=await readJson(request,4000);let cipher=null;
