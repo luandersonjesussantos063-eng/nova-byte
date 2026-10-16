@@ -9,7 +9,7 @@ function imageUrl(value){
  try{const url=new URL(raw,"https://api.reidoscanais.si/");return url.protocol==="https:"?url.href:""}catch{return ""}
 }
 function channelKey(url){try{return new URL(url).pathname.replace(/\/+$/,"").split("/").pop()}catch{return ""}}
-let loadSequence=0,livePreviews=null,liveChannelData=[];
+let loadSequence=0,livePreviews=null,liveChannelData=[],liveScope="tv";
 function note(message){const el=$("nplay-channel-notice");if(el)el.textContent=message}
 function openChannel(item){
  livePreviews?.stop();
@@ -28,10 +28,12 @@ async function load(){
   if(error)throw error;
   if(sequence!==loadSequence)return;
   const channels=(data||[]).filter(item=>item.embed_url);
-  window.NPlayHeroLive?.setChannels(channels);
-  window.NPlayHomeLive?.setChannels(channels);
+  const television=window.NPlayMusic?.select(channels,"tv")||channels;
+  window.NPlayHeroLive?.setChannels(television);
+  window.NPlayHomeLive?.setChannels(television);
   renderChannels(channels);
-  note(channels.length?"":"Nenhum canal publicado no momento.");
+  const scoped=window.NPlayMusic?.select(channels,liveScope)||channels;
+  note(scoped.length?"":liveScope==="musica"?"Nenhum canal de música publicado no momento.":"Nenhum canal publicado no momento.");
  }catch(error){
   if(sequence!==loadSequence)return;
   window.NPlayHomeLive?.setChannels([]);
@@ -46,15 +48,16 @@ function filterLiveChannels(channels,query){
 let liveDisplayMode="all";
 function renderChannels(channels){
  liveChannelData=channels;
- const searched=filterLiveChannels(channels,$("nplay-live-search")?.value||"");
+ const scoped=window.NPlayMusic?.select(channels,liveScope)||channels;
+ const searched=filterLiveChannels(scoped,$("nplay-live-search")?.value||"");
  const direct=item=>item.stream_type==="hls"||/\\.m3u8?(?:\\?|$)/i.test(item.embed_url||"")||/\\.(?:mp4|webm)(?:\\?|$)/i.test(item.embed_url||"");
  const visibleChannels=searched.filter(item=>liveDisplayMode==="all"||(liveDisplayMode==="direct"?direct(item):!direct(item)));
  const list=$("iframe-channel-list");if(!list)return;
  if(!livePreviews&&window.NPlayLivePreviews)livePreviews=window.NPlayLivePreviews.create(list);
  livePreviews?.reset();
  list.replaceChildren();
- const count=$("nplay-live-count");if(count)count.textContent=visibleChannels.length+" de "+channels.length+" canais";
- if(!visibleChannels.length&&channels.length){const empty=document.createElement("p");empty.className="nplay-channel-empty";empty.textContent="Nenhum canal encontrado. Tente outro nome ou categoria.";list.append(empty)}
+ const count=$("nplay-live-count");if(count)count.textContent=visibleChannels.length+" de "+scoped.length+(liveScope==="musica"?" canais de música":" canais");
+ if(!visibleChannels.length&&scoped.length){const empty=document.createElement("p");empty.className="nplay-channel-empty";empty.textContent="Nenhum canal encontrado. Tente outro nome ou categoria.";list.append(empty)}
  for(const item of visibleChannels){
   const isPremiere=item.embed_url===PROVIDER;
   const card=document.createElement("article");
@@ -104,8 +107,16 @@ function init(){
   renderChannels(liveChannelData);
  });
  $("nplay-live-search")?.addEventListener("input",()=>renderChannels(liveChannelData));
- window.addEventListener("nplay:tv-open",()=>{const panel=$("iframe-channels-panel");if(panel){panel.hidden=false;load()}});
- load();
+ const openScope=scope=>{
+  liveScope=scope;livePreviews?.stop();
+  const panel=$("iframe-channels-panel");if(!panel)return;panel.hidden=false;
+  const heading=$("nplay-live-heading");if(heading)heading.textContent=scope==="musica"?"Escolha seu canal de música":"Encontre seu canal";
+  const search=$("nplay-live-search");if(search){search.value="";search.placeholder=scope==="musica"?"Buscar canal de música":"Buscar canal ou categoria";search.setAttribute("aria-label",scope==="musica"?"Buscar canal de música":"Buscar canal ao vivo");}
+  renderChannels(liveChannelData);load();
+ };
+ window.addEventListener("nplay:tv-open",()=>openScope("tv"));
+ window.addEventListener("nplay:music-open",()=>openScope("musica"));
+ if(location.hash==="#musica")openScope("musica");else load();
 
 }
 if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",init);else init();

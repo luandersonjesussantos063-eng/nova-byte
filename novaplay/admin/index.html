@@ -5,7 +5,7 @@
 <meta name="theme-color" content="#080e1b"><meta name="robots" content="noindex,nofollow">
 <title>NPlay | Painel de conteúdo</title>
 <link rel="icon" href="../assets/icon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="./admin.css?v=0.48.9">
+<link rel="stylesheet" href="./admin.css?v=0.49.10">
 <style>
 .admin-nav{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin:16px 0 12px;padding:10px;background:#0d192b;border:1px solid #304461;border-radius:15px}
 .admin-tab{border:1px solid #2b405e;border-radius:10px;background:#11223a;color:#d6e4f7;font-weight:750;padding:13px 12px;min-width:0;text-align:center}
@@ -364,7 +364,7 @@
  }
  function startAdmin(){
   if(!window.supabase||typeof window.supabase.createClient!=="function"){fail();return}
-  load("./admin.js?v=0.48.9",function(){},function(){if(msg)msg.textContent="Falha ao carregar o módulo administrativo. Atualize a página."});
+  load("./admin.js?v=0.49.10",function(){},function(){if(msg)msg.textContent="Falha ao carregar o módulo administrativo. Atualize a página."});
  }
  function fail(){if(msg)msg.textContent="Não foi possível carregar a biblioteca de autenticação. Confira a conexão e tente novamente.";}
  function attempt(i){
@@ -417,7 +417,7 @@
 <script src="./signal-test.js?v=0.49.6" defer></script>
 <script src="./live-embeds.js?v=0.49.6" defer></script>
 <script src="./access-admin.js?v=0.47.0" defer></script>
-<script src="./presence-admin.js?v=0.48.9" defer></script>
+<script src="./presence-admin.js?v=0.49.10" defer></script>
 <script src="./portal-test.js?v=0.49.7" defer></script>
 </body>
 </html>

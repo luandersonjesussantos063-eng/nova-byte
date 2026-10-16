@@ -105,7 +105,7 @@ test('TV grade reads published channels only and never restores the fixed provid
  const load=source.slice(source.indexOf('async function load(){'),source.indexOf('function renderChannels(channels){'));
  let result,notice,filter,failed=false;
  const client={from:()=>({select:()=>({eq:(field,value)=>{filter=[field,value];return {order:async()=>failed?{error:Error('offline')}:{data:[{title:'Aprovado',embed_url:'https://example.org/live'}]}};}})})};
- const context=vm.createContext({$:()=>({}),loadSequence:0,note:message=>notice=message,renderChannels:rows=>result=rows,window:{supabase:{createClient:()=>client}},fetch:()=>{throw Error('Provider must not auto-publish');},Error});
+ const context=vm.createContext({$:()=>({}),loadSequence:0,liveScope:"tv",note:message=>notice=message,renderChannels:rows=>result=rows,window:{supabase:{createClient:()=>client}},fetch:()=>{throw Error('Provider must not auto-publish');},Error});
  vm.runInContext(load,context);await context.load();assert.deepEqual(filter,['is_published',true]);assert.equal(result.length,1);assert.equal(result[0].title,'Aprovado');
  failed=true;await context.load();assert.equal(result.length,0);assert.match(notice,/Não foi possível/);assert.equal(source.includes('CHANNEL_SNAPSHOT'),false);assert.equal(source.includes('fetch('),false);
 });

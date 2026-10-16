@@ -421,6 +421,7 @@ function updateHero(index){
 }
 function youtubeFilms(){return db.films.filter(x=>!x.catalogOnly && x.mode==="youtube" && /^[A-Za-z0-9_-]{11}$/.test(x.youtube_id||""))}
 const categories={
+ musica:["MÚSICA · NPLAY","Música","Canais musicais ao vivo para ouvir e assistir. Escolha seu canal e dê o play.",[]],
  tv:["TV AO VIVO","TV aberta","Canais gratuitos com reprodução configurada dentro da NPlay. A disponibilidade depende das emissoras.",db.channels],
  filmes:["NOSSO ACERVO","Filmes","Filmes com áudio em português.",db.films.filter(x=>x.mode!=="youtube")],
  youtube:["YOUTUBE · NPLAY","Filmes do YouTube","Assista por meio do player oficial do YouTube. A disponibilidade depende do canal e das permissões de reprodução.",[]],
@@ -434,6 +435,7 @@ function renderCategory(kind){
  const content=$("category-grid");content.replaceChildren();
  let list=kind==="series"?db.series:kind==="favoritos"?all.filter(x=>favorite.has(x.id)):kind==="youtube"?youtubeFilms():kind==="em-breve"?upcomingFilms():conf[3];
  if(kind==="tv")window.dispatchEvent(new Event("nplay:tv-open"));
+ if(kind==="musica")window.dispatchEvent(new Event("nplay:music-open"));
  const filters=$("genre-filter-panel"),buttons=$("genre-filter-buttons");
  filters.hidden=kind!=="filmes";
  if(kind==="filmes"){
@@ -452,6 +454,7 @@ function renderCategory(kind){
   $("category-heading").textContent=selectedGenre==="Todos"?"Filmes por gênero":selectedGenre;
   $("genre-filter-count").textContent=list.length+" título"+(list.length===1?"":"s")+" nesta categoria";
  }
+ if(kind==="musica")return;
  if(!list.length)content.append(empty(kind==="youtube"?"Em breve: filmes do YouTube":"Nenhum título nesta categoria",kind==="youtube"?"Os filmes autorizados cadastrados com um link do YouTube aparecerão automaticamente aqui.":"Selecione outro gênero ou classifique títulos no painel administrativo."));
  else list.forEach(item=>content.append(card(item,item.kind==="tv")));
 }
@@ -475,7 +478,7 @@ function navigate(page){
  $("view-home").hidden=chosen!=="inicio";
  $("view-category").hidden=chosen==="inicio"||chosen==="buscar";
  $("view-search").hidden=chosen!=="buscar";
- const embeddedPanel=$("iframe-channels-panel");if(embeddedPanel)embeddedPanel.hidden=chosen!=="tv";
+ const embeddedPanel=$("iframe-channels-panel");if(embeddedPanel)embeddedPanel.hidden=chosen!=="tv"&&chosen!=="musica";
  document.querySelectorAll("[data-nav]").forEach(b=>{const yes=b.dataset.nav===chosen;b.classList.toggle("active",yes);if(yes)b.setAttribute("aria-current","page");else b.removeAttribute("aria-current")});
  if(chosen==="inicio"){renderRows();updateHero(featuredIndex)}
  else if(chosen==="buscar"){renderSearch();setTimeout(()=>$("search-input").focus(),100)}
