@@ -38,7 +38,7 @@ async function publishItem(item){
  if(!fresh(item))throw Error('Teste este canal novamente antes de publicar.');
  if(item.dom)item.title=item.dom.title.value.trim();
  if(!item.title)throw Error('Informe o nome do canal.');
- const payload={title:item.title.slice(0,140),embed_url:item.playbackUrl,logo_url:item.logo_url||null,category:item.category||'',stream_type:'hls',last_tested_at:item.testedAt,rights_confirmed:true,is_published:true};
+ const payload={title:item.title.slice(0,140),embed_url:item.playbackUrl,logo_url:item.logo_url||null,category:item.category||'',stream_type:/\.ts$/i.test(new URL(item.playbackUrl).pathname)?'mpegts':'hls',last_tested_at:item.testedAt,rights_confirmed:true,is_published:true};
  const {error}=await db.from('novaplay_live_embeds').upsert(payload,{onConflict:'embed_url'});
  if(error)throw error;
  item.published=true;published.add(item.playbackUrl);update(item);summary();
@@ -118,7 +118,7 @@ async function testSingle(){
  finally{$('live-test-button').disabled=false;$('live-test-video').hidden=true;}
 }
 function channelGroup(item){
- if(item.stream_type==='hls'||/\.m3u8?(?:\?|$)/i.test(item.embed_url||''))return 'm3u';
+ if(['hls','mpegts'].includes(item.stream_type)||/\.(m3u8?|ts)(?:\?|$)/i.test(item.embed_url||''))return 'm3u';
  try{if(/(^|\.)(rdcanais\.org|reidoscanais\.si)$/.test(new URL(item.embed_url).hostname))return 'legacy';}catch{}
  return 'individual';
 }
@@ -203,7 +203,7 @@ function renderSaved(){
   const badge=document.createElement('p');badge.textContent=(group==='m3u'?'Lista M3U':group==='legacy'?'Canal antigo · iframe':'Cadastro individual · iframe')+' · '+(item.is_published?'Publicado na grade':'Rascunho no ADM');badge.style.color=group==='legacy'?'#f6c98b':'#96c5ff';
   if(item.logo_url){const image=document.createElement('img');image.src=item.logo_url;image.alt='';image.loading='lazy';image.referrerPolicy='no-referrer';image.style.cssText='width:64px;height:44px;object-fit:contain;float:right;background:#172a44;border-radius:6px';image.onerror=()=>image.remove();card.append(image);}
   const detail=document.createElement('details');const caption=document.createElement('summary');caption.textContent='Ver endereço do canal';const address=document.createElement('p');address.className='muted';address.style.overflowWrap='anywhere';address.textContent=item.embed_url;detail.append(caption,address);
-  const hls=item.stream_type==='hls'||/\.m3u8?(?:\?|$)/i.test(item.embed_url);
+  const hls=['hls','mpegts'].includes(item.stream_type)||/\.(m3u8?|ts)(?:\?|$)/i.test(item.embed_url);
   const toggle=button(item.is_published?'Despublicar':hls?'Testar para publicar':group==='legacy'?'Publicar canal antigo':'Publicar',async()=>{
    if(!item.is_published&&group==='legacy'&&!confirm('Este é um canal antigo, retirado da grade. Publicar '+item.title+' novamente?'))return;
    if(!item.is_published&&hls){$('live-embed-title').value=item.title;$('live-embed-url').value=item.embed_url;if(item.rights_confirmed)$('live-embed-rights').checked=true;await testSingle();$('live-test-message').scrollIntoView({behavior:'smooth',block:'center'});return;}
@@ -248,10 +248,10 @@ function init(){
   try{
    const embed_url=source($('live-embed-url').value),title=$('live-embed-title').value.trim();
    if(!title)throw Error('Informe o nome do canal.');
-   const hls=/\.m3u8?(?:\?|$)/i.test(embed_url),is_published=$('live-embed-published').checked;
+   const hls=/\.(m3u8?|ts)(?:\?|$)/i.test(embed_url),is_published=$('live-embed-published').checked;
    if(!embed_url.startsWith('https:'))throw Error('O cadastro precisa de HTTPS. Teste o endereço na lista para ver o diagnóstico.');
    if(hls&&is_published)throw Error('Use Testar sinal HLS e depois Publicar canal testado.');
-   const {error}=await db.from('novaplay_live_embeds').upsert({title,embed_url,stream_type:hls?'hls':'iframe',rights_confirmed:true,is_published},{onConflict:'embed_url'});
+   const {error}=await db.from('novaplay_live_embeds').upsert({title,embed_url,stream_type:hls?(/\.ts(?:\?|$)/i.test(embed_url)?'mpegts':'hls'):'iframe',rights_confirmed:true,is_published},{onConflict:'embed_url'});
    if(error)throw error;message('live-embed-message','Canal salvo.');await refresh();
   }catch(error){message('live-embed-message',error.message);}
  };
