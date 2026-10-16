@@ -6,10 +6,13 @@ function url(value){
  if(!['http:','https:'].includes(u.protocol)||u.username||u.password||u.href.length>2048)throw Error('Use um endereço HTTP/HTTPS válido, sem usuário ou senha na URL.');
  u.hash='';return u.href;
 }
+// Explicitly authorized HTTP-to-HTTPS mappings only. Never proxy arbitrary user-supplied URLs.
+const AUTHORIZED_GATEWAYS=Object.freeze({});
 function playable(value){
  const normalized=url(value),u=new URL(normalized);
  if(u.protocol==='https:')return normalized;
  if(u.origin+u.pathname===SPTV)return GATEWAY+u.search;
+ if(Object.prototype.hasOwnProperty.call(AUTHORIZED_GATEWAYS,normalized))return AUTHORIZED_GATEWAYS[normalized];
  throw Error('Este endereço usa HTTP. O teste dentro do site precisa de uma versão HTTPS ou de um gateway autorizado já configurado. Isso não significa que o canal esteja fora do ar.');
 }
 function commaOutsideQuotes(text){let quote=null;for(let i=0;i<text.length;i++){const c=text[i];if(quote){if(c===quote)quote=null;}else if(c==='"'||c==="'")quote=c;else if(c===',')return i;}return -1;}
