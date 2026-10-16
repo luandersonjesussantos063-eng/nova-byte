@@ -20,9 +20,13 @@ export async function checkBridge(url,secret,readJson){
  }
  const status=response.status;
  if(!response.ok){
+  if(status===401){
+   let info;try{info=await readJson(response,2000);}catch{}
+   if(info?.error==='AUTH_REQUIRED')return fail('PC_KEY_REJECTED','A ponte Docker respondeu, mas a chave enviada não corresponde à chave dela. Use Carregar CONEXAO-ADM.txt para enviar os dados do arquivo atual sem copiar.',status);
+   return fail('PC_TUNNEL_AUTH','A autenticação foi recusada antes de identificar a ponte Docker (HTTP 401). Isso ainda não confirma uma chave incorreta no PC.',status);
+  }
   await response.body?.cancel();
   if(status>=300&&status<400)return fail('PC_TUNNEL_REDIRECT','O túnel redirecionou a conexão (HTTP '+status+'). Confira o endereço HTTPS atual do PC.',status);
-  if(status===401)return fail('PC_KEY_REJECTED','O PC respondeu, mas recusou a chave. Copie novamente a chave do arquivo CONEXAO-ADM.txt atual.',status);
   if(status===403)return fail('PC_TUNNEL_DENIED','O túnel recusou a conexão do servidor NPlay (HTTP 403). A ponte pode funcionar no PC e ainda recusar o acesso do servidor.',status);
   if(status===502)return fail('PC_LOCAL_UNREACHABLE','O túnel respondeu, mas não conseguiu chegar à ponte Docker (HTTP 502). Confira o serviço bridge.',status);
   if(status===404||status===530)return fail('PC_TUNNEL_ADDRESS','O endereço do túnel não está disponível (HTTP '+status+'). Confira o endereço no arquivo CONEXAO-ADM.txt atual.',status);

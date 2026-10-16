@@ -226,7 +226,7 @@ function renderSaved(){
  const visible=savedVisible();
  const visibleIds=new Set(visible.map(x=>x.id));for(const id of selectedSaved)if(!visibleIds.has(id))selectedSaved.delete(id);
  const active=visible.filter(item=>item.is_published).length;
- message('live-channel-count','ADM 0.49.26 · '+savedChannels.length+' canais carregados · '+visible.length+' neste filtro · '+active+' publicados · '+(visible.length-active)+' rascunhos');
+ message('live-channel-count','ADM 0.49.27 · '+savedChannels.length+' canais carregados · '+visible.length+' neste filtro · '+active+' publicados · '+(visible.length-active)+' rascunhos');
  message('live-channel-help',selectedChannelGroup==='m3u'?'As listas estão aqui como rascunhos protegidos. Use o filtro Lista para separar a nova conta HLS da anterior. Pesquise o canal e use Testar para publicar; os canais sem teste continuam fora da grade.':selectedChannelGroup==='legacy'?'Canais antigos do provedor anterior. Os rascunhos ficam fora da grade; o botão Publicar canal antigo permite recuperá-los.':'Canais cadastrados individualmente por iframe, incluindo as emissoras oficiais.');
  for(const item of visible.slice(0,savedLimit)){
   const card=document.createElement('article');card.style.cssText='border:1px solid #365075;border-radius:10px;padding:12px;margin:10px 0';

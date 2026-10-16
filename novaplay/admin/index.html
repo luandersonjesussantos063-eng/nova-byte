@@ -19,9 +19,9 @@
 </style>
 </head>
 <body>
-<header class="top"><a class="brand" href="../"><span class="mark">▶</span> N<span>Play</span></a><div class="top-right"><strong>Painel administrativo · NPlay V 0.49.26</strong><button id="logout" class="outline" hidden>Sair</button></div></header>
+<header class="top"><a class="brand" href="../"><span class="mark">▶</span> N<span>Play</span></a><div class="top-right"><strong>Painel administrativo · NPlay V 0.49.27</strong><button id="logout" class="outline" hidden>Sair</button></div></header>
 <main class="container">
-  <section id="loading" class="panel intro" hidden><div class="spin"></div><p>Preparando seu painel... <small>V 0.49.26</small></p><p id="loading-error" class="feedback" role="status"></p><button id="loading-retry" class="outline" type="button" hidden onclick="location.reload()">Tentar novamente</button></section>
+  <section id="loading" class="panel intro" hidden><div class="spin"></div><p>Preparando seu painel... <small>V 0.49.27</small></p><p id="loading-error" class="feedback" role="status"></p><button id="loading-retry" class="outline" type="button" hidden onclick="location.reload()">Tentar novamente</button></section>
   <section id="login-view" class="panel login">
     <div class="section-label">ACESSO RESTRITO</div>
     <h1>Gerencie sua NPlay</h1>
@@ -310,7 +310,7 @@
     </div>
   </section>
 </main>
-<script src="./youtube-manager.js?v=0.49.26"></script>
+<script src="./youtube-manager.js?v=0.49.27"></script>
 <script>
 (function(){
   function rescue(){
@@ -387,7 +387,7 @@
  }
  function startAdmin(){
   if(!window.supabase||typeof window.supabase.createClient!=="function"){fail();return}
-  load("./admin.js?v=0.49.26",function(){},function(){if(msg)msg.textContent="Falha ao carregar o módulo administrativo. Atualize a página."});
+  load("./admin.js?v=0.49.27",function(){},function(){if(msg)msg.textContent="Falha ao carregar o módulo administrativo. Atualize a página."});
  }
  function fail(){if(msg)msg.textContent="Não foi possível carregar a biblioteca de autenticação. Confira a conexão e tente novamente.";}
  function attempt(i){
@@ -435,13 +435,13 @@
 })();
 </script>
 <script defer src="https://cdn.jsdelivr.net/npm/hls.js@1.7.3/dist/hls.min.js"></script>
-<script src="../assets/live-auth.js?v=0.49.26" defer></script>
+<script src="../assets/live-auth.js?v=0.49.27" defer></script>
 <script defer src="https://cdn.jsdelivr.net/npm/mpegts.js@1.7.3/dist/mpegts.js"></script>
 <script src="./gateway-config.js?v=0.49.6" defer></script>
 <script src="./m3u-core.js?v=0.49.6" defer></script>
-<script src="./signal-test.js?v=0.49.26" defer></script>
-<script src="./live-embeds.js?v=0.49.26" defer></script>
-<script src="./pc-tv.js?v=0.49.26" defer></script>
+<script src="./signal-test.js?v=0.49.27" defer></script>
+<script src="./live-embeds.js?v=0.49.27" defer></script>
+<script src="./pc-tv.js?v=0.49.27" defer></script>
 <script src="./access-admin.js?v=0.47.0" defer></script>
 <script src="./presence-admin.js?v=0.49.12" defer></script>
 <script src="./portal-test.js?v=0.49.12" defer></script>

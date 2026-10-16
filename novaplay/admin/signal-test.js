@@ -75,7 +75,7 @@ async function testSource(video,source,{signal,onAttempt=()=>{},...options}={}){
    try{
     let playback=url;
     if(protectedSource(url)){
-     if(!globalThis.NPlayLiveAuth)throw signalError('O módulo de acesso está desatualizado. Reabra o ADM e confirme a versão 0.49.26.','ADMIN_UPDATE_REQUIRED',true);
+     if(!globalThis.NPlayLiveAuth)throw signalError('O módulo de acesso está desatualizado. Reabra o ADM e confirme a versão 0.49.27.','ADMIN_UPDATE_REQUIRED',true);
      try{playback=await NPlayLiveAuth.authorize(url);}catch{throw signalError('Sua sessão não está disponível. Entre novamente no ADM antes de testar.','GATEWAY_SESSION',true);}
      await checkProtectedSource(playback,signal);
     }else playback=await globalThis.NPlayLiveAuth?.authorize(url)||url;

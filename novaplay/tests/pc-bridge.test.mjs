@@ -24,10 +24,11 @@ test('PC health and media use Workers-compatible redirect modes and refuse redir
 test('PC health diagnostics distinguish key rejection, tunnel denial, origin failure and invalid replies without leaking secrets',async()=>{
  const previous=globalThis.fetch;
  try{
-  for(const [status,code] of [[401,'PC_KEY_REJECTED'],[403,'PC_TUNNEL_DENIED'],[502,'PC_LOCAL_UNREACHABLE'],[530,'PC_TUNNEL_ADDRESS']]){
+  for(const [status,code] of [[401,'PC_TUNNEL_AUTH'],[403,'PC_TUNNEL_DENIED'],[502,'PC_LOCAL_UNREACHABLE'],[530,'PC_TUNNEL_ADDRESS']]){
    globalThis.fetch=async()=>new Response('private provider contents',{status});
    const result=await checkBridge('https://test.trycloudflare.com',secret,r=>r.json());assert.equal(result.code,code);assert.equal(result.status,status);assert.ok(!JSON.stringify(result).includes(secret));assert.ok(!JSON.stringify(result).includes('private provider'));
   }
+  globalThis.fetch=async()=>Response.json({error:'AUTH_REQUIRED'},{status:401});assert.equal((await checkBridge('https://test.trycloudflare.com',secret,r=>r.json())).code,'PC_KEY_REJECTED');
   globalThis.fetch=async()=>new Response('<html>not the bridge</html>');assert.equal((await checkBridge('https://test.trycloudflare.com',secret,r=>r.json())).code,'PC_RESPONSE_INVALID');
   globalThis.fetch=async()=>{throw new DOMException('private URL','TimeoutError');};assert.equal((await checkBridge('https://test.trycloudflare.com',secret,r=>r.json())).code,'PC_TUNNEL_TIMEOUT');
   globalThis.fetch=async()=>{throw Error('private key');};assert.equal((await checkBridge('https://test.trycloudflare.com',secret,r=>r.json())).code,'PC_TUNNEL_CONNECTION');
