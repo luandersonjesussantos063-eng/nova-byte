@@ -6,7 +6,7 @@ function message(id,text){$(id).textContent=text;}
 function source(raw){const iframe=raw.match(/<iframe[^>]+src=["']([^"']+)/i);return core().url(iframe?iframe[1]:raw.trim());}
 function authorized(){if($('live-embed-rights').checked)return true;message('live-embed-message','Confirme a autorização de exibição antes de publicar.');$('live-embed-rights').focus();return false;}
 function button(label,fn,style='outline'){const b=document.createElement('button');b.type='button';b.className=style;b.textContent=label;b.onclick=fn;return b;}
-function stateLabel(item){return ({idle:'Não testado',testing:'Testando vídeo…',passed:'Vídeo confirmado',failed:'Não confirmado',http:'Precisa de HTTPS',unsupported:'Outro formato',cancelled:'Interrompido'})[item.state]||'Não testado';}
+function stateLabel(item){return ({idle:'Não testado',testing:'Testando vídeo…',passed:'Vídeo confirmado',failed:'Não confirmado',http:'HTTP sem gateway',unsupported:'Outro formato',cancelled:'Interrompido'})[item.state]||'Não testado';}
 function update(item){
  if(!item.dom)return;
  const d=item.dom;d.status.textContent=(item.published?'Publicado · ':'')+stateLabel(item);
@@ -27,8 +27,8 @@ function summary(){
 async function checkItem(item,video,signal){
  item.testedAt=null;item.state='testing';item.detail='Aguardando pelo menos 2 segundos de vídeo em movimento.';update(item);summary();
  try{
-  if(item.unsupported){item.state='unsupported';item.detail='Este endereço aponta para um arquivo de vídeo ou FLV. Use o cadastro de vídeos ou um sinal HLS compatível.';return;}
-  try{item.playbackUrl=core().playable(item.url);item.published=published.has(item.playbackUrl);}catch(error){item.state='http';item.detail=error.message;return;}
+  if(item.unsupported){item.state='unsupported';item.detail='Este formato não é compatível com o testador de transmissões ao vivo.';return;}
+  try{item.playbackUrl=core().playable(item.url);item.published=published.has(item.playbackUrl);}catch(error){item.state='http';item.detail='HTTP sem gateway autorizado: '+error.message;return;}
   const result=await NPlaySignal.testSignal(video,item.playbackUrl,{signal});
   item.state='passed';item.testedAt=new Date().toISOString();item.detail=`Imagem recebida: ${result.width} × ${result.height}. Reprodução confirmada por ${result.seconds.toFixed(1)} segundos. O teste vale por 30 minutos e não garante estabilidade contínua.`;
  }catch(error){item.state=error.name==='AbortError'?'cancelled':'failed';item.detail=error.message;}
