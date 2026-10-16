@@ -38,7 +38,7 @@ export default {
   if(!Array.isArray(admins)||admins.length!==1)return new Response('Forbidden',{status:403,headers:cors});
   stage='playlist-url';
   const source=new URL(env.PLAYLIST_URL);
-  if(source.protocol!=='https:')return new Response('HTTPS playlist source required',{status:400,headers:cors});
+  if(!['https:','http:'].includes(source.protocol))return Response.json({error:'Protocolo de lista inválido.',stage},{status:400,headers:cors});
   stage='playlist-fetch';
   const upstream=await fetch(source.toString(),{redirect:'error',signal:AbortSignal.timeout(20000)});
   if(!upstream.ok)return new Response('Playlist unavailable: '+upstream.status,{status:502,headers:cors});
