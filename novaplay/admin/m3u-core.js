@@ -54,9 +54,9 @@ function playable(value){
  throw Error('Este endereço usa HTTP. O teste dentro do site precisa de uma versão HTTPS ou de um gateway autorizado já configurado. Isso não significa que o canal esteja fora do ar.');
 }
 function commaOutsideQuotes(text){let quote=null;for(let i=0;i<text.length;i++){const c=text[i];if(quote){if(c===quote)quote=null;}else if(c==='"'||c==="'")quote=c;else if(c===',')return i;}return -1;}
-const MAX_LIST_BYTES=50*1024*1024;
+const MAX_LIST_BYTES=100*1024*1024;
 function parseList(input,limit=500,offset=0){
- if(input.length>MAX_LIST_BYTES)throw Error('A lista excedeu 50 MB. Divida em partes menores.');
+ if(input.length>MAX_LIST_BYTES)throw Error('A lista excedeu 100 MB. Divida em partes menores.');
  if(!Number.isSafeInteger(offset)||offset<0)throw Error('Lote inválido.');
  const text=input.replace(/\r/g,'').replace(/^\uFEFF/,'');
  const blocks=[];

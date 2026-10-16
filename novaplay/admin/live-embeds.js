@@ -237,9 +237,9 @@ function init(){
  <label class="publish-check"><input id="live-embed-rights" type="checkbox"><span>Confirmo autorização para exibir na NPlay os canais que eu publicar.</span></label>
  <section style="border:1px solid #3a6396;border-radius:12px;padding:16px;margin:18px 0">
  <h3>Testar lista M3U e publicar canais</h3><p class="muted">Até 500 canais por lote, dois testes simultâneos. Nomes, capas e categorias são extraídos da lista. Endereços repetidos são ignorados. Para links HTTP, o testador tenta HTTPS e procura gateways autorizados configurados antes de indicar que não conseguiu reproduzir. HTTP direto é testado quando permitido pela página.</p>
- <label>Lista completa<textarea id="live-batch-input" rows="10" maxlength="52428800" placeholder="#EXTM3U&#10;#EXTINF:-1 tvg-logo=&quot;https://exemplo.com/logo.png&quot;,Nome do canal&#10;https://exemplo.com/ao-vivo.m3u8" style="width:100%"></textarea></label>
+ <label>Lista completa<textarea id="live-batch-input" rows="10" maxlength="104857600" placeholder="#EXTM3U&#10;#EXTINF:-1 tvg-logo=&quot;https://exemplo.com/logo.png&quot;,Nome do canal&#10;https://exemplo.com/ao-vivo.m3u8" style="width:100%"></textarea></label>
  <label>Abrir arquivo M3U<input id="live-batch-file" type="file" accept=".m3u,.m3u8,.txt"></label><p class="muted">Links get.php baixam listas, não são canais. Importe o arquivo da sua lista ou cole seu conteúdo. Base64 e páginas paste.sh não são sinais de vídeo.</p>
- <label>Lote a testar<input id="live-batch-number" type="number" min="1" step="1" value="1"></label><p class="muted">Arquivos de até 50 MB. Cada lote contém até 500 canais; dois canais são testados por vez.</p>
+ <label>Lote a testar<input id="live-batch-number" type="number" min="1" step="1" value="1"></label><p class="muted">Arquivos de até 100 MB. Cada lote contém até 500 canais; dois canais são testados por vez.</p>
  <div style="display:flex;gap:10px;flex-wrap:wrap"><button id="live-batch-run" class="primary" type="button">Carregar e testar lista</button><button id="live-batch-stop" class="outline" type="button" hidden>Parar testes</button><button id="live-batch-export" class="outline" type="button" disabled>Baixar M3U dos confirmados</button><button id="live-batch-publish" class="primary" type="button" disabled>Publicar aprovados</button></div>
  <p id="live-batch-parse" class="muted" role="status"></p><p id="live-batch-status" role="status" aria-live="polite"></p><div id="live-batch-results"></div></section>
  <details style="border:1px solid #365075;border-radius:12px;padding:16px"><summary>Testar ou cadastrar um canal individual</summary>
@@ -254,7 +254,7 @@ function init(){
   const input=event.target,file=input.files?.[0];if(!file)return;
   try{
    if(running||publishing)throw Error('Aguarde o teste atual terminar antes de importar outra lista.');
-   if(file.size>core().MAX_LIST_BYTES)throw Error('O arquivo excedeu 50 MB. Divida a lista em partes menores.');
+   if(file.size>core().MAX_LIST_BYTES)throw Error('O arquivo excedeu 100 MB. Divida a lista em partes menores.');
    const text=await file.text();
    if(running||publishing)throw Error('Aguarde o teste atual terminar antes de importar outra lista.');
    $('live-batch-input').value=text;$('live-batch-number').value='1';message('live-batch-parse','Arquivo carregado. Clique em Carregar e testar lista.');

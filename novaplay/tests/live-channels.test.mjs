@@ -39,7 +39,7 @@ test('URL validation, HTTPS, gateway and unsupported formats',()=>{
  assert.match(core.playable('http://95.211.149.215:8081/look/sptv/playlist.m3u8'),/^https:\/\/nplay-sptv/);
  const items=core.parseList('https://example.org/video.mp4\nhttps://example.org/hls?token=123').entries;
  assert.equal(items[0].unsupported,true);assert.equal(items[1].url,'https://example.org/hls?token=123');
- assert.throws(()=>core.parseList('x'.repeat(core.MAX_LIST_BYTES+1)),/50 MB/);
+ assert.throws(()=>core.parseList('x'.repeat(core.MAX_LIST_BYTES+1)),/100 MB/);
 });
 class Video extends EventTarget{
  readyState=3;videoWidth=1280;videoHeight=720;currentTime=0;paused=true;cleaned=false;
