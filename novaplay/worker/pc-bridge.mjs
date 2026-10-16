@@ -44,14 +44,18 @@ export async function bridgeUpstream(config,validateUrl){
   let r;const timeout=new AbortController(),timer=setTimeout(()=>timeout.abort(),20000);
   try{r=await fetch(config.url+'/fetch',{method:'POST',headers:{Authorization:'Bearer '+config.secret,'Content-Type':'application/json'},body:JSON.stringify({url:raw,range}),signal:AbortSignal.any([signal||new AbortController().signal,timeout.signal]),redirect:'manual'});}catch{const error=Error('PC bridge unavailable');error.code='PC_BRIDGE_OFFLINE';throw error;}finally{clearTimeout(timer);}
   if(r.status>=300&&r.status<400){await r.body?.cancel();const error=Error('PC bridge redirect refused');error.code='PC_BRIDGE_OFFLINE';throw error;}
-  const final=r.headers.get('X-NPlay-Upstream-Url');
-  if(!final){
+  if(!r.ok){
    const reasons={UPSTREAM_TLS:'PC_SOURCE_TLS',UPSTREAM_RESET:'PC_SOURCE_RESET',UPSTREAM_DNS:'PC_SOURCE_DNS',UPSTREAM_TIMEOUT:'PC_SOURCE_TIMEOUT',UPSTREAM_DESTINATION:'PC_SOURCE_UNAVAILABLE',UPSTREAM_CONNECTION:'PC_SOURCE_UNAVAILABLE'};
-   const code=reasons[r.headers.get('X-NPlay-Bridge-Error')]||(r.status===502?'PC_SOURCE_UNAVAILABLE':r.status===401?'PC_BRIDGE_AUTH':'PC_BRIDGE_OFFLINE');
+   let reason=r.headers.get('X-NPlay-Bridge-Error');
+   if(!reason&&r.status===502){
+    try{const payload=await r.clone().json();reason=payload?.reason;}catch{}
+   }
+   const code=reasons[reason]||(r.status===502?'PC_SOURCE_UNAVAILABLE':r.status===401?'PC_BRIDGE_AUTH':'PC_BRIDGE_OFFLINE');
    await r.body?.cancel();const error=Error('PC bridge source failure');error.code=code;throw error;
   }
-  validateUrl(final);
-  Object.defineProperty(r,'url',{value:final});return r;
+  // The bridge must not expose the provider URL in response headers.
+  // The requested URL is already validated and is sufficient for relative HLS resolution.
+  Object.defineProperty(r,'url',{value:raw});return r;
  };
 }
 export const pcFailureMessages={
