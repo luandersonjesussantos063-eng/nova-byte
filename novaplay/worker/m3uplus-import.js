@@ -19,10 +19,12 @@ function parsePlaylist(text){
 export default {
  async fetch(request,env){
   const origin=request.headers.get('Origin');
-  const allowedOrigin='https://novabytesolucoes.com.br';
-  const cors=origin===allowedOrigin?{'Access-Control-Allow-Origin':allowedOrigin,'Vary':'Origin','Access-Control-Allow-Headers':'Authorization','Access-Control-Allow-Methods':'POST, OPTIONS'}:{};
-  if(request.method==='OPTIONS')return new Response(null,{status:origin===allowedOrigin?204:403,headers:cors});
+  const allowedOrigins=['https://novabytesolucoes.com.br','https://www.novabytesolucoes.com.br'];
+  const permitted=allowedOrigins.includes(origin);
+  const cors=permitted?{'Access-Control-Allow-Origin':origin,'Vary':'Origin','Access-Control-Allow-Headers':'Authorization, Content-Type','Access-Control-Allow-Methods':'POST, OPTIONS'}:{};
+  if(request.method==='OPTIONS')return new Response(null,{status:permitted?204:403,headers:cors});
   if(new URL(request.url).pathname!=='/import'||request.method!=='POST')return new Response('Not found',{status:404,headers:cors});
+  try {
   const auth=request.headers.get('Authorization')||'';
   if(!/^Bearer [A-Za-z0-9_.-]+$/.test(auth))return new Response('Unauthorized',{status:401,headers:cors});
   if(!env.PLAYLIST_URL||!env.SUPABASE_URL||!env.SUPABASE_ANON_KEY)return new Response('Missing configuration',{status:503,headers:cors});
@@ -33,14 +35,15 @@ export default {
   const admins=await check.json();
   if(!Array.isArray(admins)||admins.length!==1)return new Response('Forbidden',{status:403,headers:cors});
   const source=new URL(env.PLAYLIST_URL);
-  if(source.protocol!=='https:')return new Response('HTTPS playlist source required',{status:400});
+  if(source.protocol!=='https:')return new Response('HTTPS playlist source required',{status:400,headers:cors});
   const upstream=await fetch(source.toString(),{redirect:'error',signal:AbortSignal.timeout(20000)});
   if(!upstream.ok)return new Response('Playlist unavailable: '+upstream.status,{status:502,headers:cors});
   const declared=Number(upstream.headers.get('content-length')||0);
-  if(declared>5*1024*1024)return new Response('Playlist too large',{status:413});
+  if(declared>5*1024*1024)return new Response('Playlist too large',{status:413,headers:cors});
   const content=await upstream.text();
   if(content.length>5*1024*1024)return new Response('Playlist too large',{status:413});
   const channels=parsePlaylist(content);
+  if(!channels.length)return Response.json({error:'A lista não retornou canais M3U válidos ou expirou.'},{status:422,headers:cors});
   // Store metadata in a private staging table, never directly publish untested streams.
   // This table must be created by the operator and protected by RLS.
   const records=channels.map((channel,index)=>({source_key:'m3uplus',source_index:index,title:channel.title,category:channel.category,logo_url:channel.logo_url,source_url:channel.source_url,status:'pending'}));
@@ -54,5 +57,6 @@ export default {
    imported+=Math.min(100,records.length-i);
   }
   return Response.json({imported,published:0,message:'Imported as private pending records. Test and approve before publication.'},{headers:cors});
+  } catch(error){return Response.json({error:'Falha no servidor ao buscar a lista ou comunicar com o banco.',code:'UPSTREAM_OR_NETWORK'},{status:502,headers:cors});}
  }
 };
