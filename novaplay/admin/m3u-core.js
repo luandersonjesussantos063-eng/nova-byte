@@ -28,7 +28,7 @@ function parseList(input,limit=500){
    const title=(separator<0?'':rest.slice(0,match.index).trim().split('\n')[0])||attr('tvg-name')||'Canal '+(entries.length+1);
    let logo=null;try{const candidate=url(attr('tvg-logo'));if(candidate.startsWith('https:'))logo=candidate;}catch{}
    const path=new URL(source).pathname;
-   entries.push({title:title.slice(0,140),url:source,logo_url:logo,category:attr('group-title').slice(0,100),unsupported:/\.(mp4|webm|ogv|flv|ts|m4v)$/i.test(path)});
+   entries.push({title:title.slice(0,140),url:source,logo_url:logo,category:attr('group-title').slice(0,100),unsupported:/\.(mp4|webm|ogv|flv|m4v)$/i.test(path)});
   }catch{invalid++;}
  }
  return {entries:entries.slice(0,limit),duplicates,invalid,total:entries.length,truncated:Math.max(0,entries.length-limit)};
