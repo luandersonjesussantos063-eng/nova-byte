@@ -5,7 +5,7 @@
 <meta name="theme-color" content="#080e1b"><meta name="robots" content="noindex,nofollow">
 <title>NPlay | Painel de conteúdo</title>
 <link rel="icon" href="../assets/icon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="./admin.css?v=0.49.10">
+<link rel="stylesheet" href="./admin.css?v=0.49.12">
 <style>
 .admin-nav{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin:16px 0 12px;padding:10px;background:#0d192b;border:1px solid #304461;border-radius:15px}
 .admin-tab{border:1px solid #2b405e;border-radius:10px;background:#11223a;color:#d6e4f7;font-weight:750;padding:13px 12px;min-width:0;text-align:center}
@@ -19,9 +19,9 @@
 </style>
 </head>
 <body>
-<header class="top"><a class="brand" href="../"><span class="mark">▶</span> N<span>Play</span></a><div class="top-right"><strong>Painel administrativo · NPlay V 0.49.7</strong><button id="logout" class="outline" hidden>Sair</button></div></header>
+<header class="top"><a class="brand" href="../"><span class="mark">▶</span> N<span>Play</span></a><div class="top-right"><strong>Painel administrativo · NPlay V 0.49.12</strong><button id="logout" class="outline" hidden>Sair</button></div></header>
 <main class="container">
-  <section id="loading" class="panel intro" hidden><div class="spin"></div><p>Preparando seu painel... <small>V 0.49.7</small></p><p id="loading-error" class="feedback" role="status"></p><button id="loading-retry" class="outline" type="button" hidden onclick="location.reload()">Tentar novamente</button></section>
+  <section id="loading" class="panel intro" hidden><div class="spin"></div><p>Preparando seu painel... <small>V 0.49.12</small></p><p id="loading-error" class="feedback" role="status"></p><button id="loading-retry" class="outline" type="button" hidden onclick="location.reload()">Tentar novamente</button></section>
   <section id="login-view" class="panel login">
     <div class="section-label">ACESSO RESTRITO</div>
     <h1>Gerencie sua NPlay</h1>
@@ -47,6 +47,7 @@
     <nav class="admin-nav" aria-label="Áreas do painel">
       <button type="button" class="admin-tab active" data-admin-tab="catalogo">Catálogo</button>
       <button type="button" class="admin-tab" data-admin-tab="importacoes">Importações</button>
+      <button type="button" class="admin-tab" data-admin-tab="youtube">YouTube</button>
       <button type="button" class="admin-tab" data-admin-tab="canais">TV ao vivo</button><button type="button" class="admin-tab" data-admin-tab="destaques">Destaques</button>
       <button type="button" class="admin-tab" data-admin-tab="online">Perfis online</button>
       <button type="button" class="admin-tab" data-admin-tab="acessos">Autorizações</button>
@@ -146,6 +147,25 @@
       </div>
     </section>
     <div class="workspace">
+    <section class="panel" id="youtube-manager" aria-labelledby="yt-admin-heading" hidden>
+      <span class="section-label">SELEÇÃO YOUTUBE</span><h2 id="yt-admin-heading">Adicionar vídeo do YouTube</h2>
+      <p class="muted">Cole o link, preencha o título e escolha a categoria. A capa será a miniatura do vídeo. Para editar ou retirar um vídeo publicado, use a aba Catálogo.</p>
+      <form id="yt-admin-form">
+        <fieldset id="yt-admin-fields" style="border:0;padding:0;margin:0;min-width:0">
+          <legend class="muted">Dados do vídeo</legend>
+          <label>Link do YouTube<input id="yt-admin-url" type="url" required maxlength="2048" placeholder="https://www.youtube.com/watch?v=..." autocomplete="off"></label>
+          <div id="yt-admin-preview" hidden><img id="yt-admin-image" alt="Miniatura oficial do vídeo no YouTube" style="display:block;width:min(100%,420px);aspect-ratio:16/9;object-fit:cover;border-radius:12px;margin:12px 0"><a id="yt-admin-source" class="outline compact" target="_blank" rel="noopener noreferrer">Conferir no YouTube ↗</a><p class="muted">Confira o conteúdo e se o canal permite reprodução incorporada antes de publicar.</p></div>
+          <label>Título<input id="yt-admin-title" required minlength="2" maxlength="140" placeholder="Nome do vídeo"></label>
+          <div class="two"><label>Categoria<select id="yt-admin-category" required><option>Filmes completos</option><option>Documentários</option><option>Humor</option><option>Curtas e animações</option></select></label><label>Nome do canal (opcional)<input id="yt-admin-channel" maxlength="120" placeholder="Ex.: TV Cultura"></label></div>
+          <label>Sinopse (opcional)<textarea id="yt-admin-description" rows="3" maxlength="3200" placeholder="Conte um pouco sobre o vídeo"></textarea></label>
+          <label>Duração em minutos (opcional)<input id="yt-admin-duration" type="number" min="1" max="600" step="1" placeholder="Ex.: 90"></label>
+          <label class="publish-check"><input id="yt-admin-rights" type="checkbox" required><span>Confirmo que posso exibir este vídeo por incorporação na NPlay.</span></label>
+          <label class="publish-check"><input id="yt-admin-publish" type="checkbox" checked><span>Publicar na aba YouTube. Desmarque para salvar como rascunho.</span></label>
+          <button type="submit" class="primary">Salvar vídeo do YouTube</button>
+        </fieldset>
+        <p id="yt-admin-status" class="feedback" role="status" aria-live="polite"></p>
+      </form>
+    </section>
     <section class="panel editor">
       <div class="section-title"><div><span class="section-label">TESTE DE IMPORTAÇÃO</span><h2 id="form-title">Importar conteúdo por magnet</h2></div><button id="cancel-edit" class="outline compact" hidden>Cancelar edição</button></div>
       <div id="legacy-upload-options" hidden aria-hidden="true">
@@ -290,6 +310,7 @@
     </div>
   </section>
 </main>
+<script src="./youtube-manager.js?v=0.49.12"></script>
 <script>
 (function(){
   function rescue(){
@@ -366,7 +387,7 @@
  }
  function startAdmin(){
   if(!window.supabase||typeof window.supabase.createClient!=="function"){fail();return}
-  load("./admin.js?v=0.49.10",function(){},function(){if(msg)msg.textContent="Falha ao carregar o módulo administrativo. Atualize a página."});
+  load("./admin.js?v=0.49.12",function(){},function(){if(msg)msg.textContent="Falha ao carregar o módulo administrativo. Atualize a página."});
  }
  function fail(){if(msg)msg.textContent="Não foi possível carregar a biblioteca de autenticação. Confira a conexão e tente novamente.";}
  function attempt(i){
@@ -384,13 +405,14 @@
   var groups={
    catalogo:[dash.querySelector(".workspace .library")],
    importacoes:[dash.querySelector(".workspace .editor")],
+   youtube:[dash.querySelector("#youtube-manager")],
    canais:[dash.querySelector("#live-embed-manager")],
    online:[dash.querySelector("#nplay-presence-admin")],
    acessos:[dash.querySelector("#nplay-access-admin")],
    destaques:[dash.querySelector(".featured-manager")],
    ferramentas:[dash.querySelector("#portal-auth-manager"),dash.querySelector(".licensed-manager"),dash.querySelector(".issue-manager")]
   };
-  var descriptions={online:"Acompanhe o tempo de conexão de cada perfil e o total de hoje.",catalogo:"Pesquise, revise e publique os títulos do catálogo.",importacoes:"Acompanhe download, preparação e envio. O rascunho é criado automaticamente; revise as informações pendentes para publicar.",canais:"Importe, teste e publique canais ao vivo.",acessos:"Analise solicitações e autorize ou revogue dispositivos.",destaques:"Organize as capas e os títulos da página inicial.",ferramentas:"Teste autenticação MAC/SN/DEV e gerencie links e problemas de reprodução."};
+  var descriptions={youtube:"Adicione vídeos por link e organize as quatro categorias da Seleção YouTube.",online:"Acompanhe o tempo de conexão de cada perfil e o total de hoje.",catalogo:"Pesquise, revise e publique os títulos do catálogo.",importacoes:"Acompanhe download, preparação e envio. O rascunho é criado automaticamente; revise as informações pendentes para publicar.",canais:"Importe, teste e publique canais ao vivo.",acessos:"Analise solicitações e autorize ou revogue dispositivos.",destaques:"Organize as capas e os títulos da página inicial.",ferramentas:"Teste autenticação MAC/SN/DEV e gerencie links e problemas de reprodução."};
   var workspace=dash.querySelector(".workspace");if(workspace)workspace.classList.add("admin-workspace");
   var intro=dash.querySelector(".intro-text"),stats=dash.querySelector(".stats"),source=dash.querySelector("#source-summary"),drive=dash.querySelector(".intro-text + .stats + #source-summary + .panel");
   function show(name){
@@ -419,7 +441,7 @@
 <script src="./signal-test.js?v=0.49.6" defer></script>
 <script src="./live-embeds.js?v=0.49.6" defer></script>
 <script src="./access-admin.js?v=0.47.0" defer></script>
-<script src="./presence-admin.js?v=0.49.10" defer></script>
-<script src="./portal-test.js?v=0.49.7" defer></script>
+<script src="./presence-admin.js?v=0.49.12" defer></script>
+<script src="./portal-test.js?v=0.49.12" defer></script>
 </body>
 </html>

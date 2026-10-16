@@ -1074,8 +1074,9 @@ function play(item,episode){
   if(!/^[A-Za-z0-9_-]{11}$/.test(id)){fail("Endereço do vídeo inválido.");return}
   v.pause();v.hidden=true;
   const frame=$("fallback-frame");frame.hidden=false;
-  // Autoplay sem som evita o bloqueio inicial; áudio pelo player oficial.
-  frame.src="https://www.youtube-nocookie.com/embed/"+encodeURIComponent(id)+"?autoplay=1&mute=1&playsinline=1&rel=0";
+  // A sessão foi aberta por um clique: pedir reprodução com áudio.
+  // Se o navegador bloquear autoplay, o play oficial continua disponível.
+  frame.src="https://www.youtube-nocookie.com/embed/"+encodeURIComponent(id)+"?autoplay=1&mute=0&controls=1&playsinline=1&rel=0";
   $("retry-btn").hidden=true;$("fallback-btn").hidden=true;
   // Evita o aviso permanente por cima da imagem. O player oficial
   // continua com seus próprios controles, marca e regras de exibição.
@@ -1165,7 +1166,7 @@ document.addEventListener("keydown",e=>{
 document.addEventListener("visibilitychange",()=>{if(document.hidden){stopHeroPreview();if(!$("player-layer").hidden)$("video").pause()}});
 window.addEventListener("scroll",()=>$("app-header").classList.toggle("is-scrolled",window.scrollY>24),{passive:true});
 if("serviceWorker" in navigator&&location.protocol==="https:"){
- window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js?v=0.49.11",{updateViaCache:"none"}).catch(()=>{}));
+ window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js?v=0.49.12",{updateViaCache:"none"}).catch(()=>{}));
 }
 $("hero-play").onclick=()=>navigate("tv");
 $("hero-info").onclick=()=>navigate("filmes");

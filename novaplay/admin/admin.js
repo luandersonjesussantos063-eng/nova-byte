@@ -1266,6 +1266,7 @@ function init(){
  if($("r2-preview-button"))$("r2-preview-button").onclick=previewR2Video;
  if(!window.supabase?.createClient){show("login-view");status("auth-message","Não foi possível carregar a conexão de armazenamento. Confira a internet e atualize a página.",true);return}
  client=window.supabase.createClient(API_URL,PUBLIC_KEY,{auth:{autoRefreshToken:true,persistSession:true,detectSessionInUrl:true}});
+ window.NPlayYouTubeAdmin?.init({client,getUser:()=>sessionUser,parseId:extractYoutubeId,refresh:loadLibrary,errorText,isBusy:()=>busy,setBusy:value=>{busy=value;}});
  if($("login-form"))$("login-form").onsubmit=authAction;$("signup").onclick=signUp;$("forgot").onclick=forgot;
  $("pending-exit").onclick=async()=>{await client.auth.signOut();show("login-view")};
  $("logout").onclick=async()=>{if(busy)return;await client.auth.signOut();sessionUser=null;show("login-view")};
