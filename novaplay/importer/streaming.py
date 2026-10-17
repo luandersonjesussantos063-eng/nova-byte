@@ -3,6 +3,7 @@ import hashlib
 import json
 import logging
 import math
+import os
 import shutil
 import time
 from pathlib import Path
@@ -119,12 +120,18 @@ class BackgroundJob:
 
 
 def optimize_existing_once(db, r2, bucket, root, stop_file, inspect_media, run_process, timeout, cooldown):
+    # Backfilling every published film downloads its full MP4 from R2 again.
+    # It can exhaust the same local disk required by unfinished imports.
+    # Keep optional manual backfill, but prioritise the user's import queue.
+    if os.getenv('IMPORTER_ADAPTIVE_BACKFILL', '0') != '1':
+        return False
     rows = db.table('novaplay_library').select('import_job_id,r2_object_key,is_published,media_validated_at').eq('is_published', True).execute().data or []
     for row in rows:
         key = row.get('r2_object_key')
         if not key or not row.get('media_validated_at') or cooldown.get(key, 0) > time.monotonic():
             continue
         cooldown[key] = time.monotonic() + 3600
+        folder = None
         try:
             head = r2.head_object(Bucket=bucket, Key=key)
             version = version_for(head['ETag'])
@@ -143,10 +150,23 @@ def optimize_existing_once(db, r2, bucket, root, stop_file, inspect_media, run_p
                 r2.download_file(bucket, key, str(source), Callback=lambda _: job.check())
             job.check()
             build_adaptive(job, r2, bucket, source, key, inspect_media(source), run_process, timeout)
-            shutil.rmtree(folder)
             return True
         except InterruptedError:
             return False
         except Exception as exc:
             LOG.warning('Adaptive optimization deferred (%s); published MP4 preserved', type(exc).__name__)
+        finally:
+            # source.mp4 is a SECOND copy fetched from R2, never the original.
+            # Discard it even after an FFmpeg error or network failure.
+            if folder is not None:
+                try:
+                    cache = Path(root).resolve() / 'adaptive-jobs'
+                    if (not cache.is_symlink() and cache.is_dir() and
+                            not folder.is_symlink() and folder.is_dir() and
+                            folder.resolve().parent == cache and
+                            len(folder.name) == 24 and
+                            all(c in '0123456789abcdef' for c in folder.name)):
+                        shutil.rmtree(folder)
+                except Exception as cleanup_exc:
+                    LOG.warning('Adaptive local cache cleanup deferred (%s)', type(cleanup_exc).__name__)
     return False
