@@ -3,7 +3,8 @@ import {timingSafeEqual} from 'node:crypto';
 import {pipeline} from 'node:stream/promises';
 import {pathToFileURL} from 'node:url';
 import {fetchMedia,fetchXtream} from './transport.mjs';
-import {MediaEngine,isEngineUrl,ENGINE_CODES} from './media-engine.mjs';
+import {isEngineUrl,ENGINE_CODES} from './media-engine.mjs';
+import {MultiEngine} from './multi-engine.mjs';
 export {publicIP,destination,fetchMedia,xtreamCandidates,fetchXtream} from './transport.mjs';
 
 function authorized(value,secret){
@@ -65,7 +66,7 @@ export function createBridge({secret,fetchUpstream=fetchMedia,fetchRoot=fetchXtr
  });
 }
 if(process.argv[1]&&import.meta.url===pathToFileURL(process.argv[1]).href){
- const engine=new MediaEngine({mode:process.env.NPLAY_MEDIA_MODE});
+ const engine=new MultiEngine({capacity:2});
  const server=createBridge({secret:process.env.NPLAY_BRIDGE_KEY,engine});
  for(const name of ['SIGTERM','SIGINT'])process.once(name,()=>{void engine.close().finally(()=>{server.close();process.exit(0);});});
  server.requestTimeout=15000;server.headersTimeout=10000;server.maxHeadersCount=30;
