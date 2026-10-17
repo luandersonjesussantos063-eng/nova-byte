@@ -943,108 +943,48 @@ let timeShiftOpenSequence=0;
 async function openTimeshift(channel,title){
  if(channel!=="a"&&channel!=="b")return false;
  const openSequence=++timeShiftOpenSequence,displayName=String(title||"Canal de teste");
- const standbyId="timeshift-"+channel;
- // Open the real NPlay player immediately, even during server authentication.
- // The previous version showed a toast and never opened a card on lab errors.
  window.NovaPlayHeroScenes?.stop?.();window.NPlayHeroLive?.stop?.();
  window.NovaPlayHover?.close?.();stopHeroPreview();
  $("detail-layer").hidden=true;selected=null;stopPlayback();
- current={item:{id:standbyId,title:displayName,kind:"tv",live:true,timeShiftTest:true,labChannel:channel},episode:null};
+ current={item:{id:"timeshift-"+channel,title:displayName,kind:"tv",live:true,timeShiftTest:true,labChannel:channel},episode:null};
  const layer=$("player-layer");
  layer.hidden=false;document.body.classList.add("modal-open");
  $("player-heading").textContent="TESTE · "+displayName;
  $("player-title").textContent=displayName;
  $("player-error").textContent="";
  $("retry-btn").hidden=true;$("fallback-btn").hidden=true;
- $("video").hidden=true;
- $("cinema-controls").hidden=true;
+ $("video").hidden=true;$("cinema-controls").hidden=true;
  enterCinema();
- playerStatus("Conectando ao laboratório e localizando gravações…");
+ playerStatus("Conectando à TV com gravação contínua…");
  const initialAttempt=attempt;
  try{
   const client=window.NPlayAccessClient||remoteDb;
   const result=await client?.auth?.getSession(),session=result?.data?.session;
   if(!session?.access_token)throw Error("Entre na NPlay para assistir aos canais de teste.");
-  const jwt=session.access_token;
-  const headers={Authorization:"Bearer "+jwt};
-  async function state(){
-   const r=await fetch(TIMESHIFT_RELAY_ORIGIN+"/status",{headers,cache:"no-store",signal:AbortSignal.timeout(12000)});
-   if(!r.ok){
-    let details={};try{details=await r.json()}catch{}
-    throw Error(details.code==="LAB_COOKIE_REJECTED"?"A senha privada entre Cloudflare e Railway não confere. Confira TIMESHIFT_VIEW_PIN nas configurações do gateway.":r.status===403?"Seu usuário não tem acesso ao laboratório.":r.status===503?"A ligação privada do laboratório ainda não está configurada.":details.error||"O laboratório está temporariamente indisponível.");
-   }
-   return r.json();
+  const jwt=session.access_token,headers={Authorization:"Bearer "+jwt};
+  const response=await fetch(TIMESHIFT_RELAY_ORIGIN+"/status",{
+   headers,cache:"no-store",signal:AbortSignal.timeout(12000)});
+  if(!response.ok){
+   let error={};try{error=await response.json()}catch{}
+   throw Error(error.code==="LAB_COOKIE_REJECTED"?"A senha privada do laboratório não foi aceita.":
+    response.status===403?"Seu usuário não tem acesso ao laboratório.":
+    error.error||"O laboratório está temporariamente indisponível.");
   }
-  const data=await state();
+  const data=await response.json();
   if(openSequence!==timeShiftOpenSequence||initialAttempt!==attempt||layer.hidden)return false;
   const blocks=data.blocks?.[channel]||[];
-  if(!blocks.length)throw Error("Ainda não há blocos prontos neste canal. Tente novamente em 30 segundos.");
-  // Start farther from the recording edge so the next channel block can arrive
-  // before the viewer consumes this archive. This is a time-shift, not real live.
-  const start=blocks[Math.max(0,blocks.length-5)].id,end=blocks[blocks.length-1].id;
-  const archive=(first,last)=>{
-   const u=new URL("/channels/"+channel+"/archive/"+first+".m3u8",TIMESHIFT_RELAY_ORIGIN);
-   u.searchParams.set("end",String(last));
-   u.searchParams.set("access_token",jwt);
-   return u.href;
-  };
-  play({id:"timeshift-"+channel,title:String(title||"Canal em teste"),kind:"tv",mode:"hls",src:archive(start,end),live:true,timeShiftTest:true});
-  const video=$("video"),sequence=attempt;
-  let lastBlock=end,busy=false,waitTimeout=null;
-  // Polling only begins at the end of a snapshot; do not skip a block until
-  // the replacement playlist is successfully parsed.
-  async function next(){
-   if(sequence!==attempt||$("player-layer").hidden||busy)return;
-   busy=true;
-   try{
-    const result=await state();
-    if(sequence!==attempt||$("player-layer").hidden)return;
-    const future=(result.blocks?.[channel]||[]).filter(block=>block.id>lastBlock);
-    if(!future.length){
-     playerStatus("Aguardando nova gravação do Canal "+channel.toUpperCase()+"...");
-     waitTimeout=setTimeout(()=>{waitTimeout=null;next();},3000);
-     return;
-    }
-    const first=future[0].id,tail=future[future.length-1].id;
-    const url=archive(first,tail);
-    playerStatus("Carregando próxima gravação...");
-    // Recreate MediaSource at each completed archive boundary: a finished
-    // VOD has reached endOfStream and is not a live playlist.
-    if(hls){hls.destroy();hls=null;}
-    video.pause();video.removeAttribute("src");video.load();
-    if(window.Hls?.isSupported()){
-     hls=new window.Hls({enableWorker:true,lowLatencyMode:false,maxBufferLength:45,
-      maxMaxBufferLength:120,fragLoadingTimeOut:30000,fragLoadingMaxRetry:5,fragLoadingRetryDelay:1000});
-     hls.on(window.Hls.Events.MANIFEST_PARSED,()=>{
-      if(sequence!==attempt)return;
-      lastBlock=tail; // Archive actually loaded: mark all included blocks consumed.
-      startAutoplay(video,sequence);
-     });
-     hls.on(window.Hls.Events.ERROR,(_event,details)=>{
-      if(sequence!==attempt||!details.fatal)return;
-      if(hls){hls.destroy();hls=null;}
-      playerStatus("Reconectando à próxima gravação…");
-      if(waitTimeout)clearTimeout(waitTimeout);
-      waitTimeout=setTimeout(()=>{waitTimeout=null;next();},5000);
-     });
-     hls.attachMedia(video);hls.loadSource(url);
-    }else{
-     lastBlock=tail;
-     video.src=url;video.load();startAutoplay(video,sequence);
-    }
-   }catch(error){
-    if(sequence!==attempt)return;
-    playerStatus(error.message||"Aguardando retomada da gravação...");
-    waitTimeout=setTimeout(()=>{waitTimeout=null;next();},5000);
-   }finally{busy=false;}
-  }
-  video.onended=()=>{if(waitTimeout){clearTimeout(waitTimeout);waitTimeout=null;}next()};
+  if(blocks.length<5)throw Error("Preparando pelo menos dois minutos de gravações. Tente novamente em instantes.");
+  // A single refreshing HLS timeline keeps the same player and appends
+  // future completed segments. Older recordings roll out of the DVR window.
+  const playlist=new URL("/channels/"+channel+"/dvr.m3u8",TIMESHIFT_RELAY_ORIGIN);
+  playlist.searchParams.set("access_token",jwt);
+  play({id:"timeshift-"+channel,title:displayName,kind:"tv",mode:"hls",
+   src:playlist.href,live:true,timeShiftTest:true,labChannel:channel});
   return true;
  }catch(error){
   if(openSequence===timeShiftOpenSequence&&initialAttempt===attempt&&!layer.hidden){
    playbackFailed(error.message||"Não foi possível abrir o laboratório.",initialAttempt);
-   $("player-loading").hidden=true;
-   $("retry-btn").hidden=false;
+   $("player-loading").hidden=true;$("retry-btn").hidden=false;
   }
   return false;
  }
@@ -1181,7 +1121,7 @@ function play(item,episode){
     if(nativeHls&&!(item.kind==="tv"&&managedHls)){
       v.src=src;startAutoplay(v,seq);
     }else if(window.Hls&&window.Hls.isSupported()){
-      hls=new window.Hls({...(window.NPlayLiveAuth?.protectedUrl(src)?{manifestLoadPolicy:{default:{maxTimeToFirstByteMs:40000,maxLoadTimeMs:45000,timeoutRetry:null,errorRetry:null}}}:{}),enableWorker:true,lowLatencyMode:false,maxBufferLength:item.kind==="tv"?20:60,maxMaxBufferLength:180,maxBufferSize:64*1024*1024,backBufferLength:30,startLevel:0,capLevelToPlayerSize:true,abrEwmaDefaultEstimate:400000});
+      hls=new window.Hls({...(window.NPlayLiveAuth?.protectedUrl(src)?{manifestLoadPolicy:{default:{maxTimeToFirstByteMs:40000,maxLoadTimeMs:45000,timeoutRetry:null,errorRetry:null}}}:{}),enableWorker:true,lowLatencyMode:false,maxBufferLength:item.timeShiftTest?85:item.kind==="tv"?20:60,maxMaxBufferLength:180,maxBufferSize:64*1024*1024,backBufferLength:item.timeShiftTest?90:30,...(item.timeShiftTest?{liveSyncDuration:120}:{}),startLevel:0,capLevelToPlayerSize:true,abrEwmaDefaultEstimate:400000});
       hls.on(window.Hls.Events.ERROR,(event,data)=>{
         if(seq!==attempt||!data.fatal)return;
         const gatewayFailure=window.NPlayLiveAuth?.failureMessage?.(data.networkDetails?.getResponseHeader?.("X-NPlay-Error"));
