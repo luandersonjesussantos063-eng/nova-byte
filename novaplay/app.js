@@ -938,7 +938,70 @@ window.NPlayLiveCatalog={staticChannels:()=>db.channels,isFavorite:id=>favorite.
  for(const record of channels){const id="channel-"+record.id;const item={id,title:record.title,kind:"tv",live:true,mode:record.stream_type,category:record.category||"TV ao vivo",description:"Transmissão ao vivo · "+(record.category||"TV"),cover:record.logo_url||"",customLabel:record.logo_url?null:record.title,liveRecord:record};all.push(item);map.set(id,item);}
  if(view==="buscar")renderSearch();if(view==="favoritos")renderCategory("favoritos");
 }};
-window.NovaPlayPlayer={openStatic:id=>{const item=byId(id);if(!item)return false;startWatching(item);return true;},openHls:openLiveHls,openRadio:(url,title,mode)=>openLiveHls(url,title,mode==="mpegts"?"mpegts":"hls",true),openMpegts:(url,title)=>openLiveHls(url,title,"mpegts"),openEmbed:openLiveEmbed,closeEmbed:()=>{if(current?.item?.liveEmbedUrl)closePlayer()}};
+const TIMESHIFT_RELAY_ORIGIN="https://nplay-timeshift-gateway.luandersonjesussantos063.workers.dev";
+let timeShiftOpenSequence=0;
+async function openTimeshift(channel,title){
+ if(channel!=="a"&&channel!=="b")return false;
+ const openSequence=++timeShiftOpenSequence;
+ try{
+  const client=window.NPlayAccessClient||remoteDb;
+  const result=await client?.auth?.getSession(),session=result?.data?.session;
+  if(!session?.access_token)throw Error("Entre na NPlay para assistir aos canais de teste.");
+  const jwt=session.access_token;
+  const headers={Authorization:"Bearer "+jwt};
+  async function state(){
+   const r=await fetch(TIMESHIFT_RELAY_ORIGIN+"/status",{headers,cache:"no-store",signal:AbortSignal.timeout(12000)});
+   if(!r.ok)throw Error(r.status===403?"Seu usuário não tem acesso ao laboratório.":r.status===503?"A ligação privada do laboratório ainda não está configurada.":"O laboratório está temporariamente indisponível.");
+   return r.json();
+  }
+  const data=await state();
+  if(openSequence!==timeShiftOpenSequence)return false;
+  const blocks=data.blocks?.[channel]||[];
+  if(!blocks.length)throw Error("Aguardando o primeiro bloco gravado do canal.");
+  const start=blocks[Math.max(0,blocks.length-3)].id,end=blocks[blocks.length-1].id;
+  const archive=(first,last)=>{
+   const u=new URL("/channels/"+channel+"/archive/"+first+".m3u8",TIMESHIFT_RELAY_ORIGIN);
+   u.searchParams.set("end",String(last));
+   u.searchParams.set("access_token",jwt);
+   return u.href;
+  };
+  play({id:"timeshift-"+channel,title:String(title||"Canal em teste"),kind:"tv",mode:"hls",src:archive(start,end),live:true,timeShiftTest:true});
+  const video=$("video"),sequence=attempt;
+  let lastBlock=end,busy=false,waitTimeout=null;
+  async function next(){
+   if(sequence!==attempt||$("player-layer").hidden||busy)return;
+   busy=true;
+   try{
+    const result=await state();
+    if(sequence!==attempt||$("player-layer").hidden)return;
+    const future=(result.blocks?.[channel]||[]).filter(block=>block.id>lastBlock);
+    if(!future.length){
+     playerStatus("Aguardando nova gravação do Canal "+channel.toUpperCase()+"...");
+     waitTimeout=setTimeout(()=>{waitTimeout=null;next();},3000);
+     return;
+    }
+    const first=future[0].id,tail=future[future.length-1].id;
+    lastBlock=tail;
+    const url=archive(first,tail);
+    playerStatus("Carregando próxima gravação...");
+    if(hls){
+     hls.stopLoad();hls.loadSource(url);
+     hls.once(window.Hls.Events.MANIFEST_PARSED,()=>{if(sequence===attempt)startAutoplay(video,sequence)});
+    }else{video.src=url;video.load();startAutoplay(video,sequence);}
+   }catch(error){
+    if(sequence!==attempt)return;
+    playerStatus(error.message||"Aguardando retomada da gravação...");
+    waitTimeout=setTimeout(()=>{waitTimeout=null;next();},5000);
+   }finally{busy=false;}
+  }
+  video.onended=()=>{if(waitTimeout){clearTimeout(waitTimeout);waitTimeout=null;}next()};
+  return true;
+ }catch(error){
+  if(openSequence===timeShiftOpenSequence)toast(error.message||"Não foi possível abrir o laboratório.");
+  return false;
+ }
+}
+window.NovaPlayPlayer={openStatic:id=>{const item=byId(id);if(!item)return false;startWatching(item);return true;},openTimeshift,openHls:openLiveHls,openRadio:(url,title,mode)=>openLiveHls(url,title,mode==="mpegts"?"mpegts":"hls",true),openMpegts:(url,title)=>openLiveHls(url,title,"mpegts"),openEmbed:openLiveEmbed,closeEmbed:()=>{if(current?.item?.liveEmbedUrl)closePlayer()}};
 $("player-live-reload").onclick=()=>{if(current?.item?.liveEmbedUrl)openLiveEmbed(current.item.liveEmbedUrl,current.item.title)};
 function play(item,episode){
  if(item?.liveEmbedUrl){openLiveEmbed(item.liveEmbedUrl,item.title);return}
@@ -1018,7 +1081,7 @@ function play(item,episode){
  const progressId=item.kind==="tv"?null:episode?episode.id:item.id;
  setResume(v,progressId,seq);
  if(item.kind==="tv")timer=setTimeout(()=>{if(seq===attempt&&((!item.audioOnly&&!v.videoWidth)||v.readyState<2)&&!tryMpegts())fail("O canal está demorando para carregar. Verifique a conexão ou tente novamente.")},window.NPlayLiveAuth?.protectedUrl(src)?45000:22000);
- if(!media.youtube_id&&!media.google_drive_id&&!window.NPlayLiveAuth?.protectedUrl(media.src))window.NPlayCasting?.configure({
+ if(!media.youtube_id&&!media.google_drive_id&&!item.timeShiftTest&&!window.NPlayLiveAuth?.protectedUrl(media.src))window.NPlayCasting?.configure({
   title:episode?item.title+" · "+episode.label:item.title,live:item.kind==="tv",
   onChange:updateCinemaControls,
   onProgress(position,duration){
