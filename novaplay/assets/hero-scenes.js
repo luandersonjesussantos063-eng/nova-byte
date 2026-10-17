@@ -103,7 +103,7 @@ async function show(item){
  teardown();lastItem=item||null;
  if(!canPreviewInView())return;
  if(!item||item.catalogOnly||item.kind==="tv")return;
- if(!matchMedia("(hover:hover) and (pointer:fine)").matches)return;
+ // Allow mobile previews too; browsers may require a tap before enabling sound.
  if(matchMedia("(prefers-reduced-motion:reduce)").matches||navigator.connection?.saveData)return;
  const clip=choose(item);if(!clip)return;
  const id=generation;
@@ -120,14 +120,14 @@ async function show(item){
    width:"100%",height:"100%",
    host:"https://www.youtube-nocookie.com",
    playerVars:{
-    autoplay:1,mute:1,controls:1,playsinline:1,rel:0,
+    autoplay:1,mute:0,controls:1,playsinline:1,rel:0,
     iv_load_policy:3,start:clip.start,end:clip.end,
     origin:location.origin
    },
    events:{
     onReady(event){
      if(id!==generation||!canPreviewInView()){if(id===generation)teardown();return}
-     try{fitHeroFrame();event.target.mute();event.target.seekTo(clip.start,true);event.target.playVideo()}catch(e){}
+     try{fitHeroFrame();event.target.unMute();event.target.setVolume(100);soundOn=true;soundButton();event.target.seekTo(clip.start,true);event.target.playVideo()}catch(e){}
     },
     onStateChange(event){
      if(id!==generation)return;
