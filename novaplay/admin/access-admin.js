@@ -9,13 +9,13 @@ async function refresh(){
  if(!user){$("nplay-access-admin-status").textContent="Entre como administrador para visualizar solicitações.";return}
  const {data:admin}=await db.from("novaplay_admins").select("user_id").eq("user_id",user.id).maybeSingle();
  if(!admin){$("nplay-access-admin-status").textContent="Somente administradores podem visualizar esta área.";return}
- const {data,error}=await db.from("novaplay_access_requests").select("user_id,device_label,status,created_at").order("created_at",{ascending:false}).limit(200);
+ const {data,error}=await db.from("novaplay_access_requests").select("user_id,display_name,device_label,status,created_at").order("created_at",{ascending:false}).limit(200);
  if(error){$("nplay-access-admin-status").textContent=error.message;return}
  $("nplay-access-admin-status").textContent=(data||[]).length+" solicitações encontradas.";
  list.replaceChildren();
  for(const item of data||[]){
   const row=document.createElement("div");row.style.cssText="border:1px solid #365075;border-radius:10px;padding:12px;margin:9px 0";
-  const title=document.createElement("strong");title.textContent=item.user_id.slice(0,8).toUpperCase()+" · "+item.status;
+  const title=document.createElement("strong");title.textContent=(item.display_name||"Sem nome")+" · "+item.status+" · "+item.user_id.slice(0,8).toUpperCase();
   const info=document.createElement("p");info.textContent=item.device_label+" · "+new Date(item.created_at).toLocaleString("pt-BR");info.style.overflowWrap="anywhere";
   row.append(title,info);
   for(const [status,label] of [["approved","Aprovar"],["denied","Recusar"],["revoked","Revogar"]]){
