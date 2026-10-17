@@ -36,7 +36,8 @@ async function loadState(){
 async function saveState(){
  if(!persistent)return;
  const pending=stateFile+'.tmp';
- await writeFile(pending,JSON.stringify({completed,boundaries:Object.fromEntries(channels.map(c=>[c,[...boundaries[c]]))]}));
+ const boundaryIndex=Object.fromEntries(channels.map(c=>[c,Array.from(boundaries[c])]));
+ await writeFile(pending,JSON.stringify({completed,boundaries:boundaryIndex}));
  await rename(pending,stateFile);
 }
 await loadState();
