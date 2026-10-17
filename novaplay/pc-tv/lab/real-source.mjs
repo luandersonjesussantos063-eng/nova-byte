@@ -19,23 +19,47 @@ function allowedUrl(value) {
   return u;
 }
 async function readPlaylist(){
-  const u=allowedUrl(playlistUrl);
-  const res=await fetch(u,{redirect:'follow',signal:AbortSignal.timeout(12000),headers:{'Accept':'audio/x-mpegurl,application/vnd.apple.mpegurl,text/plain'}});
+ const u=allowedUrl(playlistUrl);
+ const controller=new AbortController();
+ const timer=setTimeout(()=>controller.abort(),30000);
+ let reader;
+ try{
+  const res=await fetch(u,{redirect:'follow',signal:controller.signal,headers:{Accept:'audio/x-mpegurl,application/vnd.apple.mpegurl,text/plain'}});
   if(!res.ok)throw Error('PLAYLIST_HTTP_'+res.status);
   const size=Number(res.headers.get('content-length')||0);if(size>5_000_000)throw Error('PLAYLIST_TOO_LARGE');
-  const raw=await res.text();if(raw.length>5_000_000)throw Error('PLAYLIST_TOO_LARGE');
-  const rows=raw.split(/\r?\n/);
-  const records=[];let name='';
-  for(const row of rows){
-    const line=row.trim();
-    if(line.startsWith('#EXTINF:')){name=line.split(',').slice(1).join(',').trim();continue;}
-    if(!line||line.startsWith('#'))continue;
+  reader=res.body.getReader();
+  const dec=new TextDecoder();const records=[];
+  let total=0,left='',name='';
+  function consume(line){
+    line=line.trim();
+    if(line.startsWith('#EXTINF:')){name=line.split(',').slice(1).join(',').trim();return;}
+    if(!line||line.startsWith('#'))return;
     if(name){
       try{const candidate=allowedUrl(new URL(line,u).href);records.push({name,url:candidate.href});}catch{}
       name='';
     }
   }
+  while(true){
+    const {done,value}=await reader.read();
+    if(done)break;
+    total+=value.byteLength;
+    if(total>5_000_000)throw Error('PLAYLIST_TOO_LARGE');
+    left+=dec.decode(value,{stream:true});
+    const lines=left.split(/\r?\n/);left=lines.pop();
+    for(const line of lines)consume(line);
+    // Once both named channels are found there is no need to wait for a slow upstream to close.
+    if(['a','b'].every(c=>records.some(item=>norm(item.name).includes(norm(requested[c])))))break;
+  }
+  if(left)consume(left);
+  if(!records.length)throw Error('PLAYLIST_EMPTY');
   return records;
+ }catch(err){
+  if(controller.signal.aborted)throw Error('PLAYLIST_TIMEOUT');
+  throw err;
+ }finally{
+  clearTimeout(timer);
+  try{await reader?.cancel();}catch{}
+ }
 }
 export async function sourceFor(channel){
  if(!playlistUrl)throw Error('PLAYLIST_NOT_CONFIGURED');
@@ -54,7 +78,7 @@ export async function sourceFor(channel){
 export function dropSourceCache(){cache=null;}
 export function safeSourceError(err){
  const m=String(err?.message || err || 'SOURCE_ERROR');
- if(/^(PLAYLIST_HTTP_\d+|PLAYLIST_TOO_LARGE|PLAYLIST_NOT_CONFIGURED|SOURCE_(?:URL_INVALID|SCHEME_INVALID|HOST_BLOCKED)|CHANNEL_[AB]_NOT_FOUND)$/.test(m))return m;
+ if(/^(PLAYLIST_HTTP_\d+|PLAYLIST_TOO_LARGE|PLAYLIST_EMPTY|PLAYLIST_TIMEOUT|PLAYLIST_NOT_CONFIGURED|SOURCE_(?:URL_INVALID|SCHEME_INVALID|HOST_BLOCKED)|CHANNEL_[AB]_NOT_FOUND)$/.test(m))return m;
  const cause=String(err?.cause?.code||err?.code||'');
  const allowed=new Set(['ECONNRESET','ECONNREFUSED','ENOTFOUND','EAI_AGAIN','ETIMEDOUT','UND_ERR_SOCKET','UND_ERR_CONNECT_TIMEOUT','ERR_TLS_CERT_ALTNAME_INVALID','CERT_HAS_EXPIRED']);
  if(allowed.has(cause))return 'SOURCE_'+cause;
