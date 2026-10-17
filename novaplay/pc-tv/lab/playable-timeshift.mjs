@@ -60,7 +60,7 @@ async function record(c){
    await new Promise(resolve=>setTimeout(resolve,12000));return;
   }
   // Strictly sequential upstream input: only one FFmpeg child exists at any time.
-  ff=['-hide_banner','-loglevel','error','-nostdin','-rw_timeout','15000000','-i',src.url,
+  ff=['-hide_banner','-loglevel','error','-nostdin','-rw_timeout','15000000','-re','-i',src.url,
     '-map','0:v:0','-map','0:a:0?','-t',String(ROTATE),
     '-vf','scale=640:-2','-c:v','libx264','-preset','ultrafast',
     '-pix_fmt','yuv420p','-g','50','-sc_threshold','0',
