@@ -86,7 +86,7 @@ export class XtreamClient{
     if(/text\/|json|html|mpegurl/i.test(type)){media.response.destroy();throw Object.assign(Error('Provider did not return TS'),{code:'ENGINE_SOURCE_INVALID'});}
     return media;
    }catch(error){
-    if(error.code==='ECONNRESET'&&n===0&&!signal.aborted)continue;
+    if(error.code==='ECONNRESET'&&n===0&&!signal.aborted){console.warn(JSON.stringify({event:'media_source_reset_retry',candidate:1}));await new Promise(resolve=>setTimeout(resolve,350));continue;}
     if(error.code?.startsWith('ENGINE_'))throw error;
     throw Object.assign(Error('Provider media connection failed'),{code:error.code==='ECONNRESET'?'ENGINE_SOURCE_RESET':'ENGINE_SOURCE_CONNECTION'});
    }
