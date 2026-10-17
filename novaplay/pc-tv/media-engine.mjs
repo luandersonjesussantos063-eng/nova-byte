@@ -69,7 +69,13 @@ export class MediaEngine{
   console.info(JSON.stringify({event:'m3u_direct_stream_attempt'}));
   s.account=null;s.stage='receiving';s.touched=Date.now();if(signal.aborted)throw failure('ENGINE_START_TIMEOUT');
   const media=await this.client.openTs(login,signal);
-  s.input=media.response;if(signal.aborted){s.input.destroy();throw failure('ENGINE_START_TIMEOUT');}
+  s.input=media.response;
+  console.info(JSON.stringify({event:'media_upstream_open',session:s.id.slice(0,8),status:s.input.statusCode,transport:'ts'}));
+  s.input.once('end',()=>console.warn(JSON.stringify({event:'media_upstream_end',session:s.id.slice(0,8),bytes_received:s.bytes,stopping:!!s.stopping})));
+  s.input.once('aborted',()=>console.warn(JSON.stringify({event:'media_upstream_aborted',session:s.id.slice(0,8),bytes_received:s.bytes,stopping:!!s.stopping})));
+  s.input.once('close',()=>console.warn(JSON.stringify({event:'media_upstream_close',session:s.id.slice(0,8),complete:!!s.input.complete,bytes_received:s.bytes,stopping:!!s.stopping})));
+  s.input.once('error',error=>console.warn(JSON.stringify({event:'media_upstream_error',session:s.id.slice(0,8),code:String(error?.code||'UNKNOWN').slice(0,50)})));
+  if(signal.aborted){s.input.destroy();throw failure('ENGINE_START_TIMEOUT');}
   s.dir=await mkdtemp(join(this.root,'nplay-media-'));s.stage='processing';s.touched=Date.now();if(signal.aborted)throw failure('ENGINE_START_TIMEOUT');
   const video=this.mode==='copy'?['-c:v','copy']:['-c:v','libx264','-preset','ultrafast','-tune','zerolatency','-threads','2','-vf','scale=w=min(1280\\,iw):h=-2','-r','25','-g','50','-keyint_min','50','-sc_threshold','0','-b:v','2000k','-maxrate','2500k','-bufsize','5000k','-pix_fmt','yuv420p'];
   const args=['-hide_banner','-loglevel','error','-nostdin','-fflags','+genpts+discardcorrupt','-probesize','2000000','-analyzeduration','2000000','-protocol_whitelist','pipe','-threads','2','-filter_threads','1','-f','mpegts','-i','pipe:0','-map','0:v:0?','-map','0:a:0?',...video,'-c:a','aac','-b:a','128k','-ac','2','-sn','-dn','-f','hls','-hls_time','2','-hls_list_size','30','-hls_delete_threshold','15','-hls_flags','delete_segments+temp_file+omit_endlist','-hls_segment_filename',join(s.dir,'seg%09d.ts'),join(s.dir,'index.m3u8')];
