@@ -38,14 +38,14 @@ jobs:
           const app=fs.readFileSync('novaplay/app.js','utf8');
           const css=fs.readFileSync('novaplay/assets/cinema-refresh.css','utf8');
           const sw=fs.readFileSync('novaplay/sw.js','utf8');
-          for(const phrase of ['id="nplay-soft-opening"','assets/cinema-refresh.css?v=0.51.0','assets/soft-opening.js?v=0.51.0','NPlay V 0.51.0'])assert(index.includes(phrase),phrase);
-          assert(sw.includes('novaplay-v0.51.0'));
+          for(const phrase of ['id="nplay-soft-opening"','assets/cinema-refresh.css?v=0.51.1','assets/soft-opening.js?v=0.51.1','NPlay V 0.51.1'])assert(index.includes(phrase),phrase);
+          assert(sw.includes('novaplay-v0.51.1'));
           assert(sw.includes('./assets/cinema-refresh.css'));
           assert(app.includes('Filmes disponíveis'));
           assert(app.includes('Séries para acompanhar'));
           assert(css.includes('prefers-reduced-motion'));
           assert(!app.includes('openTimeshift'));
-          console.log('NPlay interface 0.51.0 — integração validada');
+          console.log('NPlay interface 0.51.1 — integração validada');
           JS
       - name: Testes de catalogo ao vivo na home
         run: node --test novaplay/tests/home-live.test.mjs
