@@ -49,7 +49,7 @@ function playBlock(c,id){
  requestVersion++;const version=requestVersion;
  currentId=id;waiting=false;
  if(h){h.destroy();h=null;}video.pause();video.removeAttribute('src');video.load();
- const url='/channels/'+c+'/blocks/'+id+'.m3u8';
+ const url='/channels/'+c+'/archive/'+id+'.m3u8';
  message.textContent='Carregando bloco '+id+' do Canal '+c.toUpperCase()+'...';
  if(window.Hls&&Hls.isSupported()){
   h=new Hls({maxBufferLength:45,fragLoadingTimeOut:30000,fragLoadingMaxRetry:5,fragLoadingRetryDelay:1000});h.loadSource(url);h.attachMedia(video);
@@ -70,7 +70,7 @@ video.addEventListener('playing',()=>{message.textContent='▶ Reproduzindo bloc
 video.addEventListener('pause',()=>{if(!video.ended&&!waiting&&currentId!==null)message.textContent='⏸ Vídeo pausado. Toque em ▶ para continuar.';});
 video.addEventListener('waiting',()=>{if(!waiting&&currentId!==null)message.textContent='Carregando vídeo do bloco '+currentId+'...';});
 
-video.addEventListener('ended',()=>nextBlock());
+video.addEventListener('ended',()=>{const blocks=known[selected]||[];const last=blocks.at(-1);if(last&&last.id>currentId)currentId=last.id;nextBlock();});
 async function refresh(){
  try{
  const x=await(await fetch('/status',{cache:'no-store'})).json();const m=await(await fetch('/metrics',{cache:'no-store'})).json();document.querySelector('#metrics').textContent='Gravações: '+m.rotations+' ciclos · Erros: '+m.recordingErrors+' · Armazenamento: '+((m.channels.a.bytes+m.channels.b.bytes)/1048576).toFixed(1)+' MB';
@@ -94,9 +94,18 @@ const server=http.createServer(async(req,res)=>{
  if(url.pathname==='/'){res.setHeader('Content-Type','text/html; charset=utf-8');res.end(html);return;}
  if(url.pathname==='/metrics'){const disk=Object.fromEntries(await Promise.all(channels.map(async c=>{const names=await segmentList(c);let bytes=0;for(const n of names){const info=await stat(join(folders[c],n)).catch(()=>null);bytes+=info?.size||0;}return [c,{segments:names.length,bytes,completedBlocks:completed[c].length,recordedSeconds:completed[c].reduce((sum,b)=>sum+b.files.length*2,0)}];})));res.setHeader('Content-Type','application/json');res.setHeader('Cache-Control','no-store');res.end(JSON.stringify({service:'nplay-timeshift-lab',source:'synthetic',uptimeSeconds:Math.floor((Date.now()-startedAt)/1000),activeRecorder:active,rotations:stats.rotations,recordingErrors:stats.errors,lastRotation:stats.lastRotation,channels:disk}));return;}
  if(url.pathname==='/status'){res.setHeader('Content-Type','application/json');res.setHeader('Cache-Control','no-store');res.end(JSON.stringify({active,blocks:Object.fromEntries(channels.map(c=>[c,completed[c].map((b,order)=>({id:b.id,order,seconds:b.files.length*2}))]))}));return;}
- const m=/^\/channels\/(a|b)\/(index\.m3u8|seg\d+\.ts|blocks\/\d+\.m3u8)$/.exec(url.pathname);
+ const m=/^\/channels\/(a|b)\/(index\.m3u8|seg\d+\.ts|blocks\/\d+\.m3u8|archive\/\d+\.m3u8)$/.exec(url.pathname);
  if(!m){res.writeHead(404);res.end();return;}
  const [,c,name]=m;
+ if(name.startsWith('archive/')){
+ const id=Number(name.slice(8,-5)),blocks=completed[c].filter(b=>b.id>=id);
+ const available=new Set(await segmentList(c));
+ if(!blocks.length||blocks.some(b=>b.files.some(n=>!available.has(n)))){res.writeHead(410);res.end();return;}
+ const lines=['#EXTM3U','#EXT-X-VERSION:3','#EXT-X-PLAYLIST-TYPE:VOD','#EXT-X-TARGETDURATION:2','#EXT-X-MEDIA-SEQUENCE:0'];
+ blocks.forEach((b,i)=>{if(i)lines.push('#EXT-X-DISCONTINUITY');for(const n of b.files)lines.push('#EXTINF:2.0,','../'+n);});
+ lines.push('#EXT-X-ENDLIST');
+ res.setHeader('Content-Type','application/vnd.apple.mpegurl');res.setHeader('Cache-Control','no-store');res.end(lines.join('\\n')+'\\n');return;
+ }
  if(name.startsWith('blocks/')){
  const id=Number(name.slice(7,-5)),block=completed[c].find(b=>b.id===id);
  if(!block){res.writeHead(404);res.end();return;}
