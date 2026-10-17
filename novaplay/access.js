@@ -59,6 +59,11 @@ async function readAccess(user){
  if(error)throw error;
  return record?.status||"new";
 }
+// Only a successful server-side authorization may uncover the app.
+function broadcastAccess(state){
+ document.documentElement.dataset.nplayAccess=state;
+ window.dispatchEvent(new CustomEvent("nplay-access-state",{detail:{state}}));
+}
 function showDeviceCode(){
  if(!lastUser)return;
  let button=document.getElementById("nplay-device-code");
@@ -77,6 +82,7 @@ function applyAccess(state){
   const deviceBadge=document.getElementById("nplay-device-code");if(deviceBadge)deviceBadge.style.display="none";
   // The catalog may have loaded before the approval existed. Reload once after
   // approval so RLS can return the newly authorized films and channels.
+  broadcastAccess("approved");
   if(hadRestrictedAccess)location.reload();
   return;
  }
@@ -84,13 +90,14 @@ function applyAccess(state){
  $("nplay-access-wall").hidden=false;
  document.querySelectorAll("video,audio").forEach(media=>{try{media.pause()}catch{}});
  render(state==="revoked"||state==="denied"?"denied":state==="pending"?"pending":"new");
+ broadcastAccess(state);
 }
 async function check(manual=false){
  if(!client||busy)return;
  busy=true;
  if(manual)render("loading");
  try{lastUser=await identify();applyAccess(await readAccess(lastUser));}
- catch{$("nplay-access-wall").hidden=false;document.querySelectorAll("video,audio").forEach(media=>{try{media.pause()}catch{}});render("connection");}
+ catch{$("nplay-access-wall").hidden=false;document.querySelectorAll("video,audio").forEach(media=>{try{media.pause()}catch{}});render("connection");broadcastAccess("connection");}
  finally{busy=false;$("nplay-access-request").disabled=false;$("nplay-access-retry").disabled=false;}
 }
 async function requestAccess(){
@@ -107,12 +114,12 @@ async function requestAccess(){
   // Duplicate requests are resolved by reading the existing status, never by
   // overwriting a denial or an approval.
   applyAccess(await readAccess(lastUser));
- }catch{render("connection");}
+ }catch{render("connection");broadcastAccess("connection");}
  finally{busy=false;$("nplay-access-request").disabled=false;$("nplay-access-retry").disabled=false;}
 }
 function start(){
  if(!window.supabase?.createClient){
-  if(++sdkWait>40){render("connection");$("nplay-access-retry").onclick=()=>location.reload();return}
+  if(++sdkWait>40){$("nplay-access-wall").hidden=false;render("connection");broadcastAccess("connection");$("nplay-access-retry").onclick=()=>location.reload();return}
   setTimeout(start,250);return;
  }
  client=window.supabase.createClient(url,key,{auth:{persistSession:true,autoRefreshToken:true}});
