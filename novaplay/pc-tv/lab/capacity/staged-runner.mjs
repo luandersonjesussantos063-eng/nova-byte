@@ -93,3 +93,29 @@ if(process.env.CAPACITY_PLAYLIST_CHECK==="1"){
   }catch(err){console.log(JSON.stringify({event:"capacity_playlist_check",error:String(err.message||err).slice(0,100)}));}
  })();
 }
+
+if(process.env.CAPACITY_DVR_CHECK==="1"){
+ (async()=>{
+  const base="http://127.0.0.1:"+port+"/";
+  await sleep(9000);
+  const login=await fetch(base+"login",{method:"POST",redirect:"manual",headers:{"Content-Type":"application/x-www-form-urlencoded"},
+   body:new URLSearchParams({pin:process.env.TIMESHIFT_VIEW_PIN}),signal:AbortSignal.timeout(9000)});
+  const cookie=(login.headers.get("set-cookie")||"").match(/^nplay_lab_auth=[0-9a-f]+/)?.[0];
+  if(!cookie)throw Error("lab login not ready");
+  const sample=async()=>{
+   const res=await fetch(base+"channels/a/dvr.m3u8",{headers:{Cookie:cookie},signal:AbortSignal.timeout(8000)});
+   const body=await res.text(),sequence=Number(body.match(/^#EXT-X-MEDIA-SEQUENCE:(\d+)/m)?.[1]);
+   const segs=body.match(/seg\d+\.ts/g)||[];
+   return {http:res.status,live:!body.includes("#EXT-X-ENDLIST"),sequence:Number.isFinite(sequence)?sequence:null,
+     segments:segs.length,first:segs[0]||null,last:segs.at(-1)||null,
+     discontinuity:Number(body.match(/^#EXT-X-DISCONTINUITY-SEQUENCE:(\d+)/m)?.[1]||0),
+     target:Number(body.match(/^#EXT-X-TARGETDURATION:(\d+)/m)?.[1]||0)};
+  };
+  const first=await sample();
+  console.log(JSON.stringify({event:"capacity_dvr_first",...first}));
+  await sleep(70000);
+  const second=await sample();
+  console.log(JSON.stringify({event:"capacity_dvr_next",...second,newSegments:first.last!==second.last,
+   sane:second.http===200&&second.live&&second.target>=2&&second.segments>0}));
+ })().catch(e=>console.error(JSON.stringify({event:"capacity_dvr_error",name:e?.name||"Error"})));
+}
