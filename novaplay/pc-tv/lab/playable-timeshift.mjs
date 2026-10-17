@@ -13,6 +13,9 @@ import {join} from 'node:path';
 const PORT=Number(process.env.PORT||process.env.TIMESHIFT_PORT||8800);
 const ROTATE=Math.max(6,Number(process.env.TIMESHIFT_ROTATE_SECONDS||30));
 const LIMIT=Math.max(10,Number(process.env.TIMESHIFT_MAX_SEGMENTS||150));
+// A manifest request means someone is actively watching that channel.
+// Prioritise its recording while preserving the one-upstream-connection limit.
+const FOCUS_TTL_MS=90000;
 const persistent=Boolean(process.env.TIMESHIFT_DATA_DIR);
 const real=Boolean(process.env.TIMESHIFT_REAL_M3U_URL);
 const pin=process.env.TIMESHIFT_VIEW_PIN||'';
@@ -21,6 +24,12 @@ const root=persistent?join(process.env.TIMESHIFT_DATA_DIR,real?'real-hls':'synth
 const stateFile=join(root,'index.json');
 const startedAt=Date.now();const stats={rotations:0,errors:0,lastRotation:null};
 const channels=['a','b'];const completed=Object.fromEntries(channels.map(c=>[c,[]]));const boundaries=Object.fromEntries(channels.map(c=>[c,new Set()]));let active='a',stop=false,child=null;
+let watchedChannel=null,watchedUntil=0;
+function prioritizeViewer(channel){
+ const changed=watchedChannel!==channel||Date.now()>=watchedUntil;
+ watchedChannel=channel;watchedUntil=Date.now()+FOCUS_TTL_MS;
+ if(changed)console.log(JSON.stringify({event:'lab_viewer_priority',channel}));
+}
 const folders=Object.fromEntries(channels.map(c=>[c,join(root,c)]));
 await mkdir(root,{recursive:true});
 await Promise.all(Object.values(folders).map(p=>mkdir(p,{recursive:true})));
@@ -114,7 +123,18 @@ async function record(c){
  console.log(JSON.stringify({event:'lab_rotation',channel:c,seconds:Math.round((Date.now()-start)/1000),segments:(await segmentList(c)).length,exitCode:exit.code??null,error:code}));
  if(real&&(exit.code!==0||block.length<3))await new Promise(resolve=>setTimeout(resolve,12000));
 }
-const recordingLoop=(async()=>{while(!stop){for(const c of channels){if(stop)break;await record(c);}}})().catch(e=>{if(!stop)console.error('lab_error',e.message);});
+const recordingLoop=(async()=>{
+ while(!stop){
+  // Only one FFmpeg process / one provider connection at a time.
+  // Playback HLS keeps refreshing its manifest, extending this priority.
+  const focused=Date.now()<watchedUntil?watchedChannel:null;
+  if(focused){await record(focused);continue;}
+  for(const c of channels){
+   if(stop||Date.now()<watchedUntil)break;
+   await record(c);
+  }
+ }
+})().catch(e=>{if(!stop)console.error('lab_error',e.message);});
 const html=`<!doctype html><html lang="pt-BR"><meta name="viewport" content="width=device-width,initial-scale=1"><title>NPlay — TV de Gravações</title><style>*{box-sizing:border-box}body{margin:0;background:#0c1324;color:#f6f9ff;font:16px system-ui}main{max-width:760px;margin:auto;padding:22px 16px}h1{font-size:25px}p{color:#adbed4;line-height:1.5}.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:20px 0}button{border:1px solid #37516e;background:#1b2d48;color:white;padding:15px 12px;border-radius:12px;font:inherit;text-align:left}button.active{background:#234a7b;border-color:#75b4ff}small{display:block;color:#bbd1eb;margin-top:6px}video{width:100%;aspect-ratio:16/9;background:#02050c;border-radius:12px}#message{margin:14px 0;color:#c9d7e9}.tag{font-size:12px;color:#92c5ff}footer{font-size:13px;color:#9aaec7;margin-top:22px}</style><main><div class="tag">LABORATÓRIO • CANAIS SINTÉTICOS</div><h1>TV de Gravações</h1><p>Escolha um canal. A reprodução automática começa quando houver 2 minutos gravados, criando uma reserva inicial para reduzir as pausas.</p><div class="grid"><button id="a" onclick="select('a')">📺 Canal A<small id="ca">Aguardando gravações</small></button><button id="b" onclick="select('b')">📺 Canal B<small id="cb">Aguardando gravações</small></button></div><h3>Blocos disponíveis</h3><p id="metrics">Monitoramento: carregando...</p><div id="blocks">Carregando...</div><p id="message">Escolha um bloco completo para assistir.</p><video id="video" controls playsinline></video><footer>O gravador alterna entre os canais a cada 30 segundos. Um bloco só aparece quando termina de gravar. O laboratório não acessa a conta IPTV.</footer></main><script defer src="https://cdn.jsdelivr.net/npm/hls.js@1/dist/hls.min.js"></script><script>
 let selected='a',h=null,currentId=null,playbackEndId=null,waiting=false,requestVersion=0,known={a:[],b:[]};const START_BUFFER_SECONDS=120;
 const video=document.querySelector('#video'),message=document.querySelector('#message');
@@ -217,6 +237,7 @@ const server=http.createServer(async(req,res)=>{
  if(!m){res.writeHead(404);res.end();return;}
  const [,c,name]=m;
  if(name==='dvr.m3u8'){
+  prioritizeViewer(c);
   // A growing LIVE HLS playlist.  Unlike a VOD archive this has NO ENDLIST:
   // the browser reloads this same URL and appends newer completed blocks.
   // Keep the stable absolute segment/media sequence and historical boundary
