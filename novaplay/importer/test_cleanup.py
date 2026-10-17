@@ -3,7 +3,7 @@ from pathlib import Path
 import tempfile
 import unittest
 from unittest.mock import MagicMock
-from cleanup import cleanup_published_imports
+from cleanup import cleanup_published_imports, cleanup_adaptive_cache
 
 
 class CleanupTest(unittest.TestCase):
@@ -100,6 +100,33 @@ class CleanupTest(unittest.TestCase):
         (self.folder / 'link').symlink_to(external, target_is_directory=True)
         self.assertEqual(self.clean(), 1)
         self.assertTrue(target.exists())
+
+    def test_abandoned_adaptive_cache_removed_without_touching_imports(self):
+        cache = self.root / 'adaptive-jobs'
+        abandoned = cache / ('a' * 24)
+        abandoned.mkdir(parents=True)
+        (abandoned / 'source.mp4').write_bytes(b'disposable cached R2 copy')
+        unusual = cache / 'personal-files'
+        unusual.mkdir()
+        (unusual / 'keep.txt').write_text('keep')
+        self.assertEqual(cleanup_adaptive_cache(self.root), 1)
+        self.assertFalse(abandoned.exists())
+        self.assertTrue((unusual / 'keep.txt').exists())
+        self.assertTrue(self.original.exists())
+        self.assertTrue(self.outside.exists())
+
+    def test_abandoned_cache_symlink_is_not_followed(self):
+        cache = self.root / 'adaptive-jobs'
+        cache.mkdir(parents=True)
+        external = self.base / 'external-cache-target'
+        external.mkdir()
+        (external / 'keep.txt').write_text('keep')
+        try:
+            (cache / ('b' * 24)).symlink_to(external, target_is_directory=True)
+        except (OSError, NotImplementedError):
+            self.skipTest('OS does not allow symlinks')
+        self.assertEqual(cleanup_adaptive_cache(self.root), 0)
+        self.assertTrue((external / 'keep.txt').exists())
 
 
 if __name__ == '__main__':
