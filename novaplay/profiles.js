@@ -98,7 +98,28 @@ remove.onclick=()=>{
  try{localStorage.setItem(activeKey,String(nextActive))}catch{}
  options(nextActive);loadDraft();render();updateHeader(nextActive);feedback.textContent="Perfil removido.";
 };
-if(avatar){avatar.onclick=show;updateHeader(activeIndex());refreshAdminLink()}
+if(avatar){
+ updateHeader(activeIndex());refreshAdminLink();
+ const menu=document.createElement("section");
+ menu.id="nplay-account-menu";menu.hidden=true;
+ menu.setAttribute("aria-label","Configurações da conta");
+ menu.style.cssText="position:fixed;right:14px;top:calc(72px + env(safe-area-inset-top,0px));z-index:2147483000;width:min(330px,calc(100vw - 28px));padding:16px;border:1px solid #3c567c;border-radius:20px;background:#101d32;color:#f3f7ff;box-shadow:0 20px 55px #000b;font:14px system-ui";
+ const heading=document.createElement("strong");heading.textContent="Configurações";heading.style.cssText="display:block;font-size:18px;margin-bottom:12px";
+ const profileName=document.createElement("p");profileName.style.cssText="margin:0 0 14px;color:#b7c9e7";
+ const makeButton=(label,handler)=>{const b=document.createElement("button");b.type="button";b.textContent=label;b.style.cssText="display:block;width:100%;padding:13px 12px;margin:7px 0;border:1px solid #354e70;border-radius:12px;background:#1a2c48;color:#f2f6ff;text-align:left;font:600 14px system-ui;cursor:pointer";b.addEventListener("click",handler);return b};
+ const device=document.createElement("div");device.style.cssText="margin-top:14px;padding:12px;border-radius:12px;background:#172940;border:1px solid #334a69";
+ const deviceTitle=document.createElement("strong");deviceTitle.textContent="Este aparelho";deviceTitle.style.cssText="display:block;margin-bottom:5px";
+ const deviceCode=document.createElement("span");deviceCode.style.cssText="font-size:13px;color:#b7c9e7;word-break:break-word";
+ const copy=makeButton("Copiar identificação",async()=>{const code=document.getElementById("nplay-device-code")?.textContent?.replace(/^Aparelho:\\s*/,"").trim();if(!code)return;try{await navigator.clipboard.writeText(code);copy.textContent="✓ Código copiado"}catch{copy.textContent="Não foi possível copiar"}});
+ device.append(deviceTitle,deviceCode,copy);
+ menu.append(heading,profileName,makeButton("👤 Trocar perfil",()=>{menu.hidden=true;avatar.setAttribute("aria-expanded","false");show()}),makeButton("✏️ Editar perfis",()=>{menu.hidden=true;options();loadDraft();dialog.showModal()}),device);
+ document.body.append(menu);
+ avatar.setAttribute("aria-haspopup","true");avatar.setAttribute("aria-expanded","false");
+ const close=()=>{menu.hidden=true;avatar.setAttribute("aria-expanded","false")};
+ avatar.onclick=e=>{e.stopPropagation();menu.hidden=!menu.hidden;avatar.setAttribute("aria-expanded",String(!menu.hidden));if(!menu.hidden){profileName.textContent="Perfil: "+profiles[activeIndex()].name;deviceCode.textContent=document.getElementById("nplay-device-code")?.textContent||"Identificação indisponível";copy.textContent="Copiar identificação"}};
+ document.addEventListener("click",e=>{if(!menu.hidden&&!menu.contains(e.target)&&e.target!==avatar)close()});
+ document.addEventListener("keydown",e=>{if(e.key==="Escape")close()});
+}
 let selected=false;try{selected=sessionStorage.getItem("nplay-profile-selected")==="1"}catch{}
 if(!selected)show();
 })();
