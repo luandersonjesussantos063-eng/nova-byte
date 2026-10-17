@@ -74,6 +74,7 @@ function applyAccess(state){
  showDeviceCode();
  if(state==="approved"){
   $("nplay-access-wall").hidden=true;
+  const deviceBadge=document.getElementById("nplay-device-code");if(deviceBadge)deviceBadge.style.display="none";
   // The catalog may have loaded before the approval existed. Reload once after
   // approval so RLS can return the newly authorized films and channels.
   if(hadRestrictedAccess)location.reload();
