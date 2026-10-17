@@ -22,6 +22,7 @@ export class MediaEngine{
   if(!s)return;
   s.stopping=true;
   if(this.current===s)this.current=null;
+  if(s.monitor)clearInterval(s.monitor);
   s.controller.abort();s.input?.destroy();s.child?.stdin.destroy();
   if(s.child&&s.child.exitCode===null){s.child.kill('SIGTERM');await Promise.race([s.closed,wait(1200)]);if(s.child.exitCode===null){s.child.kill('SIGKILL');await s.closed;}}
   if(s.dir)await rm(s.dir,{recursive:true,force:true});
@@ -41,7 +42,7 @@ export class MediaEngine{
   }
   if(!s){
    console.info(JSON.stringify({event:'media_engine_new_session'}));
-   s={key:sourceKey,owner,id:randomBytes(16).toString('hex'),controller:new AbortController(),touched:Date.now(),startedAt:new Date().toISOString(),stage:'login',bytes:0,error:null,identity};
+   s={key:sourceKey,owner,id:randomBytes(16).toString('hex'),controller:new AbortController(),touched:Date.now(),startedAt:new Date().toISOString(),stage:'login',bytes:0,lastInputAt:Date.now(),stallLogged:false,error:null,identity};
    this.current=s;
    // Each PC has one bounded receiver. Startup remains shared across HLS retries.
    s.ready=this.prepare(s,raw).catch(async error=>{
@@ -78,8 +79,9 @@ export class MediaEngine{
   s.child.stderr.resume();s.child.stdin.on('error',()=>{});
   s.closed=new Promise(resolve=>s.child.once('close',resolve));
   s.child.on('error',error=>{s.error=error.code==='ENOENT'?'ENGINE_NOT_INSTALLED':'ENGINE_PROCESS_FAILED';});
-  s.child.on('close',()=>{if(!signal.aborted){s.error||='ENGINE_PROCESS_FAILED';s.stage='failed';s.controller.abort();s.input.destroy();this.last={stage:'failed',code:s.error};}});
-  s.input.on('data',chunk=>{s.bytes+=chunk.length;});
+  s.child.on('close',()=>{console.warn(JSON.stringify({event:'media_ffmpeg_closed',session:s.id.slice(0,8),stopping:!!s.stopping}));if(!signal.aborted){s.error||='ENGINE_PROCESS_FAILED';s.stage='failed';s.controller.abort();s.input.destroy();this.last={stage:'failed',code:s.error};}});
+  s.input.on('data',chunk=>{s.bytes+=chunk.length;s.lastInputAt=Date.now();s.stallLogged=false;});
+  s.monitor=setInterval(()=>{if(s.stopping||s.error||s.stage!=='playing')return;const stalledMs=Date.now()-s.lastInputAt;if(stalledMs>12000&&!s.stallLogged){s.stallLogged=true;console.warn(JSON.stringify({event:'media_upstream_stalled',stalled_seconds:Math.floor(stalledMs/1000),session:s.id.slice(0,8)}));}},3000);s.monitor.unref();
   s.feed=pipeline(s.input,s.child.stdin,{signal}).catch(()=>{if(!signal.aborted){s.error||='ENGINE_SOURCE_CONNECTION';s.stage='failed';this.last={stage:'failed',code:s.error};s.controller.abort();s.child.kill('SIGTERM');}});
   const deadline=Date.now()+this.readyMs;
   while(Date.now()<deadline){
