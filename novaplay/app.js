@@ -413,8 +413,12 @@ async function openHeroPreview(item){
 }
 function updateHero(index){
  stopHeroPreview();
- if(window.NPlayHeroLive)return;
+ if(window.NPlayHeroLive?.isLiveFeatured?.())return;
  if(!featured.length)return;
+ $("hero").classList.remove("hero-live-mode","hero-live-playing");
+ $("hero-live-controls").hidden=true;
+ $("hero-dots").hidden=false;
+ $("hero-preview-open").hidden=false;
  featuredIndex=(index+featured.length)%featured.length;const x=featured[featuredIndex];
  $("hero-art").style.backgroundImage="url('"+(x.backdrop||x.cover).replace(/'/g,"%27")+"')";
  $("hero-title").textContent=x.title;
@@ -444,6 +448,7 @@ function updateHero(index){
  featured.forEach((film,i)=>{const b=document.createElement("button");b.className="hero-dot"+(i===featuredIndex?" active":"");b.setAttribute("aria-label","Destacar "+film.title);b.addEventListener("click",()=>updateHero(i));dots.append(b)});
  window.NovaPlayHeroScenes?.show?.(x);
 }
+window.NPlayShowFeaturedMovie=()=>updateHero(featuredIndex);
 function youtubeFilms(){return window.NPlayYouTube.select(db.films)}
 let selectedYouTubeCategory="Todos",youtubeFeaturedId=null;
 function renderYouTubeSelection(content,list){
@@ -1233,7 +1238,7 @@ document.addEventListener("keydown",e=>{
 document.addEventListener("visibilitychange",()=>{if(document.hidden){stopHeroPreview();if(!$("player-layer").hidden)$("video").pause()}});
 window.addEventListener("scroll",()=>$("app-header").classList.toggle("is-scrolled",window.scrollY>24),{passive:true});
 if("serviceWorker" in navigator&&location.protocol==="https:"){
- window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js?v=0.51.0",{updateViaCache:"none"}).catch(()=>{}));
+ window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js?v=0.51.1",{updateViaCache:"none"}).catch(()=>{}));
 }
 $("hero-play").onclick=()=>navigate("tv");
 $("hero-info").onclick=()=>navigate("filmes");
