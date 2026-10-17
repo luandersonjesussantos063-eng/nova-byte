@@ -4,6 +4,8 @@
 // Open: http://127.0.0.1:8800/ and on a second device via a local tunnel.
 // This is a lab server only: never expose publicly without authentication.
 import http from 'node:http';
+import {createHmac,timingSafeEqual} from 'node:crypto';
+import {sourceFor,dropSourceCache,safeSourceError} from './real-source.mjs';
 import {spawn} from 'node:child_process';
 import {mkdtemp,mkdir,readdir,readFile,rename,rm,stat,writeFile} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
@@ -12,7 +14,10 @@ const PORT=Number(process.env.PORT||process.env.TIMESHIFT_PORT||8800);
 const ROTATE=Math.max(6,Number(process.env.TIMESHIFT_ROTATE_SECONDS||30));
 const LIMIT=Math.max(10,Number(process.env.TIMESHIFT_MAX_SEGMENTS||150));
 const persistent=Boolean(process.env.TIMESHIFT_DATA_DIR);
-const root=persistent?process.env.TIMESHIFT_DATA_DIR:await mkdtemp(join(tmpdir(),'nplay-playable-'));
+const real=Boolean(process.env.TIMESHIFT_REAL_M3U_URL);
+const pin=process.env.TIMESHIFT_VIEW_PIN||'';
+if(real&&!pin)throw new Error('REAL_MODE_REQUIRES_VIEW_PIN');
+const root=persistent?join(process.env.TIMESHIFT_DATA_DIR,real?'real-hls':'synthetic'):await mkdtemp(join(tmpdir(),'nplay-playable-'));
 const stateFile=join(root,'index.json');
 const startedAt=Date.now();const stats={rotations:0,errors:0,lastRotation:null};
 const channels=['a','b'];const completed=Object.fromEntries(channels.map(c=>[c,[]]));const boundaries=Object.fromEntries(channels.map(c=>[c,new Set()]));let active='a',stop=false,child=null;
@@ -45,7 +50,31 @@ async function record(c){
  active=c;
  const start=Date.now(),next=await segmentList(c),offset=next.length?Number(next.at(-1).slice(3,-3))+1:0;
  if(offset>0)boundaries[c].add(offset);
- const ff=['-hide_banner','-loglevel','error','-nostdin','-re','-f','lavfi','-i',c==='a'?'testsrc2=size=640x360:rate=15':'smptebars=size=640x360:rate=15','-t',String(ROTATE),'-an','-c:v','libx264','-preset','ultrafast','-tune','zerolatency','-pix_fmt','yuv420p','-g','30','-sc_threshold','0','-f','segment','-segment_time','2','-segment_start_number',String(offset),'-segment_format','mpegts',join(folders[c],'seg%d.ts')];
+ let ff;
+ if(real){
+  let src;
+  try{src=await sourceFor(c);}
+  catch(e){
+   stats.errors++;stats.lastRotation={channel:c,at:new Date().toISOString(),error:safeSourceError(e)};
+   console.error(JSON.stringify({event:'lab_source_error',channel:c,code:safeSourceError(e)}));
+   await new Promise(resolve=>setTimeout(resolve,12000));return;
+  }
+  // Strictly sequential upstream input: only one FFmpeg child exists at any time.
+  ff=['-hide_banner','-loglevel','error','-nostdin','-rw_timeout','15000000','-i',src.url,
+    '-map','0:v:0','-map','0:a:0?','-t',String(ROTATE),
+    '-vf','scale=640:-2','-c:v','libx264','-preset','ultrafast',
+    '-pix_fmt','yuv420p','-g','50','-sc_threshold','0',
+    '-force_key_frames','expr:gte(t,n_forced*2)',
+    '-c:a','aac','-b:a','96k','-f','segment','-segment_time','2',
+    '-segment_start_number',String(offset),'-segment_format','mpegts',join(folders[c],'seg%d.ts')];
+ }else{
+  ff=['-hide_banner','-loglevel','error','-nostdin','-re','-f','lavfi','-i',
+    c==='a'?'testsrc2=size=640x360:rate=15':'smptebars=size=640x360:rate=15',
+    '-t',String(ROTATE),'-an','-c:v','libx264','-preset','ultrafast',
+    '-tune','zerolatency','-pix_fmt','yuv420p','-g','30','-sc_threshold','0',
+    '-f','segment','-segment_time','2','-segment_start_number',String(offset),
+    '-segment_format','mpegts',join(folders[c],'seg%d.ts')];
+ }
  child=spawn('ffmpeg',ff,{stdio:['ignore','ignore','pipe']});
  let err='';child.stderr.on('data',d=>{err=(err+d.toString()).slice(-1000);});
  const exit=await new Promise(resolve=>{child.on('error',e=>resolve({error:e.code}));child.on('close',code=>resolve({code}));});
@@ -57,8 +86,11 @@ async function record(c){
  const remaining=new Set(await segmentList(c));
  completed[c]=completed[c].filter(b=>b.files.every(n=>remaining.has(n)));
  await saveState();
- stats.rotations++;if(exit.code!==0||exit.error)stats.errors++;stats.lastRotation={channel:c,at:new Date().toISOString(),durationSeconds:Math.round((Date.now()-start)/1000),exitCode:exit.code??null};
- console.log(JSON.stringify({event:'lab_rotation',channel:c,seconds:Math.round((Date.now()-start)/1000),segments:(await segmentList(c)).length,exit,error:err||undefined}));
+ stats.rotations++;if(exit.code!==0||exit.error){stats.errors++;if(real)dropSourceCache();}
+ const code=/404/.test(err)?'SOURCE_HTTP_404':/403/.test(err)?'SOURCE_HTTP_403':/timed out/i.test(err)?'SOURCE_TIMEOUT':/reset|broken pipe/i.test(err)?'SOURCE_RESET':err?'FFMPEG_FAILED':null;
+ stats.lastRotation={channel:c,at:new Date().toISOString(),durationSeconds:Math.round((Date.now()-start)/1000),exitCode:exit.code??null,error:code};
+ console.log(JSON.stringify({event:'lab_rotation',channel:c,seconds:Math.round((Date.now()-start)/1000),segments:(await segmentList(c)).length,exitCode:exit.code??null,error:code}));
+ if(real&&(exit.code!==0||block.length<3))await new Promise(resolve=>setTimeout(resolve,12000));
 }
 const recordingLoop=(async()=>{while(!stop){for(const c of channels){if(stop)break;await record(c);}}})().catch(e=>{if(!stop)console.error('lab_error',e.message);});
 const html=`<!doctype html><html lang="pt-BR"><meta name="viewport" content="width=device-width,initial-scale=1"><title>NPlay — TV de Gravações</title><style>*{box-sizing:border-box}body{margin:0;background:#0c1324;color:#f6f9ff;font:16px system-ui}main{max-width:760px;margin:auto;padding:22px 16px}h1{font-size:25px}p{color:#adbed4;line-height:1.5}.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:20px 0}button{border:1px solid #37516e;background:#1b2d48;color:white;padding:15px 12px;border-radius:12px;font:inherit;text-align:left}button.active{background:#234a7b;border-color:#75b4ff}small{display:block;color:#bbd1eb;margin-top:6px}video{width:100%;aspect-ratio:16/9;background:#02050c;border-radius:12px}#message{margin:14px 0;color:#c9d7e9}.tag{font-size:12px;color:#92c5ff}footer{font-size:13px;color:#9aaec7;margin-top:22px}</style><main><div class="tag">LABORATÓRIO • CANAIS SINTÉTICOS</div><h1>TV de Gravações</h1><p>Escolha um canal. A reprodução automática começa quando houver 2 minutos gravados, criando uma reserva inicial para reduzir as pausas.</p><div class="grid"><button id="a" onclick="select('a')">📺 Canal A<small id="ca">Aguardando gravações</small></button><button id="b" onclick="select('b')">📺 Canal B<small id="cb">Aguardando gravações</small></button></div><h3>Blocos disponíveis</h3><p id="metrics">Monitoramento: carregando...</p><div id="blocks">Carregando...</div><p id="message">Escolha um bloco completo para assistir.</p><video id="video" controls playsinline></video><footer>O gravador alterna entre os canais a cada 30 segundos. Um bloco só aparece quando termina de gravar. O laboratório não acessa a conta IPTV.</footer></main><script defer src="https://cdn.jsdelivr.net/npm/hls.js@1/dist/hls.min.js"></script><script>
@@ -115,11 +147,40 @@ async function refresh(){
 }
 setInterval(refresh,3000);select('a');
 </script></html>`
+const signed=pin?createHmac('sha256',pin).update('nplay-lab-session-v1').digest('hex'):'';
+const invalidAttempts=new Map();
+function authenticated(req){
+ if(!pin)return true;
+ const v=(req.headers.cookie||'').split(';').map(x=>x.trim()).find(x=>x.startsWith('nplay_lab_auth='))?.split('=')[1]||'';
+ return v.length===signed.length&&timingSafeEqual(Buffer.from(v),Buffer.from(signed));
+}
+const loginHtml='<!doctype html><html lang="pt-BR"><meta name="viewport" content="width=device-width,initial-scale=1"><title>NPlay Lab — acesso</title><body style="font:18px system-ui;background:#0c1324;color:white;max-width:500px;margin:18vh auto;padding:20px"><h2>NPlay • Laboratório protegido</h2><p>Informe a senha de teste para entrar.</p><form method="POST" action="/login"><input name="pin" type="password" autocomplete="current-password" required style="padding:14px;width:100%;box-sizing:border-box;margin-bottom:12px"><button style="padding:14px 26px">Entrar</button></form></body></html>';
 const server=http.createServer(async(req,res)=>{
  try{
  const url=new URL(req.url,'http://localhost');
- if(url.pathname==='/'){res.setHeader('Content-Type','text/html; charset=utf-8');res.end(html);return;}
- if(url.pathname==='/metrics'){const disk=Object.fromEntries(await Promise.all(channels.map(async c=>{const names=await segmentList(c);let bytes=0;for(const n of names){const info=await stat(join(folders[c],n)).catch(()=>null);bytes+=info?.size||0;}return [c,{segments:names.length,bytes,completedBlocks:completed[c].length,recordedSeconds:completed[c].reduce((sum,b)=>sum+b.files.length*2,0)}];})));res.setHeader('Content-Type','application/json');res.setHeader('Cache-Control','no-store');res.end(JSON.stringify({service:'nplay-timeshift-lab',source:'synthetic',storageMode:persistent?'persistent':'temporary',uptimeSeconds:Math.floor((Date.now()-startedAt)/1000),activeRecorder:active,rotations:stats.rotations,recordingErrors:stats.errors,lastRotation:stats.lastRotation,channels:disk}));return;}
+ if(url.pathname==='/healthz'){res.setHeader('Content-Type','application/json');res.end('{"ok":true}');return;}
+ if(url.pathname==='/login'&&req.method==='POST'&&pin){
+  const ip=req.socket.remoteAddress||'unknown';
+  const a=invalidAttempts.get(ip)||{count:0,until:Date.now()+15*60*1000};
+  if(Date.now()>a.until){a.count=0;a.until=Date.now()+15*60*1000;}
+  if(a.count>=10){res.writeHead(429);res.end('Too many attempts');return;}
+  let body='';for await(const part of req){body+=part.toString();if(body.length>512){res.writeHead(413);res.end();return;}}
+  const submitted=new URLSearchParams(body).get('pin')||'';
+  const expected=createHmac('sha256','nplay-pin-comparison').update(pin).digest();
+  const candidate=createHmac('sha256','nplay-pin-comparison').update(submitted).digest();
+  if(!timingSafeEqual(expected,candidate)){a.count++;invalidAttempts.set(ip,a);res.writeHead(401,{'Content-Type':'text/html; charset=utf-8'});res.end(loginHtml);return;}
+  invalidAttempts.delete(ip);
+  res.writeHead(303,{'Location':'/','Set-Cookie':'nplay_lab_auth='+signed+'; Path=/; Max-Age=43200; HttpOnly; Secure; SameSite=Strict'});res.end();return;
+ }
+ if(url.pathname==='/status'&&!authenticated(req)){
+  res.setHeader('Content-Type','application/json');res.end('{"ok":true}');return;
+ }
+ if(!authenticated(req)){
+  if(url.pathname==='/'){res.setHeader('Content-Type','text/html; charset=utf-8');res.end(loginHtml);return;}
+  res.writeHead(401);res.end('AUTH_REQUIRED');return;
+ }
+ if(url.pathname==='/'){res.setHeader('Content-Type','text/html; charset=utf-8');res.end(real?html.replace('LABORATÓRIO • CANAIS SINTÉTICOS','LABORATÓRIO • CANAIS HLS REAIS').replace('O laboratório não acessa a conta IPTV.','Fontes autorizadas, gravação alternada e acesso restrito.'):html);return;}
+ if(url.pathname==='/metrics'){const disk=Object.fromEntries(await Promise.all(channels.map(async c=>{const names=await segmentList(c);let bytes=0;for(const n of names){const info=await stat(join(folders[c],n)).catch(()=>null);bytes+=info?.size||0;}return [c,{segments:names.length,bytes,completedBlocks:completed[c].length,recordedSeconds:completed[c].reduce((sum,b)=>sum+b.files.length*2,0)}];})));res.setHeader('Content-Type','application/json');res.setHeader('Cache-Control','no-store');res.end(JSON.stringify({service:'nplay-timeshift-lab',source:real?'real-hls':'synthetic',storageMode:persistent?'persistent':'temporary',uptimeSeconds:Math.floor((Date.now()-startedAt)/1000),activeRecorder:active,rotations:stats.rotations,recordingErrors:stats.errors,lastRotation:stats.lastRotation,channels:disk}));return;}
  if(url.pathname==='/status'){res.setHeader('Content-Type','application/json');res.setHeader('Cache-Control','no-store');res.end(JSON.stringify({active,blocks:Object.fromEntries(channels.map(c=>[c,completed[c].map((b,order)=>({id:b.id,order,seconds:b.files.length*2}))]))}));return;}
  const m=/^\/channels\/(a|b)\/(index\.m3u8|seg\d+\.ts|blocks\/\d+\.m3u8|archive\/\d+\.m3u8)$/.exec(url.pathname);
  if(!m){res.writeHead(404);res.end();return;}
