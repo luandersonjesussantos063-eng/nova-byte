@@ -26,8 +26,12 @@ export class XtreamClient{
   if(Number(info?.user_info?.auth)!==1||String(info.user_info.status).toLowerCase()!=='active')throw Object.assign(Error('Account is not active'),{code:'XTREAM_LOGIN_DENIED'});
   const formats=Array.isArray(info.user_info.allowed_output_formats)?info.user_info.allowed_output_formats:[];
   if(formats.length&&!formats.includes('ts'))throw Object.assign(Error('Account does not offer TS input'),{code:'XTREAM_TS_UNAVAILABLE'});
-  const active=Number(info.user_info.active_cons)||0,limit=Number(info.user_info.max_connections)||1;
-  if(forPlayback&&active>=limit)throw Object.assign(Error('All provider connections are in use'),{code:'XTREAM_CONNECTION_LIMIT'});
+  const activeRaw=info.user_info.active_cons,limitRaw=info.user_info.max_connections;
+  const active=activeRaw==null||activeRaw===''?null:Number(activeRaw);
+  const limit=limitRaw==null||limitRaw===''?null:Number(limitRaw);
+  const validActive=active!==null&&Number.isFinite(active)&&active>=0;
+  const validLimit=limit!==null&&Number.isFinite(limit)&&limit>0;
+  if(forPlayback&&validActive&&validLimit&&active>=limit)throw Object.assign(Error('All provider connections are in use'),{code:'XTREAM_CONNECTION_LIMIT'});
   // Keep the user-supplied server: no unvalidated server_info/direct_source redirects.
   return {identity,session:{origin:identity.origin,cookie},account:{active:true,connections:active,limit,formats:formats.filter(x=>['ts','m3u8','rtmp'].includes(x))}};
  }
