@@ -240,7 +240,7 @@ const server=http.createServer(async(req,res)=>{
   }
   res.setHeader('Content-Type','application/vnd.apple.mpegurl');
   res.setHeader('Cache-Control','no-store, max-age=0');
-  res.end(lines.join('\\n').replaceAll('\\n','\n')+'\n');return;
+  res.end(lines.join('\n')+'\n');return;
  }
  if(name.startsWith('archive/')){
  const id=Number(name.slice(8,-5));
