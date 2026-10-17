@@ -3,13 +3,34 @@ import assert from 'node:assert/strict';
 import {Readable} from 'node:stream';
 import {spawn,spawnSync} from 'node:child_process';
 import {XtreamClient} from '../pc-tv/xtream-client.mjs';
-import {MediaEngine,ENGINE_ORIGIN} from '../pc-tv/media-engine.mjs';
+import {MediaEngine,ENGINE_ORIGIN,openMediaInput} from '../pc-tv/media-engine.mjs';
 import {bridgeUpstream} from '../worker/pc-bridge.mjs';
 import {createBridge} from '../pc-tv/bridge.mjs';
 import worker from '../worker/live-gateway.mjs';
 import {encryptBridge} from '../worker/pc-bridge.mjs';
 const source='http://provider.example/user/pass/152812.m3u8';
 function reply(body,headers={}){return Object.assign(Readable.from([Buffer.from(JSON.stringify(body))]),{statusCode:200,headers});}
+test('TS reset tries authorized HLS sequentially without creating simultaneous sources',async()=>{
+ const state=[],signal=new AbortController().signal,media={url:'http://provider.example/live/user/pass/152812.m3u8',response:{statusCode:200}};
+ const client={
+  openTs:async()=>{state.push('ts');throw Object.assign(Error('reset'),{code:'ENGINE_SOURCE_RESET'});},
+  openHls:async()=>{state.push('hls');return media;}
+ };
+ const result=await openMediaInput(client,{},signal);
+ assert.equal(result.hlsMode,true);assert.equal(result.media,media);assert.deepEqual(state,['ts','hls']);
+});
+test('provider denial does not trigger alternate stream and two transport failures stop',async()=>{
+ const state=[],signal=new AbortController().signal,client={
+  openTs:async()=>{state.push('ts');throw Object.assign(Error('reset'),{code:'ENGINE_SOURCE_RESET'});},
+  openHls:async()=>{state.push('hls');throw Object.assign(Error('reset'),{code:'ENGINE_SOURCE_RESET'});}
+ };
+ await assert.rejects(openMediaInput(client,{},signal),{code:'ENGINE_SOURCE_RESET'});
+ assert.deepEqual(state,['ts','hls']);
+ state.length=0;client.openTs=async()=>{state.push('ts');throw Object.assign(Error('denied'),{code:'ENGINE_SOURCE_HTTP'});};
+ await assert.rejects(openMediaInput(client,{},signal),{code:'ENGINE_SOURCE_HTTP'});
+ assert.deepEqual(state,['ts']);
+});
+
 test('Xtream authenticates first, scopes API cookies to the provider and refuses inactive or exhausted accounts',async()=>{
  let calls=[],account={auth:1,status:'Active',active_cons:'0',max_connections:'1',allowed_output_formats:['m3u8','ts']};
  const client=new XtreamClient({fetcher:async(url,_range,_signal,session)=>{calls.push(url);if(url.includes('player_api.php'))return {url,response:reply({user_info:account},{'set-cookie':['PHPSESSID=test; HttpOnly; Path=/']})};assert.equal(session.cookie,'PHPSESSID=test');assert.equal(session.origin,'http://provider.example');return {url,response:Object.assign(Readable.from([Buffer.from([71])]),{statusCode:200,headers:{'content-type':'video/mp2t'}})};}});
