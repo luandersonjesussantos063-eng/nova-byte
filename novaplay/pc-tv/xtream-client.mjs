@@ -43,6 +43,7 @@ export class XtreamClient{
   const limit=limitRaw==null||limitRaw===''?null:Number(limitRaw);
   const validActive=active!==null&&Number.isFinite(active)&&active>=0;
   const validLimit=limit!==null&&Number.isFinite(limit)&&limit>0;
+  console.info(JSON.stringify({event:'xtream_connection_report',active:validActive?active:null,limit:validLimit?limit:null,playback:forPlayback,at_capacity:!!(validActive&&validLimit&&active>=limit)}));
   if(forPlayback&&validActive&&validLimit&&active>=limit)throw Object.assign(Error('All provider connections are in use'),{code:'XTREAM_CONNECTION_LIMIT'});
   // Keep the user-supplied server: no unvalidated server_info/direct_source redirects.
   return {identity,session:{origin:identity.origin,cookie},account:{active:true,connections:active,limit,formats:formats.filter(x=>['ts','m3u8','rtmp'].includes(x))}};
