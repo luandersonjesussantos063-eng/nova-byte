@@ -49,7 +49,13 @@ export default {async fetch(req,env){
    const text=await response.text();
    if(text.length>200000)return json({error:"Resposta inválida."},502);
    let parsed;try{parsed=JSON.parse(text)}catch{return json({error:"Estado inválido."},502);}
-   return json({active:parsed.active,blocks:{a:parsed.blocks?.a||[],b:parsed.blocks?.b||[]}});
+   // The Railway lab deliberately returns HTTP 200 {ok:true} to unauthenticated
+   // /status callers. Never silently reinterpret it as zero recorded blocks.
+   if(!Array.isArray(parsed.blocks?.a)||!Array.isArray(parsed.blocks?.b)){
+    console.warn(JSON.stringify({event:"timeshift_auth_failed",code:"LAB_COOKIE_REJECTED"}));
+    return json({error:"A autenticação privada entre Cloudflare e Railway não foi aceita.",code:"LAB_COOKIE_REJECTED"},502);
+   }
+   return json({active:parsed.active,blocks:{a:parsed.blocks.a,b:parsed.blocks.b}});
   }
   const match=safeChannelPath.exec(u.pathname);
   if(!match)return json({error:"Recurso não encontrado."},404);
