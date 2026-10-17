@@ -43,19 +43,7 @@ export default {async fetch(req,env){
    if(!r.ok){await r.body?.cancel();return json({ok:false,stage:"upstream_unavailable",status:r.status},502);}
    const data=await r.json();
    if(!Array.isArray(data.blocks?.a)||!Array.isArray(data.blocks?.b)){
-    // Temporary one-shot diagnostic: ask the lab to validate the configured
-    // secret through its ordinary login endpoint. Never return PIN or cookie.
-    let loginStatus="unreachable";
-    try{
-     const loginUrl=new URL("/login",env.TIMESHIFT_BASE_URL);
-     const login=await fetch(loginUrl,{method:"POST",redirect:"manual",
-       headers:{"Content-Type":"application/x-www-form-urlencoded"},
-       body:new URLSearchParams({pin:env.TIMESHIFT_VIEW_PIN}),
-       signal:AbortSignal.timeout(9000)});
-     loginStatus=login.status===303?"pin_accepted":login.status===401?"pin_mismatch":"login_unexpected_"+login.status;
-     await login.body?.cancel();
-    }catch{}
-    return json({ok:false,stage:"cookie_rejected",login:loginStatus});
+    return json({ok:false,stage:"cookie_rejected"});
    }
    return json({ok:true,stage:"authenticated"});
   }catch{return json({ok:false,stage:"upstream_connection"},502);}
