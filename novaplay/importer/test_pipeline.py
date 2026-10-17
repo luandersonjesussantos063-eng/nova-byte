@@ -80,6 +80,42 @@ class PipelineTest(unittest.TestCase):
     def test_capacity_requires_action_instead_of_blind_retry(self):
         from pipeline import failure_state,CapacityRequired
         self.assertEqual(failure_state(CapacityRequired(),1),('needs_review','capacity',False))
+    def test_capacity_auto_retries_only_one_authorized_job_with_space(self):
+        from pipeline import resume_one_capacity_import
+        job = {'id':FakeJob.id,'file_candidates':[{'index':0,'bytes':3*1024**3}],
+               'selected_file_index':0,'error_message':'Espaço insuficiente',
+               'approved_for_processing':True,'rights_confirmed':True,
+               'license_reference':'written-license','archived_at':None,'duplicate_of':None}
+        db = MagicMock()
+        query = db.table.return_value
+        for method in ('select','eq','order','update'):
+            getattr(query, method).return_value = query
+        query.execute.side_effect = [MagicMock(data=[job]),MagicMock(data=[{'id':job['id']}])]
+        with tempfile.TemporaryDirectory() as root:
+            with patch('pipeline.shutil.disk_usage',return_value=MagicMock(free=15*1024**3)):
+                cooldown={}
+                self.assertTrue(resume_one_capacity_import(db,Path(root),cooldown))
+        self.assertGreater(cooldown[job['id']],0)
+        updated=query.update.call_args.args[0]
+        self.assertEqual(updated['status'],'queued')
+        self.assertIsNone(updated['next_retry_at'])
+
+    def test_capacity_auto_retry_leaves_review_if_disk_is_small(self):
+        from pipeline import resume_one_capacity_import
+        job = {'id':FakeJob.id,'file_candidates':[{'index':0,'bytes':4*1024**3}],
+               'selected_file_index':0,'error_message':'Espaço insuficiente',
+               'approved_for_processing':True,'rights_confirmed':True,
+               'license_reference':'written-license','archived_at':None,'duplicate_of':None}
+        db=MagicMock()
+        query=db.table.return_value
+        for method in ('select','eq','order'):
+            getattr(query,method).return_value=query
+        query.execute.return_value.data=[job]
+        with tempfile.TemporaryDirectory() as root:
+            with patch('pipeline.shutil.disk_usage',return_value=MagicMock(free=2*1024**3)):
+                self.assertFalse(resume_one_capacity_import(db,Path(root),{}))
+        query.update.assert_not_called()
+
     def test_other_failures_keep_bounded_retries(self):
         from pipeline import failure_state,PermanentError
         self.assertEqual(failure_state(ConnectionError(),1),('queued','retry_wait',True))
