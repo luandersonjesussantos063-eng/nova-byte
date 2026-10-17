@@ -35,7 +35,17 @@ export default {async fetch(req,env){
  const json=(data,status=200)=>Response.json(data,{status,headers});
  if(requestOrigin&&!ALLOWED_ORIGINS.has(requestOrigin))return json({error:"Origem indisponível."},403);
  if(req.method==="OPTIONS")return new Response(null,{status:204,headers});
- if(u.pathname==="/healthz")return json({ok:true,service:"nplay-timeshift-gateway",access:"admins"});
+ if(u.pathname==="/healthz"){
+  // Health check exposes no source URL, credentials, or channel contents.
+  try{
+   if(!env.TIMESHIFT_VIEW_PIN||!env.TIMESHIFT_BASE_URL)return json({ok:false,stage:"missing_configuration"},503);
+   const r=await labFetch(env,"/status");
+   if(!r.ok){await r.body?.cancel();return json({ok:false,stage:"upstream_unavailable",status:r.status},502);}
+   const data=await r.json();
+   return json({ok:!!(Array.isArray(data.blocks?.a)&&Array.isArray(data.blocks?.b)),
+      stage:Array.isArray(data.blocks?.a)&&Array.isArray(data.blocks?.b)?"authenticated":"cookie_rejected"});
+  }catch{return json({ok:false,stage:"upstream_connection"},502);}
+ }
  if(req.method!=="GET"&&req.method!=="HEAD")return json({error:"Método inválido."},405);
  if(!env.TIMESHIFT_VIEW_PIN||!env.TIMESHIFT_BASE_URL)return json({error:"Relay não configurado."},503);
  const jwt=tokenOf(req,u);
