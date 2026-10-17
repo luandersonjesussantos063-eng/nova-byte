@@ -973,7 +973,7 @@ async function openTimeshift(channel,title){
   const result=await client?.auth?.getSession(),session=result?.data?.session;
   if(!session?.access_token)throw Error("Entre na NPlay para assistir aos canais de teste.");
   const jwt=session.access_token,headers={Authorization:"Bearer "+jwt};
-  const response=await fetch(TIMESHIFT_RELAY_ORIGIN+"/status",{
+  const response=await fetch(TIMESHIFT_RELAY_ORIGIN+"/status?focus="+channel,{
    headers,cache:"no-store",signal:AbortSignal.timeout(12000)});
   if(!response.ok){
    let error={};try{error=await response.json()}catch{}
