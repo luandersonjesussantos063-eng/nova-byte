@@ -61,7 +61,12 @@ export class MediaEngine{
  }
  async prepare(s,raw){
   const signal=s.controller.signal;
-  const login=await this.client.login(raw,AbortSignal.any([signal,AbortSignal.timeout(8000)]));s.account=login.account;s.stage='receiving';s.touched=Date.now();if(signal.aborted)throw failure('ENGINE_START_TIMEOUT');
+  // M3U live playback uses the authorized stream URL directly. The upstream server
+  // remains responsible for accepting or rejecting concurrent stream requests.
+  const identity=xtreamIdentity(raw);
+  const login={identity,session:{origin:identity.origin,cookie:''},account:null};
+  console.info(JSON.stringify({event:'m3u_direct_stream_attempt'}));
+  s.account=null;s.stage='receiving';s.touched=Date.now();if(signal.aborted)throw failure('ENGINE_START_TIMEOUT');
   const media=await this.client.openTs(login,signal);
   s.input=media.response;if(signal.aborted){s.input.destroy();throw failure('ENGINE_START_TIMEOUT');}
   s.dir=await mkdtemp(join(this.root,'nplay-media-'));s.stage='processing';s.touched=Date.now();if(signal.aborted)throw failure('ENGINE_START_TIMEOUT');
