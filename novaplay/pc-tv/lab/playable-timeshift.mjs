@@ -213,9 +213,35 @@ const server=http.createServer(async(req,res)=>{
  if(url.pathname==='/'){res.setHeader('Content-Type','text/html; charset=utf-8');res.end(real?html.replace('LABORATÓRIO • CANAIS SINTÉTICOS','LABORATÓRIO • CANAIS HLS REAIS').replace('O laboratório não acessa a conta IPTV.','Fontes autorizadas, gravação alternada e acesso restrito.'):html);return;}
  if(url.pathname==='/metrics'){const disk=Object.fromEntries(await Promise.all(channels.map(async c=>{const names=await segmentList(c);let bytes=0;for(const n of names){const info=await stat(join(folders[c],n)).catch(()=>null);bytes+=info?.size||0;}return [c,{segments:names.length,bytes,completedBlocks:completed[c].length,recordedSeconds:completed[c].reduce((sum,b)=>sum+blockDuration(b),0)}];})));res.setHeader('Content-Type','application/json');res.setHeader('Cache-Control','no-store');res.end(JSON.stringify({service:'nplay-timeshift-lab',source:real?'real-hls':'synthetic',storageMode:persistent?'persistent':'temporary',uptimeSeconds:Math.floor((Date.now()-startedAt)/1000),activeRecorder:active,rotations:stats.rotations,recordingErrors:stats.errors,lastRotation:stats.lastRotation,channels:disk}));return;}
  if(url.pathname==='/status'){res.setHeader('Content-Type','application/json');res.setHeader('Cache-Control','no-store');res.end(JSON.stringify({active,blocks:Object.fromEntries(channels.map(c=>[c,completed[c].map((b,order)=>({id:b.id,order,seconds:Math.round(blockDuration(b)*10)/10}))]))}));return;}
- const m=/^\/channels\/(a|b)\/(index\.m3u8|seg\d+\.ts|blocks\/\d+\.m3u8|archive\/\d+\.m3u8)$/.exec(url.pathname);
+ const m=/^\/channels\/(a|b)\/(index\.m3u8|dvr\.m3u8|seg\d+\.ts|blocks\/\d+\.m3u8|archive\/\d+\.m3u8)$/.exec(url.pathname);
  if(!m){res.writeHead(404);res.end();return;}
  const [,c,name]=m;
+ if(name==='dvr.m3u8'){
+  // A growing LIVE HLS playlist.  Unlike a VOD archive this has NO ENDLIST:
+  // the browser reloads this same URL and appends newer completed blocks.
+  // Keep the stable absolute segment/media sequence and historical boundary
+  // count, so evicting older recordings does not reset decoder continuity.
+  const available=new Set(await segmentList(c));
+  const blocks=completed[c].filter(b=>b.files.length&&b.files.every(f=>available.has(f)));
+  if(!blocks.length){res.writeHead(503,{'Cache-Control':'no-store'});res.end('RECORDING_NOT_READY');return;}
+  const first=Number(blocks[0].files[0].slice(3,-3));
+  const skippedDiscontinuities=[...boundaries[c]].filter(n=>n<first).length;
+  const target=Math.max(6,Math.ceil(Math.max(...blocks.flatMap(b=>b.files.map(n=>segmentDuration(b,n))))));
+  const lines=['#EXTM3U','#EXT-X-VERSION:3',
+   '#EXT-X-TARGETDURATION:'+target,
+   '#EXT-X-MEDIA-SEQUENCE:'+first,
+   '#EXT-X-DISCONTINUITY-SEQUENCE:'+skippedDiscontinuities,
+   '#EXT-X-START:TIME-OFFSET=-120,PRECISE=YES'];
+  for(const b of blocks){
+   for(const [i,n] of b.files.entries()){
+    if(i===0&&boundaries[c].has(Number(n.slice(3,-3))))lines.push('#EXT-X-DISCONTINUITY');
+    lines.push('#EXTINF:'+segmentDuration(b,n).toFixed(3)+',',n);
+   }
+  }
+  res.setHeader('Content-Type','application/vnd.apple.mpegurl');
+  res.setHeader('Cache-Control','no-store, max-age=0');
+  res.end(lines.join('\\n').replaceAll('\\n','\n')+'\n');return;
+ }
  if(name.startsWith('archive/')){
  const id=Number(name.slice(8,-5));
  const requestedEnd=url.searchParams.get('end');
