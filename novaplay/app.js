@@ -681,6 +681,14 @@ function asClock(seconds){
  const hours=Math.floor(value/3600),minutes=Math.floor(value%3600/60),secs=value%60;
  return (hours?hours+":"+String(minutes).padStart(2,"0"):String(minutes))+":"+String(secs).padStart(2,"0");
 }
+function dvrWindow(v){
+ if(!current?.item?.timeShiftTest||!v?.seekable?.length)return null;
+ try{
+  const i=v.seekable.length-1,start=v.seekable.start(i),end=v.seekable.end(i);
+  if(Number.isFinite(start)&&Number.isFinite(end)&&end>start)return {start,end,duration:end-start};
+ }catch{}
+ return null;
+}
 function updateCinemaControls(){
  const v=window.NPlayCasting?.state()||$("video");
  $("cinema-play").textContent=v.paused?"▶":"❚❚";
@@ -691,15 +699,16 @@ function updateCinemaControls(){
  const percent=Math.round(v.volume*100);
  if(volume)volume.value=String(percent);
  if(level)level.textContent=(v.muted?0:percent)+"%";
- const duration=v.duration;
+ const range=dvrWindow(v),duration=range?.duration??v.duration;
  const seekable=Number.isFinite(duration)&&duration>0;
  $("cinema-seek").disabled=!seekable;
  $("cinema-duration").textContent=seekable?asClock(duration):(current?.item?.kind==="tv"?"AO VIVO":"Carregando…");
  if(!seekActive){
-   const currentTime=seekable?Math.max(0,Math.min(duration,v.currentTime||0)):0;
-   $("cinema-elapsed").textContent=asClock(currentTime);
-   $("cinema-seek").value=seekable?String(currentTime/duration*100):"0";
-   $("cinema-seek").style.setProperty("--played",$("cinema-seek").value+"%");
+  const position=range?(v.currentTime||0)-range.start:(v.currentTime||0);
+  const currentTime=seekable?Math.max(0,Math.min(duration,position)):0;
+  $("cinema-elapsed").textContent=asClock(currentTime);
+  $("cinema-seek").value=seekable?String(currentTime/duration*100):"0";
+  $("cinema-seek").style.setProperty("--played",$("cinema-seek").value+"%");
  }
 }
 function showCinemaUi(){
@@ -733,8 +742,8 @@ $("cinema-play").onclick=()=>{
  if(window.NPlayCasting?.command("toggle")){updateCinemaControls();showCinemaUi();return;}
  const v=$("video");if(v.paused)v.play().catch(()=>showCinemaUi());else v.pause();showCinemaUi()
 };
-$("cinema-rewind").onclick=()=>{const state=window.NPlayCasting?.state();if(state){window.NPlayCasting.command("seek",state.currentTime-10);updateCinemaControls();showCinemaUi();return;}const v=$("video");if(Number.isFinite(v.duration))v.currentTime=Math.max(0,v.currentTime-10);updateCinemaControls();showCinemaUi()};
-$("cinema-forward").onclick=()=>{const state=window.NPlayCasting?.state();if(state){window.NPlayCasting.command("seek",state.currentTime+10);updateCinemaControls();showCinemaUi();return;}const v=$("video");if(Number.isFinite(v.duration))v.currentTime=Math.min(v.duration,v.currentTime+10);updateCinemaControls();showCinemaUi()};
+$("cinema-rewind").onclick=()=>{const state=window.NPlayCasting?.state();if(state){window.NPlayCasting.command("seek",state.currentTime-10);updateCinemaControls();showCinemaUi();return;}const v=$("video");const r=dvrWindow(v);if(r)v.currentTime=Math.max(r.start,v.currentTime-10);else if(Number.isFinite(v.duration))v.currentTime=Math.max(0,v.currentTime-10);updateCinemaControls();showCinemaUi()};
+$("cinema-forward").onclick=()=>{const state=window.NPlayCasting?.state();if(state){window.NPlayCasting.command("seek",state.currentTime+10);updateCinemaControls();showCinemaUi();return;}const v=$("video");const r=dvrWindow(v);if(r)v.currentTime=Math.min(r.end-0.2,v.currentTime+10);else if(Number.isFinite(v.duration))v.currentTime=Math.min(v.duration,v.currentTime+10);updateCinemaControls();showCinemaUi()};
 $("cinema-mute").onclick=()=>{if(window.NPlayCasting?.command("mute")){updateCinemaControls();return;}const v=$("video");v.muted=!v.muted;if(!v.muted&&v.volume===0)v.volume=1;updateCinemaControls();showCinemaUi()};
 $("cinema-volume")?.addEventListener("input",e=>{
  const v=$("video"),value=Number(e.target.value);
@@ -744,10 +753,10 @@ $("cinema-volume")?.addEventListener("input",e=>{
  updateCinemaControls();showCinemaUi();
 });
 $("cinema-seek").addEventListener("input",e=>{
- const v=window.NPlayCasting?.state()||$("video");if(!Number.isFinite(v.duration)||v.duration<=0)return;
+ const v=window.NPlayCasting?.state()||$("video");const r=dvrWindow(v),duration=r?.duration??v.duration;if(!Number.isFinite(duration)||duration<=0)return;
  seekActive=true;
  e.target.style.setProperty("--played",e.target.value+"%");
- const target=v.duration*Number(e.target.value)/100;
+ const target=duration*Number(e.target.value)/100;
  $("cinema-elapsed").textContent=asClock(target);
  showCinemaUi();
 });
@@ -755,7 +764,9 @@ $("cinema-seek").addEventListener("change",e=>{
  const state=window.NPlayCasting?.state();
  if(state){window.NPlayCasting.command("seek",state.duration*Number(e.target.value)/100);seekActive=false;updateCinemaControls();showCinemaUi();return;}
  const v=$("video");
- if(Number.isFinite(v.duration)&&v.duration>0)v.currentTime=Math.min(v.duration,Math.max(0,v.duration*Number(e.target.value)/100));
+ const r=dvrWindow(v);
+ if(r)v.currentTime=Math.min(r.end-0.2,Math.max(r.start,r.start+r.duration*Number(e.target.value)/100));
+ else if(Number.isFinite(v.duration)&&v.duration>0)v.currentTime=Math.min(v.duration,Math.max(0,v.duration*Number(e.target.value)/100));
  seekActive=false;updateCinemaControls();showCinemaUi()
 });
 $("cinema-fullscreen").onclick=()=>{
