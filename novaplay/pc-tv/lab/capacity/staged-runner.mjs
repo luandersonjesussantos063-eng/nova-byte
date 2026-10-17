@@ -55,3 +55,14 @@ async function test(){
  console.log(JSON.stringify({event:'capacity_finished',exitCode:code}));
 }
 if(process.env.CAPACITY_AUTO_RUN==='1')test().catch(e=>console.error(JSON.stringify({event:'capacity_failed',message:String(e?.message||e).slice(0,160)})));
+
+if(process.env.CAPACITY_GATEWAY_HEALTH_CHECK==="1"){
+ (async()=>{
+  const u="https://nplay-timeshift-gateway.luandersonjesussantos063.workers.dev/healthz";
+  try{
+   const response=await fetch(u,{signal:AbortSignal.timeout(15000),headers:{Accept:"application/json"}});
+   const data=await response.json();
+   console.log(JSON.stringify({event:"capacity_gateway_health",http:response.status,ok:data.ok===true,stage:String(data.stage||"unknown").slice(0,60)}));
+  }catch(error){console.log(JSON.stringify({event:"capacity_gateway_health",ok:false,stage:"network_or_parse_error",code:error?.cause?.code||error?.name||"UNKNOWN"}));}
+ })();
+}
