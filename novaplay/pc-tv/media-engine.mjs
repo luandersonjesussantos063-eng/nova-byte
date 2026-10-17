@@ -5,7 +5,7 @@ import {join} from 'node:path';
 import {tmpdir} from 'node:os';
 import {randomBytes,createHash} from 'node:crypto';
 import {pipeline} from 'node:stream/promises';
-import {Readable} from 'node:stream';
+import {Readable,PassThrough} from 'node:stream';
 import {XtreamClient,xtreamIdentity} from './xtream-client.mjs';
 export const ENGINE_ORIGIN='https://nplay-media.invalid';
 export const ENGINE_CODES=new Set(['XTREAM_ROOT_INVALID','XTREAM_CATALOG_INVALID','XTREAM_LOGIN_RESET','XTREAM_LOGIN_TIMEOUT','XTREAM_LOGIN_CONNECTION','XTREAM_LOGIN_INVALID','XTREAM_LOGIN_DENIED','XTREAM_TS_UNAVAILABLE','XTREAM_CONNECTION_LIMIT','ENGINE_SOURCE_HTTP','ENGINE_SOURCE_INVALID','ENGINE_SOURCE_RESET','ENGINE_SOURCE_CONNECTION','ENGINE_BUSY','ENGINE_START_TIMEOUT','ENGINE_PROCESS_FAILED','ENGINE_NOT_INSTALLED','ENGINE_ASSET_GONE']);
@@ -68,9 +68,59 @@ export class MediaEngine{
   const login={identity,session:{origin:identity.origin,cookie:''},account:null};
   console.info(JSON.stringify({event:'m3u_direct_stream_attempt'}));
   s.account=null;s.stage='receiving';s.touched=Date.now();if(signal.aborted)throw failure('ENGINE_START_TIMEOUT');
-  const media=await this.client.openTs(login,signal);
-  s.input=media.response;
-  console.info(JSON.stringify({event:'media_upstream_open',session:s.id.slice(0,8),status:s.input.statusCode,transport:'ts'}));
+  const hlsMode=process.env.NPLAY_INPUT_FORMAT==='hls';
+  const media=hlsMode?await this.client.openHls(login,signal):await this.client.openTs(login,signal);
+  s.input=hlsMode?new PassThrough({highWaterMark:1024*1024}):media.response;
+  if(hlsMode){
+   const readText=async response=>{
+    let total=0;const parts=[];
+    for await(const part of response){total+=part.length;if(total>262144)throw failure('ENGINE_SOURCE_INVALID');parts.push(part);}
+    return Buffer.concat(parts).toString('utf8');
+   };
+   const readSegment=async response=>{
+    let total=0;const parts=[];
+    for await(const part of response){total+=part.length;if(total>16000000)throw failure('ENGINE_SOURCE_INVALID');parts.push(part);}
+    return Buffer.concat(parts);
+   };
+   s.hlsTask=(async()=>{
+    let playlistUrl=media.url,initial=media.response,sequence=-1;
+    while(!signal.aborted){
+     const playlist=initial?{response:initial,url:playlistUrl}:await this.client.fetcher(playlistUrl,null,signal,{headerTimeout:8000});
+     initial=null;
+     if(playlist.response.statusCode!==200){playlist.response.destroy();throw failure('ENGINE_SOURCE_HTTP');}
+     const body=await readText(playlist.response);
+     if(!body.startsWith('#EXTM3U')||/#EXT-X-KEY:|#EXT-X-MAP:/.test(body))throw failure('ENGINE_SOURCE_INVALID');
+     const lines=body.split(/\\r?\\n/).map(x=>x.trim()).filter(Boolean);
+     const uris=lines.filter(x=>!x.startsWith('#'));
+     if(lines.some(x=>x.startsWith('#EXT-X-STREAM-INF:'))){
+      if(!uris.length)throw failure('ENGINE_SOURCE_INVALID');
+      const child=new URL(uris[0],playlistUrl);
+      if(child.origin!==identity.origin)throw failure('ENGINE_SOURCE_INVALID');
+      playlistUrl=child.href;continue;
+     }
+     const base=Number((lines.find(x=>x.startsWith('#EXT-X-MEDIA-SEQUENCE:'))||'').split(':')[1]||0);
+     for(let n=0;n<uris.length&&!signal.aborted;n++){
+      if(base+n<=sequence)continue;
+      const segmentUrl=new URL(uris[n],playlistUrl);
+      if(segmentUrl.origin!==identity.origin||!segmentUrl.pathname.endsWith('.ts'))throw failure('ENGINE_SOURCE_INVALID');
+      const segment=await this.client.fetcher(segmentUrl.href,null,signal,{headerTimeout:8000});
+      if(segment.response.statusCode!==200){segment.response.destroy();throw failure('ENGINE_SOURCE_HTTP');}
+      const bytes=await readSegment(segment.response);
+      if(!s.input.write(bytes))await new Promise((resolve,reject)=>{
+       const done=()=>{s.input.off('error',bad);resolve();};
+       const bad=error=>{s.input.off('drain',done);reject(error);};
+       s.input.once('drain',done);s.input.once('error',bad);
+       if(signal.aborted){s.input.off('drain',done);s.input.off('error',bad);resolve();}
+      });
+      sequence=base+n;
+     }
+     if(lines.includes('#EXT-X-ENDLIST'))break;
+     await wait(1200);
+    }
+    s.input.end();
+   })().catch(error=>{if(!signal.aborted){console.warn(JSON.stringify({event:'media_hls_failed',session:s.id.slice(0,8),code:String(error.code||'UNKNOWN').slice(0,50)}));s.input.destroy(error);}});
+  }
+  console.info(JSON.stringify({event:'media_upstream_open',session:s.id.slice(0,8),status:media.response.statusCode,transport:hlsMode?'hls':'ts'}));
   s.input.once('end',()=>console.warn(JSON.stringify({event:'media_upstream_end',session:s.id.slice(0,8),bytes_received:s.bytes,stopping:!!s.stopping})));
   s.input.once('aborted',()=>console.warn(JSON.stringify({event:'media_upstream_aborted',session:s.id.slice(0,8),bytes_received:s.bytes,stopping:!!s.stopping})));
   s.input.once('close',()=>console.warn(JSON.stringify({event:'media_upstream_close',session:s.id.slice(0,8),complete:!!s.input.complete,bytes_received:s.bytes,stopping:!!s.stopping})));
