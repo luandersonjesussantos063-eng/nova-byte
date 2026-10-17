@@ -71,7 +71,7 @@ export class MediaEngine{
   const hlsMode=process.env.NPLAY_INPUT_FORMAT==='hls';
   const media=hlsMode?await this.client.openHls(login,signal):await this.client.openTs(login,signal);
   s.input=hlsMode?new PassThrough({highWaterMark:1024*1024}):media.response;
-  if(hlsMode){
+  if(hlsMode){s.input.on('error',()=>{});
    const readText=async response=>{
     let total=0;const parts=[];
     for await(const part of response){total+=part.length;if(total>262144)throw failure('ENGINE_SOURCE_INVALID');parts.push(part);}
