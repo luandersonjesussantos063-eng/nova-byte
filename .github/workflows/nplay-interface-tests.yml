@@ -1,0 +1,51 @@
+name: NPlay - validar nova interface
+on:
+  push:
+    paths:
+      - 'novaplay/index.html'
+      - 'novaplay/app.js'
+      - 'novaplay/assets/cinema-refresh.css'
+      - 'novaplay/assets/soft-opening.js'
+      - 'novaplay/sw.js'
+      - 'novaplay/tests/home-live.test.mjs'
+      - 'novaplay/tests/hero-live.test.mjs'
+      - '.github/workflows/nplay-interface-tests.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  interface:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Sintaxe dos arquivos alterados
+        run: |
+          node --check novaplay/app.js
+          node --check novaplay/assets/soft-opening.js
+          node --check novaplay/sw.js
+      - name: Conferir integração da intro e da home
+        run: |
+          node --input-type=module <<'JS'
+          import fs from 'node:fs';
+          import assert from 'node:assert/strict';
+          const index=fs.readFileSync('novaplay/index.html','utf8');
+          const app=fs.readFileSync('novaplay/app.js','utf8');
+          const css=fs.readFileSync('novaplay/assets/cinema-refresh.css','utf8');
+          const sw=fs.readFileSync('novaplay/sw.js','utf8');
+          for(const phrase of ['id="nplay-soft-opening"','assets/cinema-refresh.css?v=0.51.0','assets/soft-opening.js?v=0.51.0','NPlay V 0.51.0'])assert(index.includes(phrase),phrase);
+          assert(sw.includes('novaplay-v0.51.0'));
+          assert(sw.includes('./assets/cinema-refresh.css'));
+          assert(app.includes('Filmes disponíveis'));
+          assert(app.includes('Séries para acompanhar'));
+          assert(css.includes('prefers-reduced-motion'));
+          assert(!app.includes('openTimeshift'));
+          console.log('NPlay interface 0.51.0 — integração validada');
+          JS
+      - name: Testes da home e dos destaques
+        run: node --test novaplay/tests/home-live.test.mjs novaplay/tests/hero-live.test.mjs
