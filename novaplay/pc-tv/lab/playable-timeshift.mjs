@@ -25,6 +25,21 @@ const folders=Object.fromEntries(channels.map(c=>[c,join(root,c)]));
 await mkdir(root,{recursive:true});
 await Promise.all(Object.values(folders).map(p=>mkdir(p,{recursive:true})));
 async function segmentList(c){return (await readdir(folders[c])).filter(x=>/^seg\d+\.ts$/.test(x)).sort((a,b)=>Number(a.slice(3,-3))-Number(b.slice(3,-3)));}
+function parseSegmentDurations(contents){
+ const durations={};let length=null;
+ for(const item of contents.split(/\r?\n/)){
+  const line=item.trim(),value=/^#EXTINF:([\d.]+)/.exec(line);
+  if(value){length=Number(value[1]);continue;}
+  if(length!==null&&line&&!line.startsWith('#')){
+   const file=line.slice(line.lastIndexOf('/')+1);
+   if(/^seg\d+\.ts$/.test(file)&&Number.isFinite(length)&&length>0&&length<60)durations[file]=length;
+   length=null;
+  }
+ }
+ return durations;
+}
+const segmentDuration=(block,file)=>block.durations?.[file]??2;
+const blockDuration=block=>block.files.reduce((sum,file)=>sum+segmentDuration(block,file),0);
 async function loadState(){
  if(!persistent)return;
  try{
@@ -49,6 +64,7 @@ await loadState();
 async function record(c){
  active=c;
  const start=Date.now(),next=await segmentList(c),offset=next.length?Number(next.at(-1).slice(3,-3))+1:0;
+ const segmentIndex=join(folders[c],'block-'+offset+'.m3u8');
  if(offset>0)boundaries[c].add(offset);
  let ff;
  if(real){
@@ -66,13 +82,14 @@ async function record(c){
     '-pix_fmt','yuv420p','-g','50','-sc_threshold','0',
     '-force_key_frames','expr:gte(t,n_forced*2)',
     '-c:a','aac','-b:a','96k','-f','segment','-segment_time','2',
+    '-segment_list',segmentIndex,'-segment_list_type','m3u8',
     '-segment_start_number',String(offset),'-segment_format','mpegts',join(folders[c],'seg%d.ts')];
  }else{
   ff=['-hide_banner','-loglevel','error','-nostdin','-re','-f','lavfi','-i',
     c==='a'?'testsrc2=size=640x360:rate=15':'smptebars=size=640x360:rate=15',
     '-t',String(ROTATE),'-an','-c:v','libx264','-preset','ultrafast',
     '-tune','zerolatency','-pix_fmt','yuv420p','-g','30','-sc_threshold','0',
-    '-f','segment','-segment_time','2','-segment_start_number',String(offset),
+    '-f','segment','-segment_time','2','-segment_list',segmentIndex,'-segment_list_type','m3u8','-segment_start_number',String(offset),
     '-segment_format','mpegts',join(folders[c],'seg%d.ts')];
  }
  child=spawn('ffmpeg',ff,{stdio:['ignore','ignore','pipe']});
@@ -81,7 +98,12 @@ async function record(c){
  child=null;
  const list=await segmentList(c);
  const block=list.filter(n=>Number(n.slice(3,-3))>=offset);
- if(block.length>=3){completed[c].push({id:offset,files:block});while(completed[c].length>8)completed[c].shift();}
+ const timings=await readFile(segmentIndex,'utf8').then(parseSegmentDurations).catch(()=>({}));
+ await rm(segmentIndex,{force:true});
+ if(block.length>=3){
+  completed[c].push({id:offset,files:block,durations:Object.fromEntries(block.map(n=>[n,timings[n]??2]))});
+  while(completed[c].length>8)completed[c].shift();
+ }
  for(const name of list.slice(0,Math.max(0,list.length-LIMIT)))await rm(join(folders[c],name),{force:true});
  const remaining=new Set(await segmentList(c));
  completed[c]=completed[c].filter(b=>b.files.every(n=>remaining.has(n)));
@@ -189,8 +211,8 @@ const server=http.createServer(async(req,res)=>{
   res.writeHead(401);res.end('AUTH_REQUIRED');return;
  }
  if(url.pathname==='/'){res.setHeader('Content-Type','text/html; charset=utf-8');res.end(real?html.replace('LABORATÓRIO • CANAIS SINTÉTICOS','LABORATÓRIO • CANAIS HLS REAIS').replace('O laboratório não acessa a conta IPTV.','Fontes autorizadas, gravação alternada e acesso restrito.'):html);return;}
- if(url.pathname==='/metrics'){const disk=Object.fromEntries(await Promise.all(channels.map(async c=>{const names=await segmentList(c);let bytes=0;for(const n of names){const info=await stat(join(folders[c],n)).catch(()=>null);bytes+=info?.size||0;}return [c,{segments:names.length,bytes,completedBlocks:completed[c].length,recordedSeconds:completed[c].reduce((sum,b)=>sum+b.files.length*2,0)}];})));res.setHeader('Content-Type','application/json');res.setHeader('Cache-Control','no-store');res.end(JSON.stringify({service:'nplay-timeshift-lab',source:real?'real-hls':'synthetic',storageMode:persistent?'persistent':'temporary',uptimeSeconds:Math.floor((Date.now()-startedAt)/1000),activeRecorder:active,rotations:stats.rotations,recordingErrors:stats.errors,lastRotation:stats.lastRotation,channels:disk}));return;}
- if(url.pathname==='/status'){res.setHeader('Content-Type','application/json');res.setHeader('Cache-Control','no-store');res.end(JSON.stringify({active,blocks:Object.fromEntries(channels.map(c=>[c,completed[c].map((b,order)=>({id:b.id,order,seconds:b.files.length*2}))]))}));return;}
+ if(url.pathname==='/metrics'){const disk=Object.fromEntries(await Promise.all(channels.map(async c=>{const names=await segmentList(c);let bytes=0;for(const n of names){const info=await stat(join(folders[c],n)).catch(()=>null);bytes+=info?.size||0;}return [c,{segments:names.length,bytes,completedBlocks:completed[c].length,recordedSeconds:completed[c].reduce((sum,b)=>sum+blockDuration(b),0)}];})));res.setHeader('Content-Type','application/json');res.setHeader('Cache-Control','no-store');res.end(JSON.stringify({service:'nplay-timeshift-lab',source:real?'real-hls':'synthetic',storageMode:persistent?'persistent':'temporary',uptimeSeconds:Math.floor((Date.now()-startedAt)/1000),activeRecorder:active,rotations:stats.rotations,recordingErrors:stats.errors,lastRotation:stats.lastRotation,channels:disk}));return;}
+ if(url.pathname==='/status'){res.setHeader('Content-Type','application/json');res.setHeader('Cache-Control','no-store');res.end(JSON.stringify({active,blocks:Object.fromEntries(channels.map(c=>[c,completed[c].map((b,order)=>({id:b.id,order,seconds:Math.round(blockDuration(b)*10)/10}))]))}));return;}
  const m=/^\/channels\/(a|b)\/(index\.m3u8|seg\d+\.ts|blocks\/\d+\.m3u8|archive\/\d+\.m3u8)$/.exec(url.pathname);
  if(!m){res.writeHead(404);res.end();return;}
  const [,c,name]=m;
@@ -202,8 +224,9 @@ const server=http.createServer(async(req,res)=>{
  const blocks=completed[c].filter(b=>b.id>=id&&b.id<=endId);
  const available=new Set(await segmentList(c));
  if(!blocks.length||blocks.some(b=>b.files.some(n=>!available.has(n)))){res.writeHead(410);res.end();return;}
- const lines=['#EXTM3U','#EXT-X-VERSION:3','#EXT-X-PLAYLIST-TYPE:VOD','#EXT-X-TARGETDURATION:2','#EXT-X-MEDIA-SEQUENCE:0'];
- blocks.forEach((b,i)=>{if(i)lines.push('#EXT-X-DISCONTINUITY');for(const n of b.files)lines.push('#EXTINF:2.0,','../'+n);});
+ const maxDuration=Math.max(2,...blocks.flatMap(b=>b.files.map(n=>segmentDuration(b,n))));
+ const lines=['#EXTM3U','#EXT-X-VERSION:3','#EXT-X-PLAYLIST-TYPE:VOD','#EXT-X-TARGETDURATION:'+Math.ceil(maxDuration),'#EXT-X-MEDIA-SEQUENCE:0'];
+ blocks.forEach((b,i)=>{if(i)lines.push('#EXT-X-DISCONTINUITY');for(const n of b.files)lines.push('#EXTINF:'+segmentDuration(b,n).toFixed(3)+',','../'+n);});
  lines.push('#EXT-X-ENDLIST');
  res.setHeader('Content-Type','application/vnd.apple.mpegurl');res.setHeader('Cache-Control','no-store');res.end(lines.join('\n')+'\n');return;
  }
@@ -212,7 +235,8 @@ const server=http.createServer(async(req,res)=>{
  if(!block){res.writeHead(404);res.end();return;}
  const files=(await segmentList(c));if(!block.files.every(n=>files.includes(n))){res.writeHead(410);res.end();return;}
  res.setHeader('Content-Type','application/vnd.apple.mpegurl');res.setHeader('Cache-Control','no-store');
- res.end(['#EXTM3U','#EXT-X-VERSION:3','#EXT-X-PLAYLIST-TYPE:VOD','#EXT-X-TARGETDURATION:2','#EXT-X-MEDIA-SEQUENCE:0',...block.files.flatMap(n=>['#EXTINF:2.0,','../'+n]),'#EXT-X-ENDLIST'].join('\n')+'\n');return;
+ const maxDuration=Math.max(2,...block.files.map(n=>segmentDuration(block,n)));
+ res.end(['#EXTM3U','#EXT-X-VERSION:3','#EXT-X-PLAYLIST-TYPE:VOD','#EXT-X-TARGETDURATION:'+Math.ceil(maxDuration),'#EXT-X-MEDIA-SEQUENCE:0',...block.files.flatMap(n=>['#EXTINF:'+segmentDuration(block,n).toFixed(3)+',','../'+n]),'#EXT-X-ENDLIST'].join('\n')+'\n');return;
  }
  if(name==='index.m3u8'){
  const all=await segmentList(c),list=all.slice(-18),first=list.length?Number(list[0].slice(3,-3)):0;
