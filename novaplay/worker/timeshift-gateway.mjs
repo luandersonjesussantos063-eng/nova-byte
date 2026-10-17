@@ -45,11 +45,26 @@ export default {async fetch(req,env){
    if(!Array.isArray(data.blocks?.a)||!Array.isArray(data.blocks?.b)){
     return json({ok:false,stage:"cookie_rejected"});
    }
-   // Operational counters only: never return channel media, IDs, or credentials.
+   // Transient operational metrics only; manifest URLs and media are not returned.
+   let archive={a:null,b:null};
+   for(const c of ["a","b"]){
+    const blocks=data.blocks[c],start=blocks.at(-3)?.id??blocks[0]?.id,end=blocks.at(-1)?.id;
+    if(!Number.isSafeInteger(start)||!Number.isSafeInteger(end))continue;
+    try{
+     const rsp=await labFetch(env,"/channels/"+c+"/archive/"+start+".m3u8?end="+end);
+     if(rsp.ok){
+      const manifest=await rsp.text();
+      archive[c]={segments:(manifest.match(/^#EXTINF:/gm)||[]).length,
+        seconds:Math.round([...manifest.matchAll(/^#EXTINF:([0-9.]+)/gm)].reduce((n,m)=>n+Number(m[1]),0)),
+        discontinuities:(manifest.match(/^#EXT-X-DISCONTINUITY$/gm)||[]).length};
+     }else{archive[c]={status:rsp.status};await rsp.body?.cancel();}
+    }catch{archive[c]={status:"error"};}
+   }
    return json({ok:true,stage:"authenticated",
      blocks:{a:data.blocks.a.length,b:data.blocks.b.length},
      bufferedSeconds:{a:Math.round(data.blocks.a.reduce((n,b)=>n+(Number(b.seconds)||0),0)),
-       b:Math.round(data.blocks.b.reduce((n,b)=>n+(Number(b.seconds)||0),0))}});
+       b:Math.round(data.blocks.b.reduce((n,b)=>n+(Number(b.seconds)||0),0))},
+     archive});
   }catch{return json({ok:false,stage:"upstream_connection"},502);}
  }
  if(req.method!=="GET"&&req.method!=="HEAD")return json({error:"Método inválido."},405);
