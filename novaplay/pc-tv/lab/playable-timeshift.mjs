@@ -8,7 +8,7 @@ import {spawn} from 'node:child_process';
 import {mkdtemp,readdir,readFile,rm,stat} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
-const PORT=Number(process.env.TIMESHIFT_PORT||8800);
+const PORT=Number(process.env.PORT||process.env.TIMESHIFT_PORT||8800);
 const ROTATE=Math.max(6,Number(process.env.TIMESHIFT_ROTATE_SECONDS||30));
 const LIMIT=Math.max(10,Number(process.env.TIMESHIFT_MAX_SEGMENTS||150));
 const root=await mkdtemp(join(tmpdir(),'nplay-playable-'));
@@ -48,6 +48,6 @@ const server=http.createServer(async(req,res)=>{
  res.setHeader('Content-Type','video/mp2t');res.setHeader('Content-Length',st.size);res.end(await readFile(p));
  }catch{res.writeHead(500);res.end();}
 });
-server.listen(PORT,'127.0.0.1',()=>console.log('NPlay time-shift lab on http://127.0.0.1:'+PORT));
+server.listen(PORT,'0.0.0.0',()=>console.log('NPlay time-shift lab on http://127.0.0.1:'+PORT));
 async function shutdown(){stop=true;child?.kill('SIGTERM');server.close();await rm(root,{recursive:true,force:true});}
 process.once('SIGTERM',shutdown);process.once('SIGINT',shutdown);
