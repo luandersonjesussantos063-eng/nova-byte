@@ -239,10 +239,26 @@ const server=http.createServer(async(req,res)=>{
  res.end(['#EXTM3U','#EXT-X-VERSION:3','#EXT-X-PLAYLIST-TYPE:VOD','#EXT-X-TARGETDURATION:'+Math.ceil(maxDuration),'#EXT-X-MEDIA-SEQUENCE:0',...block.files.flatMap(n=>['#EXTINF:'+segmentDuration(block,n).toFixed(3)+',','../'+n]),'#EXT-X-ENDLIST'].join('\n')+'\n');return;
  }
  if(name==='index.m3u8'){
- const all=await segmentList(c),list=all.slice(-18),first=list.length?Number(list[0].slice(3,-3)):0;
- const discontinuities=[...boundaries[c]].filter(n=>n<=first).length;
- res.setHeader('Content-Type','application/vnd.apple.mpegurl');res.setHeader('Cache-Control','no-store');
- res.end(['#EXTM3U','#EXT-X-VERSION:3','#EXT-X-TARGETDURATION:2','#EXT-X-MEDIA-SEQUENCE:'+first,'#EXT-X-DISCONTINUITY-SEQUENCE:'+discontinuities,...list.flatMap(n=>[...(boundaries[c].has(Number(n.slice(3,-3)))?['#EXT-X-DISCONTINUITY']:[]),'#EXTINF:2.0,',n])].join('\n')+'\n');return;
+  // Live *sliding* playlist. Only completed, fully retained blocks are advertised.
+  // HLS.js may reload it as new blocks arrive without tearing down MediaSource.
+  const available=new Set(await segmentList(c));
+  const blocks=completed[c].filter(b=>b.files.length&&b.files.every(n=>available.has(n)));
+  const start=blocks[0]?.files[0];
+  const first=start?Number(start.slice(3,-3)):0;
+  const discontinuities=[...boundaries[c]].filter(n=>n<first).length;
+  const maxDuration=Math.max(2,...blocks.flatMap(b=>b.files.map(n=>segmentDuration(b,n))));
+  const lines=['#EXTM3U','#EXT-X-VERSION:3','#EXT-X-TARGETDURATION:'+Math.ceil(maxDuration),
+   '#EXT-X-MEDIA-SEQUENCE:'+first,'#EXT-X-DISCONTINUITY-SEQUENCE:'+discontinuities];
+  for(const b of blocks){
+   for(const [i,n] of b.files.entries()){
+    if(i===0&&boundaries[c].has(b.id))lines.push('#EXT-X-DISCONTINUITY');
+    lines.push('#EXTINF:'+segmentDuration(b,n).toFixed(3)+',',n);
+   }
+  }
+  // No ENDLIST: the same video element receives newly completed segments.
+  res.setHeader('Content-Type','application/vnd.apple.mpegurl');
+  res.setHeader('Cache-Control','no-store');
+  res.end(lines.join('\n')+'\n');return;
  }
  const p=join(folders[c],name);const st=await stat(p).catch(()=>null);
  if(!st){res.writeHead(404);res.end();return;}
