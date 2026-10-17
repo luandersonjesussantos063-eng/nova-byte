@@ -26,7 +26,7 @@ async function labFetch(env,path){
  return await fetch(target.toString(),{headers:{"Cookie":await labCookie(env.TIMESHIFT_VIEW_PIN),"Accept":"*/*"},
   redirect:"manual",signal:AbortSignal.timeout(16000),cf:{cacheTtl:0}});
 }
-const safeChannelPath=/^\/channels\/(a|b)\/(archive\/\d{1,9}\.m3u8|seg\d{1,9}\.ts)$/;
+const safeChannelPath=/^\/channels\/(a|b)\/(dvr\.m3u8|archive\/\d{1,9}\.m3u8|seg\d{1,9}\.ts)$/;
 export default {async fetch(req,env){
  const u=new URL(req.url),requestOrigin=req.headers.get("Origin")||"";
  const headers={"Access-Control-Allow-Origin":ALLOWED_ORIGINS.has(requestOrigin)?requestOrigin:"https://novabytesolucoes.com.br",
