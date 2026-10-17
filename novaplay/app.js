@@ -681,6 +681,25 @@ function asClock(seconds){
  const hours=Math.floor(value/3600),minutes=Math.floor(value%3600/60),secs=value%60;
  return (hours?hours+":"+String(minutes).padStart(2,"0"):String(minutes))+":"+String(secs).padStart(2,"0");
 }
+// DVR manifests grow with every recorded block. The duration of a live media
+// element is often Infinity, so use its seekable window for the time indicator.
+function cinemaPlaybackRange(v){
+ if(current?.item?.timeShiftTest){
+  const ranges=v?.seekable;
+  if(ranges?.length){
+   try{
+    const first=ranges.start(0),last=ranges.end(ranges.length-1);
+    if(Number.isFinite(first)&&Number.isFinite(last)&&last>first)return {start:first,end:last};
+   }catch{}
+  }
+  const detail=hls?.levels?.[Math.max(0,hls.currentLevel)]?.details;
+  const first=detail?.fragments?.[0]?.start,last=detail?.edge;
+  if(Number.isFinite(first)&&Number.isFinite(last)&&last>first)return {start:first,end:last};
+  return null;
+ }
+ const duration=v?.duration;
+ return Number.isFinite(duration)&&duration>0?{start:0,end:duration}:null;
+}
 function updateCinemaControls(){
  const v=window.NPlayCasting?.state()||$("video");
  $("cinema-play").textContent=v.paused?"▶":"❚❚";
@@ -691,14 +710,13 @@ function updateCinemaControls(){
  const percent=Math.round(v.volume*100);
  if(volume)volume.value=String(percent);
  if(level)level.textContent=(v.muted?0:percent)+"%";
- const duration=v.duration;
- const seekable=Number.isFinite(duration)&&duration>0;
+ const range=cinemaPlaybackRange(v),seekable=!!range;
  $("cinema-seek").disabled=!seekable;
- $("cinema-duration").textContent=seekable?asClock(duration):(current?.item?.kind==="tv"?"AO VIVO":"Carregando…");
+ $("cinema-duration").textContent=seekable?asClock(range.end):(current?.item?.kind==="tv"?"AO VIVO":"Carregando…");
  if(!seekActive){
-   const currentTime=seekable?Math.max(0,Math.min(duration,v.currentTime||0)):0;
+   const currentTime=seekable?Math.max(range.start,Math.min(range.end,v.currentTime||0)):0;
    $("cinema-elapsed").textContent=asClock(currentTime);
-   $("cinema-seek").value=seekable?String(currentTime/duration*100):"0";
+   $("cinema-seek").value=seekable?String((currentTime-range.start)/(range.end-range.start)*100):"0";
    $("cinema-seek").style.setProperty("--played",$("cinema-seek").value+"%");
  }
 }
@@ -744,18 +762,18 @@ $("cinema-volume")?.addEventListener("input",e=>{
  updateCinemaControls();showCinemaUi();
 });
 $("cinema-seek").addEventListener("input",e=>{
- const v=window.NPlayCasting?.state()||$("video");if(!Number.isFinite(v.duration)||v.duration<=0)return;
+ const v=window.NPlayCasting?.state()||$("video"),range=cinemaPlaybackRange(v);if(!range)return;
  seekActive=true;
  e.target.style.setProperty("--played",e.target.value+"%");
- const target=v.duration*Number(e.target.value)/100;
+ const target=range.start+(range.end-range.start)*Number(e.target.value)/100;
  $("cinema-elapsed").textContent=asClock(target);
  showCinemaUi();
 });
 $("cinema-seek").addEventListener("change",e=>{
  const state=window.NPlayCasting?.state();
  if(state){window.NPlayCasting.command("seek",state.duration*Number(e.target.value)/100);seekActive=false;updateCinemaControls();showCinemaUi();return;}
- const v=$("video");
- if(Number.isFinite(v.duration)&&v.duration>0)v.currentTime=Math.min(v.duration,Math.max(0,v.duration*Number(e.target.value)/100));
+ const v=$("video"),range=cinemaPlaybackRange(v);
+ if(range)v.currentTime=Math.min(range.end,Math.max(range.start,range.start+(range.end-range.start)*Number(e.target.value)/100));
  seekActive=false;updateCinemaControls();showCinemaUi()
 });
 $("cinema-fullscreen").onclick=()=>{
