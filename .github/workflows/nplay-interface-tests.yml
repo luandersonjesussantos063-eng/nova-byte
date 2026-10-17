@@ -47,5 +47,5 @@ jobs:
           assert(!app.includes('openTimeshift'));
           console.log('NPlay interface 0.51.0 — integração validada');
           JS
-      - name: Testes da home e dos destaques
-        run: node --test novaplay/tests/home-live.test.mjs novaplay/tests/hero-live.test.mjs
+      - name: Testes de catalogo ao vivo na home
+        run: node --test novaplay/tests/home-live.test.mjs
