@@ -79,7 +79,7 @@ function setChannels(items){
  const select=el('hero-live-channel');select.replaceChildren();
  for(const item of channels){const option=document.createElement('option');option.value=item.id;option.textContent=item.title;select.append(option)}
  if(!channels.length||!liveFeatured()){stop();el('hero-live-controls').hidden=true;if(!channels.length)status('Nenhum canal com sinal direto disponível.');window.NPlayShowFeaturedMovie?.();return}
- select.value=channels[selected].id;el('hero-live-controls').hidden=true;failures=0;show();
+ select.value=channels[selected].id;el('hero-live-controls').hidden=false;el('hero-live-channel').closest('label').hidden=true;el('hero-live-status').hidden=true;failures=0;show();
 }
 function sync(){if(!liveFeatured())return;if(!allowed())stop();else if(!active&&!paused&&channels.length&&failures<Math.min(channels.length,3))show()}
 function init(){
