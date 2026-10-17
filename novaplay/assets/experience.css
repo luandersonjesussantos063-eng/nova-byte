@@ -180,3 +180,12 @@ button{transition:background .2s,color .2s,border-color .2s,transform .2s}
 body:has(#iframe-channels-panel:not([hidden])) .category-intro{padding-bottom:8px}body:has(#iframe-channels-panel:not([hidden])) #category-subtitle{margin-bottom:0}
 .profile-admin-link{display:inline-block;padding:14px;color:#b9d6ff;font-weight:700}.yt-featured-admin{border-top:1px solid #354c6b;padding-top:20px;margin-top:24px}
 @media(max-width:640px){.youtube-filters .genre-chip{font-size:12px;padding:9px 10px}.hero-buttons{gap:8px}.hero-buttons .btn{min-height:44px;padding:10px 14px}.hero-live-controls{gap:6px}.hero-live-status{font-size:11px}.nplay-live-toolbar{gap:10px;flex-wrap:wrap}.nplay-live-toolbar>span{font-size:12px}.category-intro{padding-top:106px}#iframe-channels-panel{padding-top:0!important;padding-bottom:100px!important}.hero .hero-shade{background:linear-gradient(0deg,#070b13 0%,#070b13ea 18%,#070b1388 62%,#070b1340),linear-gradient(90deg,#070b1377,transparent)}}
+
+/* NPlay: capas dos canais ao vivo em estilo cinema, sem cartões brancos. */
+#iframe-channel-list .nplay-live-cover{background:linear-gradient(145deg,#182945 0%,#0b1426 58%,#080d19 100%);border-color:#3a557a66;overflow:hidden}
+#iframe-channel-list .nplay-live-art{background:radial-gradient(ellipse at 50% 15%,#2b4673 0%,#101d34 52%,#090f1e 100%);color:#f5f8ff}
+#iframe-channel-list .nplay-channel-fallback-art{background:radial-gradient(ellipse at 80% 10%,#254b86 0%,transparent 60%),linear-gradient(145deg,#162b4a,#080e1d);color:#f5f8ff}
+#iframe-channel-list .nplay-channel-wordmark{color:#f5f8ff!important;text-shadow:0 2px 12px #0009;font-size:clamp(16px,2vw,25px);letter-spacing:.025em}
+#iframe-channel-list .nplay-channel-category{color:#a8c8fa!important}
+#iframe-channel-list .nplay-channel-logo-art{background:radial-gradient(ellipse at 50% 20%,#314c77,#101d35 70%,#0a1020)}
+#iframe-channel-list .nplay-live-logo{max-width:76%;max-height:72%;object-fit:contain;filter:drop-shadow(0 4px 12px #0008)}
