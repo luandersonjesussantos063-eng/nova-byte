@@ -1,0 +1,124 @@
+/* NPlay 0.51 — cinema calmo, interface original, mobile e desktop.
+   Layout only: the player, approval and existing catalog logic stay unchanged. */
+:root{--nplay-cinema:#070b13;--nplay-frost:#a8bfdc;--nplay-accent:#79b6ff}
+body{background:#070b13!important}
+#view-home{background:#070b13}
+.app-header{background:linear-gradient(180deg,#050911ef,#050911b8 70%,transparent);border:0;box-shadow:none;transition:background .28s ease,box-shadow .28s ease}
+.app-header.is-scrolled{background:#070d19f3;box-shadow:0 8px 22px #0003;border-bottom:1px solid #ffffff0a;backdrop-filter:blur(16px)}
+.desktop-nav .nav-option{background:none!important;border:0;border-radius:0;color:#b3c1d3;font-weight:600;transition:color .2s ease}
+.desktop-nav .nav-option.active{color:#fff;font-weight:800}
+.desktop-nav .nav-option.active:after{bottom:0;height:2px;width:22px;left:calc(50% - 11px);background:linear-gradient(90deg,#80c6ff,#4c78f8)}
+.desktop-nav .nav-option:hover{color:#fff}
+#view-home>.nplay-discover{display:none!important}
+#view-home .hero{height:min(75svh,690px);min-height:520px;max-height:none;background:#070c17;isolation:isolate}
+#view-home .hero-art{transform:none;transition:opacity .65s ease,background-position .65s ease;background-position:center 32%}
+#view-home .hero-shade{background:linear-gradient(90deg,#070b13f2 0%,#070b13b3 28%,#070b134b 58%,#070b1317 85%),linear-gradient(0deg,#070b13 0%,#070b13db 12%,#070b1336 45%,transparent 75%)}
+#view-home .hero-content{bottom:15%;max-width:min(615px,68vw)}
+#view-home .hero-eyebrow{font-size:10px;letter-spacing:.2em;margin-bottom:12px;color:#c2d1ea;font-weight:700}
+#view-home .hero-genre{font-size:10px;letter-spacing:.13em;color:#b7d9ff;margin-bottom:10px}
+#view-home .hero h1{font-size:clamp(38px,4.8vw,70px);font-weight:850;letter-spacing:-.04em;line-height:1.07;max-width:600px;margin:0 0 12px;text-wrap:balance;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+#view-home .hero-metadata{gap:8px;margin-bottom:10px;color:#e2e9f2}
+#view-home .hero-desc{max-width:440px;font-size:14px;line-height:1.57;color:#c5cedf;margin:0 0 19px;-webkit-line-clamp:2}
+#view-home .hero-buttons{gap:9px}
+#view-home .hero-buttons .btn{min-height:45px;border-radius:7px;padding:10px 19px;font-weight:750;backdrop-filter:none}
+#view-home .hero-buttons .btn-primary{background:#f3f6fc;color:#0d1728}
+#view-home .hero-buttons .btn-secondary{background:#283449ce;border:1px solid #ffffff1c}
+#view-home .hero-buttons .btn:hover{filter:brightness(1.06)}
+#view-home .hero-dots{bottom:11%;gap:7px}
+#view-home .hero-dot{height:5px;width:5px}
+#view-home .hero-dot.active{width:22px;background:#a7cffd}
+#view-home .home-rows{position:relative;z-index:5;margin:-34px 0 24px}
+#view-home .shelf{padding-left:clamp(20px,4vw,76px);margin-bottom:28px;contain:layout style}
+#view-home .shelf-top{padding-right:clamp(20px,4vw,76px);margin-bottom:12px;align-items:center}
+#view-home .shelf-title{font-size:clamp(17px,1.6vw,21px);font-weight:800;letter-spacing:-.025em;color:#f5f7fb;line-height:1.3}
+#view-home .see-all{color:#aecaff;font-size:12px;font-weight:700;white-space:nowrap}
+#view-home .shelf-track{gap:11px;padding-bottom:10px;padding-right:clamp(20px,4vw,76px);scroll-snap-type:x proximity}
+#view-home .poster-card:not(.channel-card):not(.youtube-card){flex:0 0 clamp(145px,14vw,200px);max-width:200px}
+#view-home .poster-card.youtube-card{flex:0 0 clamp(225px,25vw,320px);max-width:320px}
+#view-home .poster-card.channel-card{flex:0 0 clamp(245px,27vw,380px);max-width:380px}
+#view-home .poster-card .cover{border-radius:7px;border-color:#ffffff0d;box-shadow:none;transition:transform .25s ease,border-color .25s ease}
+#view-home .poster-card:hover .cover,#view-home .poster-card:focus-within .cover{transform:translateY(-3px) scale(1.012);box-shadow:0 9px 21px #0008;border-color:#a3c5ff77}
+#view-home .poster-card h3{font-size:12px;margin:8px 0 2px;white-space:nowrap;line-height:1.45}
+#view-home .poster-card p{font-size:10px;line-height:1.3;margin:0;color:#96a6bd}
+#view-home .channel-card .cover{aspect-ratio:16/9}
+#view-home .card-play-icon{background:#111b2ac7}
+#view-home .shelf-title .live-label{font-size:8px;letter-spacing:.05em}
+#view-home .shelf-arrow{box-shadow:0 4px 25px #0005}
+
+/* Calm, original profile selection, keeping NPlay's avatars and controls. */
+.nplay-profile-gate{background:#070b13!important;color:#f7f9fc}
+.nplay-profile-hero{display:none!important}
+.nplay-profile-body,.nplay-profile-hero:not(.has-poster)+.nplay-profile-body{background:transparent!important;border:0!important;box-shadow:none!important;backdrop-filter:none!important;min-height:0!important;max-width:600px!important;margin:auto!important;padding:42px 25px!important;width:100%!important}
+.nplay-profile-body::before{display:none!important}
+.nplay-profile-body h2{font-size:clamp(23px,3vw,31px)!important;font-weight:650!important;color:#f7f8fb!important;letter-spacing:-.025em;margin:0 0 29px!important}
+.nplay-profile-grid{gap:26px 18px}
+.nplay-profile-choice{font-weight:600}
+.nplay-profile-picture{border-radius:15px;box-shadow:0 6px 22px #0008}
+.nplay-profile-choice:hover .nplay-profile-picture,.nplay-profile-choice:focus-within .nplay-profile-picture{transform:translateY(-2px)}
+.nplay-profile-gate{display:flex!important;align-items:center;justify-content:center;flex-direction:column}
+
+/* New 1.65s opening is hidden while permission approval is still on screen. */
+#nplay-soft-opening[hidden]{display:none!important}
+#nplay-soft-opening{position:fixed;inset:0;z-index:2147483645;background:#03060b;color:#fff;display:grid;place-items:center;overflow:hidden;pointer-events:none;opacity:1;transition:opacity .42s cubic-bezier(.22,.61,.36,1);isolation:isolate}
+#nplay-soft-opening.is-leaving{opacity:0}
+.nplay-opening-glow{position:absolute;width:min(85vw,500px);aspect-ratio:1;border-radius:50%;background:radial-gradient(circle,#367ee01e,transparent 68%);filter:blur(24px);opacity:.65;animation:nplay-glow-soft 1.55s ease-out both}
+.nplay-opening-center{position:relative;display:flex;align-items:center;gap:11px;transform:scale(.95);opacity:0;animation:nplay-soft-in 1.32s cubic-bezier(.22,.8,.23,1) .12s both}
+.nplay-opening-symbol{width:52px;height:57px;display:grid;place-items:center;font-size:49px;font-weight:950;font-style:italic;font-family:system-ui,Arial,sans-serif;letter-spacing:-.14em;padding-right:8px;background:linear-gradient(146deg,#7ad9ff 0%,#4e9bfa 42%,#4760e5 100%);-webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:none}
+.nplay-opening-name{font-family:Inter,system-ui,Arial,sans-serif;font-size:clamp(32px,7.4vw,55px);font-weight:850;letter-spacing:-.075em;line-height:1;color:#f6f9ff;white-space:nowrap}
+.nplay-opening-name span{color:#7ec0ff}
+.nplay-opening-line{position:absolute;bottom:-17px;left:0;width:100%;height:2px;transform:scaleX(0);transform-origin:center;background:linear-gradient(90deg,transparent,#589fff,transparent);animation:nplay-soft-line 1.15s ease-out .38s both;opacity:.6}
+@keyframes nplay-soft-in{0%{opacity:0;transform:translateY(9px) scale(.94);filter:blur(6px)}42%{opacity:1;filter:blur(0)}78%{opacity:1;transform:translateY(0) scale(1)}100%{opacity:1;transform:translateY(0) scale(1.007)}}
+@keyframes nplay-soft-line{0%{transform:scaleX(0);opacity:0}40%{opacity:.8}75%{transform:scaleX(1);opacity:.7}100%{transform:scaleX(.8);opacity:0}}
+@keyframes nplay-glow-soft{from{transform:scale(.76);opacity:0}50%{opacity:.58}to{transform:scale(1.1);opacity:.2}}
+
+/* Mobile: one hero, concise information, a scannable set of rails. */
+@media(max-width:760px){
+  .app-header{height:61px;padding:0 14px;gap:8px;background:linear-gradient(180deg,#060b16fb,#060b16dd)}
+  .header-actions{gap:8px}
+  .brand .nplay-wordmark{max-width:111px;height:auto}
+  .mobile-chips{top:60px;gap:6px;padding:9px 15px 10px;background:linear-gradient(180deg,#080d19ec 65%,#080d1900);scroll-snap-type:x proximity}
+  .mobile-chips button{border:1px solid #ffffff21;border-radius:999px;background:#162135c7;color:#d9e3f3;font-weight:650;font-size:11px;padding:7px 12px;scroll-snap-align:start}
+  .mobile-chips button.active{background:#e7f2ff;color:#111d32;border-color:#e7f2ff}
+  #view-home .hero{height:clamp(455px,66svh,610px);min-height:0;max-height:none}
+  #view-home .hero-art{background-position:54% 28%}
+  #view-home .hero-shade{background:linear-gradient(0deg,#070b13 0%,#070b13f4 7%,#070b13b8 29%,#070b134b 54%,#070b1322 80%),linear-gradient(90deg,#070b1380,transparent 80%)}
+  #view-home .hero-content{left:18px;right:18px;bottom:72px;max-width:calc(100% - 36px);padding:0}
+  #view-home .hero-eyebrow{margin-bottom:8px;letter-spacing:.12em;font-size:9px}
+  #view-home .hero-genre{margin-bottom:8px;letter-spacing:.1em;font-size:9px}
+  #view-home .hero h1{font-size:clamp(30px,8.1vw,43px);line-height:1.07;margin-bottom:8px;letter-spacing:-.045em;-webkit-line-clamp:2;max-width:360px}
+  #view-home .hero-metadata{font-size:10px;gap:5px;margin-bottom:8px}
+  #view-home .hero-desc{font-size:11px;line-height:1.5;margin-bottom:11px;max-width:335px;-webkit-line-clamp:2}
+  #view-home .hero-buttons{display:flex;flex-wrap:nowrap;gap:7px}
+  #view-home .hero-buttons .btn{border-radius:6px;min-height:38px;padding:8px 12px;font-size:11px;justify-content:center;gap:6px}
+  #view-home #hero-preview-open{display:none}
+  #view-home .hero-dots{bottom:40px;right:18px;gap:5px}
+  #view-home .hero-dot{width:5px;height:5px}
+  #view-home .hero-dot.active{width:19px}
+  #view-home .home-rows{margin:-10px 0 18px}
+  #view-home .shelf{padding-left:15px;margin-bottom:22px;contain:layout style}
+  #view-home .shelf-top{padding-right:15px;margin-bottom:9px}
+  #view-home .shelf-title{font-size:16px;letter-spacing:-.025em}
+  #view-home .see-all{font-size:10px}
+  #view-home .shelf-track{gap:8px;padding-right:15px;padding-bottom:9px}
+  #view-home .poster-card:not(.channel-card):not(.youtube-card){flex:0 0 clamp(117px,34vw,155px);max-width:155px}
+  #view-home .poster-card.youtube-card{flex:0 0 min(62vw,280px);max-width:280px}
+  #view-home .poster-card.channel-card{flex:0 0 min(62vw,280px);max-width:280px}
+  #view-home .poster-card .cover{border-radius:6px}
+  #view-home .poster-card h3{font-size:11px;line-height:1.3;margin-top:6px}
+  #view-home .poster-card p{font-size:10px}
+  .mobile-nav{left:0!important;right:0!important;bottom:0!important;border-radius:0!important;padding:8px 4px calc(9px + env(safe-area-inset-bottom))!important;background:#0c1522f5!important;box-shadow:0 -6px 24px #0007!important}
+  .mobile-nav-item{font-size:9px}
+  .nplay-profile-body{padding:22px 18px!important}
+  .nplay-profile-body h2{font-size:25px!important}
+  .nplay-profile-grid{gap:20px 13px}
+}
+@media(max-width:360px){
+ #view-home .hero{height:460px}
+ #view-home .hero-buttons .btn{padding:8px 9px;font-size:10px}
+ #view-home .poster-card:not(.channel-card):not(.youtube-card){flex-basis:115px}
+}
+@media(prefers-reduced-motion:reduce){
+ #nplay-soft-opening{transition:none}
+ .nplay-opening-center,.nplay-opening-glow,.nplay-opening-line{animation:none;transform:none;opacity:1;filter:none}
+ #view-home .poster-card .cover{transition:none}
+}
