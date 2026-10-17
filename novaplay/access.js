@@ -50,7 +50,19 @@ async function readAccess(user){
  if(error)throw error;
  return record?.status||"new";
 }
+function showDeviceCode(){
+ if(!lastUser)return;
+ let button=document.getElementById("nplay-device-code");
+ if(!button){
+  button=document.createElement("button");button.id="nplay-device-code";button.type="button";
+  button.style.cssText="position:fixed;right:12px;bottom:12px;z-index:2147483645;background:#101e33;color:#c4d8ff;border:1px solid #5576a4;border-radius:9px;padding:7px 10px;font:12px system-ui;opacity:.82";
+  document.body.append(button);
+ }
+ button.textContent="Aparelho: "+lastUser.id.slice(0,8).toUpperCase();
+ button.title="Código de identificação deste aparelho";
+}
 function applyAccess(state){
+ showDeviceCode();
  if(state==="approved"){
   $("nplay-access-wall").hidden=true;
   // The catalog may have loaded before the approval existed. Reload once after
