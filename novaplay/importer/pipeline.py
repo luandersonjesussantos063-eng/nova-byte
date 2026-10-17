@@ -14,7 +14,7 @@ import subprocess
 import threading
 import time
 import uuid
-from cleanup import cleanup_published_imports
+from cleanup import cleanup_published_imports, cleanup_adaptive_cache
 try:
     from streaming import build_adaptive, optimize_existing_once
 except ImportError:
@@ -207,8 +207,13 @@ def download(job,max_bytes,timeout):
         source=safe_file(job.folder/'download',chosen['name'])
         # libtorrent rechecks existing pieces, so partial data survives restarts.
         available=source.stat().st_size if source.exists() else 0
-        if shutil.disk_usage(job.folder).free < max(0,chosen['bytes']-available)+chosen['bytes']*2+2*1024**3:
-            raise CapacityRequired('Espaço insuficiente para baixar e preparar este vídeo mantendo os originais. Libere espaço ou escolha uma versão menor; atualizar a lista não resolve esta condição.')
+        # Reserve the remaining download plus a POSSIBLE compatible MP4 output.
+        # The old rule required three full copies plus 2 GiB before even
+        # inspecting codecs, which incorrectly blocked many 3-4 GiB films.
+        remaining=max(0,chosen['bytes']-available)
+        required=remaining+int(chosen['bytes']*1.3)+768*1024**2
+        if shutil.disk_usage(job.folder).free < required:
+            raise CapacityRequired('Espaço insuficiente para baixar e preparar este vídeo com segurança. A limpeza automática será tentada; escolha uma versão menor se o espaço continuar insuficiente.')
         handle.prioritize_files([7 if i==chosen['index'] else 0 for i in range(files.num_files())])
         handle.unset_flags(lt.torrent_flags.upload_mode)
         job.progress('downloading',force=True)
@@ -272,7 +277,10 @@ def prepare(job,source,max_bytes,timeout):
         output=job.folder/'prepared.mp4'
         ready=job.manifest.get('prepared')
         if not (ready and output.is_file() and job.manifest.get('source_fingerprint')==fingerprint):
-            if shutil.disk_usage(job.folder).free < max(meta['size_bytes']*2,1024**3):raise CapacityRequired('Espaço insuficiente para converter sem perder o original. Libere espaço antes de retomar.')
+            # Browser-compatible files bypass conversion entirely. Otherwise
+            # keep room for one prepared output and a safe reserve.
+            if shutil.disk_usage(job.folder).free < max(int(meta['size_bytes']*1.3)+512*1024**2,1024**3):
+                raise CapacityRequired('Espaço insuficiente para converter sem perder o original. Libere espaço antes de retomar.')
             partial=job.folder/'prepared.partial.mp4'
             # Reuse browser-compatible streams; changing a container or audio
             # does not require hours of encoding the video again.
@@ -431,6 +439,53 @@ def handle_job(db,r2,record,root,recovery,bucket,max_bytes,timeout,local_file=No
                 delay=3600 if isinstance(exc,MetadataUnavailable) else 900 if isinstance(exc,SlowSource) else retry_delay(record['attempts'])
                 job.update(status=status,stage=stage,error_message=message[:500],error_code=type(exc).__name__,next_retry_at=utc(delay) if retry else None,locked_until=None)
 
+def resume_one_capacity_import(db, root, cooldown):
+    """Release one already-authorized capacity job only when disk can accept it.
+
+    Called only when no other import is claimed. Never unblocks missing-source
+    jobs or changes rights approvals. Failed jobs require no new download if
+    a saved source already exists, but still need conversion headroom.
+    """
+    now=time.monotonic()
+    rows=db.table('novaplay_magnet_imports').select(
+        'id,file_candidates,selected_file_index,error_message,license_reference,'
+        'duplicate_of,archived_at,approved_for_processing,rights_confirmed'
+    ).eq('status','needs_review').eq('stage','capacity').order('created_at').execute().data or []
+    for row in rows:
+        identifier=row.get('id')
+        if cooldown.get(identifier,0)>now:
+            continue
+        if (not row.get('approved_for_processing') or not row.get('rights_confirmed') or
+                not row.get('license_reference') or row.get('duplicate_of') or row.get('archived_at')):
+            continue
+        files=row.get('file_candidates') or []
+        if not isinstance(files,list):
+            continue
+        selected=row.get('selected_file_index')
+        sizes=[int(x['bytes']) for x in files if isinstance(x,dict) and
+               isinstance(x.get('bytes'),(int,float)) and 0<int(x['bytes'])<100*1024**3 and
+               (selected is None or x.get('index')==selected)]
+        if not sizes:
+            continue
+        size=max(sizes)
+        # Conservative reservation for the copy that FFmpeg may need.
+        converting='converter' in (row.get('error_message') or '').lower()
+        required=int(size*(1.3 if converting else 2.3))+768*1024**2
+        if shutil.disk_usage(root).free < required:
+            continue
+        # An empty queue and sufficient free space protect against retry loops.
+        cooldown[identifier]=now+3600
+        updated=db.table('novaplay_magnet_imports').update({
+            'status':'queued','stage':'queued','error_code':None,'error_message':None,
+            'next_retry_at':None,'progress_percent':0,'locked_until':None,
+            'lock_token':None,'worker_id':None
+        }).eq('id',identifier).eq('status','needs_review').eq('stage','capacity').execute().data or []
+        if updated:
+            LOG.info('Capacity recovered; safely requeued one approved import (%s)',identifier)
+            return True
+    return False
+
+
 def main():
     from dotenv import load_dotenv
     from supabase import create_client
@@ -456,21 +511,31 @@ def main():
     max_bytes=int(os.getenv('IMPORTER_MAX_BYTES',str(16*1024**3)))
     timeout=int(os.getenv('IMPORTER_TIMEOUT_SECONDS','7200'))
     bucket=os.getenv('R2_BUCKET','nplay-filmes')
+    root.mkdir(parents=True,exist_ok=True)
     if args.cleanup_only:
-        cleanup_published_imports(db,r2,bucket,root,recovery)
+        before=shutil.disk_usage(root).free
+        clean=cleanup_published_imports(db,r2,bucket,root,recovery)
+        caches=cleanup_adaptive_cache(root)
+        after=shutil.disk_usage(root).free
+        LOG.info('Cleanup completed: verified published jobs=%d, temporary caches=%d, net freed=%.2f GiB',
+                 clean,caches,(after-before)/1024**3)
         return
     next_cleanup=0.0
     adaptive_cooldown={}
+    capacity_cooldown={}
     while not (base/'importer.stop').exists():
         try:
             if time.monotonic() >= next_cleanup:
                 cleanup_published_imports(db,r2,bucket,root,recovery)
+                cleanup_adaptive_cache(root)
                 next_cleanup=time.monotonic()+60
             jobs=db.rpc('novaplay_claim_import',{'p_worker_id':worker,'p_job_id':args.job_id}).execute().data or []
             if jobs:
                 handle_job(db,r2,jobs[0],root,recovery,bucket,max_bytes,timeout,args.local_file)
                 cleanup_published_imports(db,r2,bucket,root,recovery)
             elif not args.once:
+                if resume_one_capacity_import(db,root,capacity_cooldown):
+                    continue
                 if not optimize_existing_once(db,r2,bucket,root,base/"importer.stop",inspect_media,run_process,timeout,adaptive_cooldown):time.sleep(15)
         except Exception as exc:
             LOG.error('Queue unavailable (%s)',type(exc).__name__)
