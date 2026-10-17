@@ -94,7 +94,7 @@ function start(){
  $("nplay-access-request").onclick=requestAccess;
  $("nplay-access-retry").onclick=()=>check(true);
  check();
- document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!$("nplay-access-wall").hidden)check()});
+ document.addEventListener("visibilitychange",()=>{if(!document.hidden)check()});
  setInterval(()=>{if(!document.hidden&&!$("nplay-access-wall").hidden)check()},15000);
 }
 if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",start);else start();
