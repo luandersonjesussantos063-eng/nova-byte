@@ -142,3 +142,12 @@ test('live channel search matches accented titles and multiple category words wi
  assert.equal(context.filterLiveChannels(rows,'inexistente').length,0);
  assert.equal(context.filterLiveChannels(rows,'').length,3);assert.equal(rows.length,3);
 });
+
+test('imported channel names resolve local logos without relying on their protected stream URL',()=>{
+ const source=read('live-embeds.js');
+ const helpers=source.slice(source.indexOf('const CHANNEL_LOGOS='),source.indexOf('let loadSequence='));
+ const context=vm.createContext({URL});vm.runInContext(helpers,context);
+ for(const [title,file] of [['SPORTV FHD','sportv.png'],['TNT SÉRIES HD² [L]','tntseries.png'],['CNN BRASIL FHD','cnnbrasil.png'],['RECORD RJ CAPITAL FHD','record.png'],['GB GO GOIANIA SD','globo.png'],['DISCOVERY H&H FHD³','discoveryheh.webp'],['HBO FAMILY HD','hbofamily.png'],['H2 SD','history2.png']])assert.equal(vm.runInContext(`titleLogo(${JSON.stringify(title)})`,context),'./assets/channel-logos/'+file);
+ assert.equal(vm.runInContext('titleLogo("CANAL SEM LOGO HD")',context),'');
+ assert.equal(vm.runInContext('channelName("TNT SÉRIES HD² [L]")',context),'TNT SÉRIES');
+});

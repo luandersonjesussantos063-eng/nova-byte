@@ -9,6 +9,22 @@ function imageUrl(value){
  try{const url=new URL(raw,"https://api.reidoscanais.si/");return url.protocol==="https:"?url.href:""}catch{return ""}
 }
 function channelKey(url){try{return new URL(url).pathname.replace(/\/+$/,"").split("/").pop()}catch{return ""}}
+function channelName(title){
+ return String(title||"Canal ao vivo").replace(/\s*·\s*Ao vivo$/i,"").replace(/\s*\[[^\]]*\]\s*$/g,"").replace(/\s+(?:(?:FHD|UHD|HD|SD|4K|8K)[²³0-9]*|H26[45]|HEVC)(?:\s|$)/gi," ").replace(/\s+/g," ").trim();
+}
+function titleLogo(title){
+ const name=channelName(title).normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase();
+ const compact=name.replace(/[^a-z0-9]/g,"");
+ if(/^gb(?:\s|$)/.test(name))return CHANNEL_LOGOS.globo;
+ if(/^discovery\s+h\s*[&e]\s*h/.test(name))return CHANNEL_LOGOS.discoveryheh;
+ if(/^a\s*&\s*e(?:\s|$)/.test(name))return CHANNEL_LOGOS.ae;
+ if(/^h2(?:\s|$)/.test(name))return CHANNEL_LOGOS.history2;
+ const aliases=Object.keys(CHANNEL_LOGOS).sort((a,b)=>b.length-a.length);
+ for(const key of aliases){const token=key.replace(/[^a-z0-9]/g,"");if(token.length>=3?compact.startsWith(token):name===token||name.startsWith(token+" "))return CHANNEL_LOGOS[key];}
+ if(/^discovery(?:\s|$)/.test(name))return CHANNEL_LOGOS.discoverychannel;
+ if(/^premiere(?:\s|$)/.test(name))return CHANNEL_LOGOS.premiereclubes;
+ return "";
+}
 let loadSequence=0,livePreviews=null,liveChannelData=[],liveScope="tv";
 function note(message){const el=$("nplay-channel-notice");if(el)el.textContent=message}
 async function openChannel(item){
@@ -84,11 +100,15 @@ function renderChannels(channels){
   art.className="nplay-live-art"+(isPremiere?" nplay-premiere-art":"");
   // As capas usam a identidade da emissora, nunca a foto do programa da EPG.
   const fallback=()=>{
+   art.className="nplay-live-art nplay-channel-fallback-art";
+   let hue=0;for(const char of String(item.category||item.title))hue=(hue*31+char.charCodeAt(0))%360;
+   art.style.setProperty("--channel-hue",String(hue));
    art.replaceChildren();
+   const category=document.createElement("span");category.className="nplay-channel-category";category.textContent=item.category||"NPLAY · TV AO VIVO";art.append(category);
    const label=document.createElement("span");label.className="nplay-channel-wordmark";
-   label.textContent=item.title.replace(/\s*·\s*Ao vivo$/i,"");art.append(label);
+   label.textContent=channelName(item.title);art.append(label);
   };
-  const sources=[CHANNEL_LOGOS[channelKey(item.embed_url)],item.logo_url].map(source=>{
+  const sources=[CHANNEL_LOGOS[channelKey(item.embed_url)],titleLogo(item.title),item.logo_url].map(source=>{
    if(typeof source==="string"&&source.startsWith("./assets/"))return source;
    return imageUrl(source);
   }).filter((source,index,all)=>source&&all.indexOf(source)===index);
