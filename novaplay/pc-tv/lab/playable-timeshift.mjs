@@ -25,10 +25,13 @@ const stateFile=join(root,'index.json');
 const startedAt=Date.now();const stats={rotations:0,errors:0,lastRotation:null};
 const channels=['a','b'];const completed=Object.fromEntries(channels.map(c=>[c,[]]));const boundaries=Object.fromEntries(channels.map(c=>[c,new Set()]));let active='a',stop=false,child=null;
 let watchedChannel=null,watchedUntil=0;
-function prioritizeViewer(channel){
+function prioritizeViewer(channel,force=false){
+ // Manifest refreshes renew the *current* channel only. With two open
+ // players, the other playlist cannot seize focus every 2 seconds.
+ if(!force&&watchedChannel!==channel&&Date.now()<watchedUntil)return;
  const changed=watchedChannel!==channel||Date.now()>=watchedUntil;
  watchedChannel=channel;watchedUntil=Date.now()+FOCUS_TTL_MS;
- if(changed)console.log(JSON.stringify({event:'lab_viewer_priority',channel}));
+ if(changed)console.log(JSON.stringify({event:'lab_viewer_priority',channel,mode:force?'selection':'renewal'}));
 }
 const folders=Object.fromEntries(channels.map(c=>[c,join(root,c)]));
 await mkdir(root,{recursive:true});
@@ -75,6 +78,9 @@ async function record(c){
  const start=Date.now(),next=await segmentList(c),offset=next.length?Number(next.at(-1).slice(3,-3))+1:0;
  const segmentIndex=join(folders[c],'block-'+offset+'.m3u8');
  if(offset>0)boundaries[c].add(offset);
+ // Keep FFmpeg alive longer for the channel the viewer chose.
+ // Finished 2-second segments are published progressively, not after 3 minutes.
+ const captureSeconds=watchedChannel===c&&Date.now()<watchedUntil?Math.max(ROTATE,180):ROTATE;
  let ff;
  if(real){
   let src;
@@ -86,7 +92,7 @@ async function record(c){
   }
   // Strictly sequential upstream input: only one FFmpeg child exists at any time.
   ff=['-hide_banner','-loglevel','error','-nostdin','-rw_timeout','15000000','-re','-i',src.url,
-    '-map','0:v:0','-map','0:a:0?','-t',String(ROTATE),
+    '-map','0:v:0','-map','0:a:0?','-t',String(captureSeconds),
     '-vf','scale=640:-2','-c:v','libx264','-preset','ultrafast',
     '-pix_fmt','yuv420p','-g','50','-sc_threshold','0',
     '-force_key_frames','expr:gte(t,n_forced*2)',
@@ -96,32 +102,65 @@ async function record(c){
  }else{
   ff=['-hide_banner','-loglevel','error','-nostdin','-re','-f','lavfi','-i',
     c==='a'?'testsrc2=size=640x360:rate=15':'smptebars=size=640x360:rate=15',
-    '-t',String(ROTATE),'-an','-c:v','libx264','-preset','ultrafast',
+    '-t',String(captureSeconds),'-an','-c:v','libx264','-preset','ultrafast',
     '-tune','zerolatency','-pix_fmt','yuv420p','-g','30','-sc_threshold','0',
     '-f','segment','-segment_time','2','-segment_list',segmentIndex,'-segment_list_type','m3u8','-segment_start_number',String(offset),
     '-segment_format','mpegts',join(folders[c],'seg%d.ts')];
  }
  child=spawn('ffmpeg',ff,{stdio:['ignore','ignore','pipe']});
  let err='';child.stderr.on('data',d=>{err=(err+d.toString()).slice(-1000);});
- const exit=await new Promise(resolve=>{child.on('error',e=>resolve({error:e.code}));child.on('close',code=>resolve({code}));});
- child=null;
+ let publishing=false,cutForSwitch=false;
+ async function publishCompleted(){
+  if(publishing)return;
+  publishing=true;
+  try{
+   // FFmpeg updates the segment list after closing each individual TS file.
+   const timings=await readFile(segmentIndex,'utf8').then(parseSegmentDurations).catch(()=>({}));
+   const names=Object.keys(timings).filter(n=>Number(n.slice(3,-3))>=offset)
+    .sort((a,b)=>Number(a.slice(3,-3))-Number(b.slice(3,-3)));
+   const existing=completed[c].find(b=>b.id===offset);
+   if(names.length<2||(existing&&names.length<=existing.files.length))return;
+   const block=existing||{id:offset,files:[],durations:{}};
+   block.files=names;
+   block.durations=Object.fromEntries(names.map(n=>[n,timings[n]]));
+   if(!existing)completed[c].push(block);
+   // Rotate on disk while preserving the still-available portion of old blocks.
+   const files=await segmentList(c);
+   for(const file of files.slice(0,Math.max(0,files.length-LIMIT)))
+    await rm(join(folders[c],file),{force:true});
+   const remaining=new Set(await segmentList(c));
+   completed[c]=completed[c].map(b=>{
+    b.files=b.files.filter(f=>remaining.has(f));return b;
+   }).filter(b=>b.files.length).slice(-8);
+   await saveState();
+  }finally{publishing=false;}
+ }
+ const poller=setInterval(()=>{
+  // A deliberate channel selection can preempt a long focused capture.
+  // A simple manifest refresh from the other channel cannot.
+  if(child&&watchedChannel&&watchedChannel!==c&&Date.now()<watchedUntil
+     &&Date.now()-start>4000&&!cutForSwitch){
+   cutForSwitch=true;child.kill('SIGINT');
+  }
+  publishCompleted().catch(e=>console.error(JSON.stringify({event:'lab_publish_error',code:e.code||'UNKNOWN'})));
+ },1300);
+ const exit=await new Promise(resolve=>{
+  child.on('error',e=>resolve({error:e.code}));
+  child.on('close',code=>resolve({code}));
+ });
+ clearInterval(poller);child=null;
+ while(publishing)await new Promise(resolve=>setTimeout(resolve,40));
+ await publishCompleted();
  const list=await segmentList(c);
  const block=list.filter(n=>Number(n.slice(3,-3))>=offset);
- const timings=await readFile(segmentIndex,'utf8').then(parseSegmentDurations).catch(()=>({}));
  await rm(segmentIndex,{force:true});
- if(block.length>=3){
-  completed[c].push({id:offset,files:block,durations:Object.fromEntries(block.map(n=>[n,timings[n]??2]))});
-  while(completed[c].length>8)completed[c].shift();
- }
- for(const name of list.slice(0,Math.max(0,list.length-LIMIT)))await rm(join(folders[c],name),{force:true});
- const remaining=new Set(await segmentList(c));
- completed[c]=completed[c].filter(b=>b.files.every(n=>remaining.has(n)));
- await saveState();
- stats.rotations++;if(exit.code!==0||exit.error){stats.errors++;if(real)dropSourceCache();}
+ // Interrupted captures are expected during a deliberate channel switch.
+ stats.rotations++;
+ if(!cutForSwitch&&(exit.code!==0||exit.error)){stats.errors++;if(real)dropSourceCache();}
  const code=/404/.test(err)?'SOURCE_HTTP_404':/403/.test(err)?'SOURCE_HTTP_403':/timed out/i.test(err)?'SOURCE_TIMEOUT':/reset|broken pipe/i.test(err)?'SOURCE_RESET':err?'FFMPEG_FAILED':null;
  stats.lastRotation={channel:c,at:new Date().toISOString(),durationSeconds:Math.round((Date.now()-start)/1000),exitCode:exit.code??null,error:code};
  console.log(JSON.stringify({event:'lab_rotation',channel:c,seconds:Math.round((Date.now()-start)/1000),segments:(await segmentList(c)).length,exitCode:exit.code??null,error:code}));
- if(real&&(exit.code!==0||block.length<3))await new Promise(resolve=>setTimeout(resolve,12000));
+ if(real&&!cutForSwitch&&(exit.code!==0||block.length<3))await new Promise(resolve=>setTimeout(resolve,12000));
 }
 const recordingLoop=(async()=>{
  while(!stop){
@@ -232,7 +271,10 @@ const server=http.createServer(async(req,res)=>{
  }
  if(url.pathname==='/'){res.setHeader('Content-Type','text/html; charset=utf-8');res.end(real?html.replace('LABORATÓRIO • CANAIS SINTÉTICOS','LABORATÓRIO • CANAIS HLS REAIS').replace('O laboratório não acessa a conta IPTV.','Fontes autorizadas, gravação alternada e acesso restrito.'):html);return;}
  if(url.pathname==='/metrics'){const disk=Object.fromEntries(await Promise.all(channels.map(async c=>{const names=await segmentList(c);let bytes=0;for(const n of names){const info=await stat(join(folders[c],n)).catch(()=>null);bytes+=info?.size||0;}return [c,{segments:names.length,bytes,completedBlocks:completed[c].length,recordedSeconds:completed[c].reduce((sum,b)=>sum+blockDuration(b),0)}];})));res.setHeader('Content-Type','application/json');res.setHeader('Cache-Control','no-store');res.end(JSON.stringify({service:'nplay-timeshift-lab',source:real?'real-hls':'synthetic',storageMode:persistent?'persistent':'temporary',uptimeSeconds:Math.floor((Date.now()-startedAt)/1000),activeRecorder:active,rotations:stats.rotations,recordingErrors:stats.errors,lastRotation:stats.lastRotation,channels:disk}));return;}
- if(url.pathname==='/status'){res.setHeader('Content-Type','application/json');res.setHeader('Cache-Control','no-store');res.end(JSON.stringify({active,blocks:Object.fromEntries(channels.map(c=>[c,completed[c].map((b,order)=>({id:b.id,order,seconds:Math.round(blockDuration(b)*10)/10}))]))}));return;}
+ if(url.pathname==='/status'){
+  const focus=url.searchParams.get('focus');
+  if(channels.includes(focus))prioritizeViewer(focus,true);
+  res.setHeader('Content-Type','application/json');res.setHeader('Cache-Control','no-store');res.end(JSON.stringify({active,blocks:Object.fromEntries(channels.map(c=>[c,completed[c].map((b,order)=>({id:b.id,order,seconds:Math.round(blockDuration(b)*10)/10}))]))}));return;}
  const m=/^\/channels\/(a|b)\/(index\.m3u8|dvr\.m3u8|seg\d+\.ts|blocks\/\d+\.m3u8|archive\/\d+\.m3u8)$/.exec(url.pathname);
  if(!m){res.writeHead(404);res.end();return;}
  const [,c,name]=m;
