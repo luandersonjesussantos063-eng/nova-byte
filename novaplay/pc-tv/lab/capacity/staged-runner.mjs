@@ -62,7 +62,7 @@ if(process.env.CAPACITY_GATEWAY_HEALTH_CHECK==="1"){
   try{
    const response=await fetch(u,{signal:AbortSignal.timeout(15000),headers:{Accept:"application/json"}});
    const data=await response.json();
-   console.log(JSON.stringify({event:"capacity_gateway_health",http:response.status,ok:data.ok===true,stage:String(data.stage||"unknown").slice(0,60),login:String(data.login||"not_checked").slice(0,50)}));
+   console.log(JSON.stringify({event:"capacity_gateway_health",http:response.status,ok:data.ok===true,stage:String(data.stage||"unknown").slice(0,60),login:String(data.login||"not_checked").slice(0,50),blocksA:Number(data.blocks?.a)||0,blocksB:Number(data.blocks?.b)||0,bufferedA:Number(data.bufferedSeconds?.a)||0,bufferedB:Number(data.bufferedSeconds?.b)||0}));
   }catch(error){console.log(JSON.stringify({event:"capacity_gateway_health",ok:false,stage:"network_or_parse_error",code:error?.cause?.code||error?.name||"UNKNOWN"}));}
  })();
 }
