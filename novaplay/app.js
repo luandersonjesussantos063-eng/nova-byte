@@ -264,30 +264,42 @@ function upcomingFilms(){
 }
 function renderRows(){
  const holder=$("home-rows");
- if(!homeLivePreviews&&window.NPlayLivePreviews)homeLivePreviews=window.NPlayLivePreviews.create(holder,{maxParallel:4});
+ if(!homeLivePreviews&&window.NPlayLivePreviews)homeLivePreviews=window.NPlayLivePreviews.create(holder,{maxParallel:3});
  homeLivePreviews?.reset();holder.replaceChildren();
+ // One purpose per row; keep the initial page scannable on phones.
+ // This is display-only: content rights, access checks and player routes are unchanged.
+ const availableFilms=uploadedCatalog.filter(x=>x.kind==="film"&&!x.catalogOnly&&x.mode!=="youtube");
+ const availableSeries=uploadedCatalog.filter(x=>x.kind==="series"&&!x.catalogOnly);
+ const tvChannels=[...homeLiveChannels,...db.channels];
+ const grouped=genreGroups();
+ const curatedGenres=["Ação","Animação","Comédia","Suspense","Drama"].map(name=>[
+  name==="Animação"?"Animações para assistir":name+" para sua sessão",
+  grouped.get(name)||[],
+  "genero:"+name,false
+ ]).filter(x=>x[1].length>=4);
  const blocks=[
- ["Continuar assistindo",continued(),"continuar",false],
- ["TV ao vivo",[...homeLiveChannels,...db.channels],"tv",true],
- ["Filmes licenciados",uploadedCatalog.filter(x=>x.mode==="licensed"&&!x.catalogOnly),"filmes",false],
- ["Sua próxima sessão",uploadedCatalog.filter(x=>x.kind==="film"&&x.mode==="r2"&&!x.catalogOnly),"filmes",false],
- ["Séries para acompanhar",uploadedCatalog.filter(x=>x.kind==="series"&&!x.catalogOnly),"series",false],
- ["Seleção YouTube",youtubeFilms(),"youtube",false],
- ["Animes e estreias · Em breve",upcomingFilms(),"em-breve",false],
- ...genreOrder.filter(name=>name!=="Não classificados")
-  .map(name=>[name,genreGroups().get(name),"genero:"+name,false]).filter(b=>b[1].length>=3),
- ["Ainda sem gênero",genreGroups().get("Não classificados").slice(0,80),"genero:Não classificados",false],
- ["Minha lista",all.filter(x=>favorite.has(x.id)),"favoritos",false]
+  ["Continuar assistindo",continued(),"continuar",false],
+  ["Minha lista",all.filter(x=>favorite.has(x.id)),"favoritos",false],
+  ["Filmes disponíveis",availableFilms.length?availableFilms:db.films.filter(x=>!x.catalogOnly),"filmes",false],
+  ["Séries para acompanhar",availableSeries,"series",false],
+  ["TV ao vivo",tvChannels,"tv",true],
+  ...curatedGenres,
+  ["Seleção YouTube",youtubeFilms(),"youtube",false],
+  ["Em breve na NPlay",upcomingFilms(),"em-breve",false]
  ];
- blocks.forEach(b=>{
-  const items=b[1].slice(0,36),row=shelf(b[0],items,b[2],b[3]);if(!row)return;holder.append(row);
-  if(!b[3]||!homeLivePreviews)return;
+ blocks.forEach(([title,collection,key,live])=>{
+  const items=collection.slice(0,20),row=shelf(title,items,key,live);
+  if(!row)return;
+  holder.append(row);
+  if(!live||!homeLivePreviews)return;
   const cards=row.querySelectorAll(".poster-card");
   items.forEach((item,index)=>{
    if(item.mode!=="hls"||!item.src)return;
-   const card=cards[index],cover=card?.querySelector(".cover");if(!cover)return;
-   const sound=document.createElement("button");sound.type="button";sound.className="nplay-live-sound";sound.hidden=true;cover.append(sound);
-   homeLivePreviews.register({card,cover,sound,url:item.src,title:item.title});
+   const element=cards[index],cover=element?.querySelector(".cover");if(!cover)return;
+   const sound=document.createElement("button");
+   sound.type="button";sound.className="nplay-live-sound";sound.hidden=true;
+   cover.append(sound);
+   homeLivePreviews.register({card:element,cover,sound,url:item.src,title:item.title});
   });
  });
 }
