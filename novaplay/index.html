@@ -158,6 +158,28 @@
 .nplay-live-reload[hidden]{display:none}
 </style>
 <link rel="stylesheet" href="./assets/experience.css?v=0.50.2">
+<style>
+/* Sino de novidades NPlay v0.50.8 */
+#nplay-notice-area{position:relative;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+#nplay-notice-bell{position:relative;width:39px;height:39px;border:1px solid #425575;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#f5f8ff;background:#14233a;cursor:pointer}
+#nplay-notice-bell:hover,#nplay-notice-bell[aria-expanded="true"]{border-color:#77aaff;background:#1c3557}
+#nplay-notice-bell svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+#nplay-notice-count{position:absolute;right:-6px;top:-7px;background:#ec6f32;border-radius:15px;border:2px solid #0a111d;min-width:21px;padding:2px 4px;color:#fff;font-weight:900;font-size:11px;line-height:16px}
+#nplay-notice-panel{position:absolute;top:48px;right:0;width:min(375px,calc(100vw - 25px));max-height:min(68vh,580px);overflow:auto;background:#121c2c;border:1px solid #415a7a;box-shadow:0 20px 60px #000a;border-radius:16px;padding:12px;z-index:110;text-align:left}
+.nplay-notice-header{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 10px}
+.nplay-notice-header strong{font-size:16px;color:#fff}
+.nplay-notice-header button,.nplay-notice-bottom button{border:1px solid #44638a;color:#d2e5ff;background:#213551;padding:7px 10px;border-radius:8px;cursor:pointer}
+#nplay-notice-items{display:flex;flex-direction:column;gap:8px}
+.nplay-notice-entry{width:100%;display:flex;align-items:flex-start;flex-direction:column;text-align:left;gap:6px;border:1px solid #2e4360;border-radius:10px;background:#19263a;padding:12px;color:#dfeafa;cursor:pointer;font:inherit}
+.nplay-notice-entry.unread{border-color:#598fdb;background:#203a5c}
+.nplay-notice-entry small{color:#9cc2ff;font-size:11px}
+.nplay-notice-entry strong{font-size:14px}
+.nplay-notice-entry span{font-size:13px;line-height:1.45;white-space:pre-wrap}
+.nplay-notice-entry time{color:#a3b5ca;font-size:11px}
+.nplay-notice-empty{padding:18px 8px;color:#b5c6dd;font-size:13px}
+.nplay-notice-bottom{display:flex;justify-content:flex-end;margin-top:10px}
+@media(max-width:600px){#nplay-notice-bell{width:34px;height:34px}#nplay-notice-panel{position:fixed;top:68px;right:10px;max-height:70vh}}
+</style>
 </head>
 <body>
 <style id="nplay-access-style">
@@ -192,7 +214,7 @@
 .access-creator strong{font-size:14px;font-weight:750;color:#f3f6ff}
 .access-version{font-size:11px;font-weight:700;white-space:nowrap;border:1px solid #c8dcff36;border-radius:30px;padding:9px 12px;background:#080e1c99;backdrop-filter:blur(8px)}
 </style>
-<div id="nplay-access-wall" data-state="loading"><div class="access-catalog" aria-hidden="true"><div class="access-poster-wall"><img src="./assets/nplay-posters/10_coisas_que_eu_odeio_em_voce.jpg" alt="" decoding="async" width="320" height="480"><img src="./assets/featured-covers/a_era_do_gelo.avif" alt="" decoding="async" width="320" height="480"><img src="./assets/approved-covers-v2/a_vinganca_perfeita.jpg" alt="" decoding="async" width="320" height="480"><img src="./assets/nplay-posters/10_segundos_para_vencer.jpg" alt="" decoding="async" width="320" height="480"><img src="./assets/featured-covers/a_era_do_gelo_2.avif" alt="" decoding="async" width="320" height="480"><img src="./assets/approved-covers-v2/a_vizinhanca_assombrada.jpg" alt="" decoding="async" width="320" height="480"><img src="./assets/nplay-posters/12_homens_e_outro_segredo.jpg" alt="" decoding="async" width="320" height="480"><img src="./assets/featured-covers/a_era_do_gelo_3.avif" alt="" decoding="async" width="320" height="480"><img src="./assets/approved-covers-v2/another_legendado.jpg" alt="" decoding="async" width="320" height="480"><img src="./assets/nplay-posters/13_fantasmas.jpg" alt="" decoding="async" width="320" height="480"><img src="./assets/featured-covers/a_era_do_gelo_4.avif" alt="" decoding="async" width="320" height="480"><img src="./assets/approved-covers-v2/arcane_legendado.jpg" alt="" decoding="async" width="320" height="480"><img src="./assets/nplay-posters/2001_uma_odisseia_no_espaco.jpg" alt="" decoding="async" width="320" height="480"><img src="./assets/featured-covers/a_familia_do_futuro.avif" alt="" decoding="async" width="320" height="480"><img src="./assets/approved-covers-v2/belle_e_sebastian_a_aventura_continua.jpg" alt="" decoding="async" width="320" height="480"><img src="./assets/nplay-posters/300.jpg" alt="" decoding="async" width="320" height="480"><img src="./assets/featured-covers/a_fantastica_fabrica_de_chocolate.jpg" alt="" decoding="async" width="320" height="480"><img src="./assets/approved-covers-v2/black_clover_dublado.jpg" alt="" decoding="async" width="320" height="480"><img src="./assets/nplay-posters/300_a_ascensao_do_imperio.jpg" alt="" decoding="async" width="320" height="480"><img src="./assets/featured-covers/a_grande_familia_o_roubo.jpg" alt="" decoding="async" width="320" height="480"><img src="./assets/approved-covers-v2/castlevania_dublado.jpg" alt="" decoding="async" width="320" height="480"><img src="./assets/nplay-posters/500_dias_com_ela.jpg" alt="" decoding="async" width="320" height="480"><img src="./assets/approved-covers-v2/date_a_live_iv.jpg" alt="" decoding="async" width="320" height="480"><img src="./assets/nplay-posters/a_arvore_da_maldicao.jpg" alt="" decoding="async" width="320" height="480"><img src="./assets/approved-covers-v2/great_pretender_razbliuto_filme.jpg" alt="" decoding="async" width="320" height="480"><img src="./assets/nplay-posters/a_caminho_de_casa.jpg" alt="" decoding="async" width="320" height="480"><img src="./assets/approved-covers-v2/jibaku_shounen_hanako_kun_dublado.jpg" alt="" decoding="async" width="320" height="480"></div></div><header class="access-topline"><div class="access-creator"><span>CRIADO POR</span><strong>NovaByte Soluções</strong></div><span class="access-version">NPlay · v0.50.7</span></header><main class="inner" aria-labelledby="nplay-access-title">
+<div id="nplay-access-wall" data-state="loading"><div class="access-catalog" aria-hidden="true"><div class="access-poster-wall"><img src="./assets/nplay-posters/10_coisas_que_eu_odeio_em_voce.jpg" alt="" decoding="async" width="320" height="480"><img src="./assets/featured-covers/a_era_do_gelo.avif" alt="" decoding="async" width="320" height="480"><img src="./assets/approved-covers-v2/a_vinganca_perfeita.jpg" alt="" decoding="async" width="320" height="480"><img src="./assets/nplay-posters/10_segundos_para_vencer.jpg" alt="" decoding="async" width="320" height="480"><img src="./assets/featured-covers/a_era_do_gelo_2.avif" alt="" decoding="async" width="320" height="480"><img src="./assets/approved-covers-v2/a_vizinhanca_assombrada.jpg" alt="" decoding="async" width="320" height="480"><img src="./assets/nplay-posters/12_homens_e_outro_segredo.jpg" alt="" decoding="async" width="320" height="480"><img src="./assets/featured-covers/a_era_do_gelo_3.avif" alt="" decoding="async" width="320" height="480"><img src="./assets/approved-covers-v2/another_legendado.jpg" alt="" decoding="async" width="320" height="480"><img src="./assets/nplay-posters/13_fantasmas.jpg" alt="" decoding="async" width="320" height="480"><img src="./assets/featured-covers/a_era_do_gelo_4.avif" alt="" decoding="async" width="320" height="480"><img src="./assets/approved-covers-v2/arcane_legendado.jpg" alt="" decoding="async" width="320" height="480"><img src="./assets/nplay-posters/2001_uma_odisseia_no_espaco.jpg" alt="" decoding="async" width="320" height="480"><img src="./assets/featured-covers/a_familia_do_futuro.avif" alt="" decoding="async" width="320" height="480"><img src="./assets/approved-covers-v2/belle_e_sebastian_a_aventura_continua.jpg" alt="" decoding="async" width="320" height="480"><img src="./assets/nplay-posters/300.jpg" alt="" decoding="async" width="320" height="480"><img src="./assets/featured-covers/a_fantastica_fabrica_de_chocolate.jpg" alt="" decoding="async" width="320" height="480"><img src="./assets/approved-covers-v2/black_clover_dublado.jpg" alt="" decoding="async" width="320" height="480"><img src="./assets/nplay-posters/300_a_ascensao_do_imperio.jpg" alt="" decoding="async" width="320" height="480"><img src="./assets/featured-covers/a_grande_familia_o_roubo.jpg" alt="" decoding="async" width="320" height="480"><img src="./assets/approved-covers-v2/castlevania_dublado.jpg" alt="" decoding="async" width="320" height="480"><img src="./assets/nplay-posters/500_dias_com_ela.jpg" alt="" decoding="async" width="320" height="480"><img src="./assets/approved-covers-v2/date_a_live_iv.jpg" alt="" decoding="async" width="320" height="480"><img src="./assets/nplay-posters/a_arvore_da_maldicao.jpg" alt="" decoding="async" width="320" height="480"><img src="./assets/approved-covers-v2/great_pretender_razbliuto_filme.jpg" alt="" decoding="async" width="320" height="480"><img src="./assets/nplay-posters/a_caminho_de_casa.jpg" alt="" decoding="async" width="320" height="480"><img src="./assets/approved-covers-v2/jibaku_shounen_hanako_kun_dublado.jpg" alt="" decoding="async" width="320" height="480"></div></div><header class="access-topline"><div class="access-creator"><span>CRIADO POR</span><strong>NovaByte Soluções</strong></div><span class="access-version">NPlay · v0.50.8</span></header><main class="inner" aria-labelledby="nplay-access-title">
  <div class="access-brand"><img src="./assets/brand/nplay-wordmark-v0482.svg" alt="NPlay" width="180" height="65"></div>
  <span id="nplay-access-badge">ACESSO POR APARELHO</span>
  <h1 id="nplay-access-title">Preparando seu acesso</h1>
@@ -250,6 +272,17 @@
   <button class="nav-option" data-nav="favoritos">Minha lista</button>
 </nav>
 <div class="header-actions">
+  <div id="nplay-notice-area">
+    <button type="button" id="nplay-notice-bell" aria-label="Notificações" aria-expanded="false" aria-controls="nplay-notice-panel" title="Novidades da NPlay">
+      <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg>
+      <span id="nplay-notice-count" hidden>0</span>
+    </button>
+    <section id="nplay-notice-panel" aria-label="Novidades da NPlay" hidden>
+      <div class="nplay-notice-header"><strong>🔔 Novidades da NPlay</strong><button id="nplay-notice-close" type="button" aria-label="Fechar novidades">✕</button></div>
+      <div id="nplay-notice-items"><p class="nplay-notice-empty">Carregando avisos...</p></div>
+      <div class="nplay-notice-bottom"><button id="nplay-notice-read-all" type="button">Marcar todas como lidas</button></div>
+    </section>
+  </div>
   <button class="icon-btn" id="search-trigger" aria-label="Buscar títulos"><svg><use href="#i-search"/></svg></button>
   <span class="free-pill"><span class="live-dot"></span>GRÁTIS</span>
   <button class="avatar" id="profile-trigger" aria-label="Trocar perfil" title="Trocar perfil">NP</button>
@@ -418,7 +451,7 @@
 </div>
 <aside id="nplay-install-banner" hidden style="position:fixed;z-index:1000;bottom:calc(76px + env(safe-area-inset-bottom,0px));left:12px;right:12px;max-width:480px;margin:auto;padding:15px 16px;border-radius:16px;border:1px solid #5474a2;background:#122541;box-shadow:0 12px 38px #000b;color:#fff"><div style="display:flex;align-items:center;gap:12px"><img src="./assets/brand/nplay-icon-192-v0482.png" alt="" width="48" height="48" style="border-radius:12px"><div style="flex:1"><strong>Instale a NPlay</strong><div id="nplay-install-description" style="font-size:12px;color:#b8cbed;margin-top:3px">Assista com um toque na tela inicial.</div></div><button id="nplay-install-dismiss" type="button" aria-label="Fechar sugestão de instalação" style="background:transparent;color:white;border:0;font-size:20px;cursor:pointer">✕</button></div><button id="nplay-install-action" type="button" style="margin-top:12px;width:100%;background:#326ad6;color:white;border:0;border-radius:10px;padding:12px;font-weight:800;cursor:pointer">Instalar aplicativo</button></aside>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
-<footer class="app-footer"><div>NPlay V 0.50.7 · Filmes, séries e TV em português · Artes ilustrativas da NPlay · O uso comercial de cada conteúdo exige verificação dos direitos.</div></footer>
+<footer class="app-footer"><div>NPlay V 0.50.8 · Filmes, séries e TV em português · Artes ilustrativas da NPlay · O uso comercial de cada conteúdo exige verificação dos direitos.</div></footer>
 <script src="./assets/cover.js?v=0.39.2-covers2"></script>
 <script src="./assets/card-hover.js?v=0.39.2"></script>
 <script src="./assets/hero-scenes.js?v=0.39.2"></script>
@@ -429,6 +462,7 @@
 <script src="./assets/live-auth.js?v=0.50.0" defer></script>
 <script src="./assets/casting.js?v=0.49.12" defer></script>
 <script src="./assets/music-core.js?v=0.50.0" defer></script>
+<script src="./assets/notifications.js?v=0.50.8" defer></script>
 <script src="./assets/youtube-core.js?v=0.49.12" defer></script>
 <script src="./app.js?v=0.50.6-stream-stability" defer></script>
 <script src="./assets/live-preview.js?v=0.50.0" defer></script>
