@@ -2,7 +2,7 @@ import {seal,unseal} from './hls-relay.mjs';
 const configId='nplay-pc-bridge-v1';
 export function bridgeUrl(raw){
  const url=new URL(raw);
- if(url.protocol!=='https:'||url.username||url.password||url.port||url.search||url.hash||url.pathname!=='/'||!/^[-a-z0-9]+\.trycloudflare\.com$/.test(url.hostname))throw Error('INVALID_PC_BRIDGE_URL');
+ if(url.protocol!=='https:'||url.username||url.password||url.port||url.search||url.hash||url.pathname!=='/'||!/^[-a-z0-9]+\.(?:trycloudflare\.com|up\.railway\.app)$/.test(url.hostname))throw Error('INVALID_PC_BRIDGE_URL');
  return url.origin;
 }
 export async function encryptBridge(config,key){return seal(JSON.stringify(config),configId,key);}

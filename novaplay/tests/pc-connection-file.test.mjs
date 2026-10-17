@@ -12,3 +12,8 @@ test('connection file imports the full URL and exact key, including Windows CRLF
 test('unrelated, oversized and invalid-key files cannot populate the connection',()=>{
  for(const text of ['a'.repeat(5000),'CHAVE DO PC: '+secret,'ENDERECO DO PC: https://foreign.example\nCHAVE DO PC: '+secret,'ENDERECO DO PC: https://example-pc.trycloudflare.com\nCHAVE DO PC: short'])assert.throws(()=>parse(text));
 });
+
+test('Railway connection file retains the private key and rejects foreign suffixes',()=>{
+ assert.equal(parse('ENDERECO DO PC: https://node-test.up.railway.app\nCHAVE DO PC: '+secret).url,'https://node-test.up.railway.app');
+ assert.throws(()=>parse('ENDERECO DO PC: https://node-test.up.railway.app.attacker.example\nCHAVE DO PC: '+secret));
+});

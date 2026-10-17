@@ -119,3 +119,8 @@ test('a viewer streams an IP-based HLS manifest and segment through the PC with 
   const segment=manifest.split('\n').find(x=>x.startsWith('https:'));const media=await worker.fetch(new Request(segment),env);assert.equal(media.status,200);assert.equal((await media.arrayBuffer()).byteLength,4);assert.equal(bridgeCalls,2);
  }finally{globalThis.fetch=previous;}
 });
+
+test('cloud receiver accepts Railway HTTPS only on its exact managed suffix',()=>{
+ assert.equal(bridgeUrl('https://node-test.up.railway.app'),'https://node-test.up.railway.app');
+ for(const url of ['http://node-test.up.railway.app','https://node-test.up.railway.app.attacker.example','https://user:pass@node-test.up.railway.app','https://node-test.up.railway.app/private'])assert.throws(()=>bridgeUrl(url));
+});

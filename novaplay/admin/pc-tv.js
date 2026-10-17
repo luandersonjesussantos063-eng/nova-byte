@@ -2,7 +2,7 @@
  function parseConnection(text){
   if(typeof text!=='string'||text.length>4096)throw Error('Escolha o arquivo CONEXAO-ADM.txt gerado pela TV-PC.');
   text=text.replace(/^\uFEFF/,'');
-  const url=text.match(/^ENDERECO DO PC:[ \t]*(https:\/\/[-a-z0-9]+\.trycloudflare\.com\/?)[ \t]*\r?$/m)?.[1];
+  const url=text.match(/^ENDERECO DO PC:[ \t]*(https:\/\/[-a-z0-9]+\.(?:trycloudflare\.com|up\.railway\.app)\/?)[ \t]*\r?$/m)?.[1];
   const secret=text.match(/^CHAVE DO PC:[ \t]*([a-f0-9]{64})[ \t]*\r?$/m)?.[1];
   if(!url||!secret)throw Error('O arquivo não contém o endereço e a chave da TV-PC. Escolha CONEXAO-ADM.txt.');
   return {url,secret};

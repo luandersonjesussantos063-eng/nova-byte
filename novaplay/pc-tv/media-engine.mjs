@@ -12,7 +12,7 @@ export const isEngineUrl=raw=>{try{return new URL(raw).origin===ENGINE_ORIGIN;}c
 const failure=code=>Object.assign(Error(code),{code});
 const wait=ms=>new Promise(r=>setTimeout(r,ms));
 export class MediaEngine{
- constructor({client=new XtreamClient(),ffmpeg='ffmpeg',mode='compatible',idleMs=25000,readyMs=14000,root=tmpdir()}={}){
+ constructor({client=new XtreamClient(),ffmpeg='ffmpeg',mode='compatible',idleMs=90000,readyMs=14000,root=tmpdir()}={}){
   this.client=client;this.ffmpeg=ffmpeg;this.mode=mode==='copy'?'copy':'compatible';this.idleMs=idleMs;this.readyMs=readyMs;this.root=root;this.current=null;this.last={stage:'idle',code:null};this.lock=Promise.resolve();
   this.sweep=setInterval(()=>{const s=this.current;if(s&&Date.now()-s.touched>this.idleMs)void this.stop(s).catch(()=>{});},2000);this.sweep.unref();
  }
@@ -63,7 +63,7 @@ export class MediaEngine{
   s.input=media.response;if(signal.aborted){s.input.destroy();throw failure('ENGINE_START_TIMEOUT');}
   s.dir=await mkdtemp(join(this.root,'nplay-media-'));s.stage='processing';s.touched=Date.now();if(signal.aborted)throw failure('ENGINE_START_TIMEOUT');
   const video=this.mode==='copy'?['-c:v','copy']:['-c:v','libx264','-preset','ultrafast','-tune','zerolatency','-threads','2','-vf','scale=w=min(1280\\,iw):h=-2','-r','25','-g','50','-keyint_min','50','-sc_threshold','0','-b:v','2000k','-maxrate','2500k','-bufsize','5000k','-pix_fmt','yuv420p'];
-  const args=['-hide_banner','-loglevel','error','-nostdin','-fflags','+genpts+discardcorrupt','-probesize','2000000','-analyzeduration','2000000','-protocol_whitelist','pipe','-threads','2','-filter_threads','1','-f','mpegts','-i','pipe:0','-map','0:v:0?','-map','0:a:0?',...video,'-c:a','aac','-b:a','128k','-ac','2','-sn','-dn','-f','hls','-hls_time','2','-hls_list_size','6','-hls_delete_threshold','2','-hls_flags','delete_segments+temp_file+omit_endlist','-hls_segment_filename',join(s.dir,'seg%09d.ts'),join(s.dir,'index.m3u8')];
+  const args=['-hide_banner','-loglevel','error','-nostdin','-fflags','+genpts+discardcorrupt','-probesize','2000000','-analyzeduration','2000000','-protocol_whitelist','pipe','-threads','2','-filter_threads','1','-f','mpegts','-i','pipe:0','-map','0:v:0?','-map','0:a:0?',...video,'-c:a','aac','-b:a','128k','-ac','2','-sn','-dn','-f','hls','-hls_time','2','-hls_list_size','30','-hls_delete_threshold','15','-hls_flags','delete_segments+temp_file+omit_endlist','-hls_segment_filename',join(s.dir,'seg%09d.ts'),join(s.dir,'index.m3u8')];
   s.child=spawn(this.ffmpeg,args,{stdio:['pipe','ignore','pipe'],windowsHide:true});
   // Discard raw FFmpeg diagnostics: they may contain input metadata. Only safe
   // stage/code values enter logs, status responses and the public player.
