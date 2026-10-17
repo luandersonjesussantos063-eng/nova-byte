@@ -94,10 +94,10 @@ async function record(c){
 }
 const recordingLoop=(async()=>{while(!stop){for(const c of channels){if(stop)break;await record(c);}}})().catch(e=>{if(!stop)console.error('lab_error',e.message);});
 const html=`<!doctype html><html lang="pt-BR"><meta name="viewport" content="width=device-width,initial-scale=1"><title>NPlay — TV de Gravações</title><style>*{box-sizing:border-box}body{margin:0;background:#0c1324;color:#f6f9ff;font:16px system-ui}main{max-width:760px;margin:auto;padding:22px 16px}h1{font-size:25px}p{color:#adbed4;line-height:1.5}.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:20px 0}button{border:1px solid #37516e;background:#1b2d48;color:white;padding:15px 12px;border-radius:12px;font:inherit;text-align:left}button.active{background:#234a7b;border-color:#75b4ff}small{display:block;color:#bbd1eb;margin-top:6px}video{width:100%;aspect-ratio:16/9;background:#02050c;border-radius:12px}#message{margin:14px 0;color:#c9d7e9}.tag{font-size:12px;color:#92c5ff}footer{font-size:13px;color:#9aaec7;margin-top:22px}</style><main><div class="tag">LABORATÓRIO • CANAIS SINTÉTICOS</div><h1>TV de Gravações</h1><p>Escolha um canal. A reprodução automática começa quando houver 2 minutos gravados, criando uma reserva inicial para reduzir as pausas.</p><div class="grid"><button id="a" onclick="select('a')">📺 Canal A<small id="ca">Aguardando gravações</small></button><button id="b" onclick="select('b')">📺 Canal B<small id="cb">Aguardando gravações</small></button></div><h3>Blocos disponíveis</h3><p id="metrics">Monitoramento: carregando...</p><div id="blocks">Carregando...</div><p id="message">Escolha um bloco completo para assistir.</p><video id="video" controls playsinline></video><footer>O gravador alterna entre os canais a cada 30 segundos. Um bloco só aparece quando termina de gravar. O laboratório não acessa a conta IPTV.</footer></main><script defer src="https://cdn.jsdelivr.net/npm/hls.js@1/dist/hls.min.js"></script><script>
-let selected='a',h=null,currentId=null,waiting=false,requestVersion=0,known={a:[],b:[]};const START_BUFFER_SECONDS=120;
+let selected='a',h=null,currentId=null,playbackEndId=null,waiting=false,requestVersion=0,known={a:[],b:[]};const START_BUFFER_SECONDS=120;
 const video=document.querySelector('#video'),message=document.querySelector('#message');
 function select(c){
- selected=c;currentId=null;waiting=false;requestVersion++;
+ selected=c;currentId=null;playbackEndId=null;waiting=false;requestVersion++;
  if(h){h.destroy();h=null;}video.pause();video.removeAttribute('src');video.load();
  document.querySelectorAll('.grid button').forEach(b=>b.classList.toggle('active',b.id===c));
  message.textContent='Canal '+c.toUpperCase()+' selecionado. Preparando primeira gravação...';
@@ -107,8 +107,12 @@ function playBlock(c,id){
  if(c!==selected)return;
  requestVersion++;const version=requestVersion;
  currentId=id;waiting=false;
+ // Freeze the end of this VOD at the last block known when playback starts.
+ // New blocks recorded while watching must remain queued, not be skipped.
+ const visible=(known[c]||[]).filter(b=>b.id>=id);
+ playbackEndId=visible.length?visible[visible.length-1].id:id;
  if(h){h.destroy();h=null;}video.pause();video.removeAttribute('src');video.load();
- const url='/channels/'+c+'/archive/'+id+'.m3u8';
+ const url='/channels/'+c+'/archive/'+id+'.m3u8?end='+playbackEndId;
  message.textContent='Carregando bloco '+id+' do Canal '+c.toUpperCase()+'...';
  if(window.Hls&&Hls.isSupported()){
   h=new Hls({maxBufferLength:45,fragLoadingTimeOut:30000,fragLoadingMaxRetry:5,fragLoadingRetryDelay:1000});h.loadSource(url);h.attachMedia(video);
@@ -129,7 +133,12 @@ video.addEventListener('playing',()=>{message.textContent='▶ Reproduzindo bloc
 video.addEventListener('pause',()=>{if(!video.ended&&!waiting&&currentId!==null)message.textContent='⏸ Vídeo pausado. Toque em ▶ para continuar.';});
 video.addEventListener('waiting',()=>{if(!waiting&&currentId!==null)message.textContent='Carregando vídeo do bloco '+currentId+'...';});
 
-video.addEventListener('ended',()=>{const blocks=known[selected]||[];const last=blocks.at(-1);if(last&&last.id>currentId)currentId=last.id;nextBlock();});
+video.addEventListener('ended',()=>{
+ if(currentId===null||playbackEndId===null)return;
+ // Never jump to known[selected].at(-1): that skips the blocks produced while this VOD played.
+ currentId=playbackEndId;
+ nextBlock();
+});
 async function refresh(){
  try{
  const x=await(await fetch('/status',{cache:'no-store'})).json();const m=await(await fetch('/metrics',{cache:'no-store'})).json();document.querySelector('#metrics').textContent='Gravações: '+m.rotations+' ciclos · Erros: '+m.recordingErrors+' · Armazenamento: '+((m.channels.a.bytes+m.channels.b.bytes)/1048576).toFixed(1)+' MB';
@@ -186,7 +195,11 @@ const server=http.createServer(async(req,res)=>{
  if(!m){res.writeHead(404);res.end();return;}
  const [,c,name]=m;
  if(name.startsWith('archive/')){
- const id=Number(name.slice(8,-5)),blocks=completed[c].filter(b=>b.id>=id);
+ const id=Number(name.slice(8,-5));
+ const requestedEnd=url.searchParams.get('end');
+ const endId=requestedEnd===null?Number.MAX_SAFE_INTEGER:Number(requestedEnd);
+ if(!Number.isSafeInteger(id)||!Number.isSafeInteger(endId)||endId<id){res.writeHead(400);res.end();return;}
+ const blocks=completed[c].filter(b=>b.id>=id&&b.id<=endId);
  const available=new Set(await segmentList(c));
  if(!blocks.length||blocks.some(b=>b.files.some(n=>!available.has(n)))){res.writeHead(410);res.end();return;}
  const lines=['#EXTM3U','#EXT-X-VERSION:3','#EXT-X-PLAYLIST-TYPE:VOD','#EXT-X-TARGETDURATION:2','#EXT-X-MEDIA-SEQUENCE:0'];
