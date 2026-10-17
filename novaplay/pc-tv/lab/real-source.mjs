@@ -26,7 +26,7 @@ async function readPlaylist(){
  try{
   const res=await fetch(u,{redirect:'follow',signal:controller.signal,headers:{Accept:'audio/x-mpegurl,application/vnd.apple.mpegurl,text/plain'}});
   if(!res.ok)throw Error('PLAYLIST_HTTP_'+res.status);
-  const size=Number(res.headers.get('content-length')||0);if(size>5_000_000)throw Error('PLAYLIST_TOO_LARGE');
+  // A large declared Content-Length is fine: stream only until the two channels are found.
   reader=res.body.getReader();
   const dec=new TextDecoder();const records=[];
   let total=0,left='',name='';
@@ -43,7 +43,8 @@ async function readPlaylist(){
     const {done,value}=await reader.read();
     if(done)break;
     total+=value.byteLength;
-    if(total>5_000_000)throw Error('PLAYLIST_TOO_LARGE');
+    if(total>16_000_000)throw Error('PLAYLIST_TOO_LARGE');
+    if(total>8192&&records.length===0&&!left.includes('#EXTM3U')&&!left.includes('#EXTINF'))throw Error('PLAYLIST_INVALID_FORMAT');
     left+=dec.decode(value,{stream:true});
     const lines=left.split(/\r?\n/);left=lines.pop();
     for(const line of lines)consume(line);
@@ -78,7 +79,7 @@ export async function sourceFor(channel){
 export function dropSourceCache(){cache=null;}
 export function safeSourceError(err){
  const m=String(err?.message || err || 'SOURCE_ERROR');
- if(/^(PLAYLIST_HTTP_\d+|PLAYLIST_TOO_LARGE|PLAYLIST_EMPTY|PLAYLIST_TIMEOUT|PLAYLIST_NOT_CONFIGURED|SOURCE_(?:URL_INVALID|SCHEME_INVALID|HOST_BLOCKED)|CHANNEL_[AB]_NOT_FOUND)$/.test(m))return m;
+ if(/^(PLAYLIST_HTTP_\d+|PLAYLIST_TOO_LARGE|PLAYLIST_EMPTY|PLAYLIST_INVALID_FORMAT|PLAYLIST_TIMEOUT|PLAYLIST_NOT_CONFIGURED|SOURCE_(?:URL_INVALID|SCHEME_INVALID|HOST_BLOCKED)|CHANNEL_[AB]_NOT_FOUND)$/.test(m))return m;
  const cause=String(err?.cause?.code||err?.code||'');
  const allowed=new Set(['ECONNRESET','ECONNREFUSED','ENOTFOUND','EAI_AGAIN','ETIMEDOUT','UND_ERR_SOCKET','UND_ERR_CONNECT_TIMEOUT','ERR_TLS_CERT_ALTNAME_INVALID','CERT_HAS_EXPIRED']);
  if(allowed.has(cause))return 'SOURCE_'+cause;
