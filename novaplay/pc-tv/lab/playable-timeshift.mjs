@@ -26,7 +26,7 @@ async function loadState(){
   const previous=JSON.parse(await readFile(stateFile,'utf8'));
   for(const c of channels){
    const available=new Set(await segmentList(c));
-   const safeFiles=b=>Array.isArray(b.files)&&b.files.length>0&&b.files.every(f=>/^seg\\d+\\.ts$/.test(f)&&available.has(f));
+   const safeFiles=b=>Array.isArray(b.files)&&b.files.length>0&&b.files.every(f=>/^seg\d+\.ts$/.test(f)&&available.has(f));
    completed[c]=(previous.completed?.[c]||[]).filter(safeFiles).slice(-8);
    boundaries[c]=new Set((previous.boundaries?.[c]||[]).filter(Number.isSafeInteger));
   }
