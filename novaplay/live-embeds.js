@@ -30,7 +30,6 @@ function note(message){const el=$("nplay-channel-notice");if(el)el.textContent=m
 async function openChannel(item){
  livePreviews?.stop();
  if(item.staticId){window.NovaPlayPlayer?.openStatic(item.staticId);return;}
- if(item.stream_type==="timeshift"){window.NovaPlayPlayer?.openTimeshift?.(item.labChannel,item.title);return;}
  let source;try{source=await window.NPlayLiveAuth?.authorize(item.embed_url)||item.embed_url;}catch(error){note(error.message);return;}
  const hls=item.stream_type==="hls"||/\.m3u8?(?:\?|$)/i.test(item.embed_url);
  const audioOnly=/r[aá]dios?/i.test((item.category||"")+" "+item.title);
@@ -47,9 +46,7 @@ async function load(){
   const db=window.NPlayAccessClient||window.supabase.createClient("https://vajlhodqxskozuxxlujv.supabase.co","sb_publishable_uT0b4y0Bex1k1QWZoyIfKg_K0pm-yS3");
   const data=[];for(let offset=0;;offset+=500){const page=await db.from("novaplay_live_embeds").select("id,title,embed_url,stream_type,logo_url,category").eq("is_published",true).order("created_at",{ascending:false}).order("id").range(offset,offset+499);if(page.error)throw page.error;data.push(...(page.data||[]));if(!page.data||page.data.length<500)break;}
   if(sequence!==loadSequence)return;
-  const experimental=await window.NPlayTimeShiftBeta?.getChannels?.()||[];
-  if(sequence!==loadSequence)return;
-  const channels=[...experimental,...(data||[]).filter(item=>item.embed_url)];
+  const channels=(data||[]).filter(item=>item.embed_url);
   window.NPlayLiveCatalog?.setChannels(channels);
   const television=window.NPlayMusic?.select(channels,"tv")||channels;
   const previews=television.filter(item=>!window.NPlayLiveAuth?.protectedUrl(item.embed_url));
