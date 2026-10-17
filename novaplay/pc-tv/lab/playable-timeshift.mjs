@@ -12,13 +12,14 @@ const PORT=Number(process.env.PORT||process.env.TIMESHIFT_PORT||8800);
 const ROTATE=Math.max(6,Number(process.env.TIMESHIFT_ROTATE_SECONDS||30));
 const LIMIT=Math.max(10,Number(process.env.TIMESHIFT_MAX_SEGMENTS||150));
 const root=await mkdtemp(join(tmpdir(),'nplay-playable-'));
-const channels=['a','b'];let active='a',stop=false,child=null;
+const channels=['a','b'];const boundaries=Object.fromEntries(channels.map(c=>[c,new Set()]));let active='a',stop=false,child=null;
 const folders=Object.fromEntries(channels.map(c=>[c,join(root,c)]));
 await Promise.all(Object.values(folders).map(async p=>{const {mkdir}=await import('node:fs/promises');await mkdir(p);}));
 async function segmentList(c){return (await readdir(folders[c])).filter(x=>/^seg\d+\.ts$/.test(x)).sort((a,b)=>Number(a.slice(3,-3))-Number(b.slice(3,-3)));}
 async function record(c){
  active=c;
  const start=Date.now(),next=await segmentList(c),offset=next.length?Number(next.at(-1).slice(3,-3))+1:0;
+ if(offset>0)boundaries[c].add(offset);
  const ff=['-hide_banner','-loglevel','error','-nostdin','-re','-f','lavfi','-i',c==='a'?'testsrc2=size=640x360:rate=15':'smptebars=size=640x360:rate=15','-t',String(ROTATE),'-an','-c:v','libx264','-preset','ultrafast','-tune','zerolatency','-pix_fmt','yuv420p','-g','30','-sc_threshold','0','-f','segment','-segment_time','2','-segment_start_number',String(offset),'-segment_format','mpegts',join(folders[c],'seg%d.ts')];
  child=spawn('ffmpeg',ff,{stdio:['ignore','ignore','pipe']});
  let err='';child.stderr.on('data',d=>{err=(err+d.toString()).slice(-1000);});
@@ -40,8 +41,9 @@ const server=http.createServer(async(req,res)=>{
  const [,c,name]=m;
  if(name==='index.m3u8'){
  const all=await segmentList(c),list=all.slice(-18),first=list.length?Number(list[0].slice(3,-3)):0;
+ const discontinuities=[...boundaries[c]].filter(n=>n<=first).length;
  res.setHeader('Content-Type','application/vnd.apple.mpegurl');res.setHeader('Cache-Control','no-store');
- res.end(['#EXTM3U','#EXT-X-VERSION:3','#EXT-X-TARGETDURATION:2','#EXT-X-MEDIA-SEQUENCE:'+first,...list.flatMap(n=>['#EXTINF:2.0,',n])].join('\n')+'\n');return;
+ res.end(['#EXTM3U','#EXT-X-VERSION:3','#EXT-X-TARGETDURATION:2','#EXT-X-MEDIA-SEQUENCE:'+first,'#EXT-X-DISCONTINUITY-SEQUENCE:'+discontinuities,...list.flatMap(n=>[...(boundaries[c].has(Number(n.slice(3,-3)))?['#EXT-X-DISCONTINUITY']:[]),'#EXTINF:2.0,',n])].join('\n')+'\n');return;
  }
  const p=join(folders[c],name);const st=await stat(p).catch(()=>null);
  if(!st){res.writeHead(404);res.end();return;}
