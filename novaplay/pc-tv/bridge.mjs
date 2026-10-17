@@ -66,7 +66,7 @@ export function createBridge({secret,fetchUpstream=fetchMedia,fetchRoot=fetchXtr
  });
 }
 if(process.argv[1]&&import.meta.url===pathToFileURL(process.argv[1]).href){
- const engine=new MultiEngine({capacity:2});
+ const engine=new MultiEngine({capacity:3});
  const server=createBridge({secret:process.env.NPLAY_BRIDGE_KEY,engine});
  for(const name of ['SIGTERM','SIGINT'])process.once(name,()=>{void engine.close().finally(()=>{server.close();process.exit(0);});});
  server.requestTimeout=15000;server.headersTimeout=10000;server.maxHeadersCount=30;
