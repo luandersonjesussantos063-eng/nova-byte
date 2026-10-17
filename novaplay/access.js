@@ -59,6 +59,8 @@ function applyAccess(state){
   return;
  }
  hadRestrictedAccess=true;
+ $("nplay-access-wall").hidden=false;
+ document.querySelectorAll("video,audio").forEach(media=>{try{media.pause()}catch{}});
  render(state==="revoked"||state==="denied"?"denied":state==="pending"?"pending":"new");
 }
 async function check(manual=false){
