@@ -50,10 +50,10 @@ function playBlock(c,id){
  currentId=id;waiting=false;
  if(h){h.destroy();h=null;}video.pause();video.removeAttribute('src');video.load();
  const url='/channels/'+c+'/blocks/'+id+'.m3u8';
- message.textContent='Reproduzindo bloco '+id+' do Canal '+c.toUpperCase();
+ message.textContent='Carregando bloco '+id+' do Canal '+c.toUpperCase()+'...';
  if(window.Hls&&Hls.isSupported()){
   h=new Hls();h.loadSource(url);h.attachMedia(video);
-  h.on(Hls.Events.MANIFEST_PARSED,()=>{if(version===requestVersion)video.play().catch(()=>{message.textContent='Toque no vídeo para iniciar a reprodução.';});});
+  h.on(Hls.Events.MANIFEST_PARSED,()=>{if(version===requestVersion)video.play().catch(()=>{message.textContent='Reprodução pronta. Toque em ▶ para iniciar (o navegador bloqueou o início automático).';});});
   h.on(Hls.Events.ERROR,(_,d)=>{if(version===requestVersion&&d.fatal)message.textContent='Falha ao reproduzir: '+d.details;});
  }else if(video.canPlayType('application/vnd.apple.mpegurl')){
   video.src=url;video.play().catch(()=>{message.textContent='Toque no vídeo para iniciar a reprodução.';});
@@ -66,6 +66,9 @@ function nextBlock(){
  waiting=true;message.textContent='Bloco concluído. Aguardando a próxima gravação do Canal '+selected.toUpperCase()+'...';
  return false;
 }
+video.addEventListener('playing',()=>{message.textContent='▶ Reproduzindo bloco '+currentId+' do Canal '+selected.toUpperCase();});
+video.addEventListener('pause',()=>{if(!video.ended&&!waiting&&currentId!==null)message.textContent='⏸ Vídeo pausado. Toque em ▶ para continuar.';});
+video.addEventListener('waiting',()=>{if(!waiting&&currentId!==null)message.textContent='Carregando vídeo do bloco '+currentId+'...';});
 video.addEventListener('ended',()=>nextBlock());
 async function refresh(){
  try{
@@ -75,7 +78,7 @@ async function refresh(){
  const el=document.querySelector('#blocks');el.replaceChildren();const blocks=x.blocks[selected];
  if(!blocks.length){el.textContent='Aguardando o primeiro bloco completo.';return;}
  for(const b of blocks.slice().reverse()){
-  const btn=document.createElement('button');btn.textContent='▶ Gravação '+(b.order+1)+' · '+b.seconds+' segundos';
+  const btn=document.createElement('button');btn.textContent='▶ Bloco '+b.id+' · '+b.seconds+' segundos';
   btn.style.display='block';btn.style.width='100%';btn.style.marginBottom='8px';
   const c=selected;btn.onclick=()=>playBlock(c,b.id);el.append(btn);
  }
