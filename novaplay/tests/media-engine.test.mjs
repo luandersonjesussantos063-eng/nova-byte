@@ -32,8 +32,8 @@ test('engine control uses bounded JSON and preserves an explicit login failure i
 });
 test('FFmpeg receives live video/audio through a pipe and serves decodable HLS through the authenticated bridge', {timeout:25000},async t=>{
  if(spawnSync('ffmpeg',['-version'],{stdio:'ignore'}).status!==0){t.skip('FFmpeg is required for integration media test');return;}
- let opens=0,generator;
- const client={login:async()=>({account:{active:true,connections:0,limit:1,formats:['ts']}}),openTs:async(_login,signal)=>{
+ let opens=0,logins=0,generator;
+ const client={login:async()=>{if(++logins>1)throw Object.assign(Error('Second provider connection refused'),{code:'XTREAM_CONNECTION_LIMIT'});return {account:{active:true,connections:0,limit:1,formats:['ts']}};},openTs:async(_login,signal)=>{
   opens++;
   generator=spawn('ffmpeg',['-hide_banner','-loglevel','error','-re','-f','lavfi','-i','testsrc2=size=320x180:rate=25','-f','lavfi','-i','sine=frequency=440:sample_rate=48000','-c:v','libx264','-preset','ultrafast','-threads','1','-g','50','-c:a','aac','-f','mpegts','pipe:1'],{stdio:['ignore','pipe','ignore']});
   signal.addEventListener('abort',()=>generator.kill('SIGKILL'),{once:true});return {response:generator.stdout,url:source};
@@ -62,6 +62,17 @@ test('FFmpeg receives live video/audio through a pipe and serves decodable HLS t
    const resource=manifest.split('\n').find(x=>x.startsWith(gateway+'/live/'));assert.ok(resource);
    const delivered=await worker.fetch(new Request(resource),env);assert.equal(delivered.status,200);assert.equal(new Uint8Array(await delivered.arrayBuffer())[0],71);assert.equal(opens,1);
   }finally{globalThis.fetch=realFetch;}
+  // Different viewers and legacy/canonical TS URLs must share the first HLS
+  // login even when the provider would reject a second connection.
+  const tsUrls=[source.replace('/user/','/live/user/').replace('.m3u8','.ts'),source.replace('.m3u8','.ts')];
+  const viewers=await Promise.all(tsUrls.map((url,i)=>fetch(base+'/fetch',{method:'POST',headers,body:JSON.stringify({url,xtream:true,owner:String(i+1).repeat(64)})})));
+  assert.deepEqual(viewers.map(r=>r.status),[200,200]);
+  const readers=viewers.map(r=>r.body.getReader());
+  const received=await Promise.all(readers.map(r=>r.read()));
+  for(const part of received){assert.equal(part.done,false);assert.equal(part.value[0],71);}
+  await Promise.all(readers.map(r=>r.cancel()));
+  const afterDisconnect=await engine.start(source,'d'.repeat(64));assert.equal(afterDisconnect.base,data.base);
+  assert.equal(opens,1);assert.equal(logins,1);
   const status=await(await fetch(base+'/engine/status',{headers})).json();assert.equal(status.stage,'playing');assert.ok(status.bytes_received>0);assert.equal(status.channels_receiving,1);
   for(const path of ['../../etc/passwd','seg000000000.ts?x=1'])await assert.rejects(engine.asset(data.base.replace('index.m3u8',path)),{code:'ENGINE_ASSET_GONE'});
   await engine.close();assert.equal(engine.status().channels_receiving,0);

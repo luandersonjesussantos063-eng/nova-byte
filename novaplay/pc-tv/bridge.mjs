@@ -23,7 +23,7 @@ export function createBridge({secret,fetchUpstream=fetchMedia,fetchRoot=fetchXtr
  return http.createServer(async(req,res)=>{
   const json=(status,data)=>{if(res.headersSent||res.destroyed)return;const headers={'Content-Type':'application/json','Cache-Control':'no-store'};if(data.reason)headers['X-NPlay-Bridge-Error']=data.reason;res.writeHead(status,headers);res.end(JSON.stringify(data));};
   if(!authorized(req.headers.authorization,secret)){req.resume();json(401,{error:'AUTH_REQUIRED'});return;}
-  if(req.url==='/health'&&req.method==='GET'){json(200,{service:'nplay-pc-tv',version:'0.50.1',capabilities:{xtream:!!engine,media_engine:!!engine}});return;}
+  if(req.url==='/health'&&req.method==='GET'){json(200,{service:'nplay-pc-tv',version:'0.50.2',capabilities:{xtream:!!engine,media_engine:!!engine}});return;}
   if(req.url==='/engine/status'&&req.method==='GET'){json(200,engine?engine.status():{stage:'unavailable',code:'ENGINE_NOT_INSTALLED'});return;}
   if(!['/fetch','/engine/start','/xtream/inspect'].includes(req.url)||req.method!=='POST'){req.resume();json(404,{error:'NOT_FOUND'});return;}
   const controller=new AbortController();req.on('aborted',()=>controller.abort());
@@ -47,7 +47,11 @@ export function createBridge({secret,fetchUpstream=fetchMedia,fetchRoot=fetchXtr
     catch(error){json(200,{ok:false,code:ENGINE_CODES.has(error.code)?error.code:'ENGINE_PROCESS_FAILED'});}
     return;
    }
-   media=isEngineUrl(input.url)&&engine?await engine.asset(input.url):await (input.xtream?fetchRoot:fetchUpstream)(input.url,input.range,controller.signal);
+   const root=new URL(input.url);
+   const sharedTs=engine&&input.xtream&&!root.search&&!root.hash&&/^\/(?:live\/)?[^/]+\/[^/]+\/\d+\.ts$/.test(root.pathname);
+   if(isEngineUrl(input.url)&&engine)media=await engine.asset(input.url);
+   else if(sharedTs)media=await engine.stream(input.url,controller.signal,/^[a-f0-9]{64}$/.test(input.owner||'')?input.owner:'default');
+   else media=await (input.xtream?fetchRoot:fetchUpstream)(input.url,input.range,controller.signal);
    const {response,url}=media;
    const headers={'Cache-Control':'no-store','X-NPlay-Upstream-Url':url};
    for(const name of ['content-type','content-length','content-range','accept-ranges'])if(response.headers[name])headers[name]=response.headers[name];

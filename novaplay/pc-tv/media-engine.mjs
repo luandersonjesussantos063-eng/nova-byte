@@ -5,6 +5,7 @@ import {join} from 'node:path';
 import {tmpdir} from 'node:os';
 import {randomBytes,createHash} from 'node:crypto';
 import {pipeline} from 'node:stream/promises';
+import {Readable} from 'node:stream';
 import {XtreamClient,xtreamIdentity} from './xtream-client.mjs';
 export const ENGINE_ORIGIN='https://nplay-media.invalid';
 export const ENGINE_CODES=new Set(['XTREAM_ROOT_INVALID','XTREAM_CATALOG_INVALID','XTREAM_LOGIN_RESET','XTREAM_LOGIN_TIMEOUT','XTREAM_LOGIN_CONNECTION','XTREAM_LOGIN_INVALID','XTREAM_LOGIN_DENIED','XTREAM_TS_UNAVAILABLE','XTREAM_CONNECTION_LIMIT','ENGINE_SOURCE_HTTP','ENGINE_SOURCE_INVALID','ENGINE_SOURCE_RESET','ENGINE_SOURCE_CONNECTION','ENGINE_BUSY','ENGINE_START_TIMEOUT','ENGINE_PROCESS_FAILED','ENGINE_NOT_INSTALLED','ENGINE_ASSET_GONE']);
@@ -16,7 +17,7 @@ export class MediaEngine{
   this.client=client;this.ffmpeg=ffmpeg;this.mode=mode==='copy'?'copy':'compatible';this.idleMs=idleMs;this.readyMs=readyMs;this.root=root;this.current=null;this.last={stage:'idle',code:null};this.lock=Promise.resolve();
   this.sweep=setInterval(()=>{const s=this.current;if(s&&Date.now()-s.touched>this.idleMs)void this.stop(s).catch(()=>{});},2000);this.sweep.unref();
  }
- status(){const s=this.current;return {engine:'nplay-xtream-ffmpeg',version:'0.50.1',mode:this.mode,stage:s?.stage||this.last.stage,code:(s?s.error:this.last.code)||null,bytes_received:s?.bytes||0,started_at:s?.startedAt||null,account:s?.account||null,video_codec:this.mode==='copy'?'original':'h264',audio_codec:'aac',channels_receiving:s?1:0};}
+ status(){const s=this.current;return {engine:'nplay-xtream-ffmpeg',version:'0.50.2',mode:this.mode,stage:s?.stage||this.last.stage,code:(s?s.error:this.last.code)||null,bytes_received:s?.bytes||0,started_at:s?.startedAt||null,account:s?.account||null,video_codec:this.mode==='copy'?'original':'h264',audio_codec:'aac',channels_receiving:s?1:0};}
  async stop(s=this.current){
   if(!s)return;
   s.stopping=true;
@@ -28,7 +29,7 @@ export class MediaEngine{
  }
  async close(){clearInterval(this.sweep);await this.stop();}
  async start(raw,owner='default'){
-  const identity=xtreamIdentity(raw),sourceKey=createHash('sha256').update(raw).digest('hex');
+  const identity=xtreamIdentity(raw),sourceKey=createHash('sha256').update(JSON.stringify([identity.origin,identity.user,identity.password,identity.id])).digest('hex');
   let release;const previous=this.lock;this.lock=new Promise(resolve=>{release=resolve;});await previous;
   let s;
   try{
@@ -83,6 +84,33 @@ export class MediaEngine{
    await wait(100);
   }
   throw failure('ENGINE_START_TIMEOUT');
+ }
+ // Both browser transports consume the same bounded upstream receiver. A TS
+ // fallback must never create an independent provider connection per viewer.
+ async stream(raw,signal,owner='default'){
+  const ready=await this.start(raw,owner),s=this.current;
+  if(!s||!ready.base.includes('/'+s.id+'/'))throw failure('ENGINE_ASSET_GONE');
+  const engine=this;
+  async function* segments(){
+   let next=null;
+   while(!signal?.aborted&&engine.current===s&&!s.error){
+    s.touched=Date.now();
+    const manifest=await readFile(join(s.dir,'index.m3u8'),'utf8');
+    const files=manifest.split('\n').filter(x=>/^seg\d{9}\.ts$/.test(x));
+    if(next===null&&files.length)next=Number(files[Math.max(0,files.length-3)].slice(3,-3));
+    for(const file of files){
+     const sequence=Number(file.slice(3,-3));
+     if(sequence<next)continue;
+     if(signal?.aborted||engine.current!==s||s.error)return;
+     let bytes;try{bytes=await readFile(join(s.dir,file));}catch(error){if(error.code==='ENOENT')continue;throw error;}
+     if(bytes.length>24000000)throw failure('ENGINE_PROCESS_FAILED');
+     s.touched=Date.now();next=sequence+1;yield bytes;
+    }
+    await wait(200);
+   }
+  }
+  const response=Readable.from(segments());response.statusCode=200;response.headers={'content-type':'video/mp2t'};
+  return {response,url:ENGINE_ORIGIN+'/session/'+s.id+'/stream.ts'};
  }
  async asset(raw){
   const u=new URL(raw),m=/^\/session\/([a-f0-9]{32})\/(index\.m3u8|seg\d{9}\.ts)$/.exec(u.pathname),s=this.current;
