@@ -68,7 +68,7 @@ async function check(manual=false){
  busy=true;
  if(manual)render("loading");
  try{lastUser=await identify();applyAccess(await readAccess(lastUser));}
- catch{render("connection");}
+ catch{$("nplay-access-wall").hidden=false;document.querySelectorAll("video,audio").forEach(media=>{try{media.pause()}catch{}});render("connection");}
  finally{busy=false;$("nplay-access-request").disabled=false;$("nplay-access-retry").disabled=false;}
 }
 async function requestAccess(){
@@ -97,6 +97,7 @@ function start(){
  $("nplay-access-retry").onclick=()=>check(true);
  check();
  document.addEventListener("visibilitychange",()=>{if(!document.hidden)check()});
+ window.addEventListener("focus",()=>check());
  setInterval(()=>{if(!document.hidden)check()},15000);
 }
 if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",start);else start();
