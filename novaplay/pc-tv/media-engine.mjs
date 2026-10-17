@@ -33,11 +33,13 @@ export class MediaEngine{
   let s;
   try{
   s=this.current;
+  console.info(JSON.stringify({event:'media_engine_request',existing:!!s,same_source:!!s&&s.key===sourceKey,stage:s?.stage||'idle',failed:!!s?.error}));
   if(s&&(s.key!==sourceKey||s.error||s.controller.signal.aborted)){
    if(s.owner!==owner&&Date.now()-s.touched<8000&&!s.error)throw failure('ENGINE_BUSY');
    await this.stop(s);s=null;
   }
   if(!s){
+   console.info(JSON.stringify({event:'media_engine_new_session'}));
    s={key:sourceKey,owner,id:randomBytes(16).toString('hex'),controller:new AbortController(),touched:Date.now(),startedAt:new Date().toISOString(),stage:'login',bytes:0,error:null,identity};
    this.current=s;
    // Each PC has one bounded receiver. Startup remains shared across HLS retries.
