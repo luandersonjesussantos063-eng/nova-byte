@@ -1,5 +1,6 @@
 {
   "published_ids": [
+    "2026-10-16-Updating-the-Indexing-API-quota-page",
     "tag:blogger.com,1999:blog-6755709643044947179.post-6854566470509824044",
     "https://developer.chrome.com/blog/new-in-devtools-october-2026?hl=en",
     "https://developer.chrome.com/blog/html-in-canvas-ot-changes?hl=en",
@@ -43,6 +44,15 @@
     "tag:blogger.com,1999:blog-6755709643044947179.post-3564094472242054542"
   ],
   "posts": [
+    {
+      "slug": "updating-the-indexing-api-quota-page",
+      "title": "Updating the Indexing API quota page",
+      "description": "Updating the Indexing API quota page. Entenda a novidade e o impacto prático para empresas, sites, aplicativos e profissionais.",
+      "date": "2026-10-17",
+      "category": "Google Search e SEO",
+      "image": "/assets/news/updating-the-indexing-api-quota-page.svg",
+      "source": "https://developers.google.com/search/updates#october-2026"
+    },
     {
       "slug": "android-developers-blog-is-moving",
       "title": "Android Developers Blog is moving",
