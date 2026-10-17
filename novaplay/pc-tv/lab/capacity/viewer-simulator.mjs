@@ -60,7 +60,9 @@ function record(result,ms){
 async function request(path,kind='buffer'){
  const start=performance.now();
  try{
-  const res=await fetch(new URL(path,base),{
+  const target=new URL(path,base);
+  if(target.origin!==base.origin)throw Error('Cross-origin HLS reference rejected');
+  const res=await fetch(target,{
    headers:{Cookie:cookie,Accept:kind==='text'?'application/vnd.apple.mpegurl,application/json':'video/mp2t'},
    cache:'no-store',signal:AbortSignal.timeout(15000)
   });
@@ -94,7 +96,9 @@ async function viewer(index,until){
  while(Date.now()<until){
   if(position>=queue.length){
    const id=await latest(channel);
-   if(!Number.isSafeInteger(id)||id<=seenBlock){await sleep(2500);continue;}
+   if(!Number.isSafeInteger(id)){await sleep(2500);continue;}
+   // Re-read the latest completed block if no new one exists; this is a
+   // delivery-throughput benchmark, not a viewer continuity simulation.
    seenBlock=id;
    const path='/channels/'+channel+'/blocks/'+id+'.m3u8';
    const manifest=await request(path,'text');
