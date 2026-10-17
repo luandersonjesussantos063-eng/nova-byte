@@ -984,9 +984,18 @@ async function openTimeshift(channel,title){
     lastBlock=tail;
     const url=archive(first,tail);
     playerStatus("Carregando próxima gravação...");
-    if(hls){
-     hls.stopLoad();hls.loadSource(url);
-     hls.once(window.Hls.Events.MANIFEST_PARSED,()=>{if(sequence===attempt)startAutoplay(video,sequence)});
+    // Recreate MediaSource at each completed archive boundary: a finished
+    // VOD has reached endOfStream and is not a live playlist.
+    if(hls){hls.destroy();hls=null;}
+    video.pause();video.removeAttribute("src");video.load();
+    if(window.Hls?.isSupported()){
+     hls=new window.Hls({enableWorker:true,lowLatencyMode:false,maxBufferLength:45,
+      maxMaxBufferLength:120,fragLoadingTimeOut:30000,fragLoadingMaxRetry:5,fragLoadingRetryDelay:1000});
+     hls.on(window.Hls.Events.MANIFEST_PARSED,()=>{if(sequence===attempt)startAutoplay(video,sequence)});
+     hls.on(window.Hls.Events.ERROR,(_event,details)=>{
+      if(sequence===attempt&&details.fatal)playerStatus("Erro ao carregar este bloco. Abra novamente o canal de teste.");
+     });
+     hls.attachMedia(video);hls.loadSource(url);
     }else{video.src=url;video.load();startAutoplay(video,sequence);}
    }catch(error){
     if(sequence!==attempt)return;
