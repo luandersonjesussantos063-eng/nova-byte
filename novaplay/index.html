@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#080d17">
-<meta name="nplay-version" content="0.50.9">
+<meta name="nplay-version" content="0.51.0">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="NPlay">
@@ -181,6 +181,7 @@
 .nplay-notice-bottom{display:flex;justify-content:flex-end;margin-top:10px}
 @media(max-width:600px){#nplay-notice-bell{width:34px;height:34px}#nplay-notice-panel{position:fixed;top:68px;right:10px;max-height:70vh}}
 </style>
+<link rel="stylesheet" href="./assets/cinema-refresh.css?v=0.51.0">
 </head>
 <body>
 <style id="nplay-access-style">
@@ -259,6 +260,14 @@
 <symbol id="i-arrow-left" viewBox="0 0 24 24"><path d="m15 4-8 8 8 8"/></symbol>
 <symbol id="i-volume" viewBox="0 0 24 24"><path d="M3 9v6h4l5 4V5L7 9H3M16 8c3 2 3 6 0 8"/></symbol>
 </svg>
+<div id="nplay-soft-opening" hidden aria-hidden="true">
+  <div class="nplay-opening-glow"></div>
+  <div class="nplay-opening-center">
+    <span class="nplay-opening-symbol" aria-hidden="true">N</span>
+    <span class="nplay-opening-name">N<span>Play</span></span>
+    <span class="nplay-opening-line"></span>
+  </div>
+</div>
 <header class="app-header" id="app-header">
 <a href="#inicio" class="brand" id="brand-link" aria-label="NPlay, início">
   <img class="nplay-wordmark" src="./assets/brand/nplay-wordmark-v0482.svg" alt="NPlay" width="142" height="51">
@@ -452,7 +461,7 @@
 </div>
 <aside id="nplay-install-banner" hidden style="position:fixed;z-index:1000;bottom:calc(76px + env(safe-area-inset-bottom,0px));left:12px;right:12px;max-width:480px;margin:auto;padding:15px 16px;border-radius:16px;border:1px solid #5474a2;background:#122541;box-shadow:0 12px 38px #000b;color:#fff"><div style="display:flex;align-items:center;gap:12px"><img src="./assets/brand/nplay-icon-192-v0482.png" alt="" width="48" height="48" style="border-radius:12px"><div style="flex:1"><strong>Instale a NPlay</strong><div id="nplay-install-description" style="font-size:12px;color:#b8cbed;margin-top:3px">Assista com um toque na tela inicial.</div></div><button id="nplay-install-dismiss" type="button" aria-label="Fechar sugestão de instalação" style="background:transparent;color:white;border:0;font-size:20px;cursor:pointer">✕</button></div><button id="nplay-install-action" type="button" style="margin-top:12px;width:100%;background:#326ad6;color:white;border:0;border-radius:10px;padding:12px;font-weight:800;cursor:pointer">Instalar aplicativo</button></aside>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
-<footer class="app-footer"><div>NPlay V 0.50.9 · Filmes, séries e TV em português · Artes ilustrativas da NPlay · O uso comercial de cada conteúdo exige verificação dos direitos.</div></footer>
+<footer class="app-footer"><div>NPlay V 0.51.0 · Filmes, séries e TV em português · Artes ilustrativas da NPlay · O uso comercial de cada conteúdo exige verificação dos direitos.</div></footer>
 <script src="./assets/cover.js?v=0.39.2-covers2"></script>
 <script src="./assets/card-hover.js?v=0.39.2"></script>
 <script src="./assets/hero-scenes.js?v=0.39.2"></script>
@@ -465,7 +474,8 @@
 <script src="./assets/music-core.js?v=0.50.0" defer></script>
 <script src="./assets/notifications.js?v=0.50.8" defer></script>
 <script src="./assets/youtube-core.js?v=0.49.12" defer></script>
-<script src="./app.js?v=0.50.9-clean-labs" defer></script>
+<script src="./app.js?v=0.51.0-home-cleanup" defer></script>
+<script src="./assets/soft-opening.js?v=0.51.0" defer></script>
 <script src="./assets/live-preview.js?v=0.50.0" defer></script>
 <script src="./assets/hero-live.js?v=0.49.12" defer></script>
 <script src="./live-embeds.js?v=0.50.9-clean-labs" defer></script>
