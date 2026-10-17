@@ -5,18 +5,41 @@
 // This is a lab server only: never expose publicly without authentication.
 import http from 'node:http';
 import {spawn} from 'node:child_process';
-import {mkdtemp,readdir,readFile,rm,stat} from 'node:fs/promises';
+import {mkdtemp,mkdir,readdir,readFile,rename,rm,stat,writeFile} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 const PORT=Number(process.env.PORT||process.env.TIMESHIFT_PORT||8800);
 const ROTATE=Math.max(6,Number(process.env.TIMESHIFT_ROTATE_SECONDS||30));
 const LIMIT=Math.max(10,Number(process.env.TIMESHIFT_MAX_SEGMENTS||150));
-const root=await mkdtemp(join(tmpdir(),'nplay-playable-'));
+const persistent=Boolean(process.env.TIMESHIFT_DATA_DIR);
+const root=persistent?process.env.TIMESHIFT_DATA_DIR:await mkdtemp(join(tmpdir(),'nplay-playable-'));
+const stateFile=join(root,'index.json');
 const startedAt=Date.now();const stats={rotations:0,errors:0,lastRotation:null};
 const channels=['a','b'];const completed=Object.fromEntries(channels.map(c=>[c,[]]));const boundaries=Object.fromEntries(channels.map(c=>[c,new Set()]));let active='a',stop=false,child=null;
 const folders=Object.fromEntries(channels.map(c=>[c,join(root,c)]));
-await Promise.all(Object.values(folders).map(async p=>{const {mkdir}=await import('node:fs/promises');await mkdir(p);}));
+await mkdir(root,{recursive:true});
+await Promise.all(Object.values(folders).map(p=>mkdir(p,{recursive:true})));
 async function segmentList(c){return (await readdir(folders[c])).filter(x=>/^seg\d+\.ts$/.test(x)).sort((a,b)=>Number(a.slice(3,-3))-Number(b.slice(3,-3)));}
+async function loadState(){
+ if(!persistent)return;
+ try{
+  const previous=JSON.parse(await readFile(stateFile,'utf8'));
+  for(const c of channels){
+   const available=new Set(await segmentList(c));
+   const safeFiles=b=>Array.isArray(b.files)&&b.files.length>0&&b.files.every(f=>/^seg\\d+\\.ts$/.test(f)&&available.has(f));
+   completed[c]=(previous.completed?.[c]||[]).filter(safeFiles).slice(-8);
+   boundaries[c]=new Set((previous.boundaries?.[c]||[]).filter(Number.isSafeInteger));
+  }
+  console.log(JSON.stringify({event:'lab_recovered',blocks:Object.fromEntries(channels.map(c=>[c,completed[c].length]))}));
+ }catch(e){if(e.code!=='ENOENT')console.warn('lab_state_recovery_failed');}
+}
+async function saveState(){
+ if(!persistent)return;
+ const pending=stateFile+'.tmp';
+ await writeFile(pending,JSON.stringify({completed,boundaries:Object.fromEntries(channels.map(c=>[c,[...boundaries[c]]))]}));
+ await rename(pending,stateFile);
+}
+await loadState();
 async function record(c){
  active=c;
  const start=Date.now(),next=await segmentList(c),offset=next.length?Number(next.at(-1).slice(3,-3))+1:0;
@@ -30,6 +53,9 @@ async function record(c){
  const block=list.filter(n=>Number(n.slice(3,-3))>=offset);
  if(block.length>=3){completed[c].push({id:offset,files:block});while(completed[c].length>8)completed[c].shift();}
  for(const name of list.slice(0,Math.max(0,list.length-LIMIT)))await rm(join(folders[c],name),{force:true});
+ const remaining=new Set(await segmentList(c));
+ completed[c]=completed[c].filter(b=>b.files.every(n=>remaining.has(n)));
+ await saveState();
  stats.rotations++;if(exit.code!==0||exit.error)stats.errors++;stats.lastRotation={channel:c,at:new Date().toISOString(),durationSeconds:Math.round((Date.now()-start)/1000),exitCode:exit.code??null};
  console.log(JSON.stringify({event:'lab_rotation',channel:c,seconds:Math.round((Date.now()-start)/1000),segments:(await segmentList(c)).length,exit,error:err||undefined}));
 }
@@ -92,7 +118,7 @@ const server=http.createServer(async(req,res)=>{
  try{
  const url=new URL(req.url,'http://localhost');
  if(url.pathname==='/'){res.setHeader('Content-Type','text/html; charset=utf-8');res.end(html);return;}
- if(url.pathname==='/metrics'){const disk=Object.fromEntries(await Promise.all(channels.map(async c=>{const names=await segmentList(c);let bytes=0;for(const n of names){const info=await stat(join(folders[c],n)).catch(()=>null);bytes+=info?.size||0;}return [c,{segments:names.length,bytes,completedBlocks:completed[c].length,recordedSeconds:completed[c].reduce((sum,b)=>sum+b.files.length*2,0)}];})));res.setHeader('Content-Type','application/json');res.setHeader('Cache-Control','no-store');res.end(JSON.stringify({service:'nplay-timeshift-lab',source:'synthetic',uptimeSeconds:Math.floor((Date.now()-startedAt)/1000),activeRecorder:active,rotations:stats.rotations,recordingErrors:stats.errors,lastRotation:stats.lastRotation,channels:disk}));return;}
+ if(url.pathname==='/metrics'){const disk=Object.fromEntries(await Promise.all(channels.map(async c=>{const names=await segmentList(c);let bytes=0;for(const n of names){const info=await stat(join(folders[c],n)).catch(()=>null);bytes+=info?.size||0;}return [c,{segments:names.length,bytes,completedBlocks:completed[c].length,recordedSeconds:completed[c].reduce((sum,b)=>sum+b.files.length*2,0)}];})));res.setHeader('Content-Type','application/json');res.setHeader('Cache-Control','no-store');res.end(JSON.stringify({service:'nplay-timeshift-lab',source:'synthetic',storageMode:persistent?'persistent':'temporary',uptimeSeconds:Math.floor((Date.now()-startedAt)/1000),activeRecorder:active,rotations:stats.rotations,recordingErrors:stats.errors,lastRotation:stats.lastRotation,channels:disk}));return;}
  if(url.pathname==='/status'){res.setHeader('Content-Type','application/json');res.setHeader('Cache-Control','no-store');res.end(JSON.stringify({active,blocks:Object.fromEntries(channels.map(c=>[c,completed[c].map((b,order)=>({id:b.id,order,seconds:b.files.length*2}))]))}));return;}
  const m=/^\/channels\/(a|b)\/(index\.m3u8|seg\d+\.ts|blocks\/\d+\.m3u8|archive\/\d+\.m3u8)$/.exec(url.pathname);
  if(!m){res.writeHead(404);res.end();return;}
@@ -126,5 +152,11 @@ const server=http.createServer(async(req,res)=>{
 });
 server.listen(PORT,'0.0.0.0',()=>console.log('NPlay time-shift lab on http://127.0.0.1:'+PORT));
 let shuttingDown=false;
-async function shutdown(){if(shuttingDown)return;shuttingDown=true;stop=true;child?.kill('SIGTERM');server.close();await recordingLoop;await rm(root,{recursive:true,force:true});}
+async function shutdown(){
+ if(shuttingDown)return;
+ shuttingDown=true;stop=true;child?.kill('SIGTERM');
+ const closed=new Promise(resolve=>server.close(resolve));
+ await recordingLoop;await closed;
+ if(!persistent)await rm(root,{recursive:true,force:true});
+}
 process.once('SIGTERM',shutdown);process.once('SIGINT',shutdown);
