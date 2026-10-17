@@ -44,10 +44,11 @@ async function readPlaylist(){
     if(done)break;
     total+=value.byteLength;
     if(total>16_000_000)throw Error('PLAYLIST_TOO_LARGE');
-    if(total>8192&&records.length===0&&!left.includes('#EXTM3U')&&!left.includes('#EXTINF'))throw Error('PLAYLIST_INVALID_FORMAT');
+    // The stream may start with a large chunk; classify only after parsing.
     left+=dec.decode(value,{stream:true});
     const lines=left.split(/\r?\n/);left=lines.pop();
     for(const line of lines)consume(line);
+    if(total>4096&&records.length===0&&(/^\\s*<!doctype html/i.test(left)||/^\\s*<html/i.test(left)))throw Error('PLAYLIST_HTML');
     // Once both named channels are found there is no need to wait for a slow upstream to close.
     if(['a','b'].every(c=>records.some(item=>norm(item.name).includes(norm(requested[c])))))break;
   }
@@ -102,8 +103,11 @@ export async function sourceFor(channel){
  try{sources=await readXtreamChannels();}
  catch(e){
   apiFailure=safeSourceError(e);
+  console.log(JSON.stringify({event:'lab_xtream_api_failed',code:apiFailure}));
   method='m3u';
-  const all=await readPlaylist();
+  let all;
+  try{all=await readPlaylist();}
+  catch(e2){console.error(JSON.stringify({event:'lab_m3u_failed',code:safeSourceError(e2)}));throw e2;}
   sources={};const taken=new Set();
   for(const c of ['a','b']){
     const q=norm(requested[c]);
@@ -119,7 +123,7 @@ export async function sourceFor(channel){
 export function dropSourceCache(){cache=null;}
 export function safeSourceError(err){
  const m=String(err?.message || err || 'SOURCE_ERROR');
- if(/^(PLAYLIST_HTTP_\d+|PLAYLIST_TOO_LARGE|PLAYLIST_EMPTY|PLAYLIST_INVALID_FORMAT|PLAYLIST_TIMEOUT|PLAYLIST_NOT_CONFIGURED|SOURCE_(?:URL_INVALID|SCHEME_INVALID|HOST_BLOCKED)|CHANNEL_[AB]_NOT_FOUND|XTREAM_(?:CREDENTIALS_UNAVAILABLE|API_TIMEOUT|API_TOO_LARGE|API_NOT_JSON|API_NOT_STREAMS|API_HTTP_\d+))$/.test(m))return m;
+ if(/^(PLAYLIST_HTTP_\d+|PLAYLIST_TOO_LARGE|PLAYLIST_EMPTY|PLAYLIST_HTML|PLAYLIST_INVALID_FORMAT|PLAYLIST_TIMEOUT|PLAYLIST_NOT_CONFIGURED|SOURCE_(?:URL_INVALID|SCHEME_INVALID|HOST_BLOCKED)|CHANNEL_[AB]_NOT_FOUND|XTREAM_(?:CREDENTIALS_UNAVAILABLE|API_TIMEOUT|API_TOO_LARGE|API_NOT_JSON|API_NOT_STREAMS|API_HTTP_\d+))$/.test(m))return m;
  const cause=String(err?.cause?.code||err?.code||'');
  const allowed=new Set(['ECONNRESET','ECONNREFUSED','ENOTFOUND','EAI_AGAIN','ETIMEDOUT','UND_ERR_SOCKET','UND_ERR_CONNECT_TIMEOUT','ERR_TLS_CERT_ALTNAME_INVALID','CERT_HAS_EXPIRED']);
  if(allowed.has(cause))return 'SOURCE_'+cause;
