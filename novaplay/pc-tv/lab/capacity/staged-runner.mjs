@@ -66,3 +66,30 @@ if(process.env.CAPACITY_GATEWAY_HEALTH_CHECK==="1"){
   }catch(error){console.log(JSON.stringify({event:"capacity_gateway_health",ok:false,stage:"network_or_parse_error",code:error?.cause?.code||error?.name||"UNKNOWN"}));}
  })();
 }
+
+if(process.env.CAPACITY_PLAYLIST_CHECK==="1"){
+ (async()=>{
+  const base="http://127.0.0.1:"+port+"/";
+  try{
+   await sleep(70000);
+   const login=await fetch(base+"login",{method:"POST",redirect:"manual",
+    headers:{"Content-Type":"application/x-www-form-urlencoded"},
+    body:new URLSearchParams({pin:process.env.TIMESHIFT_VIEW_PIN})});
+   const cookie=login.headers.get("set-cookie")?.match(/^nplay_lab_auth=[a-f0-9]+/)?.[0];
+   if(login.status!==303||!cookie)throw Error("login_failed");
+   const results={};
+   for(const c of ["a","b"]){
+    const r=await fetch(base+"channels/"+c+"/index.m3u8",{headers:{Cookie:cookie}});
+    const manifest=await r.text();
+    const ids=[...manifest.matchAll(/^seg(\d+)\.ts$/gm)].map(m=>Number(m[1]));
+    const durations=[...manifest.matchAll(/^#EXTINF:([\d.]+)/gm)].map(m=>Number(m[1]));
+    const first=Number(manifest.match(/^#EXT-X-MEDIA-SEQUENCE:(\d+)/m)?.[1]||-1);
+    results[c]={status:r.status,segments:ids.length,mediaSequence:first,hasEndlist:manifest.includes("#EXT-X-ENDLIST"),
+     monotonic:ids.every((n,i)=>i===0||n===ids[i-1]+1),aligned:ids.length===durations.length,
+     discontinuities:(manifest.match(/^#EXT-X-DISCONTINUITY$/gm)||[]).length,
+     valid:r.ok&&ids.length>=10&&!manifest.includes("#EXT-X-ENDLIST")&&ids.length===durations.length&&ids.every((n,i)=>i===0||n===ids[i-1]+1)&&first===ids[0]};
+   }
+   console.log(JSON.stringify({event:"capacity_playlist_check",results}));
+  }catch(err){console.log(JSON.stringify({event:"capacity_playlist_check",error:String(err.message||err).slice(0,100)}));}
+ })();
+}
