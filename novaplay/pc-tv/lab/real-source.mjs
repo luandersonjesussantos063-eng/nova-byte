@@ -62,24 +62,64 @@ async function readPlaylist(){
   try{await reader?.cancel();}catch{}
  }
 }
+async function readXtreamChannels(){
+  const u=allowedUrl(playlistUrl);
+  const username=u.searchParams.get('username');
+  const password=u.searchParams.get('password');
+  if(!username||!password)throw Error('XTREAM_CREDENTIALS_UNAVAILABLE');
+  const api=allowedUrl(new URL('/player_api.php',u).href);
+  api.searchParams.set('username',username);
+  api.searchParams.set('password',password);
+  api.searchParams.set('action','get_live_streams');
+  let res;
+  try{res=await fetch(api,{signal:AbortSignal.timeout(18000),redirect:'error'});}
+  catch(e){if(e?.name==='TimeoutError')throw Error('XTREAM_API_TIMEOUT');throw e;}
+  if(!res.ok)throw Error('XTREAM_API_HTTP_'+res.status);
+  const length=Number(res.headers.get('content-length')||0);
+  if(length>12_000_000)throw Error('XTREAM_API_TOO_LARGE');
+  const txt=await res.text();
+  if(txt.length>12_000_000)throw Error('XTREAM_API_TOO_LARGE');
+  let parsed;
+  try{parsed=JSON.parse(txt);}catch{throw Error('XTREAM_API_NOT_JSON');}
+  if(!Array.isArray(parsed))throw Error('XTREAM_API_NOT_STREAMS');
+  const needed={};const taken=new Set();
+  for(const c of ['a','b']){
+    const name=norm(requested[c]);
+    const matches=parsed.filter(i=>Number.isInteger(Number(i.stream_id))&&Number(i.stream_id)>0&&norm(i.name).includes(name)&&!taken.has(i.stream_id));
+    // Best effort exact match before accepting a substring, e.g. HD/FHD variants
+    const entry=matches.find(i=>norm(i.name)===name)||matches[0];
+    if(!entry)throw Error('CHANNEL_'+c.toUpperCase()+'_NOT_FOUND');
+    const target=allowedUrl(new URL('/live/'+encodeURIComponent(username)+'/'+encodeURIComponent(password)+'/'+String(entry.stream_id)+'.m3u8',u).href);
+    needed[c]={name:String(entry.name).slice(0,100),url:target.href};
+    taken.add(entry.stream_id);
+  }
+  return needed;
+}
 export async function sourceFor(channel){
  if(!playlistUrl)throw Error('PLAYLIST_NOT_CONFIGURED');
  if(cache&&Date.now()<cache.until)return cache.sources[channel];
- const all=await readPlaylist();
- const sources={};const taken=new Set();
- for(const c of ['a','b']){
-   const q=norm(requested[c]);
-   const candidate=all.find(item=>norm(item.name).includes(q)&&!taken.has(item.url));
-   if(!candidate)throw Error('CHANNEL_'+c.toUpperCase()+'_NOT_FOUND');
-   sources[c]=candidate;taken.add(candidate.url);
+ let sources,method='xtream-api',apiFailure='';
+ try{sources=await readXtreamChannels();}
+ catch(e){
+  apiFailure=safeSourceError(e);
+  method='m3u';
+  const all=await readPlaylist();
+  sources={};const taken=new Set();
+  for(const c of ['a','b']){
+    const q=norm(requested[c]);
+    const candidate=all.find(item=>norm(item.name).includes(q)&&!taken.has(item.url));
+    if(!candidate)throw Error('CHANNEL_'+c.toUpperCase()+'_NOT_FOUND');
+    sources[c]=candidate;taken.add(candidate.url);
+  }
  }
  cache={sources,until:Date.now()+10*60*1000};
+ console.log(JSON.stringify({event:'lab_sources_found',method,apiFailure:apiFailure||undefined,channels:['a','b']}));
  return sources[channel];
 }
 export function dropSourceCache(){cache=null;}
 export function safeSourceError(err){
  const m=String(err?.message || err || 'SOURCE_ERROR');
- if(/^(PLAYLIST_HTTP_\d+|PLAYLIST_TOO_LARGE|PLAYLIST_EMPTY|PLAYLIST_INVALID_FORMAT|PLAYLIST_TIMEOUT|PLAYLIST_NOT_CONFIGURED|SOURCE_(?:URL_INVALID|SCHEME_INVALID|HOST_BLOCKED)|CHANNEL_[AB]_NOT_FOUND)$/.test(m))return m;
+ if(/^(PLAYLIST_HTTP_\d+|PLAYLIST_TOO_LARGE|PLAYLIST_EMPTY|PLAYLIST_INVALID_FORMAT|PLAYLIST_TIMEOUT|PLAYLIST_NOT_CONFIGURED|SOURCE_(?:URL_INVALID|SCHEME_INVALID|HOST_BLOCKED)|CHANNEL_[AB]_NOT_FOUND|XTREAM_(?:CREDENTIALS_UNAVAILABLE|API_TIMEOUT|API_TOO_LARGE|API_NOT_JSON|API_NOT_STREAMS|API_HTTP_\d+))$/.test(m))return m;
  const cause=String(err?.cause?.code||err?.code||'');
  const allowed=new Set(['ECONNRESET','ECONNREFUSED','ENOTFOUND','EAI_AGAIN','ETIMEDOUT','UND_ERR_SOCKET','UND_ERR_CONNECT_TIMEOUT','ERR_TLS_CERT_ALTNAME_INVALID','CERT_HAS_EXPIRED']);
  if(allowed.has(cause))return 'SOURCE_'+cause;
