@@ -10,6 +10,30 @@ import uuid
 
 LOG = logging.getLogger('nplay-importer')
 
+def cleanup_adaptive_cache(root):
+    """Clear only NPlay's orphaned adaptive video caches, never job downloads or R2.
+
+    Call when the single local importer worker is idle / stopped. Cache folders
+    use stable 24-character hex identifiers and contain disposable R2 copies.
+    """
+    cache = Path(root).resolve() / 'adaptive-jobs'
+    if cache.is_symlink() or not cache.is_dir() or cache.resolve() != cache:
+        return 0
+    removed = 0
+    for folder in cache.iterdir():
+        try:
+            if not re.fullmatch(r'[0-9a-f]{24}', folder.name):
+                continue
+            if folder.is_symlink() or not folder.is_dir() or folder.resolve().parent != cache:
+                continue
+            shutil.rmtree(folder)
+            removed += 1
+        except Exception as exc:
+            LOG.warning('Adaptive cache cleanup deferred (%s)', type(exc).__name__)
+    if removed:
+        LOG.info('Cleared %d abandoned adaptive-job temporary folders', removed)
+    return removed
+
 
 def cleanup_published_imports(db, r2, bucket, root, recovery):
     root, recovery = Path(root).resolve(), Path(recovery).resolve()
@@ -44,6 +68,7 @@ def cleanup_published_imports(db, r2, bucket, root, recovery):
                 continue
             remote = r2.head_object(Bucket=bucket, Key=key)
             if remote.get('ContentLength') != size or remote.get('Metadata', {}).get('sha256') != digest:
+                LOG.warning('Verified cleanup deferred for %s: remote R2 object does not match local receipt', folder.name)
                 continue
             # Preserve the small receipt. Only job-owned downloads/output are removed.
             for child in folder.iterdir():
