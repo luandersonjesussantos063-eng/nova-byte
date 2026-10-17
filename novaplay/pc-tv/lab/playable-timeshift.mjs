@@ -70,7 +70,7 @@ video.addEventListener('playing',()=>{message.textContent='▶ Reproduzindo bloc
 video.addEventListener('pause',()=>{if(!video.ended&&!waiting&&currentId!==null)message.textContent='⏸ Vídeo pausado. Toque em ▶ para continuar.';});
 video.addEventListener('waiting',()=>{if(!waiting&&currentId!==null)message.textContent='Carregando vídeo do bloco '+currentId+'...';});
 video.addEventListener('timeupdate',()=>{if(!video.duration||video.duration-video.currentTime>12)return;const next=(known[selected]||[]).find(b=>b.id>currentId);if(next)prefetchBlock(selected,next.id);});
-async function prefetchBlock(c,id){const key=c+':'+id;if(prefetched.has(key))return;prefetched.add(key);try{const url='/channels/'+c+'/blocks/'+id+'.m3u8';const body=await(await fetch(url)).text();const lines=body.split('\n').filter(line=>line&&!line.startsWith('#'));await Promise.all(lines.slice(0,4).map(line=>fetch(new URL(line,url).href).catch(()=>{})));}catch{prefetched.delete(key);}}
+async function prefetchBlock(c,id){const key=c+':'+id;if(prefetched.has(key))return;prefetched.add(key);try{const url='/channels/'+c+'/blocks/'+id+'.m3u8';const body=await(await fetch(url)).text();const lines=body.split('\n').filter(line=>line&&!line.startsWith('#'));await Promise.all(lines.slice(0,4).map(line=>fetch(new URL(line,new URL(url,location.origin)).href).catch(()=>{})));}catch{prefetched.delete(key);}}
 video.addEventListener('ended',()=>nextBlock());
 async function refresh(){
  try{
