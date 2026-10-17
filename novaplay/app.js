@@ -942,7 +942,25 @@ const TIMESHIFT_RELAY_ORIGIN="https://nplay-timeshift-gateway.luandersonjesussan
 let timeShiftOpenSequence=0;
 async function openTimeshift(channel,title){
  if(channel!=="a"&&channel!=="b")return false;
- const openSequence=++timeShiftOpenSequence;
+ const openSequence=++timeShiftOpenSequence,displayName=String(title||"Canal de teste");
+ const standbyId="timeshift-"+channel;
+ // Open the real NPlay player immediately, even during server authentication.
+ // The previous version showed a toast and never opened a card on lab errors.
+ window.NovaPlayHeroScenes?.stop?.();window.NPlayHeroLive?.stop?.();
+ window.NovaPlayHover?.close?.();stopHeroPreview();
+ $("detail-layer").hidden=true;selected=null;stopPlayback();
+ current={item:{id:standbyId,title:displayName,kind:"tv",live:true,timeShiftTest:true,labChannel:channel},episode:null};
+ const layer=$("player-layer");
+ layer.hidden=false;document.body.classList.add("modal-open");
+ $("player-heading").textContent="TESTE · "+displayName;
+ $("player-title").textContent=displayName;
+ $("player-error").textContent="";
+ $("retry-btn").hidden=true;$("fallback-btn").hidden=true;
+ $("video").hidden=true;
+ $("cinema-controls").hidden=true;
+ enterCinema();
+ playerStatus("Conectando ao laboratório e localizando gravações…");
+ const initialAttempt=attempt;
  try{
   const client=window.NPlayAccessClient||remoteDb;
   const result=await client?.auth?.getSession(),session=result?.data?.session;
@@ -951,13 +969,16 @@ async function openTimeshift(channel,title){
   const headers={Authorization:"Bearer "+jwt};
   async function state(){
    const r=await fetch(TIMESHIFT_RELAY_ORIGIN+"/status",{headers,cache:"no-store",signal:AbortSignal.timeout(12000)});
-   if(!r.ok)throw Error(r.status===403?"Seu usuário não tem acesso ao laboratório.":r.status===503?"A ligação privada do laboratório ainda não está configurada.":"O laboratório está temporariamente indisponível.");
+   if(!r.ok){
+    let details={};try{details=await r.json()}catch{}
+    throw Error(details.code==="LAB_COOKIE_REJECTED"?"A senha privada entre Cloudflare e Railway não confere. Confira TIMESHIFT_VIEW_PIN nas configurações do gateway.":r.status===403?"Seu usuário não tem acesso ao laboratório.":r.status===503?"A ligação privada do laboratório ainda não está configurada.":details.error||"O laboratório está temporariamente indisponível.");
+   }
    return r.json();
   }
   const data=await state();
-  if(openSequence!==timeShiftOpenSequence)return false;
+  if(openSequence!==timeShiftOpenSequence||initialAttempt!==attempt||layer.hidden)return false;
   const blocks=data.blocks?.[channel]||[];
-  if(!blocks.length)throw Error("Aguardando o primeiro bloco gravado do canal.");
+  if(!blocks.length)throw Error("Ainda não há blocos prontos neste canal. Tente novamente em 30 segundos.");
   const start=blocks[Math.max(0,blocks.length-3)].id,end=blocks[blocks.length-1].id;
   const archive=(first,last)=>{
    const u=new URL("/channels/"+channel+"/archive/"+first+".m3u8",TIMESHIFT_RELAY_ORIGIN);
@@ -1006,7 +1027,11 @@ async function openTimeshift(channel,title){
   video.onended=()=>{if(waitTimeout){clearTimeout(waitTimeout);waitTimeout=null;}next()};
   return true;
  }catch(error){
-  if(openSequence===timeShiftOpenSequence)toast(error.message||"Não foi possível abrir o laboratório.");
+  if(openSequence===timeShiftOpenSequence&&initialAttempt===attempt&&!layer.hidden){
+   playbackFailed(error.message||"Não foi possível abrir o laboratório.",initialAttempt);
+   $("player-loading").hidden=true;
+   $("retry-btn").hidden=false;
+  }
   return false;
  }
 }
@@ -1271,7 +1296,7 @@ $("player-issue-retry").onclick=()=>{if(current)play(current.item,current.episod
 
 $("hero-preview-close").onclick=stopHeroPreview;
 $("player-back").onclick=()=>closePlayer();$("player-close").onclick=()=>closePlayer();
-$("retry-btn").onclick=()=>{if(current)play(current.item,current.episode)};
+$("retry-btn").onclick=()=>{if(!current)return;if(current.item?.timeShiftTest)openTimeshift(current.item.labChannel,current.item.title);else play(current.item,current.episode)};
 $("fallback-btn").onclick=useFallback;
 $("close-details").onclick=closeDetails;
  $("detail-back").onclick=closeDetails;
