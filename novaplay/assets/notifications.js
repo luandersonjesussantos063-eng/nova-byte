@@ -77,7 +77,8 @@ async function connect(){
 }
 function init(){
  setup();connect();
- setInterval(()=>{if(!ready)connect();else if(!document.hidden)refresh()},60000);
+ setInterval(()=>{if(!ready)connect();else if(!document.hidden)refresh()},ready?60000:6000);
+ setInterval(()=>{if(ready&&!document.hidden)refresh()},60000);
  document.addEventListener("visibilitychange",()=>{if(!document.hidden)refresh()});
  window.addEventListener("focus",()=>{if(!ready)connect();else refresh()});
 }
