@@ -3,6 +3,14 @@
 const url="https://vajlhodqxskozuxxlujv.supabase.co",key="sb_publishable_uT0b4y0Bex1k1QWZoyIfKg_K0pm-yS3";
 const $=id=>document.getElementById(id);
 let client=null,busy=false,lastState="loading",lastUser=null,hadRestrictedAccess=false,sdkWait=0;
+function nameField(){
+ let field=document.getElementById("nplay-access-name");
+ if(field)return field;
+ field=document.createElement("input");field.id="nplay-access-name";field.type="text";field.autocomplete="name";field.maxLength=80;field.placeholder="Seu nome completo";field.required=true;
+ field.style.cssText="display:block;width:100%;box-sizing:border-box;padding:13px;margin:12px 0;border-radius:10px;background:#15243c;color:white;border:1px solid #6481a8;font-size:16px";
+ $("nplay-access-request").before(field);
+ return field;
+}
 function render(state){
  lastState=state;
  const copy={
@@ -15,6 +23,7 @@ function render(state){
  }[state];
  $("nplay-access-title").textContent=copy[0];$("nplay-access-status").textContent=copy[1];$("nplay-access-hint").textContent=copy[2];
  $("nplay-access-wall").dataset.state=state;
+ nameField().hidden=state!=="new";
  $("nplay-access-request").hidden=state!=="new";
  $("nplay-access-request").disabled=busy;
  $("nplay-access-retry").hidden=["loading","sending"].includes(state);
@@ -90,7 +99,9 @@ async function requestAccess(){
   lastUser=await identify();
   const state=await readAccess(lastUser);
   if(state!=="new"){applyAccess(state);return;}
-  const {error}=await client.from("novaplay_access_requests").insert({user_id:lastUser.id,device_label:(navigator.userAgent||"Dispositivo").slice(0,110),status:"pending"});
+  const displayName=nameField().value.trim();
+  if(displayName.length<2){render("new");nameField().focus();return;}
+  const {error}=await client.from("novaplay_access_requests").insert({user_id:lastUser.id,display_name:displayName,device_label:(navigator.userAgent||"Dispositivo").slice(0,110),status:"pending"});
   if(error&&error.code!=="23505")throw error;
   // Duplicate requests are resolved by reading the existing status, never by
   // overwriting a denial or an approval.
