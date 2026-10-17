@@ -91,5 +91,9 @@ def cleanup_published_imports(db, r2, bucket, root, recovery):
             continue
         except Exception as exc:
             # Network/permission failures preserve remaining files and retry next pass.
-            LOG.warning('Local cleanup deferred for %s (%s)', folder.name, type(exc).__name__)
+            # Report the R2 error code (not credentials) so an invalid token
+            # or SignatureDoesNotMatch can be corrected instead of silently
+            # keeping gigabytes of local copies forever.
+            code = getattr(exc, 'response', {}).get('Error', {}).get('Code', type(exc).__name__)
+            LOG.warning('Local cleanup deferred for %s (R2/disk code: %s)', folder.name, code)
     return cleaned
