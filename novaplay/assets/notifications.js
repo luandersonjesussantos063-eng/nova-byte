@@ -38,6 +38,15 @@ async function refresh(){
   return;
  }
  news=data||[];
+ // Every published NPlay version automatically creates a local unread notice.
+ // No database write, no client privileges and no personal data are needed.
+ const version=document.querySelector('meta[name="nplay-version"]')?.content||"";
+ if(/^\d+\.\d+\.\d+$/.test(version)){
+  const identifier=-Number(version.split(".").map((part,i)=>String(Number(part)).padStart(i===0?1:3,"0")).join(""));
+  news.unshift({id:identifier,title:"NPlay atualizada · versão "+version,
+   body:"Uma nova versão da NPlay está disponível. Confira as melhorias e continue aproveitando seus conteúdos.",
+   category:"atualizacao",created_at:new Date().toISOString()});
+ }
  paint();
 }
 function openPanel(show){
