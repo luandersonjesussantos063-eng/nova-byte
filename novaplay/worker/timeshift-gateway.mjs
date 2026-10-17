@@ -45,7 +45,11 @@ export default {async fetch(req,env){
    if(!Array.isArray(data.blocks?.a)||!Array.isArray(data.blocks?.b)){
     return json({ok:false,stage:"cookie_rejected"});
    }
-   return json({ok:true,stage:"authenticated"});
+   // Operational counters only: never return channel media, IDs, or credentials.
+   return json({ok:true,stage:"authenticated",
+     blocks:{a:data.blocks.a.length,b:data.blocks.b.length},
+     bufferedSeconds:{a:Math.round(data.blocks.a.reduce((n,b)=>n+(Number(b.seconds)||0),0)),
+       b:Math.round(data.blocks.b.reduce((n,b)=>n+(Number(b.seconds)||0),0))}});
   }catch{return json({ok:false,stage:"upstream_connection"},502);}
  }
  if(req.method!=="GET"&&req.method!=="HEAD")return json({error:"Método inválido."},405);
