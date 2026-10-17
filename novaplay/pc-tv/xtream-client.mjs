@@ -67,10 +67,19 @@ export class XtreamClient{
   const {identity:i,session}=login;
   const candidates=[`${i.origin}/live/${encodeURIComponent(i.user)}/${encodeURIComponent(i.password)}/${i.id}.m3u8`,`${i.origin}/${encodeURIComponent(i.user)}/${encodeURIComponent(i.password)}/${i.id}.m3u8`];
   for(let n=0;n<candidates.length;n++){
-   const media=await this.fetcher(candidates[n],null,signal,{...session,headerTimeout:8000});
-   if(media.response.statusCode===404&&n===0){media.response.destroy();continue;}
-   if(media.response.statusCode!==200){media.response.destroy();throw Object.assign(Error('HLS source denied'),{code:'ENGINE_SOURCE_HTTP'});}
-   return media;
+   try{
+    const media=await this.fetcher(candidates[n],null,signal,{...session,headerTimeout:8000});
+    if(media.response.statusCode===404&&n===0){media.response.destroy();continue;}
+    if(media.response.statusCode!==200){media.response.destroy();throw Object.assign(Error('HLS source denied'),{code:'ENGINE_SOURCE_HTTP'});}
+    return media;
+   }catch(error){
+    if(error.code==='ECONNRESET'&&n===0&&!signal.aborted){
+     console.warn(JSON.stringify({event:'media_hls_source_reset_retry',candidate:1}));
+     await new Promise(resolve=>setTimeout(resolve,350));continue;
+    }
+    if(error.code?.startsWith('ENGINE_'))throw error;
+    throw Object.assign(Error('HLS media connection failed'),{code:error.code==='ECONNRESET'?'ENGINE_SOURCE_RESET':'ENGINE_SOURCE_CONNECTION'});
+   }
   }
   throw Object.assign(Error('HLS unavailable'),{code:'ENGINE_SOURCE_HTTP'});
  }
