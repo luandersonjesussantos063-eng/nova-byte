@@ -104,7 +104,7 @@ const server=http.createServer(async(req,res)=>{
  const lines=['#EXTM3U','#EXT-X-VERSION:3','#EXT-X-PLAYLIST-TYPE:VOD','#EXT-X-TARGETDURATION:2','#EXT-X-MEDIA-SEQUENCE:0'];
  blocks.forEach((b,i)=>{if(i)lines.push('#EXT-X-DISCONTINUITY');for(const n of b.files)lines.push('#EXTINF:2.0,','../'+n);});
  lines.push('#EXT-X-ENDLIST');
- res.setHeader('Content-Type','application/vnd.apple.mpegurl');res.setHeader('Cache-Control','no-store');res.end(lines.join('\\n')+'\\n');return;
+ res.setHeader('Content-Type','application/vnd.apple.mpegurl');res.setHeader('Cache-Control','no-store');res.end(lines.join('\n')+'\n');return;
  }
  if(name.startsWith('blocks/')){
  const id=Number(name.slice(7,-5)),block=completed[c].find(b=>b.id===id);
