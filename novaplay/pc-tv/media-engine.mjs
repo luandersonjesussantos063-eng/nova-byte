@@ -79,10 +79,10 @@ export class MediaEngine{
   s.child.stderr.resume();s.child.stdin.on('error',()=>{});
   s.closed=new Promise(resolve=>s.child.once('close',resolve));
   s.child.on('error',error=>{s.error=error.code==='ENOENT'?'ENGINE_NOT_INSTALLED':'ENGINE_PROCESS_FAILED';});
-  s.child.on('close',()=>{console.warn(JSON.stringify({event:'media_ffmpeg_closed',session:s.id.slice(0,8),stopping:!!s.stopping}));if(!signal.aborted){s.error||='ENGINE_PROCESS_FAILED';s.stage='failed';s.controller.abort();s.input.destroy();this.last={stage:'failed',code:s.error};}});
+  s.child.on('close',(exitCode,exitSignal)=>{console.warn(JSON.stringify({event:'media_ffmpeg_closed',session:s.id.slice(0,8),stopping:!!s.stopping,exit_code:exitCode,exit_signal:exitSignal,bytes_received:s.bytes,input_idle_seconds:Math.floor((Date.now()-s.lastInputAt)/1000)}));if(!signal.aborted){s.error||='ENGINE_PROCESS_FAILED';s.stage='failed';s.controller.abort();s.input.destroy();this.last={stage:'failed',code:s.error};}});
   s.input.on('data',chunk=>{s.bytes+=chunk.length;s.lastInputAt=Date.now();s.stallLogged=false;});
   s.monitor=setInterval(()=>{if(s.stopping||s.error||s.stage!=='playing')return;const stalledMs=Date.now()-s.lastInputAt;if(stalledMs>12000&&!s.stallLogged){s.stallLogged=true;console.warn(JSON.stringify({event:'media_upstream_stalled',stalled_seconds:Math.floor(stalledMs/1000),session:s.id.slice(0,8)}));}},3000);s.monitor.unref();
-  s.feed=pipeline(s.input,s.child.stdin,{signal}).catch(()=>{if(!signal.aborted){s.error||='ENGINE_SOURCE_CONNECTION';s.stage='failed';this.last={stage:'failed',code:s.error};s.controller.abort();s.child.kill('SIGTERM');}});
+  s.feed=pipeline(s.input,s.child.stdin,{signal}).catch(error=>{if(!signal.aborted){console.warn(JSON.stringify({event:'media_input_pipeline_failed',session:s.id.slice(0,8),code:String(error?.code||'UNKNOWN').slice(0,50)}));}if(!signal.aborted){s.error||='ENGINE_SOURCE_CONNECTION';s.stage='failed';this.last={stage:'failed',code:s.error};s.controller.abort();s.child.kill('SIGTERM');}});
   const deadline=Date.now()+this.readyMs;
   while(Date.now()<deadline){
    if(s.error)throw failure(s.error);
