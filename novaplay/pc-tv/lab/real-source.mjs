@@ -55,5 +55,8 @@ export function dropSourceCache(){cache=null;}
 export function safeSourceError(err){
  const m=String(err?.message || err || 'SOURCE_ERROR');
  if(/^(PLAYLIST_HTTP_\d+|PLAYLIST_TOO_LARGE|PLAYLIST_NOT_CONFIGURED|SOURCE_(?:URL_INVALID|SCHEME_INVALID|HOST_BLOCKED)|CHANNEL_[AB]_NOT_FOUND)$/.test(m))return m;
+ const cause=String(err?.cause?.code||err?.code||'');
+ const allowed=new Set(['ECONNRESET','ECONNREFUSED','ENOTFOUND','EAI_AGAIN','ETIMEDOUT','UND_ERR_SOCKET','UND_ERR_CONNECT_TIMEOUT','ERR_TLS_CERT_ALTNAME_INVALID','CERT_HAS_EXPIRED']);
+ if(allowed.has(cause))return 'SOURCE_'+cause;
  return 'SOURCE_CONNECT_FAILED';
 }
