@@ -5,7 +5,9 @@ const el=id=>document.getElementById(id);
 let channels=[],selected=0,active=null,paused=false,failures=0;
 const launchNumber=(()=>{try{const n=(Number(sessionStorage.getItem('nplay-feature-launch'))||0)+1;sessionStorage.setItem('nplay-feature-launch',String(n));return n}catch{return Date.now()}})();
 const movieLaunch=launchNumber%2===0;
-const liveFeatured=()=>!movieLaunch;
+// The redesigned home starts on a film/series highlight. TV remains available
+// in its own catalog rail without an automatic upstream connection on entry.
+const liveFeatured=()=>false;
 const normalize=value=>String(value||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
 function eligible(item){
  try{const url=new URL(item.embed_url);return url.protocol==='https:'&&!url.username&&!url.password&&(item.stream_type==='hls'||/\.m3u8?(?:\?|$)/i.test(url.href))}catch{return false}
