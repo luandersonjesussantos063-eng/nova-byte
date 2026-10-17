@@ -979,7 +979,9 @@ async function openTimeshift(channel,title){
   if(openSequence!==timeShiftOpenSequence||initialAttempt!==attempt||layer.hidden)return false;
   const blocks=data.blocks?.[channel]||[];
   if(!blocks.length)throw Error("Ainda não há blocos prontos neste canal. Tente novamente em 30 segundos.");
-  const start=blocks[Math.max(0,blocks.length-3)].id,end=blocks[blocks.length-1].id;
+  // Start farther from the recording edge so the next channel block can arrive
+  // before the viewer consumes this archive. This is a time-shift, not real live.
+  const start=blocks[Math.max(0,blocks.length-5)].id,end=blocks[blocks.length-1].id;
   const archive=(first,last)=>{
    const u=new URL("/channels/"+channel+"/archive/"+first+".m3u8",TIMESHIFT_RELAY_ORIGIN);
    u.searchParams.set("end",String(last));
@@ -989,6 +991,8 @@ async function openTimeshift(channel,title){
   play({id:"timeshift-"+channel,title:String(title||"Canal em teste"),kind:"tv",mode:"hls",src:archive(start,end),live:true,timeShiftTest:true});
   const video=$("video"),sequence=attempt;
   let lastBlock=end,busy=false,waitTimeout=null;
+  // Polling only begins at the end of a snapshot; do not skip a block until
+  // the replacement playlist is successfully parsed.
   async function next(){
    if(sequence!==attempt||$("player-layer").hidden||busy)return;
    busy=true;
@@ -1002,7 +1006,6 @@ async function openTimeshift(channel,title){
      return;
     }
     const first=future[0].id,tail=future[future.length-1].id;
-    lastBlock=tail;
     const url=archive(first,tail);
     playerStatus("Carregando próxima gravação...");
     // Recreate MediaSource at each completed archive boundary: a finished
@@ -1012,12 +1015,23 @@ async function openTimeshift(channel,title){
     if(window.Hls?.isSupported()){
      hls=new window.Hls({enableWorker:true,lowLatencyMode:false,maxBufferLength:45,
       maxMaxBufferLength:120,fragLoadingTimeOut:30000,fragLoadingMaxRetry:5,fragLoadingRetryDelay:1000});
-     hls.on(window.Hls.Events.MANIFEST_PARSED,()=>{if(sequence===attempt)startAutoplay(video,sequence)});
+     hls.on(window.Hls.Events.MANIFEST_PARSED,()=>{
+      if(sequence!==attempt)return;
+      lastBlock=tail; // Archive actually loaded: mark all included blocks consumed.
+      startAutoplay(video,sequence);
+     });
      hls.on(window.Hls.Events.ERROR,(_event,details)=>{
-      if(sequence===attempt&&details.fatal)playerStatus("Erro ao carregar este bloco. Abra novamente o canal de teste.");
+      if(sequence!==attempt||!details.fatal)return;
+      if(hls){hls.destroy();hls=null;}
+      playerStatus("Reconectando à próxima gravação…");
+      if(waitTimeout)clearTimeout(waitTimeout);
+      waitTimeout=setTimeout(()=>{waitTimeout=null;next();},5000);
      });
      hls.attachMedia(video);hls.loadSource(url);
-    }else{video.src=url;video.load();startAutoplay(video,sequence);}
+    }else{
+     lastBlock=tail;
+     video.src=url;video.load();startAutoplay(video,sequence);
+    }
    }catch(error){
     if(sequence!==attempt)return;
     playerStatus(error.message||"Aguardando retomada da gravação...");
