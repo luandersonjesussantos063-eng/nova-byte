@@ -42,18 +42,28 @@ $stage = Join-Path $base ('.update-' + [guid]::NewGuid().ToString())
 New-Item -Path $stage -ItemType Directory | Out-Null
 try {
     foreach ($name in @('cleanup.py', 'streaming.py', 'pipeline.py')) {
-        Invoke-WebRequest -UseBasicParsing -Uri ('https://novabytesolucoes.com.br/novaplay/importer/' + $name + '?update=adaptive1') -OutFile (Join-Path $stage $name)
+        Invoke-WebRequest -UseBasicParsing -Uri ('https://novabytesolucoes.com.br/novaplay/importer/' + $name + '?update=capacityfix2') -OutFile (Join-Path $stage $name)
     }
     & (Join-Path $base '.venv\Scripts\python.exe') -m py_compile (Join-Path $stage 'cleanup.py') (Join-Path $stage 'streaming.py') (Join-Path $stage 'pipeline.py')
     if ($LASTEXITCODE -ne 0) { throw 'Validacao dos arquivos falhou. Nenhum arquivo instalado.' }
-    # Install dependency first; the previous worker does not use it.
-    Move-Item -Force (Join-Path $stage 'cleanup.py') (Join-Path $base 'cleanup.py')
-    Move-Item -Force (Join-Path $stage 'streaming.py') (Join-Path $base 'streaming.py')
-    Move-Item -Force (Join-Path $stage 'pipeline.py') (Join-Path $base 'pipeline.py')
-    Write-Host 'Atualizado. Limpando somente importacoes publicadas e confirmadas no R2...'
+    $backup = Join-Path $base ('backup-capacidade-' + (Get-Date -Format 'yyyyMMdd-HHmmss'))
+    New-Item -Path $backup -ItemType Directory | Out-Null
+    foreach ($name in @('cleanup.py', 'streaming.py', 'pipeline.py')) {
+        Copy-Item -LiteralPath (Join-Path $base $name) -Destination (Join-Path $backup $name) -ErrorAction Stop
+    }
+    Write-Host ('Backup dos arquivos anteriores: ' + $backup)
+    foreach ($name in @('cleanup.py', 'streaming.py', 'pipeline.py')) {
+        Copy-Item -Force -LiteralPath (Join-Path $stage $name) -Destination (Join-Path $base $name)
+    }
+    $drive = [System.IO.DriveInfo]::new(([System.IO.Path]::GetPathRoot($base)))
+    $beforeGiB = [Math]::Round($drive.AvailableFreeSpace / 1GB, 2)
+    Write-Host ('Espaco livre antes da limpeza: ' + $beforeGiB + ' GiB')
+    Write-Host 'Verificando os filmes publicados no R2 e removendo caches temporarios abandonados...'
     & (Join-Path $base '.venv\Scripts\python.exe') (Join-Path $base 'worker.py') --cleanup-only
-    if ($LASTEXITCODE -ne 0) { throw 'A limpeza nao terminou. Confira a conexao e inicie o importador novamente.' }
-    Write-Host 'Pronto. Iniciando importador com limpeza e streaming adaptativo.'
+    if ($LASTEXITCODE -ne 0) { throw 'A limpeza nao terminou. Confira o log; backups dos arquivos anteriores estao preservados.' }
+    $afterGiB = [Math]::Round($drive.AvailableFreeSpace / 1GB, 2)
+    Write-Host ('Espaco livre apos a limpeza: ' + $afterGiB + ' GiB (recuperados: ' + [Math]::Round(($afterGiB - $beforeGiB),2) + ' GiB)')
+    Write-Host 'Pronto. Importador corrigido; retomada gradual dos filmes com capacidade suficiente.'
     Start-Process -FilePath $env:ComSpec -ArgumentList @('/k', ('call "' + (Join-Path $base 'INICIAR-IMPORTADOR.bat') + '"')) -WorkingDirectory $base
 } finally {
     Remove-Item -Recurse -Force $stage
