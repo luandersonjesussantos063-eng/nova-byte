@@ -19,7 +19,19 @@ export class XtreamClient{
   const identity=xtreamIdentity(raw),u=new URL('/player_api.php',identity.origin);
   u.searchParams.set('username',identity.user);u.searchParams.set('password',identity.password);
   let result;
-  try{result=await this.fetcher(u.href,null,signal);}catch(error){throw Object.assign(Error('Xtream login transport failed'),{code:error.code==='ECONNRESET'?'XTREAM_LOGIN_RESET':(error.code==='ETIMEDOUT'||signal?.reason?.name==='TimeoutError')?'XTREAM_LOGIN_TIMEOUT':'XTREAM_LOGIN_CONNECTION'});}
+  for(let attempt=0;attempt<2;attempt++){
+   try{result=await this.fetcher(u.href,null,signal);break;}
+   catch(error){
+    if(error.code==='ECONNRESET'&&attempt===0&&!signal?.aborted){
+     console.warn(JSON.stringify({event:'xtream_login_retry',code:'ECONNRESET'}));
+     await new Promise(resolve=>setTimeout(resolve,300));
+     if(signal?.aborted)break;
+     continue;
+    }
+    throw Object.assign(Error('Xtream login transport failed'),{code:error.code==='ECONNRESET'?'XTREAM_LOGIN_RESET':(error.code==='ETIMEDOUT'||signal?.reason?.name==='TimeoutError')?'XTREAM_LOGIN_TIMEOUT':'XTREAM_LOGIN_CONNECTION'});
+   }
+  }
+  if(!result)throw Object.assign(Error('Xtream login cancelled'),{code:'XTREAM_LOGIN_TIMEOUT'});
   if(result.response.statusCode!==200){result.response.destroy();throw Object.assign(Error('Xtream login denied'),{code:'XTREAM_LOGIN_DENIED'});}
   const cookie=safeCookies(result.response.headers);let info;
   try{info=await boundedJson(result.response);}catch{throw Object.assign(Error('Invalid Xtream response'),{code:'XTREAM_LOGIN_INVALID'});}
