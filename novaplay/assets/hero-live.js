@@ -3,6 +3,9 @@
 "use strict";
 const el=id=>document.getElementById(id);
 let channels=[],selected=0,active=null,paused=false,failures=0;
+const launchNumber=(()=>{try{const n=(Number(sessionStorage.getItem('nplay-feature-launch'))||0)+1;sessionStorage.setItem('nplay-feature-launch',String(n));return n}catch{return Date.now()}})();
+const movieLaunch=launchNumber%2===0;
+const liveFeatured=()=>!movieLaunch;
 const normalize=value=>String(value||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
 function eligible(item){
  try{const url=new URL(item.embed_url);return url.protocol==='https:'&&!url.username&&!url.password&&(item.stream_type==='hls'||/\.m3u8?(?:\?|$)/i.test(url.href))}catch{return false}
@@ -41,7 +44,7 @@ function describe(item){
  for(const text of ['Ao vivo',item.category||'TV', 'Som desativado ao iniciar']){const span=document.createElement('span');span.textContent=text;metadata.append(span)}
  el('hero-art').style.backgroundImage='radial-gradient(ellipse at 75% 30%,#204477,#0b172b 60%,#070b13)';
  el('hero-dots').hidden=true;el('hero-preview-open').hidden=true;
- const info=el('hero-info');info.textContent='Trocar de canal';info.onclick=()=>{const picker=el('hero-live-channel');picker.focus();try{picker.showPicker?.()}catch{}};
+ const info=el('hero-info');info.textContent='Ver TV ao vivo';info.onclick=()=>document.querySelector('[data-nav="tv"]')?.click();
  el('hero-play').onclick=()=>{stop();window.NovaPlayPlayer?.openHls(item.embed_url,item.title)};
 }
 function show(){
@@ -51,11 +54,11 @@ function show(){
  if(active?.item.id===item.id)return;
  stop();
  const video=document.createElement('video');video.className='hero-live-video';
- video.autoplay=true;video.muted=true;video.defaultMuted=true;video.playsInline=true;video.preload='none';
- video.setAttribute('muted','');video.setAttribute('playsinline','');video.setAttribute('aria-hidden','true');video.tabIndex=-1;
+ video.autoplay=true;video.muted=false;video.defaultMuted=false;video.playsInline=true;video.preload='none';
+ video.setAttribute('playsinline','');video.setAttribute('aria-hidden','true');video.tabIndex=-1;
  const state={item,video,hls:null,playing:false,timeout:null};active=state;el('hero-live-media').append(video);
  status('Conectando ao sinal ao vivo…');controls();
- const play=()=>{if(active!==state)return;try{Promise.resolve(video.play()).catch(()=>fail(state))}catch{fail(state)}};
+ const play=()=>{if(active!==state)return;try{Promise.resolve(video.play()).catch(()=>{if(active!==state)return;video.muted=true;controls();Promise.resolve(video.play()).catch(()=>fail(state))})}catch{video.muted=true;Promise.resolve(video.play()).catch(()=>fail(state))}};
  video.addEventListener('playing',()=>{if(active!==state)return;clearTimeout(state.timeout);state.playing=true;failures=0;el('hero').classList.add('hero-live-playing');status('● Ao vivo agora');controls()});
  video.addEventListener('error',()=>fail(state));state.timeout=setTimeout(()=>fail(state),12000);
  try{
@@ -72,13 +75,13 @@ function setChannels(items){
  channels=(items||[]).filter(eligible);
  const preferred=['recordtv mt','sbt interior sp','tv brasil web','rede minas'];
  channels.sort((a,b)=>{const rank=x=>{const i=preferred.indexOf(normalize(x.title));return i<0?100:i};return rank(a)-rank(b)||a.title.localeCompare(b.title,'pt-BR')});
- selected=Math.max(0,channels.findIndex(x=>x.id===previous));
+ selected=channels.length?Math.abs(launchNumber-1)%channels.length:0;
  const select=el('hero-live-channel');select.replaceChildren();
  for(const item of channels){const option=document.createElement('option');option.value=item.id;option.textContent=item.title;select.append(option)}
- if(!channels.length){stop();el('hero-live-controls').hidden=true;status('Nenhum canal com sinal direto disponível.');return}
- select.value=channels[selected].id;el('hero-live-controls').hidden=false;failures=0;show();
+ if(!channels.length||!liveFeatured()){stop();el('hero-live-controls').hidden=true;if(!channels.length)status('Nenhum canal com sinal direto disponível.');window.NPlayShowFeaturedMovie?.();return}
+ select.value=channels[selected].id;el('hero-live-controls').hidden=true;failures=0;show();
 }
-function sync(){if(!allowed())stop();else if(!active&&!paused&&channels.length&&failures<Math.min(channels.length,3))show()}
+function sync(){if(!liveFeatured())return;if(!allowed())stop();else if(!active&&!paused&&channels.length&&failures<Math.min(channels.length,3))show()}
 function init(){
  el('hero-live-channel').addEventListener('change',event=>{selected=Math.max(0,channels.findIndex(x=>x.id===event.target.value));failures=0;paused=false;show()});
  el('hero-live-toggle').addEventListener('click',()=>{paused=!paused;if(paused){stop();status('Transmissão pausada no banner.')}else{failures=0;show()}controls()});
@@ -91,6 +94,6 @@ function init(){
  observer.observe(document.body,{attributes:true,attributeFilter:['class']});
  for(const node of [el('view-home'),el('nplay-profile-gate')])if(node)observer.observe(node,{attributes:true,attributeFilter:['hidden']});
 }
-window.NPlayHeroLive={setChannels,show,sync,stop};
+window.NPlayHeroLive={setChannels,show,sync,stop,isLiveFeatured:liveFeatured};
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })();
