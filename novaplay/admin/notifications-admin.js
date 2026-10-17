@@ -11,7 +11,7 @@ function badge(n){
  const access=document.querySelector('[data-admin-tab="acessos"]');
  if(access)access.textContent=n?"Autorizações ("+n+")":"Autorizações";
 }
-function alarm(item){
+function alarm(item,preview=false){
  if(!ringEnabled)return;
  try{
   if(!audio)audio=new (window.AudioContext||window.webkitAudioContext)();
@@ -27,7 +27,7 @@ function alarm(item){
    oscillator.start(t+offset);oscillator.stop(t+offset+0.2);
   });
  }catch(e){console.warn("NPlay: áudio de alerta indisponível",e)}
- if("Notification" in window&&Notification.permission==="granted"){
+ if(!preview&&"Notification" in window&&Notification.permission==="granted"){
   try{
    const n=new Notification("NPlay · Nova solicitação de acesso",{
     body:(item.display_name||"Novo cliente").slice(0,80)+" aguarda liberação.",
@@ -63,16 +63,15 @@ async function syncAccess(){
 async function enableAlerts(){
  if(!started)return;
  try{
+  // Ask while the user's click still counts as browser permission activation.
+  const permission="Notification" in window&&Notification.permission==="default"?Notification.requestPermission():null;
   if(!audio)audio=new (window.AudioContext||window.webkitAudioContext)();
   await audio.resume();
   ringEnabled=true;localStorage.setItem("nplay-admin-alerts-sound","1");
-  if("Notification" in window&&Notification.permission==="default"){
-   // Explicit click permits asking to display OS-level notices while this page remains open.
-   await Notification.requestPermission();
-  }
+  if(permission)await permission;
   $("nplay-alert-enable").textContent="🔔 Alertas ligados";
   setMessage("Som ativado. Notificações do navegador: "+("Notification" in window?Notification.permission:"não disponíveis")+".");
-  alarm({user_id:"teste",display_name:"Som de teste"});
+  alarm({user_id:"teste",display_name:"Som de teste"},true);
  }catch(e){setMessage("O navegador não permitiu o som. Interaja novamente com o botão.");}
 }
 function setupAccessAlerts(){
