@@ -681,14 +681,6 @@ function asClock(seconds){
  const hours=Math.floor(value/3600),minutes=Math.floor(value%3600/60),secs=value%60;
  return (hours?hours+":"+String(minutes).padStart(2,"0"):String(minutes))+":"+String(secs).padStart(2,"0");
 }
-function dvrWindow(v){
- if(!current?.item?.timeShiftTest||!v?.seekable?.length)return null;
- try{
-  const i=v.seekable.length-1,start=v.seekable.start(i),end=v.seekable.end(i);
-  if(Number.isFinite(start)&&Number.isFinite(end)&&end>start)return {start,end,duration:end-start};
- }catch{}
- return null;
-}
 function updateCinemaControls(){
  const v=window.NPlayCasting?.state()||$("video");
  $("cinema-play").textContent=v.paused?"▶":"❚❚";
@@ -699,12 +691,12 @@ function updateCinemaControls(){
  const percent=Math.round(v.volume*100);
  if(volume)volume.value=String(percent);
  if(level)level.textContent=(v.muted?0:percent)+"%";
- const range=dvrWindow(v),duration=range?.duration??v.duration;
+ const duration=v.duration;
  const seekable=Number.isFinite(duration)&&duration>0;
  $("cinema-seek").disabled=!seekable;
  $("cinema-duration").textContent=seekable?asClock(duration):(current?.item?.kind==="tv"?"AO VIVO":"Carregando…");
  if(!seekActive){
-  const position=range?(v.currentTime||0)-range.start:(v.currentTime||0);
+  const position=v.currentTime||0;
   const currentTime=seekable?Math.max(0,Math.min(duration,position)):0;
   $("cinema-elapsed").textContent=asClock(currentTime);
   $("cinema-seek").value=seekable?String(currentTime/duration*100):"0";
@@ -742,8 +734,8 @@ $("cinema-play").onclick=()=>{
  if(window.NPlayCasting?.command("toggle")){updateCinemaControls();showCinemaUi();return;}
  const v=$("video");if(v.paused)v.play().catch(()=>showCinemaUi());else v.pause();showCinemaUi()
 };
-$("cinema-rewind").onclick=()=>{const state=window.NPlayCasting?.state();if(state){window.NPlayCasting.command("seek",state.currentTime-10);updateCinemaControls();showCinemaUi();return;}const v=$("video");const r=dvrWindow(v);if(r)v.currentTime=Math.max(r.start,v.currentTime-10);else if(Number.isFinite(v.duration))v.currentTime=Math.max(0,v.currentTime-10);updateCinemaControls();showCinemaUi()};
-$("cinema-forward").onclick=()=>{const state=window.NPlayCasting?.state();if(state){window.NPlayCasting.command("seek",state.currentTime+10);updateCinemaControls();showCinemaUi();return;}const v=$("video");const r=dvrWindow(v);if(r)v.currentTime=Math.min(r.end-0.2,v.currentTime+10);else if(Number.isFinite(v.duration))v.currentTime=Math.min(v.duration,v.currentTime+10);updateCinemaControls();showCinemaUi()};
+$("cinema-rewind").onclick=()=>{const state=window.NPlayCasting?.state();if(state){window.NPlayCasting.command("seek",state.currentTime-10);updateCinemaControls();showCinemaUi();return;}const v=$("video");if(Number.isFinite(v.duration))v.currentTime=Math.max(0,v.currentTime-10);updateCinemaControls();showCinemaUi()};
+$("cinema-forward").onclick=()=>{const state=window.NPlayCasting?.state();if(state){window.NPlayCasting.command("seek",state.currentTime+10);updateCinemaControls();showCinemaUi();return;}const v=$("video");if(Number.isFinite(v.duration))v.currentTime=Math.min(v.duration,v.currentTime+10);updateCinemaControls();showCinemaUi()};
 $("cinema-mute").onclick=()=>{if(window.NPlayCasting?.command("mute")){updateCinemaControls();return;}const v=$("video");v.muted=!v.muted;if(!v.muted&&v.volume===0)v.volume=1;updateCinemaControls();showCinemaUi()};
 $("cinema-volume")?.addEventListener("input",e=>{
  const v=$("video"),value=Number(e.target.value);
@@ -753,7 +745,7 @@ $("cinema-volume")?.addEventListener("input",e=>{
  updateCinemaControls();showCinemaUi();
 });
 $("cinema-seek").addEventListener("input",e=>{
- const v=window.NPlayCasting?.state()||$("video");const r=dvrWindow(v),duration=r?.duration??v.duration;if(!Number.isFinite(duration)||duration<=0)return;
+ const v=window.NPlayCasting?.state()||$("video");duration=v.duration;if(!Number.isFinite(duration)||duration<=0)return;
  seekActive=true;
  e.target.style.setProperty("--played",e.target.value+"%");
  const target=duration*Number(e.target.value)/100;
@@ -764,9 +756,7 @@ $("cinema-seek").addEventListener("change",e=>{
  const state=window.NPlayCasting?.state();
  if(state){window.NPlayCasting.command("seek",state.duration*Number(e.target.value)/100);seekActive=false;updateCinemaControls();showCinemaUi();return;}
  const v=$("video");
- const r=dvrWindow(v);
- if(r)v.currentTime=Math.min(r.end-0.2,Math.max(r.start,r.start+r.duration*Number(e.target.value)/100));
- else if(Number.isFinite(v.duration)&&v.duration>0)v.currentTime=Math.min(v.duration,Math.max(0,v.duration*Number(e.target.value)/100));
+ if(Number.isFinite(v.duration)&&v.duration>0)v.currentTime=Math.min(v.duration,Math.max(0,v.duration*Number(e.target.value)/100));
  seekActive=false;updateCinemaControls();showCinemaUi()
 });
 $("cinema-fullscreen").onclick=()=>{
@@ -949,58 +939,7 @@ window.NPlayLiveCatalog={staticChannels:()=>db.channels,isFavorite:id=>favorite.
  for(const record of channels){const id="channel-"+record.id;const item={id,title:record.title,kind:"tv",live:true,mode:record.stream_type,category:record.category||"TV ao vivo",description:"Transmissão ao vivo · "+(record.category||"TV"),cover:record.logo_url||"",customLabel:record.logo_url?null:record.title,liveRecord:record};all.push(item);map.set(id,item);}
  if(view==="buscar")renderSearch();if(view==="favoritos")renderCategory("favoritos");
 }};
-const TIMESHIFT_RELAY_ORIGIN="https://nplay-timeshift-gateway.luandersonjesussantos063.workers.dev";
-let timeShiftOpenSequence=0;
-async function openTimeshift(channel,title){
- if(channel!=="a"&&channel!=="b")return false;
- const openSequence=++timeShiftOpenSequence,displayName=String(title||"Canal de teste");
- window.NovaPlayHeroScenes?.stop?.();window.NPlayHeroLive?.stop?.();
- window.NovaPlayHover?.close?.();stopHeroPreview();
- $("detail-layer").hidden=true;selected=null;stopPlayback();
- current={item:{id:"timeshift-"+channel,title:displayName,kind:"tv",live:true,timeShiftTest:true,labChannel:channel},episode:null};
- const layer=$("player-layer");
- layer.hidden=false;document.body.classList.add("modal-open");
- $("player-heading").textContent="TESTE · "+displayName;
- $("player-title").textContent=displayName;
- $("player-error").textContent="";
- $("retry-btn").hidden=true;$("fallback-btn").hidden=true;
- $("video").hidden=true;$("cinema-controls").hidden=true;
- enterCinema();
- playerStatus("Conectando à TV com gravação contínua…");
- const initialAttempt=attempt;
- try{
-  const client=window.NPlayAccessClient||remoteDb;
-  const result=await client?.auth?.getSession(),session=result?.data?.session;
-  if(!session?.access_token)throw Error("Entre na NPlay para assistir aos canais de teste.");
-  const jwt=session.access_token,headers={Authorization:"Bearer "+jwt};
-  const response=await fetch(TIMESHIFT_RELAY_ORIGIN+"/status?focus="+channel,{
-   headers,cache:"no-store",signal:AbortSignal.timeout(12000)});
-  if(!response.ok){
-   let error={};try{error=await response.json()}catch{}
-   throw Error(error.code==="LAB_COOKIE_REJECTED"?"A senha privada do laboratório não foi aceita.":
-    response.status===403?"Seu usuário não tem acesso ao laboratório.":
-    error.error||"O laboratório está temporariamente indisponível.");
-  }
-  const data=await response.json();
-  if(openSequence!==timeShiftOpenSequence||initialAttempt!==attempt||layer.hidden)return false;
-  const blocks=data.blocks?.[channel]||[];
-  if(blocks.length<5)throw Error("Preparando pelo menos dois minutos de gravações. Tente novamente em instantes.");
-  // A single refreshing HLS timeline keeps the same player and appends
-  // future completed segments. Older recordings roll out of the DVR window.
-  const playlist=new URL("/channels/"+channel+"/dvr.m3u8",TIMESHIFT_RELAY_ORIGIN);
-  playlist.searchParams.set("access_token",jwt);
-  play({id:"timeshift-"+channel,title:displayName,kind:"tv",mode:"hls",
-   src:playlist.href,live:true,timeShiftTest:true,labChannel:channel});
-  return true;
- }catch(error){
-  if(openSequence===timeShiftOpenSequence&&initialAttempt===attempt&&!layer.hidden){
-   playbackFailed(error.message||"Não foi possível abrir o laboratório.",initialAttempt);
-   $("player-loading").hidden=true;$("retry-btn").hidden=false;
-  }
-  return false;
- }
-}
-window.NovaPlayPlayer={openStatic:id=>{const item=byId(id);if(!item)return false;startWatching(item);return true;},openTimeshift,openHls:openLiveHls,openRadio:(url,title,mode)=>openLiveHls(url,title,mode==="mpegts"?"mpegts":"hls",true),openMpegts:(url,title)=>openLiveHls(url,title,"mpegts"),openEmbed:openLiveEmbed,closeEmbed:()=>{if(current?.item?.liveEmbedUrl)closePlayer()}};
+window.NovaPlayPlayer={openStatic:id=>{const item=byId(id);if(!item)return false;startWatching(item);return true;},openHls:openLiveHls,openRadio:(url,title,mode)=>openLiveHls(url,title,mode==="mpegts"?"mpegts":"hls",true),openMpegts:(url,title)=>openLiveHls(url,title,"mpegts"),openEmbed:openLiveEmbed,closeEmbed:()=>{if(current?.item?.liveEmbedUrl)closePlayer()}};
 $("player-live-reload").onclick=()=>{if(current?.item?.liveEmbedUrl)openLiveEmbed(current.item.liveEmbedUrl,current.item.title)};
 function play(item,episode){
  if(item?.liveEmbedUrl){openLiveEmbed(item.liveEmbedUrl,item.title);return}
@@ -1080,7 +1019,7 @@ function play(item,episode){
  const progressId=item.kind==="tv"?null:episode?episode.id:item.id;
  setResume(v,progressId,seq);
  if(item.kind==="tv")timer=setTimeout(()=>{if(seq===attempt&&((!item.audioOnly&&!v.videoWidth)||v.readyState<2)&&!tryMpegts())fail("O canal está demorando para carregar. Verifique a conexão ou tente novamente.")},window.NPlayLiveAuth?.protectedUrl(src)?45000:22000);
- if(!media.youtube_id&&!media.google_drive_id&&!item.timeShiftTest&&!window.NPlayLiveAuth?.protectedUrl(media.src))window.NPlayCasting?.configure({
+ if(!media.youtube_id&&!media.google_drive_id&&!window.NPlayLiveAuth?.protectedUrl(media.src))window.NPlayCasting?.configure({
   title:episode?item.title+" · "+episode.label:item.title,live:item.kind==="tv",
   onChange:updateCinemaControls,
   onProgress(position,duration){
@@ -1132,7 +1071,7 @@ function play(item,episode){
     if(nativeHls&&!(item.kind==="tv"&&managedHls)){
       v.src=src;startAutoplay(v,seq);
     }else if(window.Hls&&window.Hls.isSupported()){
-      hls=new window.Hls({...(window.NPlayLiveAuth?.protectedUrl(src)?{manifestLoadPolicy:{default:{maxTimeToFirstByteMs:40000,maxLoadTimeMs:45000,timeoutRetry:null,errorRetry:null}}}:{}),enableWorker:true,lowLatencyMode:false,maxBufferLength:item.timeShiftTest?85:item.kind==="tv"?20:60,maxMaxBufferLength:180,maxBufferSize:64*1024*1024,backBufferLength:item.timeShiftTest?90:30,...(item.timeShiftTest?{liveSyncDuration:120}:{}),startLevel:0,capLevelToPlayerSize:true,abrEwmaDefaultEstimate:400000});
+      hls=new window.Hls({...(window.NPlayLiveAuth?.protectedUrl(src)?{manifestLoadPolicy:{default:{maxTimeToFirstByteMs:40000,maxLoadTimeMs:45000,timeoutRetry:null,errorRetry:null}}}:{}),enableWorker:true,lowLatencyMode:false,maxBufferLength:item.kind==="tv"?20:60,maxMaxBufferLength:180,maxBufferSize:64*1024*1024,backBufferLength:30,startLevel:0,capLevelToPlayerSize:true,abrEwmaDefaultEstimate:400000});
       hls.on(window.Hls.Events.ERROR,(event,data)=>{
         if(seq!==attempt||!data.fatal)return;
         const gatewayFailure=window.NPlayLiveAuth?.failureMessage?.(data.networkDetails?.getResponseHeader?.("X-NPlay-Error"));
@@ -1261,7 +1200,7 @@ $("player-issue-retry").onclick=()=>{if(current)play(current.item,current.episod
 
 $("hero-preview-close").onclick=stopHeroPreview;
 $("player-back").onclick=()=>closePlayer();$("player-close").onclick=()=>closePlayer();
-$("retry-btn").onclick=()=>{if(!current)return;if(current.item?.timeShiftTest)openTimeshift(current.item.labChannel,current.item.title);else play(current.item,current.episode)};
+$("retry-btn").onclick=()=>{if(!current)return;play(current.item,current.episode)};
 $("fallback-btn").onclick=useFallback;
 $("close-details").onclick=closeDetails;
  $("detail-back").onclick=closeDetails;
