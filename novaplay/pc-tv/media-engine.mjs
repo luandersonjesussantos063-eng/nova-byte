@@ -83,14 +83,14 @@ export class MediaEngine{
     return Buffer.concat(parts);
    };
    s.hlsTask=(async()=>{
-    let playlistUrl=media.url,initial=media.response,sequence=-1;
+    let playlistUrl=media.url,initial=media.response,sequence=-1,missing=0;
     while(!signal.aborted){
      const playlist=initial?{response:initial,url:playlistUrl}:await this.client.fetcher(playlistUrl,null,signal,{headerTimeout:8000});
      initial=null;
      if(playlist.response.statusCode!==200){playlist.response.destroy();throw failure('ENGINE_SOURCE_HTTP');}
      const body=await readText(playlist.response);
      if(!body.startsWith('#EXTM3U')||/#EXT-X-KEY:|#EXT-X-MAP:/.test(body))throw failure('ENGINE_SOURCE_INVALID');
-     const lines=body.split(/\\r?\\n/).map(x=>x.trim()).filter(Boolean);
+     const lines=body.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
      const uris=lines.filter(x=>!x.startsWith('#'));
      if(lines.some(x=>x.startsWith('#EXT-X-STREAM-INF:'))){
       if(!uris.length)throw failure('ENGINE_SOURCE_INVALID');
@@ -99,11 +99,20 @@ export class MediaEngine{
       playlistUrl=child.href;continue;
      }
      const base=Number((lines.find(x=>x.startsWith('#EXT-X-MEDIA-SEQUENCE:'))||'').split(':')[1]||0);
+     if(!Number.isSafeInteger(base)||base<0)throw failure('ENGINE_SOURCE_INVALID');
+     let refresh=false;
      for(let n=0;n<uris.length&&!signal.aborted;n++){
       if(base+n<=sequence)continue;
       const segmentUrl=new URL(uris[n],playlistUrl);
       if(segmentUrl.origin!==identity.origin||!segmentUrl.pathname.endsWith('.ts'))throw failure('ENGINE_SOURCE_INVALID');
       const segment=await this.client.fetcher(segmentUrl.href,null,signal,{headerTimeout:8000});
+      if(segment.response.statusCode===404||segment.response.statusCode===410){
+       const status=segment.response.statusCode;segment.response.destroy();
+       missing++;
+       console.warn(JSON.stringify({event:'media_hls_segment_expired',session:s.id.slice(0,8),status,consecutive:missing}));
+       if(missing>5)throw failure('ENGINE_SOURCE_HTTP');
+       sequence=base+n;refresh=true;break;
+      }
       if(segment.response.statusCode!==200){segment.response.destroy();throw failure('ENGINE_SOURCE_HTTP');}
       const bytes=await readSegment(segment.response);
       if(!s.input.write(bytes))await new Promise((resolve,reject)=>{
@@ -112,10 +121,10 @@ export class MediaEngine{
        s.input.once('drain',done);s.input.once('error',bad);
        if(signal.aborted){s.input.off('drain',done);s.input.off('error',bad);resolve();}
       });
-      sequence=base+n;
+      sequence=base+n;missing=0;
      }
      if(lines.includes('#EXT-X-ENDLIST'))break;
-     await wait(1200);
+     await wait(refresh?250:1200);
     }
     s.input.end();
    })().catch(error=>{if(!signal.aborted){console.warn(JSON.stringify({event:'media_hls_failed',session:s.id.slice(0,8),code:String(error.code||'UNKNOWN').slice(0,50)}));s.input.destroy(error);}});
