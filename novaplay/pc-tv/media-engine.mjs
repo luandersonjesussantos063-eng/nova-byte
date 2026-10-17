@@ -12,6 +12,23 @@ export const ENGINE_CODES=new Set(['XTREAM_ROOT_INVALID','XTREAM_CATALOG_INVALID
 export const isEngineUrl=raw=>{try{return new URL(raw).origin===ENGINE_ORIGIN;}catch{return false;}};
 const failure=code=>Object.assign(Error(code),{code});
 const wait=ms=>new Promise(r=>setTimeout(r,ms));
+// A failed TS handshake holds no live stream. Try the same authorized channel
+// using its advertised HLS format, never concurrently with the TS connection.
+export async function openMediaInput(client,login,signal,preferHls=false){
+ if(preferHls)return {media:await client.openHls(login,signal),hlsMode:true};
+ try{return {media:await client.openTs(login,signal),hlsMode:false};}
+ catch(error){
+  if(signal?.aborted||error?.code!=='ENGINE_SOURCE_RESET')throw error;
+  console.warn(JSON.stringify({event:'media_transport_fallback',from:'ts',to:'hls',cause:'ENGINE_SOURCE_RESET'}));
+  try{return {media:await client.openHls(login,signal),hlsMode:true};}
+  catch(hlsError){
+   // Do not initiate more attempts: provider concurrency and geo restrictions
+   // are enforced by the upstream. Do not log URLs or credentials.
+   console.warn(JSON.stringify({event:'media_transport_fallback_failed',code:String(hlsError?.code||'SOURCE_UNAVAILABLE').slice(0,48)}));
+   throw error;
+  }
+ }
+}
 export class MediaEngine{
  constructor({client=new XtreamClient(),ffmpeg='ffmpeg',mode='compatible',idleMs=90000,readyMs=14000,root=tmpdir()}={}){
   this.client=client;this.ffmpeg=ffmpeg;this.mode=mode==='copy'?'copy':'compatible';this.idleMs=idleMs;this.readyMs=readyMs;this.root=root;this.current=null;this.last={stage:'idle',code:null};this.lock=Promise.resolve();
@@ -68,8 +85,7 @@ export class MediaEngine{
   const login={identity,session:{origin:identity.origin,cookie:''},account:null};
   console.info(JSON.stringify({event:'m3u_direct_stream_attempt'}));
   s.account=null;s.stage='receiving';s.touched=Date.now();if(signal.aborted)throw failure('ENGINE_START_TIMEOUT');
-  const hlsMode=process.env.NPLAY_INPUT_FORMAT==='hls';
-  const media=hlsMode?await this.client.openHls(login,signal):await this.client.openTs(login,signal);
+  const {media,hlsMode}=await openMediaInput(this.client,login,signal,process.env.NPLAY_INPUT_FORMAT==='hls');
   s.input=hlsMode?new PassThrough({highWaterMark:1024*1024}):media.response;
   if(hlsMode){s.input.on('error',()=>{});
    const readText=async response=>{
