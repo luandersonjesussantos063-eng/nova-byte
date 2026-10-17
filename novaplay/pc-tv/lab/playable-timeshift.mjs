@@ -33,7 +33,7 @@ async function record(c){
  stats.rotations++;if(exit.code!==0||exit.error)stats.errors++;stats.lastRotation={channel:c,at:new Date().toISOString(),durationSeconds:Math.round((Date.now()-start)/1000),exitCode:exit.code??null};
  console.log(JSON.stringify({event:'lab_rotation',channel:c,seconds:Math.round((Date.now()-start)/1000),segments:(await segmentList(c)).length,exit,error:err||undefined}));
 }
-void(async()=>{while(!stop){for(const c of channels){if(stop)break;await record(c);}}})().catch(e=>console.error('lab_error',e.message));
+const recordingLoop=(async()=>{while(!stop){for(const c of channels){if(stop)break;await record(c);}}})().catch(e=>{if(!stop)console.error('lab_error',e.message);});
 const html=`<!doctype html><html lang="pt-BR"><meta name="viewport" content="width=device-width,initial-scale=1"><title>NPlay — TV de Gravações</title><style>*{box-sizing:border-box}body{margin:0;background:#0c1324;color:#f6f9ff;font:16px system-ui}main{max-width:760px;margin:auto;padding:22px 16px}h1{font-size:25px}p{color:#adbed4;line-height:1.5}.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:20px 0}button{border:1px solid #37516e;background:#1b2d48;color:white;padding:15px 12px;border-radius:12px;font:inherit;text-align:left}button.active{background:#234a7b;border-color:#75b4ff}small{display:block;color:#bbd1eb;margin-top:6px}video{width:100%;aspect-ratio:16/9;background:#02050c;border-radius:12px}#message{margin:14px 0;color:#c9d7e9}.tag{font-size:12px;color:#92c5ff}footer{font-size:13px;color:#9aaec7;margin-top:22px}</style><main><div class="tag">LABORATÓRIO • CANAIS SINTÉTICOS</div><h1>TV de Gravações</h1><p>Escolha um canal. A reprodução automática começa quando houver 2 minutos gravados, criando uma reserva inicial para reduzir as pausas.</p><div class="grid"><button id="a" onclick="select('a')">📺 Canal A<small id="ca">Aguardando gravações</small></button><button id="b" onclick="select('b')">📺 Canal B<small id="cb">Aguardando gravações</small></button></div><h3>Blocos disponíveis</h3><p id="metrics">Monitoramento: carregando...</p><div id="blocks">Carregando...</div><p id="message">Escolha um bloco completo para assistir.</p><video id="video" controls playsinline></video><footer>O gravador alterna entre os canais a cada 30 segundos. Um bloco só aparece quando termina de gravar. O laboratório não acessa a conta IPTV.</footer></main><script defer src="https://cdn.jsdelivr.net/npm/hls.js@1/dist/hls.min.js"></script><script>
 let selected='a',h=null,currentId=null,waiting=false,requestVersion=0,known={a:[],b:[]};const START_BUFFER_SECONDS=120;
 const video=document.querySelector('#video'),message=document.querySelector('#message');
@@ -125,5 +125,6 @@ const server=http.createServer(async(req,res)=>{
  }catch{res.writeHead(500);res.end();}
 });
 server.listen(PORT,'0.0.0.0',()=>console.log('NPlay time-shift lab on http://127.0.0.1:'+PORT));
-async function shutdown(){stop=true;child?.kill('SIGTERM');server.close();await rm(root,{recursive:true,force:true});}
+let shuttingDown=false;
+async function shutdown(){if(shuttingDown)return;shuttingDown=true;stop=true;child?.kill('SIGTERM');server.close();await recordingLoop;await rm(root,{recursive:true,force:true});}
 process.once('SIGTERM',shutdown);process.once('SIGINT',shutdown);
