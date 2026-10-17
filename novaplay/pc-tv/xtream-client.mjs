@@ -63,6 +63,17 @@ export class XtreamClient{
   try{const info=await action('get_short_epg',{stream_id:i.id,limit:'5'},100000);epg=(info.epg_listings||[]).slice(0,5).map(x=>({title:Buffer.from(String(x.title||'').slice(0,4000),'base64').toString('utf8').slice(0,500),start:String(x.start||'').slice(0,40),end:String(x.end||'').slice(0,40)}));}catch{}
   return {ok:true,account:login.account,channel_count:streams.length,categories:categories.slice(0,500).map(x=>({id:String(x.category_id||'').slice(0,40),name:String(x.category_name||'').slice(0,120)})),selected_channel:channel?{id:i.id,title:String(channel.name||'').slice(0,140)}:null,epg};
  }
+ async openHls(login,signal){
+  const {identity:i,session}=login;
+  const candidates=[`${i.origin}/live/${encodeURIComponent(i.user)}/${encodeURIComponent(i.password)}/${i.id}.m3u8`,`${i.origin}/${encodeURIComponent(i.user)}/${encodeURIComponent(i.password)}/${i.id}.m3u8`];
+  for(let n=0;n<candidates.length;n++){
+   const media=await this.fetcher(candidates[n],null,signal,{...session,headerTimeout:8000});
+   if(media.response.statusCode===404&&n===0){media.response.destroy();continue;}
+   if(media.response.statusCode!==200){media.response.destroy();throw Object.assign(Error('HLS source denied'),{code:'ENGINE_SOURCE_HTTP'});}
+   return media;
+  }
+  throw Object.assign(Error('HLS unavailable'),{code:'ENGINE_SOURCE_HTTP'});
+ }
  async openTs(login,signal){
   const {identity:i,session}=login;
   const candidates=[`${i.origin}/live/${encodeURIComponent(i.user)}/${encodeURIComponent(i.password)}/${i.id}.ts`,`${i.origin}/${encodeURIComponent(i.user)}/${encodeURIComponent(i.password)}/${i.id}.ts`];
