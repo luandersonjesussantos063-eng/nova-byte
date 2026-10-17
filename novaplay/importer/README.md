@@ -50,16 +50,16 @@ Para atualizar uma instalação existente no Windows, abra o PowerShell **dentro
 Invoke-WebRequest -UseBasicParsing 'https://novabytesolucoes.com.br/novaplay/importer/ATUALIZAR-LIMPEZA.ps1' -OutFile 'ATUALIZAR-LIMPEZA.ps1'; if ($?) { & ([scriptblock]::Create((Get-Content -Raw -Encoding UTF8 '.\ATUALIZAR-LIMPEZA.ps1'))) }
 ```
 
-O comando sinaliza parada, espera o supervisor terminar o trabalho atual, instala somente `pipeline.py` e `cleanup.py`, confere a sintaxe, executa a limpeza das tarefas publicadas elegíveis e abre o importador novamente. `.env` e credenciais são preservados. Não feche o FFmpeg durante a espera. Se houver um worker iniciado separadamente, aguarde esse worker parar antes de atualizar.
+O comando sinaliza parada, espera o supervisor terminar o trabalho atual, faz backup de `pipeline.py`, `streaming.py` e `cleanup.py`, confere a sintaxe, atualiza os três arquivos, executa a limpeza segura, exibe o espaço recuperado e reabre o importador. `.env` e credenciais continuam intocados. `.env` e credenciais são preservados. Não feche o FFmpeg durante a espera. Se houver um worker iniciado separadamente, aguarde esse worker parar antes de atualizar.
 
-Também é possível executar somente a conferência e limpeza: `python worker.py --cleanup-only` (com o supervisor parado). Os erros de capacidade existentes continuam exigindo a opção de tentar novamente no painel depois que houver espaço.
+Também é possível executar somente a conferência e limpeza: `python worker.py --cleanup-only` (com o supervisor parado). A correção identifica caches descartáveis em `jobs/adaptive-jobs/`, sem remover fontes pessoais ou trabalhos ainda não publicados. A fila de 16 tarefas em `capacity` é retomada **uma por vez** quando o importador reinicia e verifica espaço livre suficiente; tarefas sem fonte disponível permanecem em revisão. Se o disco continuar cheio, nenhuma tentativa arriscada é iniciada.
 
 
 ## Streaming adaptativo e conexões lentas
 
 A versão 0.45.36 inclui `streaming.py`. Após o envio do MP4, o processador prepara HLS com versões de até 240p, 480p e 720p, sem ampliar a resolução de origem. O manifesto principal só é enviado depois de conferir todos os segmentos no R2. O MP4 continua como alternativa. Uma falha na otimização não impede a publicação do MP4.
 
-Quando a fila está livre, o processador otimiza também vídeos publicados anteriormente, um por vez. Esse trabalho pode demorar horas no computador; usa FFmpeg com duas threads por versão e requer espaço temporário. Os arquivos temporários da otimização antiga são removidos após concluir; uma falha os preserva para retomada. O arquivo `importer.stop` interrompe essa otimização de vídeos antigos com segurança. Trabalhos novos já iniciados terminam antes de o supervisor parar.
+Os vídeos novos podem receber qualidades adaptativas durante a importação, se houver espaço. A **otimização retroativa dos filmes antigos fica desativada por padrão**, evitando baixar novamente cada MP4 publicado e ocupar o disco. Para executar a retroativa manualmente, defina `IMPORTER_ADAPTIVE_BACKFILL=1` no `.env` após dimensionar o armazenamento. Em qualquer caso, cópias locais temporárias dessa otimização são descartadas ao terminar ou falhar; o vídeo original publicado permanece no R2. O arquivo `importer.stop` interrompe o processador entre tarefas.
 
 O player descobre automaticamente quando o HLS está disponível, começa pela qualidade baixa e permite a adaptação do navegador/HLS.js. Filmes HLS têm buffer alvo de 60 segundos, limitado também pela memória; isso não garante ausência de pausas abaixo da velocidade da versão mínima. Vídeos do YouTube, Drive e players externos dependem dos próprios fornecedores.
 
