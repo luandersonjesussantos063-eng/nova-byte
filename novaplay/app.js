@@ -584,6 +584,7 @@ function navigate(page){
  else if(page==="filmes"&&view!=="filmes")selectedGenre="Todos";
  const chosen=genreLink?"filmes":page==="buscar"?"buscar":(categories[page]?page:"inicio");
  view=chosen;
+ window.dispatchEvent(new CustomEvent("nplay:navigate",{detail:{page:chosen}}));
  $("view-home").hidden=chosen!=="inicio";
  $("view-category").hidden=chosen==="inicio"||chosen==="buscar";
  $("view-search").hidden=chosen!=="buscar";
@@ -1303,7 +1304,7 @@ document.addEventListener("keydown",e=>{
 document.addEventListener("visibilitychange",()=>{if(document.hidden){stopHeroPreview();if(!$("player-layer").hidden)$("video").pause()}});
 window.addEventListener("scroll",()=>$("app-header").classList.toggle("is-scrolled",window.scrollY>24),{passive:true});
 if("serviceWorker" in navigator&&location.protocol==="https:"){
- window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js?v=0.51.12-favorites",{updateViaCache:"none"}).catch(()=>{}));
+ window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js?v=0.51.13-tvspotlight",{updateViaCache:"none"}).catch(()=>{}));
 }
 $("hero-play").onclick=()=>navigate("tv");
 $("hero-info").onclick=()=>navigate("filmes");
