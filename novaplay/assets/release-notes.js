@@ -5,6 +5,19 @@
 "use strict";
 const releases=[
  {
+  version:"0.51.10",
+  date:"2026-10-18",
+  title:"Novidades da NPlay · versão 0.51.10",
+  intro:"A abertura voltou à identidade que você conhece, agora com animação de letras.",
+  changes:[
+   "Restauramos a logo original da NPlay e o reflexo suave de luz azul abaixo dela.",
+   "As letras aparecem uma por uma, sincronizadas com a abertura.",
+   "O som original escolhido permanece o mesmo, sem trocar a gravação."
+  ],
+  action:"preview-intro-audio",
+  actionLabel:"▶ Ouvir som da abertura"
+ },
+ {
   version:"0.51.9",
   date:"2026-10-17",
   title:"Novidades da NPlay · versão 0.51.9",
