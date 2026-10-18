@@ -4,7 +4,8 @@
 (()=>{
 "use strict";
 const releases=[
- {
+ {version:"0.51.15",date:"2026-10-18",title:"Teste de todas as prévias no ADM · versão 0.51.15",intro:"Teste a grade e escolha os canais com imagem funcionando.",changes:["Botão para testar todas as prévias, com progresso, contagem e opção de parar.","Filtro para escolher somente os canais com imagem confirmada; seleção e salvamento continuam manuais."]},
+  {
   version:"0.51.14",date:"2026-10-18",title:"Prévias escolhidas no ADM · versão 0.51.14",
   intro:"A faixa de TV agora mostra somente os canais escolhidos e testados pelo administrador.",
   changes:[

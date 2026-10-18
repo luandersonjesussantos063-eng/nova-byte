@@ -31,10 +31,10 @@
 #nplay-presence-admin .presence-watching{margin:7px 0 5px;padding:9px 12px;border-radius:9px;border:1px solid #4a607b70;background:#15273d;color:#d4e3f7;font-size:13px;font-weight:650;overflow-wrap:anywhere;line-height:1.4}
 #nplay-presence-admin .presence-watching.is-playing{border-color:#448bb5b0;background:#123650;color:#d6f1ff}
 </style>
-<link rel="stylesheet" href="./tv-previews.css?v=0.51.14">
+<link rel="stylesheet" href="./tv-previews.css?v=0.51.15">
 </head>
 <body>
-<header class="top"><a class="brand" href="../"><span class="mark">▶</span> N<span>Play</span></a><div class="top-right"><strong>Painel administrativo · NPlay V 0.51.14</strong><button id="logout" class="outline" hidden>Sair</button></div></header>
+<header class="top"><a class="brand" href="../"><span class="mark">▶</span> N<span>Play</span></a><div class="top-right"><strong>Painel administrativo · NPlay V 0.51.15</strong><button id="logout" class="outline" hidden>Sair</button></div></header>
 <main class="container">
   <section id="loading" class="panel intro" hidden><div class="spin"></div><p>Preparando seu painel... <small>V 0.52.1</small></p><p id="loading-error" class="feedback" role="status"></p><button id="loading-retry" class="outline" type="button" hidden onclick="location.reload()">Tentar novamente</button></section>
   <section id="login-view" class="panel login">
@@ -127,11 +127,11 @@
     <section id="nplay-access-admin" class="panel" hidden style="margin:16px 0"><h2>Autorizações de acesso</h2><p class="muted">Aprove ou revogue dispositivos. Somente administradores podem alterar o acesso.</p><button id="nplay-access-refresh" type="button" class="outline">Atualizar solicitações</button><p id="nplay-access-admin-status"></p><div id="nplay-access-admin-list"></div></section><section id="live-embed-manager" class="panel" hidden><h2>Canais ao vivo · testar e publicar</h2><section id="tv-preview-admin" aria-labelledby="tv-preview-heading">
 <h3 id="tv-preview-heading">Prévias e destaques da tela TV ao vivo</h3>
 <p class="muted">Escolha até 24 canais publicados. Teste a imagem, adicione à lista e salve. Somente canais selecionados entram na faixa de prévias; nenhum será escolhido automaticamente.</p>
-<div class="tv-preview-toolbar"><button type="button" id="tv-preview-refresh" class="outline">Atualizar canais</button><button type="button" id="tv-preview-save" class="primary" disabled>Salvar seleção</button><button type="button" id="tv-preview-stop" class="outline" hidden>Parar teste</button></div>
-<p id="tv-preview-message" role="status" aria-live="polite">Carregando seleção…</p><video id="tv-preview-video" controls muted playsinline hidden></video>
+<div class="tv-preview-toolbar"><button type="button" id="tv-preview-test-all" class="primary" disabled>Testar todas as prévias</button><button type="button" id="tv-preview-refresh" class="outline">Atualizar canais</button><button type="button" id="tv-preview-save" class="primary" disabled>Salvar seleção</button><button type="button" id="tv-preview-stop" class="outline" hidden>Parar teste</button></div>
+<progress id="tv-preview-progress" value="0" max="1" hidden aria-label="Progresso dos testes"></progress><p id="tv-preview-message" role="status" aria-live="polite">Carregando seleção…</p><video id="tv-preview-video" controls muted playsinline hidden></video>
 <h4>Seus canais <span id="tv-preview-count">0/24</span></h4><div id="tv-preview-selected"></div>
 <label for="tv-preview-search">Buscar canal publicado</label><input id="tv-preview-search" type="search" placeholder="Ex.: Discovery, SBT, Sportv…" autocomplete="off">
-<div id="tv-preview-results"></div><button type="button" id="tv-preview-more" class="outline" hidden>Mostrar mais canais</button>
+<label for="tv-preview-filter">Resultado dos testes</label><select id="tv-preview-filter"><option value="all">Todos os canais</option><option value="working">Só as que funcionaram</option><option value="failed">Sem prévia</option><option value="pending">Ainda não testadas</option></select><div id="tv-preview-results"></div><button type="button" id="tv-preview-more" class="outline" hidden>Mostrar mais canais</button>
 </section><div id="live-embed-controls"></div></section>
     <div class="intro-text"><span class="section-label">CENTRAL DE CONTEÚDO</span><h1>Seus filmes, suas regras.</h1><p>Escolha um vídeo do telefone, envie uma capa e publique dentro da NPlay.</p></div>
     <div class="stats">
@@ -496,14 +496,14 @@
 })();
 </script>
 <script defer src="https://cdn.jsdelivr.net/npm/hls.js@1.7.3/dist/hls.min.js"></script>
-<script src="../assets/live-auth.js?v=0.51.14-preview-release" defer></script>
+<script src="../assets/live-auth.js?v=0.51.15-preview-release" defer></script>
 <script defer src="https://cdn.jsdelivr.net/npm/mpegts.js@1.7.3/dist/mpegts.js"></script>
 <script src="./gateway-config.js?v=0.49.6" defer></script>
 <script src="./m3u-core.js?v=0.49.6" defer></script>
 <script src="./signal-test.js?v=0.50.0" defer></script>
 <script src="./iptv-diagnostics.js?v=0.50.0" defer></script>
 <script src="./live-embeds.js?v=0.50.0" defer></script>
-<script src="./tv-previews.js?v=0.51.14" defer></script>
+<script src="./tv-previews.js?v=0.51.15" defer></script>
 <script src="./pc-tv.js?v=0.50.0" defer></script>
 <script src="./access-admin.js?v=0.50.7" defer></script>
 <script src="./notifications-admin.js?v=0.50.8" defer></script>

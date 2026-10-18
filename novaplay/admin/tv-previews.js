@@ -2,7 +2,7 @@
 (()=>{
 'use strict';
 function eligible(item){try{const u=new URL(item.embed_url);return item.is_published!==false&&u.protocol==='https:'&&!u.username&&!u.password&&(item.stream_type==='hls'||/\.m3u8?(?:\?|$)/i.test(u.href));}catch{return false;}}
-function canAdd(item,proof,now=Date.now()){return !!item&&eligible(item)&&proof?.url===item.embed_url&&Number.isFinite(proof.at)&&now-proof.at>=0&&now-proof.at<30*60*1000;}
+function canAdd(item,proof,now=Date.now()){return !!item&&eligible(item)&&proof?.url===item.embed_url&&Number.isFinite(proof.at)&&now-proof.at>=0&&now-proof.at<24*60*60*1000;}
 async function verify(video,item,{signal,test=globalThis.NPlaySignal?.testSignal}={}){
  if(!eligible(item)||!test)throw Error('Escolha um canal publicado com sinal HLS para testar a prévia.');
  let playback;
@@ -16,6 +16,19 @@ async function verify(video,item,{signal,test=globalThis.NPlaySignal?.testSignal
   return {at:Date.now(),url:item.embed_url};
  }finally{if(playback)window.NPlayLiveAuth?.release(playback);await window.NPlayLiveAuth?.waitForRelease?.();}
 }
+async function scan(items,{signal,check,onResult=()=>{},onProgress=()=>{}}){
+ const cache=new Map();let done=0,passed=0,failed=0;
+ for(const item of items){
+  if(signal?.aborted)break;
+  onProgress({done,total:items.length,passed,failed,item});
+  let result=cache.get(item.embed_url);
+  if(!result){try{result={proof:await check(item,signal)};}catch(error){if(signal?.aborted||error.name==='AbortError')break;result={error};}cache.set(item.embed_url,result);}
+  if(signal?.aborted)break;
+  done++;if(result.proof)passed++;else failed++;
+  onResult(item,result);onProgress({done,total:items.length,passed,failed});
+ }
+ return {done,total:items.length,passed,failed,stopped:!!signal?.aborted};
+}
 async function persist(client,ids){
  if(!Array.isArray(ids)||ids.length>24||new Set(ids).size!==ids.length)throw Error('Escolha até 24 canais diferentes.');
  const {data,error}=await client.from('novaplay_featured').update({tv_spotlight_ids:ids}).eq('id',1).select('tv_spotlight_ids').single();
@@ -23,31 +36,32 @@ async function persist(client,ids){
  if(!data||JSON.stringify(data.tv_spotlight_ids)!==JSON.stringify(ids))throw Error('Não foi possível confirmar o salvamento. Entre com uma conta administrativa.');
  return data.tv_spotlight_ids;
 }
-window.NPlayTvPreviewAdmin={eligible,canAdd,verify,persist};
+window.NPlayTvPreviewAdmin={eligible,canAdd,verify,persist,scan};
 const $=id=>document.getElementById(id);if(!$('tv-preview-admin'))return;
 let db,channels=[],chosen=[],saved=new Set(),proofs=new Map(),failures=new Set(),controller=null,loading=false,saving=false,loaded=false,initialized=false,limit=24;
 const message=text=>{$('tv-preview-message').textContent=text;};
 function button(label,action,disabled=false){const node=document.createElement('button');node.type='button';node.className='outline compact';node.textContent=label;node.disabled=disabled;node.onclick=action;return node;}
 function render(){
  const busy=!!controller||saving;
- $('tv-preview-save').disabled=!loaded||loading||busy;$('tv-preview-refresh').disabled=loading||busy;$('tv-preview-stop').hidden=!controller;
+ $('tv-preview-test-all').disabled=!loaded||loading||busy;$('tv-preview-save').disabled=!loaded||loading||busy;$('tv-preview-refresh').disabled=loading||busy;$('tv-preview-stop').hidden=!controller;
  $('tv-preview-count').textContent=chosen.length+'/24 canais selecionados';
  const list=$('tv-preview-selected');list.replaceChildren();
  if(!chosen.length){const p=document.createElement('p');p.className='muted';p.textContent='Sem canais selecionados, a faixa fica oculta para os clientes.';list.append(p);}
  chosen.forEach((id,index)=>{
   const item=channels.find(x=>x.id===id),row=document.createElement('div');row.className='tv-preview-row';
   const name=document.createElement('strong');name.textContent=(index+1)+'. '+(item?.title||'Canal fora da grade');
-  row.append(name,button('↑',()=>{[chosen[index-1],chosen[index]]=[chosen[index],chosen[index-1]];render();},busy||index===0),button('Retirar',()=>{chosen=chosen.filter(x=>x!==id);render();},busy));list.append(row);
+  row.append(name,button('↑',()=>{[chosen[index-1],chosen[index]]=[chosen[index],chosen[index-1]];render();},saving||index===0),button('Retirar',()=>{chosen=chosen.filter(x=>x!==id);render();},saving));list.append(row);
  });
  const query=$('tv-preview-search').value.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
- const matches=channels.filter(x=>(x.title+' '+(x.category||'')).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().includes(query));
+ const filter=$('tv-preview-filter').value;
+ const matches=channels.filter(x=>(filter==='all'||filter==='working'&&canAdd(x,proofs.get(x.id))||filter==='failed'&&failures.has(x.id)||filter==='pending'&&!proofs.has(x.id)&&!failures.has(x.id))&&(x.title+' '+(x.category||'')).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().includes(query));
  const results=$('tv-preview-results');results.replaceChildren();
  for(const item of matches.slice(0,limit)){
   const row=document.createElement('div');row.className='tv-preview-row';
   const info=document.createElement('div'),name=document.createElement('strong'),note=document.createElement('small');name.textContent=item.title;
   note.textContent=failures.has(item.id)?'Prévia não confirmada':canAdd(item,proofs.get(item.id))?'✓ Imagem em movimento confirmada':chosen.includes(item.id)?'Selecionado · pode testar novamente':'Teste a imagem antes de adicionar';
   info.append(name,note);
-  row.append(info,button('Testar prévia',()=>testChannel(item),busy),button(chosen.includes(item.id)?'Selecionado':'+ Adicionar',()=>{if(canAdd(item,proofs.get(item.id))&&!chosen.includes(item.id)&&chosen.length<24){chosen.push(item.id);render();}},busy||chosen.includes(item.id)||chosen.length>=24||!canAdd(item,proofs.get(item.id))));results.append(row);
+  row.append(info,button('Testar prévia',()=>testChannel(item),busy),button(chosen.includes(item.id)?'Selecionado':'+ Adicionar',()=>{if(canAdd(item,proofs.get(item.id))&&!chosen.includes(item.id)&&chosen.length<24){chosen.push(item.id);render();}},saving||chosen.includes(item.id)||chosen.length>=24||!canAdd(item,proofs.get(item.id))));results.append(row);
  }
  $('tv-preview-more').hidden=matches.length<=limit;
 }
@@ -58,6 +72,19 @@ async function testChannel(item){
  try{const proof=await verify($('tv-preview-video'),item,{signal:controller.signal});proofs.set(item.id,proof);message('✓ Prévia de '+item.title+' confirmada. Clique em Adicionar e depois Salvar seleção.');}
  catch(error){failures.add(item.id);message(error.name==='AbortError'?'Teste interrompido.':'Prévia não confirmada: '+error.message);}
  finally{controller=null;$('tv-preview-video').hidden=true;render();}
+}
+async function testAll(){
+ if(!loaded||controller||saving||loading)return;
+ controller=new AbortController();proofs.clear();failures.clear();render();
+ const progress=$('tv-preview-progress');progress.hidden=false;progress.max=channels.length;progress.value=0;
+ $('tv-preview-video').hidden=false;
+ try{
+  const result=await scan(channels,{signal:controller.signal,check:(item,signal)=>verify($('tv-preview-video'),item,{signal}),
+   onResult:(item,result)=>{if(result.proof){proofs.set(item.id,result.proof);failures.delete(item.id);}else{proofs.delete(item.id);failures.add(item.id);}render();},
+   onProgress:({done,total,passed,failed,item})=>{progress.value=done;message('Testadas '+done+'/'+total+' · Funcionando: '+passed+' · Sem prévia: '+failed+(item?' · Agora: '+item.title:'')+'. Mantenha esta tela aberta. Você já pode adicionar as aprovadas.');}});
+  $('tv-preview-filter').value='working';limit=24;
+  message((result.stopped?'Teste interrompido. ':'Teste concluído. ')+result.done+'/'+result.total+' testadas · '+result.passed+' funcionando · '+result.failed+' sem prévia. Escolha as que deseja adicionar e salve a seleção.');
+ }finally{controller=null;$('tv-preview-video').hidden=true;render();}
 }
 async function load(){
  if(loading||saving||controller)return;loading=true;loaded=false;$('tv-preview-save').disabled=true;
@@ -84,7 +111,7 @@ function init(){
  if(initialized)return;
  db=window.NPlayLiveAdminClient;
  if(!db||!window.NPlayLiveAuth||!globalThis.NPlaySignal){setTimeout(init,300);return;}
- initialized=true;$('tv-preview-search').oninput=()=>{limit=24;render();};$('tv-preview-save').onclick=save;$('tv-preview-refresh').onclick=load;$('tv-preview-more').onclick=()=>{limit+=24;render();};$('tv-preview-stop').onclick=()=>controller?.abort();
+ initialized=true;$('tv-preview-test-all').onclick=testAll;$('tv-preview-filter').onchange=()=>{limit=24;render();};$('tv-preview-search').oninput=()=>{limit=24;render();};$('tv-preview-save').onclick=save;$('tv-preview-refresh').onclick=load;$('tv-preview-more').onclick=()=>{limit+=24;render();};$('tv-preview-stop').onclick=()=>controller?.abort();
  window.addEventListener('pagehide',()=>controller?.abort());document.querySelector('[data-admin-tab="canais"]')?.addEventListener('click',load);
  db.auth.onAuthStateChange?.(()=>setTimeout(()=>{controller?.abort();void load();},0));
  const dashboard=$('dashboard');if(dashboard)new MutationObserver(()=>{if(dashboard.hidden)controller?.abort();else void load();}).observe(dashboard,{attributes:true,attributeFilter:['hidden']});

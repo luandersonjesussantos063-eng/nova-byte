@@ -8,7 +8,7 @@ const item={id:'00142c6f-bb22-5f18-8e42-4d852d8d7c00',title:'Canal A',embed_url:
 test('only a current moving-image confirmation for the exact published HLS source enables adding it',()=>{
  const {core}=boot();const now=Date.now(),proof={at:now,url:item.embed_url};
  assert.equal(core.canAdd(item,proof,now),true);assert.equal(core.canAdd(item,null,now),false);
- assert.equal(core.canAdd(item,{...proof,at:now-31*60000},now),false);
+ assert.equal(core.canAdd(item,{...proof,at:now-25*60*60000},now),false);
  assert.equal(core.canAdd({...item,embed_url:'https://other.example/live.m3u8'},proof,now),false);
  assert.equal(core.canAdd({...item,is_published:false},proof,now),false);
  assert.equal(core.eligible({...item,embed_url:'http://media.example/a.m3u8'}),false);
@@ -33,6 +33,18 @@ test('saving touches only the preview selection and refuses false successes or d
 });
 test('admin controls and mobile header spacing are integrated into the published interfaces',()=>{
  const admin=readFileSync(new URL('../admin/index.html',import.meta.url),'utf8'),css=readFileSync(new URL('../assets/tv-spotlight.css',import.meta.url),'utf8');
- for(const id of ['tv-preview-admin','tv-preview-search','tv-preview-selected','tv-preview-save','tv-preview-video'])assert(admin.includes('id="'+id+'"'));
- assert(admin.includes('tv-previews.js?v=0.51.14'));assert(css.includes('padding-top:calc(130px + env(safe-area-inset-top,0px))'));
+ for(const id of ['tv-preview-admin','tv-preview-search','tv-preview-selected','tv-preview-save','tv-preview-video','tv-preview-test-all','tv-preview-filter','tv-preview-progress'])assert(admin.includes('id="'+id+'"'));
+ assert(admin.includes('tv-previews.js?v=0.51.15'));assert(css.includes('padding-top:calc(130px + env(safe-area-inset-top,0px))'));
+});
+
+test('batch tests sequentially, reuses identical sources and reports failures without auto selecting',async()=>{
+ const {core}=boot();const rows=[item,{...item,id:'duplicate'},{...item,id:'bad',embed_url:'https://bad.example/a.m3u8'}];
+ let active=0,max=0,calls=0;const results=[],progress=[];
+ const summary=await core.scan(rows,{check:async channel=>{calls++;active++;max=Math.max(active,max);await Promise.resolve();active--;if(channel.id==='bad')throw Error('offline');return {url:channel.embed_url,at:Date.now()};},onResult:(channel,result)=>results.push([channel.id,!!result.proof]),onProgress:value=>progress.push(value.done)});
+ assert.equal(max,1);assert.equal(calls,2);assert.equal(summary.done,3);assert.equal(summary.passed,2);assert.equal(summary.failed,1);assert.equal(summary.stopped,false);assert.deepEqual(results,[[item.id,true],['duplicate',true],['bad',false]]);assert.equal(progress.at(-1),3);
+});
+test('stopping a batch keeps completed results and never marks an interrupted preview as failed',async()=>{
+ const {core}=boot();const signal={aborted:false};let calls=0;const results=[];
+ const summary=await core.scan([item,{...item,id:'second',embed_url:'https://second.example/a.m3u8'}, {...item,id:'third'}],{signal,check:async channel=>{calls++;if(calls===2){signal.aborted=true;throw new DOMException('Stopped','AbortError');}return {url:channel.embed_url,at:Date.now()};},onResult:channel=>results.push(channel.id)});
+ assert.equal(calls,2);assert.equal(summary.done,1);assert.equal(summary.failed,0);assert.equal(summary.stopped,true);assert.deepEqual(results,[item.id]);
 });
