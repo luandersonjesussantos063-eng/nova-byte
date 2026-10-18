@@ -63,6 +63,7 @@ function draw(rows){
   const empty=document.createElement('p');empty.className='muted';
   empty.textContent='Nenhum perfil registrado. Abra a NPlay e selecione um perfil em um aparelho autorizado.';
   list.append(empty);
+  message.textContent='0 perfis online · Nenhum perfil registrado · Consulta automática a cada 10s';
  }
  repaintTime();
 }
