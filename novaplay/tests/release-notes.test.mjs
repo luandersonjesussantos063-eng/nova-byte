@@ -27,8 +27,8 @@ function boot(){
 
 test('the published NPlay version always has specific editorial release notes',()=>{
  assert.match(version,/^\d+\.\d+\.\d+$/);
- assert.equal((html.match(/release-notes\.js\?v=0\.51\.11/g)||[]).length,1);
- assert(html.indexOf('release-notes.js?v=0.51.11')<html.indexOf('notifications.js?v=0.51.11'),'changelog must load before bell');
+ assert.equal((html.match(/release-notes\.js\?v=0\.51\.12/g)||[]).length,1);
+ assert(html.indexOf('release-notes.js?v=0.51.12')<html.indexOf('notifications.js?v=0.51.12'),'changelog must load before bell');
  const {releases}=boot();
  const current=releases.filter(r=>r.version===version);
  assert.equal(current.length,1);
@@ -46,7 +46,7 @@ test('current version describes the restored NPlay logo and staggered opening',(
  assert.equal(current.action,'preview-intro-audio');
  assert.match(current.actionLabel,/Ouvir som/);
  assert.equal(core.releaseEntries().current.version,version);
- assert.equal(old.length,10);
+ assert.equal(old.length,releases.length-1);
  assert(old.every(entry=>entry.historical&&entry.action==null));
  assert(old.some(entry=>entry.version==='0.51.3'&&entry.changes.some(c=>/som da abertura/.test(c))));
 });

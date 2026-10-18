@@ -29,8 +29,15 @@ function registerCatalogInterest(item,eventType){
   .catch(()=>{});
 }
 function read(key,fallback){try{const x=JSON.parse(localStorage.getItem(key));return x??fallback}catch(e){return fallback}}
+// The home, TV grid and player must share one persistent channel identity.
+function favoriteId(value){
+ const id=String(typeof value==="string"?value:value?.staticId||value?.id||"");
+ return /^(?:live-)?[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)?"channel-"+id.replace(/^live-/,"").toLowerCase():id;
+}
+function isFavorite(value){return favorite.has(favoriteId(value));}
+function favoriteItems(){return [...new Map(all.filter(isFavorite).map(item=>[favoriteId(item),item])).values()];}
 const savedFavorites=read(favKey,[]);
-const favorite=new Set((Array.isArray(savedFavorites)?savedFavorites:[]).filter(x=>typeof x==="string"));
+const favorite=new Set((Array.isArray(savedFavorites)?savedFavorites:[]).filter(x=>typeof x==="string").map(favoriteId));
 const searchText=value=>String(value??"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLocaleLowerCase("pt-BR");
 let progress=read(progressKey,{});
 if(!progress||typeof progress!=="object"||Array.isArray(progress))progress={};
@@ -108,14 +115,41 @@ async function loadUploadedCatalog(){
 
 function icon(id){return '<svg aria-hidden="true"><use href="#i-'+id+'"></use></svg>'}
 function toast(message){clearTimeout(toastTimeout);const n=$("toast");n.textContent=message;n.classList.add("show");toastTimeout=setTimeout(()=>n.classList.remove("show"),2600)}
-function favLabel(item){return favorite.has(item.id)?"Na minha lista":"Minha lista"}
+function favLabel(item){return isFavorite(item)?"Na minha lista":"Minha lista"}
+function refreshPlayerFavorite(){
+ const button=$("player-favorite"),item=current?.item;
+ if(!button)return;
+ const id=favoriteId(item),available=!!id&&map.has(item?.id);
+ button.hidden=!available;
+ button.setAttribute("aria-pressed",String(available&&isFavorite(item)));
+ button.setAttribute("aria-label",(isFavorite(item)?"Remover dos favoritos: ":"Favoritar: ")+(item?.title||"conteúdo"));
+ button.title=isFavorite(item)?"Remover dos favoritos":"Salvar nos favoritos";
+ button.innerHTML=icon("heart");
+ button.onclick=available?()=>toggleFavorite(item):null;
+}
 function toggleFavorite(item){
- if(favorite.has(item.id)){favorite.delete(item.id);toast("Removido da minha lista")}
- else{favorite.add(item.id);toast("Adicionado à minha lista")}
- save(favKey,[...favorite]);if(selected?.id===item.id)refreshFavoriteButton();
+ const id=favoriteId(item);if(!id)return false;
+ const wasSaved=favorite.has(id),next=new Set(favorite);
+ if(wasSaved)next.delete(id);else next.add(id);
+ try{localStorage.setItem(favKey,JSON.stringify([...next]));}
+ catch{toast("Não foi possível salvar os favoritos neste navegador.");return false;}
+ favorite.clear();for(const saved of next)favorite.add(saved);
+ toast(wasSaved?"Removido da minha lista":"Adicionado à minha lista");
+ if(selected)refreshFavoriteButton();refreshPlayerFavorite();
+ window.dispatchEvent(new CustomEvent("nplay:favorites-change"));
  if(view==="favoritos")renderCategory("favoritos");
  if(view==="inicio")renderRows();
+ return true;
 }
+window.addEventListener("storage",event=>{
+ if(event.key!==favKey&&event.key!==null)return;
+ const saved=read(favKey,[]);favorite.clear();
+ for(const id of Array.isArray(saved)?saved:[])if(typeof id==="string")favorite.add(favoriteId(id));
+ if(selected)refreshFavoriteButton();refreshPlayerFavorite();
+ window.dispatchEvent(new CustomEvent("nplay:favorites-change"));
+ if(view==="favoritos")renderCategory("favoritos");
+ if(view==="inicio")renderRows();
+});
 function progressItem(id){const p=progress[id];return p&&Number.isFinite(p.position)&&p.position>5&&Number.isFinite(p.duration)&&p.duration>0&&p.position/p.duration<.94?p:null}
 function continued(){
  return Object.entries(progress).filter(([id])=>progressItem(id)).sort((a,b)=>(b[1].updated||0)-(a[1].updated||0))
@@ -279,7 +313,7 @@ function renderRows(){
  ]).filter(x=>x[1].length>=4);
  const blocks=[
   ["Continuar assistindo",continued(),"continuar",false],
-  ["Minha lista",all.filter(x=>favorite.has(x.id)),"favoritos",false],
+  ["Minha lista",favoriteItems(),"favoritos",false],
   ["Filmes disponíveis",availableFilms.length?availableFilms:db.films.filter(x=>!x.catalogOnly),"filmes",false],
   ["Séries para acompanhar",availableSeries,"series",false],
   ["TV ao vivo",tvChannels,"tv",true],
@@ -493,7 +527,7 @@ function renderCategory(kind){
  const conf=categories[kind]||categories.filmes;
  $("category-kicker").textContent=conf[0];$("category-heading").textContent=conf[1];$("category-subtitle").textContent=conf[2];
  const content=$("category-grid");content.className="category-grid";content.replaceChildren();
- let list=kind==="series"?db.series:kind==="favoritos"?all.filter(x=>favorite.has(x.id)):kind==="youtube"?youtubeFilms():kind==="em-breve"?upcomingFilms():conf[3];
+ let list=kind==="series"?db.series:kind==="favoritos"?favoriteItems():kind==="youtube"?youtubeFilms():kind==="em-breve"?upcomingFilms():conf[3];
  if(kind==="tv")window.dispatchEvent(new Event("nplay:tv-open"));
  if(kind==="musica")window.dispatchEvent(new Event("nplay:music-open"));
  const filters=$("genre-filter-panel"),buttons=$("genre-filter-buttons");
@@ -564,7 +598,7 @@ function navigate(page){
 }
 function refreshFavoriteButton(){
  const btn=$("detail-favorite");if(!selected)return;
- btn.innerHTML=icon(favorite.has(selected.id)?"check":"plus")+" <span>"+escapeText(favLabel(selected))+"</span>";
+ btn.innerHTML=icon(isFavorite(selected)?"check":"plus")+" <span>"+escapeText(favLabel(selected))+"</span>";
 }
 /* Pluto TV e emissoras sem stream autorizado abrem o site oficial.
    Nenhum URL interno ou HLS de terceiros é extraído da plataforma. */
@@ -815,7 +849,7 @@ function stopPlayback(){
  if(hls){hls.destroy();hls=null}
  if(tsPlayer){tsPlayer.destroy();tsPlayer=null}
  video.removeAttribute("src");video.load();video.hidden=false;
- $("fallback-frame").src="about:blank";$("fallback-frame").hidden=true;current=null;
+ $("fallback-frame").src="about:blank";$("fallback-frame").hidden=true;current=null;refreshPlayerFavorite();
 }
 function closePlayer(skipFullscreen=false){
  const layer=$("player-layer");
@@ -939,13 +973,20 @@ function setupLiveTouchShield(){
  clearNplayShieldTimer();overlay.hidden=true;toggle.hidden=false;toggle.textContent="Proteger tela";
  started.hidden=false;started.disabled=false;started.textContent="Vídeo começou";
 }
-function openLiveEmbed(url,title){
+function liveFavoriteItem(url,channel){
+ if(channel?.id){const item=map.get(favoriteId(channel));if(item)return item;}
+ const clean=raw=>{try{const u=new URL(raw);u.searchParams.delete("access_token");u.searchParams.delete("viewer");u.searchParams.sort();u.hash="";return u.href}catch{return ""}};
+ const source=clean(url);
+ return all.find(item=>item.liveRecord&&clean(item.liveRecord.embed_url)===source)||all.find(item=>item.kind==="tv"&&clean(item.src)===source)||null;
+}
+function openLiveEmbed(url,title,channel){
  let source;
  try{source=new URL(url);if(source.protocol!=="https:")return false}catch{return false}
  window.NovaPlayHeroScenes?.stop?.();window.NPlayHeroLive?.stop?.();window.NovaPlayHover?.close?.();stopHeroPreview();
  $("detail-layer").hidden=true;selected=null;
  stopPlayback();
- current={item:{title:String(title||"Canal ao vivo"),kind:"tv",liveEmbedUrl:source.href},episode:null};
+ current={item:{...liveFavoriteItem(url,channel),title:String(title||"Canal ao vivo"),kind:"tv",liveEmbedUrl:source.href},episode:null};
+ refreshPlayerFavorite();
  notifyPlayback(current.item,null,'open');
  const layer=$("player-layer"),frame=$("fallback-frame");
  layer.hidden=false;layer.classList.add("live-embed-active");document.body.classList.add("modal-open");
@@ -962,19 +1003,19 @@ function openLiveEmbed(url,title){
  frame.referrerPolicy="no-referrer";frame.hidden=false;frame.src=source.href;
  setupLiveTouchShield();enterCinema();$("player-close").focus();return true;
 }
-function openLiveHls(url,title,mode="hls",audioOnly=false){
+function openLiveHls(url,title,mode="hls",audioOnly=false,channel){
  let source;try{source=new URL(url);if(source.protocol!=="https:"||source.username||source.password)return false}catch{return false}
- play({id:"live-"+source.href,title:String(title||"Canal ao vivo"),kind:"tv",src:source.href,mode,live:true,audioOnly});return true;
+ play({...liveFavoriteItem(url,channel),title:String(title||"Canal ao vivo"),kind:"tv",src:source.href,mode,live:true,audioOnly});return true;
 }
-window.NPlayLiveCatalog={staticChannels:()=>db.channels,isFavorite:id=>favorite.has(id),toggleFavorite:id=>{const item=map.get(id);if(item)toggleFavorite(item);},setChannels(channels){
+window.NPlayLiveCatalog={staticChannels:()=>db.channels,isFavorite,toggleFavorite:id=>toggleFavorite(map.get(favoriteId(id))||{id:favoriteId(id)}),setChannels(channels){
  for(let i=all.length-1;i>=0;i--)if(all[i].liveRecord){map.delete(all[i].id);all.splice(i,1);}
  for(const record of channels){const id="channel-"+record.id;const item={id,title:record.title,kind:"tv",live:true,mode:record.stream_type,category:record.category||"TV ao vivo",description:"Transmissão ao vivo · "+(record.category||"TV"),cover:record.logo_url||"",customLabel:record.logo_url?null:record.title,liveRecord:record};all.push(item);map.set(id,item);}
  if(view==="buscar")renderSearch();if(view==="favoritos")renderCategory("favoritos");
 }};
-window.NovaPlayPlayer={openStatic:id=>{const item=byId(id);if(!item)return false;startWatching(item);return true;},openHls:openLiveHls,openRadio:(url,title,mode)=>openLiveHls(url,title,mode==="mpegts"?"mpegts":"hls",true),openMpegts:(url,title)=>openLiveHls(url,title,"mpegts"),openEmbed:openLiveEmbed,closeEmbed:()=>{if(current?.item?.liveEmbedUrl)closePlayer()}};
-$("player-live-reload").onclick=()=>{if(current?.item?.liveEmbedUrl)openLiveEmbed(current.item.liveEmbedUrl,current.item.title)};
+window.NovaPlayPlayer={openStatic:id=>{const item=byId(id);if(!item)return false;startWatching(item);return true;},openHls:(url,title,channel)=>openLiveHls(url,title,"hls",false,channel),openRadio:(url,title,mode,channel)=>openLiveHls(url,title,mode==="mpegts"?"mpegts":"hls",true,channel),openMpegts:(url,title,channel)=>openLiveHls(url,title,"mpegts",false,channel),openEmbed:openLiveEmbed,closeEmbed:()=>{if(current?.item?.liveEmbedUrl)closePlayer()}};
+$("player-live-reload").onclick=()=>{if(current?.item?.liveEmbedUrl)openLiveEmbed(current.item.liveEmbedUrl,current.item.title,current.item)};
 function play(item,episode){
- if(item?.liveEmbedUrl){openLiveEmbed(item.liveEmbedUrl,item.title);return}
+ if(item?.liveEmbedUrl){openLiveEmbed(item.liveEmbedUrl,item.title,item);return}
  if(item?.kind==="tv"&&item.mode==="external"){openOfficialChannel(item);return}
  window.NovaPlayHeroScenes?.stop?.();window.NPlayHeroLive?.stop?.();
  window.NovaPlayHover?.close?.();
@@ -990,6 +1031,7 @@ function play(item,episode){
   item={...item,src:playbackUrl.href};
  }
  current={item,episode:episode||null};
+ refreshPlayerFavorite();
  notifyPlayback(item,episode,'open');
  const media=episode||item;
  $("player-layer").hidden=false;document.body.classList.add("modal-open");
@@ -1261,7 +1303,7 @@ document.addEventListener("keydown",e=>{
 document.addEventListener("visibilitychange",()=>{if(document.hidden){stopHeroPreview();if(!$("player-layer").hidden)$("video").pause()}});
 window.addEventListener("scroll",()=>$("app-header").classList.toggle("is-scrolled",window.scrollY>24),{passive:true});
 if("serviceWorker" in navigator&&location.protocol==="https:"){
- window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js?v=0.51.11-epg",{updateViaCache:"none"}).catch(()=>{}));
+ window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js?v=0.51.12-favorites",{updateViaCache:"none"}).catch(()=>{}));
 }
 $("hero-play").onclick=()=>navigate("tv");
 $("hero-info").onclick=()=>navigate("filmes");
