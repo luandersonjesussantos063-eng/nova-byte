@@ -21,7 +21,9 @@ test('NPlay intro uses a unique local signature without external audio or Netfli
  assert.match(html,/intro-audio\.js\?v=0\.51\.4/);
  assert.match(profiles,/Som da abertura/);
  assert.doesNotMatch(code,/https?:\/\/|\.mp3|\.wav|fetch\(/i);
- assert.match(code,/clash\(/);\n assert.match(code,/swoosh\(/);\n assert.match(code,/createDynamicsCompressor/);
+ assert.match(code,/clash\(/);
+ assert.match(code,/swoosh\(/);
+ assert.match(code,/createDynamicsCompressor/);
 });
 test('sound is enabled initially, persists opt-out, and never blocks a browser without audio support',async()=>{
  const s=harness();
