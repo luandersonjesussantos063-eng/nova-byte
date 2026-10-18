@@ -44,6 +44,64 @@ async function checkIptvServer(){
  }finally{clearTimeout(timer);btn.disabled=false;}
 }
 
+
+/* Account-level diagnostic. Runs only after admin enters the existing client
+   password; nothing is stored, logged, exposed in a URL, or changed in the DB.
+   Uses POST (form-urlencoded) to avoid putting Xtream credentials in query logs. */
+async function diagnoseIptvAccount(username,password,report){
+ if(!/^[a-z0-9_]{4,40}$/.test(username)||password.length<12||password.length>128){
+  report('Confira o usuário e informe a senha atual deste acesso (mínimo de 12 caracteres).');
+  return {ok:false,stage:'input'};
+ }
+ const call=async action=>{
+  const body=new URLSearchParams({username,password});
+  if(action)body.set('action',action);
+  const ctrl=new AbortController(),timeout=setTimeout(()=>ctrl.abort(),20000);
+  try{
+   const r=await fetch(server+'/player_api.php',{
+    method:'POST',body,
+    credentials:'omit',referrerPolicy:'no-referrer',redirect:'error',
+    cache:'no-store',signal:ctrl.signal
+   });
+   if(!r.ok)return {status:r.status,data:null};
+   return {status:r.status,data:await r.json()};
+  }finally{clearTimeout(timeout)}
+ };
+ try{
+  report('1/2 · Verificando a autenticação da conta no servidor NPlay…');
+  const login=await call(null);
+  if(login.status!==200){
+   report('A autenticação retornou HTTP '+login.status+'. O servidor está acessível, mas não concluiu o login da conta.');
+   return {ok:false,stage:'login',status:login.status};
+  }
+  const info=login.data?.user_info;
+  if(Number(info?.auth)!==1){
+   const expired=info?.status==='Expired';
+   report(expired?'A conta está expirada. Confira a validade no ADM.':'A conta não autenticou. Confira a senha atual e se o acesso está liberado.');
+   return {ok:false,stage:'login',status:info?.status||'denied'};
+  }
+  const streamsInUse=Number(info?.active_cons)||0,limit=Number(info?.max_connections)||1;
+  report('✓ Conta autenticada no servidor.\n2/2 · Verificando se a grade Xtream retorna os canais ao vivo…');
+  const result=await call('get_live_streams');
+  if(result.status!==200){
+   report('✓ Login aceito.\n✕ Falha ao carregar a grade (HTTP '+result.status+'). O problema está na consulta ao catálogo.');
+   return {ok:false,stage:'catalog',status:result.status};
+  }
+  if(!Array.isArray(result.data)){
+   report('✓ Login aceito.\n✕ O servidor retornou uma lista em formato inesperado. O aplicativo IPTV pode não conseguir lê-la.');
+   return {ok:false,stage:'catalog-format'};
+  }
+  const count=result.data.length;
+  report('✓ Login da conta confirmado.\n✓ Grade Xtream carregada: '+count+' canais ao vivo.\nTransmissões em uso: '+streamsInUse+'/'+limit+'.'+
+    (count?'\nSe os canais ainda não abrirem, a próxima falha está na reprodução do sinal ou na compatibilidade do aplicativo, não no login nem na lista.':'\nA grade veio vazia. Verifique as permissões de canais deste acesso.'));
+  return {ok:count>0,stage:count>0?'catalog-ok':'catalog-empty',count};
+ }catch(error){
+  const timed=error?.name==='AbortError';
+  report(timed?'O servidor demorou mais de 20 segundos para responder.':'Não foi possível completar o teste da conta. Verifique a conexão HTTPS com o gateway.');
+  return {ok:false,stage:timed?'timeout':'network'};
+ }
+}
+
 async function update(item,data){await api('update',{id:item.id,...data});await refresh();}
 async function refresh(){
  try{
@@ -58,6 +116,33 @@ async function refresh(){
   add('Renovar 30 dias',()=>{const base=Math.max(Date.now(),Date.parse(x.expires_at));return update(x,{expires_at:new Date(base+30*86400000).toISOString(),enabled:true});});
   add('Redefinir senha',async()=>{if(!confirm('A senha anterior deixará de funcionar. Redefinir o acesso de '+x.username+'?'))return;const pass=password();await update(x,{password:pass});delivery(x.username,pass);});
   const label=document.createElement('label');label.textContent='Transmissões simultâneas';const select=document.createElement('select');for(const n of [1,2,3]){const o=document.createElement('option');o.value=n;o.textContent=n;select.append(o);}select.value=x.max_connections;select.onchange=async()=>{select.disabled=true;try{await update(x,{max_connections:Number(select.value)});}catch(e){message(e.message,true);}finally{select.disabled=false;}};label.append(select);row.append(label);
+  const check=document.createElement('details');
+  check.style.cssText='margin:14px 0 0;border-top:1px solid #365075;padding-top:12px';
+  const labelCheck=document.createElement('summary');
+  labelCheck.textContent='Verificar login e canais deste acesso';
+  labelCheck.style.cssText='cursor:pointer;font-weight:700;margin-bottom:8px';
+  const help=document.createElement('p');help.className='muted';
+  help.textContent='Digite a senha atual para testar a conta, sem redefini-la. A senha não é salva nem aparece no resultado.';
+  const secret=document.createElement('input');
+  secret.type='password';secret.placeholder='Senha atual do acesso';
+  secret.autocomplete='off';secret.autocapitalize='off';
+  secret.spellcheck=false;secret.minLength=12;secret.maxLength=128;
+  secret.setAttribute('aria-label','Senha atual de '+x.username);
+  secret.style.cssText='width:100%;margin:4px 0 10px';
+  const runCheck=document.createElement('button');
+  runCheck.type='button';runCheck.className='outline';runCheck.textContent='Testar login e grade Xtream';
+  const checkResult=document.createElement('p');
+  checkResult.setAttribute('role','status');checkResult.setAttribute('aria-live','polite');
+  checkResult.style.cssText='white-space:pre-line;overflow-wrap:anywhere;margin:10px 0;font-size:13px';
+  runCheck.onclick=async()=>{
+   if(runCheck.disabled)return;
+   const entered=secret.value;secret.value='';
+   runCheck.disabled=true;
+   try{await diagnoseIptvAccount(x.username,entered,text=>{checkResult.textContent=text})}
+   finally{runCheck.disabled=false}
+  };
+  check.append(labelCheck,help,secret,runCheck,checkResult);
+  row.append(check);
   $('iptv-list').append(row);
  }
  message(items.length+' acessos IPTV cadastrados.');
