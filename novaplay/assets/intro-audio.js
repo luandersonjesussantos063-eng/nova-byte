@@ -4,7 +4,7 @@
 (()=>{
  "use strict";
  const storageKey="nplay-opening-audio-enabled-v1";
- let context=null,lastPlayedAt=-1;
+ let context=null,lastPlayedAt=-Infinity;
  function enabled(){
   try{return localStorage.getItem(storageKey)!=="off"}catch{return true}
  }
