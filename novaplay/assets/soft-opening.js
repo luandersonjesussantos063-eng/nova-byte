@@ -7,7 +7,7 @@
  const root=document.getElementById("nplay-soft-opening");
  if(!root)return;
  const start=performance.now();
- const minimum=1650;
+ const minimum=2200; // preserve the actual 2.22s recording through the logo
  const fade=450;
  let settled=false,hideTimer=null,audioRequested=false;
  const prefersReduced=()=>!!window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
@@ -28,7 +28,7 @@
   }
   // Keep a little visual time after a slow approval so the signature
   // does not begin as the logo is already fading out.
-  const delay=prefersReduced()?0:Math.max(1000,minimum-(performance.now()-start));
+  const delay=prefersReduced()?0:Math.max(2200,minimum-(performance.now()-start));
   if(hideTimer!==null)window.clearTimeout(hideTimer);
   hideTimer=window.setTimeout(()=>{
    if(settled)return;
