@@ -48,7 +48,7 @@ test('admin refreshes every 10 seconds and updates displayed seconds each second
  assert.match(card.children[3].textContent,/Sessão atual: 1min 55s/);
  h.tick(2000);
  assert.match(card.children[3].textContent,/1min 57s/);
- assert.match(h.items['presence-status'].textContent,/1 perfil\\(is\\) online/);
+ assert.match(h.items['presence-status'].textContent,/1 perfil\(is\) online/);
 });
 test('stale sessions turn offline automatically after 45 seconds without new RPC',async()=>{
  const serverNow=Date.now(),h=harness([{user_id:'12345678',profile_name:'Perfil antigo',
@@ -60,7 +60,7 @@ test('stale sessions turn offline automatically after 45 seconds without new RPC
  h.tick(16000);
  assert.equal(h.items['presence-list'].children[0].children[1].textContent,'Offline');
  assert.equal(h.rpcCalls(),calls);
- assert.match(h.items['presence-status'].textContent,/0 perfil\\(is\\) online/);
+ assert.match(h.items['presence-status'].textContent,/0 perfil\(is\) online/);
 });
 test('recent backgrounded profile is not counted as online',async()=>{
  const now=Date.now(),h=harness([{user_id:'12345678',profile_name:'Em segundo plano',
@@ -68,7 +68,7 @@ test('recent backgrounded profile is not counted as online',async()=>{
   session_seconds:40,today_seconds:80}]);
  await flush();
  assert.equal(h.items['presence-list'].children[0].children[1].textContent,'Em segundo plano');
- assert.match(h.items['presence-status'].textContent,/0 perfil\\(is\\) online/);
+ assert.match(h.items['presence-status'].textContent,/0 perfil\(is\) online/);
 });
 test('closed or hidden administration panel does not trigger unnecessary API calls',async()=>{
  const h=harness([]);await flush();const first=h.rpcCalls();
