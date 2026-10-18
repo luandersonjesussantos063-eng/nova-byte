@@ -6,6 +6,9 @@ on:
       - 'novaplay/app.js'
       - 'novaplay/assets/cinema-refresh.css'
       - 'novaplay/assets/soft-opening.js'
+      - 'novaplay/assets/intro-audio.js'
+      - 'novaplay/profiles.js'
+      - 'novaplay/tests/intro-audio.test.mjs'
       - 'novaplay/sw.js'
       - 'novaplay/tests/home-live.test.mjs'
       - 'novaplay/tests/hero-live.test.mjs'
@@ -28,6 +31,8 @@ jobs:
         run: |
           node --check novaplay/app.js
           node --check novaplay/assets/soft-opening.js
+          node --check novaplay/assets/intro-audio.js
+          node --check novaplay/profiles.js
           node --check novaplay/sw.js
       - name: Conferir integração da intro e da home
         run: |
@@ -38,14 +43,16 @@ jobs:
           const app=fs.readFileSync('novaplay/app.js','utf8');
           const css=fs.readFileSync('novaplay/assets/cinema-refresh.css','utf8');
           const sw=fs.readFileSync('novaplay/sw.js','utf8');
-          for(const phrase of ['id="nplay-soft-opening"','assets/cinema-refresh.css?v=0.51.2','assets/soft-opening.js?v=0.51.2','NPlay V 0.51.2'])assert(index.includes(phrase),phrase);
-          assert(sw.includes('novaplay-v0.51.2'));
+          for(const phrase of ['id="nplay-soft-opening"','assets/cinema-refresh.css?v=0.51.2','assets/soft-opening.js?v=0.51.3','NPlay V 0.51.3'])assert(index.includes(phrase),phrase);
+          assert(sw.includes('novaplay-v0.51.3'));
           assert(sw.includes('./assets/cinema-refresh.css'));
+          assert(sw.includes('./assets/intro-audio.js'));
+          assert(index.includes('assets/intro-audio.js?v=0.51.3'));
           assert(app.includes('Filmes disponíveis'));
           assert(app.includes('Séries para acompanhar'));
           assert(css.includes('prefers-reduced-motion'));
           assert(!app.includes('openTimeshift'));
-          console.log('NPlay interface 0.51.2 — integração validada');
+          console.log('NPlay interface 0.51.3 — integração validada');
           JS
       - name: Testes de catalogo ao vivo na home
-        run: node --test novaplay/tests/home-live.test.mjs novaplay/tests/soft-opening.test.mjs
+        run: node --test novaplay/tests/home-live.test.mjs novaplay/tests/soft-opening.test.mjs novaplay/tests/intro-audio.test.mjs
