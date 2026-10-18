@@ -85,7 +85,14 @@ video()?.addEventListener('pause',()=>playbackStatus('paused'));
 video()?.addEventListener('waiting',()=>playbackStatus('buffering'));
 video()?.addEventListener('ended',()=>setActivity(null));
 video()?.addEventListener('error',()=>setActivity(null));
-document.addEventListener('visibilitychange',()=>{void flush()});
+document.addEventListener('visibilitychange',()=>{
+ // A backgrounded player may pause without delivering a visible pause event.
+ // Recheck the actual video state before reporting "playing" on return.
+ if(document.visibilityState==='visible'&&activity&&!player()?.hidden&&!video()?.hidden){
+  activity={...activity,state:video()?.paused?'paused':video()?.readyState>=2?'playing':'buffering'};
+ }
+ void flush();
+});
 window.addEventListener('online',()=>{void flush()});
 window.addEventListener('offline',()=>{void flush()});
 window.addEventListener('nplay-profile-change',()=>{activity=null;void flush()});
