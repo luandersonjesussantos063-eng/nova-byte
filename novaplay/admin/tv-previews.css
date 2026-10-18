@@ -1,0 +1,6 @@
+#tv-preview-admin{border:1px solid #496b9b;border-radius:16px;padding:20px;margin:12px 0 28px;background:#101c2e}
+#tv-preview-admin h3{margin:0 0 10px}#tv-preview-admin input{width:100%;margin:12px 0}
+.tv-preview-row{display:flex;gap:10px;align-items:center;padding:12px 0;border-bottom:1px solid #52698544;flex-wrap:wrap}
+.tv-preview-row>div,.tv-preview-row>strong{flex:1;min-width:180px}.tv-preview-row small{display:block;color:#b4c6e2;margin-top:5px}
+#tv-preview-video{width:min(100%,520px);aspect-ratio:16/9;background:#000;margin-top:14px;border-radius:12px}
+.tv-preview-toolbar{display:flex;gap:10px;flex-wrap:wrap;margin:16px 0}#tv-preview-message{overflow-wrap:anywhere;color:#c4daf9}

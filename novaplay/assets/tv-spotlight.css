@@ -1,4 +1,4 @@
-.tv-spotlight{padding:22px clamp(18px,4.2vw,80px) 14px;max-width:1700px;margin:0 auto}
+.tv-spotlight{padding:110px clamp(18px,4.2vw,80px) 14px;max-width:1700px;margin:0 auto}
 .tv-spotlight[hidden]{display:none}
 .tv-spotlight-header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
 .tv-spotlight-header h2{font-size:clamp(17px,2vw,24px);margin:0;color:#f4f7ff}
@@ -27,4 +27,7 @@
 .tv-spotlight button:focus-visible{outline:3px solid #8dbfff;outline-offset:3px}
 @media(min-width:1250px){.tv-spotlight-layout{grid-template-columns:minmax(0,1fr) 310px}.tv-spotlight-rail{max-height:610px}}
 @media(max-width:900px){.tv-spotlight-layout{display:block}.tv-spotlight-rail{margin-top:16px;flex-direction:row;max-height:none;overflow-x:auto;overflow-y:hidden;padding:0 0 10px;scroll-snap-type:x proximity;gap:12px}.tv-spotlight-card{width:220px;flex-basis:220px}.tv-spotlight-info{align-items:flex-start;flex-direction:column}.tv-spotlight-actions{width:100%}.tv-spotlight-actions .tv-spotlight-watch{margin-left:auto}}
-@media(max-width:480px){.tv-spotlight{padding-top:16px}.tv-spotlight-header{align-items:flex-start}.tv-spotlight-header span{display:block;margin-bottom:5px;font-size:10px}.tv-spotlight-header h2{font-size:19px}.tv-spotlight-next{font-size:12px;padding:8px 11px;white-space:nowrap}.tv-spotlight-feature{border-radius:16px}.tv-spotlight-info{padding:13px}.tv-spotlight-card{width:185px;flex-basis:185px}.tv-spotlight-actions button{font-size:12px;padding:8px 10px}.tv-spotlight-actions .tv-spotlight-favorite{font-size:25px}}
+@media(max-width:480px){.tv-spotlight{padding-top:130px}.tv-spotlight-header{align-items:flex-start}.tv-spotlight-header span{display:block;margin-bottom:5px;font-size:10px}.tv-spotlight-header h2{font-size:19px}.tv-spotlight-next{font-size:12px;padding:8px 11px;white-space:nowrap}.tv-spotlight-feature{border-radius:16px}.tv-spotlight-info{padding:13px}.tv-spotlight-card{width:185px;flex-basis:185px}.tv-spotlight-actions button{font-size:12px;padding:8px 10px}.tv-spotlight-actions .tv-spotlight-favorite{font-size:25px}}
+
+#tv-spotlight:not([hidden]) + .category-intro{padding-top:28px}
+@media(max-width:760px){.tv-spotlight{padding-top:calc(130px + env(safe-area-inset-top,0px))}}
