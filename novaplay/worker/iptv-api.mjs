@@ -20,7 +20,19 @@ export async function iptvAdmin(request,jwt){
 const hash=async raw=>[...new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(raw)))].map(x=>x.toString(16).padStart(2,'0')).join('');
 const clean=raw=>String(raw||'').replace(/[\r\n"<>]/g,' ').trim();
 const xml=raw=>String(raw||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&apos;'}[c]));
-const category=raw=>{let n=2166136261;for(const c of String(raw||'Geral'))n=Math.imul(n^c.charCodeAt(0),16777619);return String(n>>>0);};
+// Many Xtream TV applications store category IDs as small, signed integers.
+// The old unsigned 32-bit FNV IDs exceeded 2^31 (e.g. INFANTIS=3520097441),
+// which causes a signed overflow / empty lists in some native IPTV clients.
+// Keep deterministic IDs below one million; accept old unsigned/signed IDs on
+// category-filter requests so previously cached clients can still browse.
+const categoryHash=raw=>{let n=2166136261;for(const c of String(raw||'Geral'))n=Math.imul(n^c.charCodeAt(0),16777619);return n>>>0;};
+export const category=raw=>String(10000+(categoryHash(raw)%900000));
+function categoryMatches(raw,requested){
+ const hash=categoryHash(raw);
+ return String(requested)===category(raw)
+  ||String(requested)===String(hash)
+  ||String(requested)===String(hash|0);
+}
 export function extension(item){try{return /\.(m3u8|mp4|webm)$/i.exec(new URL(item.source_url).pathname)?.[1]||'mp4';}catch{return /\.(mp4|webm)$/i.exec(item.r2_key||'')?.[1]||'mp4';}}
 function logo(raw){if(!raw)return '';try{if(/^https:\/\//.test(raw))return new URL(raw).href;if(raw.startsWith('assets/'))return 'https://novabytesolucoes.com.br/novaplay/'+raw;return DB+'/storage/v1/object/public/novaplay-posters/'+raw.split('/').map(encodeURIComponent).join('/');}catch{return '';}}
 function streamInfo(item,index){return {num:index+1,name:item.title,stream_type:item.kind==='live'?'live':'movie',stream_id:item.id,stream_icon:logo(item.logo),epg_channel_id:item.kind==='live'?'nplay-'+item.id:null,added:'0',category_id:category(item.category),custom_sid:'',tv_archive:0,direct_source:'',tv_archive_duration:0,container_extension:item.kind==='live'?'ts':extension(item),rating:'0',rating_5based:0};}
@@ -29,7 +41,7 @@ export function catalogAction(action,params,catalog){
  const all=catalog.items||[],kind=action.includes('live')?'live':action.includes('series')?'series':'vod';
  let items=kind==='series'?(catalog.series||[]).map(s=>({...s,category:all.find(x=>x.series_title===s.title)?.category||'Séries',logo:all.find(x=>x.series_title===s.title)?.logo})):all.filter(x=>x.kind===kind);
  if(action.endsWith('_categories'))return [...new Map(items.map(x=>[category(x.category),{category_id:category(x.category),category_name:x.category,parent_id:0}])).values()];
- const filter=params.get('category_id');if(filter&&filter!=='0')items=items.filter(x=>category(x.category)===filter);
+ const filter=params.get('category_id');if(filter&&filter!=='0'&&filter!=='-1')items=items.filter(x=>categoryMatches(x.category,filter));
  if(action==='get_live_streams'||action==='get_vod_streams')return items.map(streamInfo);
  if(action==='get_vod_info'){
   const item=all.find(x=>x.kind==='vod'&&x.id===Number(params.get('vod_id')));if(!item)return {};
@@ -159,7 +171,7 @@ export async function handleIptv(request,env,ctx,{validateUrl,upstream}){
   }
   const action=params.get('action');
   if((u.pathname==='/player_api.php'||u.pathname==='/panel_api.php')&&!action){
-   const now=Math.floor(Date.now()/1000);return json({user_info:{username,password,message:'NPlay',auth:1,status:'Active',exp_date:String(Math.floor(Date.parse(account.expires_at)/1000)),is_trial:'0',active_cons:account.active_connections,created_at:String(now),max_connections:String(account.max_connections),allowed_output_formats:['m3u8','ts']},server_info:{url:u.hostname,port:'80',https_port:'443',server_protocol:'https',rtmp_port:'0',timezone:'America/Campo_Grande',timestamp_now:now,time_now:new Date().toISOString().slice(0,19).replace('T',' ')}});
+   const now=Math.floor(Date.now()/1000);return json({user_info:{username,password,message:'NPlay',auth:1,status:'Active',exp_date:String(Math.floor(Date.parse(account.expires_at)/1000)),is_trial:'0',active_cons:account.active_connections,created_at:String(now),max_connections:String(account.max_connections),allowed_output_formats:['m3u8','ts']},server_info:{url:u.hostname,port:'443',https_port:'443',server_protocol:'https',rtmp_port:'0',timezone:'America/Campo_Grande',timestamp_now:now,time_now:new Date().toISOString().slice(0,19).replace('T',' ')}});
   }
   const catalog=await iptvRpc(env,'catalog',{account_id:account.id});if(!catalog.ok)throw fail('AUTH',401);
   if(u.pathname==='/get.php')return new Response(request.method==='HEAD'?null:playlist(catalog,u.origin,username,password,params.get('output')),{headers:{...baseHeaders,'Content-Type':'audio/x-mpegurl; charset=utf-8','Content-Disposition':'attachment; filename="nplay.m3u"'}});
