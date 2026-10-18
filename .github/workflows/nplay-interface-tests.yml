@@ -12,6 +12,7 @@ on:
       - 'novaplay/assets/notifications.js'
       - 'novaplay/tests/release-notes.test.mjs'
       - 'novaplay/tests/youtube-layout.test.mjs'
+      - 'novaplay/tests/opening-logo.test.mjs'
       - 'novaplay/profiles.js'
       - 'novaplay/tests/intro-audio.test.mjs'
       - 'novaplay/sw.js'
@@ -50,15 +51,16 @@ jobs:
           const app=fs.readFileSync('novaplay/app.js','utf8');
           const css=fs.readFileSync('novaplay/assets/cinema-refresh.css','utf8');
           const sw=fs.readFileSync('novaplay/sw.js','utf8');
-          for(const phrase of ['id="nplay-soft-opening"','assets/cinema-refresh.css?v=0.51.9','assets/soft-opening.js?v=0.51.6','assets/release-notes.js?v=0.51.9','NPlay V 0.51.9'])assert(index.includes(phrase),phrase);
-          assert(sw.includes('novaplay-v0.51.9'));
+          for(const phrase of ['id="nplay-soft-opening"','assets/cinema-refresh.css?v=0.51.10','assets/soft-opening.js?v=0.51.10','assets/release-notes.js?v=0.51.10','NPlay V 0.51.10'])assert(index.includes(phrase),phrase);
+          assert(sw.includes('novaplay-v0.51.10-opening-light'));
           assert(sw.includes('./assets/cinema-refresh.css'));
           assert(sw.includes('./assets/intro-audio.js'));
           assert(sw.includes('./assets/release-notes.js'));
           assert(sw.includes('./assets/notifications.js'));
           assert(index.includes('assets/intro-audio.js?v=0.51.6'));
           assert(index.includes('class="nplay-opening-logo"'),"Abertura sem logo horizontal");
-          assert(index.includes('brand/nplay-wordmark-v0482.svg'),"Abertura sem o wordmark NPlay");
+          assert(index.includes('nplay-opening-letter-y'),"Letras da logo não estão animadas");
+          assert(index.includes('nplay-opening-reflection'),"Reflexo azul não foi restaurado");
           assert(!index.includes('class="nplay-opening-symbol"'),"Logo antigo duplicado ainda existe");
           assert(!index.includes('class="nplay-opening-name"'),"Texto da logo antiga ainda existe");
           assert(fs.readFileSync('novaplay/assets/brand/nplay-wordmark-v0482.svg','utf8').includes('<svg'),"Logo vetorial inválida");
@@ -72,7 +74,7 @@ jobs:
           assert(app.includes('Séries para acompanhar'));
           assert(css.includes('prefers-reduced-motion'));
           assert(!app.includes('openTimeshift'));
-          console.log('NPlay interface 0.51.9 — integração validada');
+          console.log('NPlay interface 0.51.10 — integração validada');
           JS
       - name: Testes de catalogo ao vivo na home
-        run: node --test novaplay/tests/home-live.test.mjs novaplay/tests/soft-opening.test.mjs novaplay/tests/intro-audio.test.mjs novaplay/tests/release-notes.test.mjs novaplay/tests/youtube-layout.test.mjs
+        run: node --test novaplay/tests/home-live.test.mjs novaplay/tests/soft-opening.test.mjs novaplay/tests/intro-audio.test.mjs novaplay/tests/release-notes.test.mjs novaplay/tests/youtube-layout.test.mjs novaplay/tests/opening-logo.test.mjs
