@@ -339,3 +339,12 @@ body{background:#070b13!important}
   #nplay-soft-opening .nplay-opening-reflection,
   #nplay-soft-opening.is-playing .nplay-opening-reflection{opacity:.49;animation:none;transform:none}
 }
+
+/* Favorites remain available in cinema, embeds and mobile fullscreen. */
+.player-favorite{display:grid;place-items:center;flex:0 0 40px;width:40px;height:40px;padding:9px;border:1px solid #ffffff70;border-radius:50%;background:#091424d9;color:#fff;cursor:pointer;touch-action:manipulation}
+.player-favorite[hidden]{display:none}
+.player-favorite svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2}
+.player-favorite[aria-pressed="true"]{color:#ff7291;border-color:#ff7291}
+.player-favorite[aria-pressed="true"] svg{fill:currentColor}
+.player-favorite:focus-visible{outline:3px solid #96caff;outline-offset:3px}
+@media(max-width:600px){.player-favorite{flex-basis:36px;width:36px;height:36px;padding:7px}}

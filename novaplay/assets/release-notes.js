@@ -5,6 +5,17 @@
 "use strict";
 const releases=[
  {
+  version:"0.51.12",
+  date:"2026-10-18",
+  title:"Favoritos no player · versão 0.51.12",
+  intro:"Salve seus canais favoritos também enquanto assiste.",
+  changes:[
+   "Os favoritos dos canais usam a mesma identificação na tela inicial, na grade e na reprodução.",
+   "O coração na tela de reprodução permite salvar ou remover o canal sem fechar o vídeo.",
+   "A lista permanece salva neste navegador e acompanha as alterações feitas em outras abas."
+  ]
+ },
+ {
   version:"0.51.11",
   date:"2026-10-18",
   title:"Programação ao vivo · versão 0.51.11",
