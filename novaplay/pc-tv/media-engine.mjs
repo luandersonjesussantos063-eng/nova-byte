@@ -111,7 +111,8 @@ export class MediaEngine{
     while(!signal.aborted){
      const playlist=initial?{response:initial,url:playlistUrl}:await this.client.fetcher(playlistUrl,null,signal,{headerTimeout:8000});
      initial=null;
-     if(playlist.response.statusCode!==200){playlist.response.destroy();throw failure('ENGINE_SOURCE_HTTP');}
+     if(playlist.response.statusCode!==200){console.warn(JSON.stringify({event:'media_hls_playlist_http',status:playlist.response.statusCode,session:s.id.slice(0,8)}));playlist.response.destroy();throw failure('ENGINE_SOURCE_HTTP');}
+     playlistUrl=playlist.url||playlistUrl;
      const body=await readText(playlist.response);
      if(!body.startsWith('#EXTM3U')||/#EXT-X-KEY:|#EXT-X-MAP:/.test(body))throw failure('ENGINE_SOURCE_INVALID');
      const lines=body.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
@@ -147,7 +148,9 @@ export class MediaEngine{
       sequence=base+n;missing=0;
      }
      if(lines.includes('#EXT-X-ENDLIST'))break;
-     await wait(refresh?250:1200);
+     const target=Number((lines.find(x=>x.startsWith('#EXT-X-TARGETDURATION:'))||'').split(':')[1]);
+     const refreshMs=Number.isFinite(target)&&target>0?Math.min(10000,Math.max(1000,target*500)):3000;
+     await wait(refresh?250:refreshMs);
     }
     s.input.end();
    })().catch(error=>{if(!signal.aborted){console.warn(JSON.stringify({event:'media_hls_failed',session:s.id.slice(0,8),code:String(error.code||'UNKNOWN').slice(0,50)}));s.input.destroy(error);}});
