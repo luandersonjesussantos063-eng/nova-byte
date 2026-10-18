@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {handleIptv,catalogAction,playlist} from '../worker/iptv-api.mjs';
+import {handleIptv,catalogAction,playlist,category} from '../worker/iptv-api.mjs';
 import {seal,unseal} from '../worker/hls-relay.mjs';
 import worker from '../worker/live-gateway.mjs';
 const origin='https://gateway.example',account={ok:true,id:'account',username:'client',expires_at:'2030-01-01T00:00:00Z',max_connections:2,active_connections:0},catalog={ok:true,items:[
@@ -50,4 +50,45 @@ test('public IPTV CORS works for native/webview clients while admin API still ch
 }));
 test('XMLTV returns channel identifiers with escaped XML and no invented programmes',async()=>mocked(async()=>{
  const r=await handleIptv(new Request(origin+'/xmltv.php?'+auth),env,{}, {validateUrl,upstream});const text=await r.text();assert.match(text,/TV &amp; Teste/);assert.ok(!text.includes('<programme'));
+}));
+
+
+test('TV applications receive small category IDs and each category returns its actual channels',()=>{
+ const groupNames=['INFANTIS','4K & FHDR','GLOBO SUL','BAND','SBT','GLOBO CENTRO-OESTE','TELECINE'];
+ const sample={items:groupNames.map((name,index)=>({id:index+20,kind:'live',title:'Exemplo '+name,category:name}))};
+ const params=new URLSearchParams();
+ const categories=catalogAction('get_live_categories',params,sample);
+ const all=catalogAction('get_live_streams',params,sample);
+ assert.equal(categories.length,groupNames.length);
+ assert.equal(all.length,groupNames.length);
+ for(const group of categories){
+  const id=Number(group.category_id);
+  assert(Number.isSafeInteger(id)&&id>=10000&&id<910000,'small signed-safe category identifier');
+  const filtered=catalogAction('get_live_streams',new URLSearchParams({category_id:group.category_id}),sample);
+  assert.equal(filtered.length,1,'category '+group.category_name+' must have a channel');
+  assert.equal(filtered[0].category_id,group.category_id);
+ }
+ assert.equal(new Set(categories.map(x=>x.category_id)).size,categories.length);
+ assert.equal(category('INFANTIS'),'207441');
+ assert.equal(category('4K & FHDR'),'689034');
+});
+
+test('previously cached unsigned and negative signed IDs remain usable after category-ID migration',()=>{
+ const sample={items:[{id:42,kind:'live',title:'Infantil HD',category:'INFANTIS'},{id:51,kind:'live',title:'SBT HD',category:'SBT'}]};
+ for(const legacy of ['3520097441','-774869855']){
+  const items=catalogAction('get_live_streams',new URLSearchParams({category_id:legacy}),sample);
+  assert.equal(items.length,1);
+  assert.equal(items[0].stream_id,42);
+  assert.equal(items[0].category_id,category('INFANTIS'));
+ }
+ assert.equal(catalogAction('get_live_streams',new URLSearchParams({category_id:'-1'}),sample).length,2);
+});
+
+test('Xtream login reports secure HTTPS 443 as its primary and HTTPS port',async()=>mocked(async()=>{
+ const response=await handleIptv(new Request(origin+'/player_api.php?'+auth),env,{}, {validateUrl,upstream});
+ const json=await response.json();
+ assert.equal(json.user_info.auth,1);
+ assert.equal(json.server_info.server_protocol,'https');
+ assert.equal(json.server_info.port,'443');
+ assert.equal(json.server_info.https_port,'443');
 }));
