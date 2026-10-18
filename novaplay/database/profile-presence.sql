@@ -1,4 +1,5 @@
 -- Presence is distinct from movie playback: visible app time, server clock.
+-- Keep the 45s server expiry aligned with the 15s browser heartbeat and the 45s ADM status.
 create table public.novaplay_profile_presence (
  user_id uuid not null references auth.users(id) on delete cascade,
  profile_id uuid not null, profile_name text not null check(length(profile_name) between 1 and 20),
@@ -37,7 +38,7 @@ begin
  end if;
  -- A hidden older tab cannot stop the currently visible tab's session.
  if not p_visible and r.tab_id<>p_tab then return;end if;
- if r.is_visible and t-r.last_seen<=interval '75 seconds' then
+ if r.is_visible and t-r.last_seen<=interval '45 seconds' then
   elapsed:=greatest(0,extract(epoch from t-r.last_seen));
  end if;
  if elapsed>0 then
@@ -52,8 +53,8 @@ begin
   end if;
  end if;
  update public.novaplay_profile_presence set profile_name=trim(p_name),tab_id=p_tab,is_visible=p_visible,last_seen=t,
-  session_started=case when p_visible and (not r.is_visible or t-r.last_seen>interval '75 seconds') then t else r.session_started end,
-  session_seconds=case when p_visible and (not r.is_visible or t-r.last_seen>interval '75 seconds') then 0 else r.session_seconds+elapsed end
+  session_started=case when p_visible and (not r.is_visible or t-r.last_seen>interval '45 seconds') then t else r.session_started end,
+  session_seconds=case when p_visible and (not r.is_visible or t-r.last_seen>interval '45 seconds') then 0 else r.session_seconds+elapsed end
  where user_id=u and profile_id=p_profile;
 end $$;
 revoke all on function novaplay_internal.profile_heartbeat(uuid,text,uuid,boolean) from public,anon;
