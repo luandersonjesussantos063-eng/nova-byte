@@ -17,9 +17,15 @@
   if(hideTimer!==null)window.clearTimeout(hideTimer);
   root.hidden=true;
   root.classList.remove("is-leaving");
+  root.classList.remove("is-playing");
  }
  function approve(){
   if(settled)return;
+  if(!root.classList.contains("is-playing")){
+   // Reveal N → P → l → a → y when the verified user's intro begins,
+   // not while a slow access check is still pending.
+   root.classList.add("is-playing");
+  }
   if(!audioRequested){
    audioRequested=true;
    // Web Audio may be blocked until the user interacts with the browser.
