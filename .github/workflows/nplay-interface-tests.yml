@@ -2,6 +2,10 @@ name: NPlay - validar nova interface
 on:
   push:
     paths:
+      - 'novaplay/assets/live-epg.js'
+      - 'novaplay/assets/live-epg.css'
+      - 'novaplay/worker/epg.mjs'
+      - 'novaplay/tests/epg.test.mjs'
       - 'novaplay/index.html'
       - 'novaplay/app.js'
       - 'novaplay/assets/cinema-refresh.css'
@@ -51,8 +55,8 @@ jobs:
           const app=fs.readFileSync('novaplay/app.js','utf8');
           const css=fs.readFileSync('novaplay/assets/cinema-refresh.css','utf8');
           const sw=fs.readFileSync('novaplay/sw.js','utf8');
-          for(const phrase of ['id="nplay-soft-opening"','assets/cinema-refresh.css?v=0.51.10','assets/soft-opening.js?v=0.51.10','assets/release-notes.js?v=0.51.10','NPlay V 0.51.10'])assert(index.includes(phrase),phrase);
-          assert(sw.includes('novaplay-v0.51.10-opening-light'));
+          for(const phrase of ['id="nplay-soft-opening"','assets/cinema-refresh.css?v=0.51.11','assets/soft-opening.js?v=0.51.11','assets/release-notes.js?v=0.51.11','NPlay V 0.51.11'])assert(index.includes(phrase),phrase);
+          assert(sw.includes('novaplay-v0.51.11-epg'));
           assert(sw.includes('./assets/cinema-refresh.css'));
           assert(sw.includes('./assets/intro-audio.js'));
           assert(sw.includes('./assets/release-notes.js'));
@@ -74,7 +78,7 @@ jobs:
           assert(app.includes('Séries para acompanhar'));
           assert(css.includes('prefers-reduced-motion'));
           assert(!app.includes('openTimeshift'));
-          console.log('NPlay interface 0.51.10 — integração validada');
+          console.log('NPlay interface 0.51.11 — integração validada');
           JS
       - name: Testes de catalogo ao vivo na home
-        run: node --test novaplay/tests/home-live.test.mjs novaplay/tests/soft-opening.test.mjs novaplay/tests/intro-audio.test.mjs novaplay/tests/release-notes.test.mjs novaplay/tests/youtube-layout.test.mjs novaplay/tests/opening-logo.test.mjs
+        run: node --test novaplay/tests/epg.test.mjs novaplay/tests/home-live.test.mjs novaplay/tests/soft-opening.test.mjs novaplay/tests/intro-audio.test.mjs novaplay/tests/release-notes.test.mjs novaplay/tests/youtube-layout.test.mjs novaplay/tests/opening-logo.test.mjs

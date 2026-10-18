@@ -5,6 +5,16 @@
 "use strict";
 const releases=[
  {
+  version:"0.51.11",
+  date:"2026-10-18",
+  title:"Programação ao vivo · versão 0.51.11",
+  intro:"Consulte o que está passando nos canais com guia do fornecedor.",
+  changes:[
+   "Os canais com guia mostram o programa atual, o horário e uma barra de progresso.",
+   "O próximo programa aparece quando informado pelo fornecedor; canais sem guia mostram Programação indisponível."
+  ]
+ },
+ {
   version:"0.51.10",
   date:"2026-10-18",
   title:"Novidades da NPlay · versão 0.51.10",
