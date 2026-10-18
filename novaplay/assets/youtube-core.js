@@ -5,6 +5,7 @@ const categories=Object.freeze(["Filmes completos","Documentários","Humor","Cur
 const normalize=value=>String(value||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase();
 function category(item){
  const genre=normalize(item.category||item.genre);
+ if(/filmes? completos?/.test(genre))return categories[0];
  if(/document/.test(genre))return categories[1];
  if(/humor|comedia|stand.?up|esquete/.test(genre))return categories[2];
  if(/curta|animac/.test(genre))return categories[3];
@@ -18,5 +19,6 @@ function select(items){
  });
 }
 function channel(item){return String(item.description||"").match(/^Canal:\s*(.+)$/m)?.[1]?.trim()||"YouTube"}
-root.NPlayYouTube=Object.freeze({categories,category,select,channel});
+function comedy(items){return select(items).filter(item=>/humor|comedia|stand.?up|esquete/.test(normalize(item.category||item.genre)))}
+root.NPlayYouTube=Object.freeze({categories,category,select,channel,comedy});
 })(window);

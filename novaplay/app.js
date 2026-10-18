@@ -291,6 +291,9 @@ function genreGroups(){
   groups.get(primaryGenre(item)).push(item);
  return groups;
 }
+function comedyFilms(){
+ return [...window.NPlayYouTube.comedy(db.films),...(genreGroups().get("Comédia")||[])];
+}
 function upcomingFilms(){
  const upcoming=db.films.filter(x=>x.catalogOnly);
  const premium=x=>!!window.NovaPlayCover?.operationCover?.(x.title,false);
@@ -308,9 +311,9 @@ function renderRows(){
  const grouped=genreGroups();
  const curatedGenres=["Ação","Animação","Comédia","Suspense","Drama"].map(name=>[
   name==="Animação"?"Animações para assistir":name+" para sua sessão",
-  grouped.get(name)||[],
-  "genero:"+name,false
- ]).filter(x=>x[1].length>=4);
+  name==="Comédia"?comedyFilms():grouped.get(name)||[],
+  name==="Comédia"?"comedia":"genero:"+name,false
+ ]).filter(x=>x[1].length>=(x[2]==="comedia"?1:4));
  const blocks=[
   ["Continuar assistindo",continued(),"continuar",false],
   ["Minha lista",favoriteItems(),"favoritos",false],
@@ -515,6 +518,7 @@ function renderYouTubeSelection(content,list){
  }
 }
 const categories={
+ comedia:["PARA RIR · NPLAY","Comédia","Filmes, especiais de stand-up e vídeos de humor. As seleções do YouTube tocam no player oficial do canal.",[]],
  musica:["MÚSICA · NPLAY","Música","Canais musicais ao vivo para ouvir e assistir. Escolha seu canal e dê o play.",[]],
  tv:["TV AO VIVO","TV ao vivo","Encontre seus canais por nome, categoria ou região.",db.channels],
  filmes:["NOSSO ACERVO","Filmes","Filmes com áudio em português.",db.films.filter(x=>x.mode!=="youtube")],
@@ -527,7 +531,7 @@ function renderCategory(kind){
  const conf=categories[kind]||categories.filmes;
  $("category-kicker").textContent=conf[0];$("category-heading").textContent=conf[1];$("category-subtitle").textContent=conf[2];
  const content=$("category-grid");content.className="category-grid";content.replaceChildren();
- let list=kind==="series"?db.series:kind==="favoritos"?favoriteItems():kind==="youtube"?youtubeFilms():kind==="em-breve"?upcomingFilms():conf[3];
+ let list=kind==="series"?db.series:kind==="favoritos"?favoriteItems():kind==="comedia"?comedyFilms():kind==="youtube"?youtubeFilms():kind==="em-breve"?upcomingFilms():conf[3];
  if(kind==="tv")window.dispatchEvent(new Event("nplay:tv-open"));
  if(kind==="musica")window.dispatchEvent(new Event("nplay:music-open"));
  const filters=$("genre-filter-panel"),buttons=$("genre-filter-buttons");
@@ -1305,7 +1309,7 @@ document.addEventListener("keydown",e=>{
 document.addEventListener("visibilitychange",()=>{if(document.hidden){stopHeroPreview();if(!$("player-layer").hidden)$("video").pause()}});
 window.addEventListener("scroll",()=>$("app-header").classList.toggle("is-scrolled",window.scrollY>24),{passive:true});
 if("serviceWorker" in navigator&&location.protocol==="https:"){
- window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js?v=0.51.21-tvspotlight",{updateViaCache:"none"}).catch(()=>{}));
+ window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js?v=0.51.22-tvspotlight",{updateViaCache:"none"}).catch(()=>{}));
 }
 $("hero-play").onclick=()=>navigate("tv");
 $("hero-info").onclick=()=>navigate("filmes");

@@ -35,6 +35,9 @@ body{background:#070b13!important}
 #view-home .shelf-track{gap:11px;padding-bottom:10px;padding-right:clamp(20px,4vw,76px);scroll-snap-type:x proximity}
 #view-home .poster-card:not(.channel-card):not(.youtube-card){flex:0 0 clamp(145px,14vw,200px);max-width:200px}
 #view-home .poster-card.youtube-card{flex:0 0 clamp(225px,25vw,320px);max-width:320px}
+#view-home .poster-card.youtube-card .cover,
+.category-grid .poster-card.youtube-card .cover{aspect-ratio:16/9}
+#view-home .poster-card.youtube-card h3{white-space:normal;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
 #view-home .poster-card.channel-card{flex:0 0 clamp(245px,27vw,380px);max-width:380px}
 #view-home .poster-card .cover{border-radius:7px;border-color:#ffffff0d;box-shadow:none;transition:transform .25s ease,border-color .25s ease}
 #view-home .poster-card:hover .cover,#view-home .poster-card:focus-within .cover{transform:translateY(-3px) scale(1.012);box-shadow:0 9px 21px #0008;border-color:#a3c5ff77}
