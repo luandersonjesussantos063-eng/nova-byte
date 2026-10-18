@@ -247,3 +247,94 @@ body{background:#070b13!important}
   .category-grid.youtube-selection .poster-card.youtube-card h3{font-size:12px}
   .category-grid.youtube-selection .shelf-title{font-size:17px}
 }
+
+
+
+/* NPlay opening 0.51.10 — same original logo, reflected blue light underneath.
+   Each glyph appears separately when access is approved, in sync with the
+   existing recorded intro sound. No new splash artwork or audio asset. */
+#nplay-soft-opening .nplay-opening-center{
+  position:relative;
+  display:grid;
+  place-items:center;
+  gap:0;
+  width:min(380px,83vw);
+  max-width:90vw;
+  opacity:1;
+  transform:none;
+  filter:none;
+  animation:none;
+  isolation:isolate;
+}
+#nplay-soft-opening .nplay-opening-logo{
+  display:block;
+  width:100%;
+  max-width:100%;
+  height:auto;
+  max-height:none;
+  object-fit:contain;
+  overflow:visible;
+  filter:drop-shadow(0 0 12px #3f8cff1c);
+  position:relative;
+  z-index:2;
+}
+#nplay-soft-opening .nplay-opening-letter{
+  opacity:0;
+  transform-box:fill-box;
+  transform-origin:center center;
+}
+#nplay-soft-opening.is-playing .nplay-opening-letter{
+  animation:nplay-glyph-reveal .46s cubic-bezier(.2,.75,.3,1) forwards;
+}
+#nplay-soft-opening.is-playing .nplay-opening-letter-n{animation-delay:.05s}
+#nplay-soft-opening.is-playing .nplay-opening-letter-p{animation-delay:.32s}
+#nplay-soft-opening.is-playing .nplay-opening-letter-l{animation-delay:.48s}
+#nplay-soft-opening.is-playing .nplay-opening-letter-a{animation-delay:.64s}
+#nplay-soft-opening.is-playing .nplay-opening-letter-y{animation-delay:.80s}
+@keyframes nplay-glyph-reveal{
+  from{opacity:0;filter:blur(5px);transform:translateY(7px) scale(.985)}
+  to{opacity:1;filter:blur(0);transform:translateY(0) scale(1)}
+}
+/* Restored signature: a modest horizontal reflection directly beneath NPlay. */
+#nplay-soft-opening .nplay-opening-reflection{
+  position:absolute;
+  z-index:1;
+  left:20%;
+  right:13%;
+  bottom:6%;
+  height:25%;
+  pointer-events:none;
+  opacity:0;
+  background:radial-gradient(ellipse 47% 34% at 55% 22%,#75d8ff6e 0%,#2b80fe3b 30%,#162e5d16 63%,transparent 100%);
+  filter:blur(9px);
+  transform:scaleX(.6) translateY(3px);
+}
+#nplay-soft-opening .nplay-opening-reflection::after{
+  content:"";
+  position:absolute;
+  height:2px;
+  width:65%;
+  left:17.5%;
+  top:8%;
+  background:linear-gradient(90deg,transparent,#4c93ff85 20%,#a7eaffaa 53%,#286bf17a 78%,transparent);
+  filter:blur(1px);
+  border-radius:100%;
+}
+#nplay-soft-opening.is-playing .nplay-opening-reflection{
+  animation:nplay-opening-underlight 1.2s ease-out .62s both;
+}
+@keyframes nplay-opening-underlight{
+  0%{opacity:0;transform:scaleX(.5) translateY(3px)}
+  43%{opacity:.78;transform:scaleX(1) translateY(0)}
+  100%{opacity:.49;transform:scaleX(.98) translateY(0)}
+}
+@media(max-width:600px){
+  #nplay-soft-opening .nplay-opening-center{width:min(340px,87vw)}
+}
+@media(prefers-reduced-motion:reduce){
+  #nplay-soft-opening .nplay-opening-center{opacity:1;animation:none;transform:none;filter:none}
+  #nplay-soft-opening .nplay-opening-letter,
+  #nplay-soft-opening.is-playing .nplay-opening-letter{opacity:1;animation:none;filter:none;transform:none}
+  #nplay-soft-opening .nplay-opening-reflection,
+  #nplay-soft-opening.is-playing .nplay-opening-reflection{opacity:.49;animation:none;transform:none}
+}
