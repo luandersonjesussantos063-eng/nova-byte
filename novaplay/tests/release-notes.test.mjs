@@ -27,8 +27,8 @@ function boot(){
 
 test('the published NPlay version always has specific editorial release notes',()=>{
  assert.match(version,/^\d+\.\d+\.\d+$/);
- assert.equal((html.match(/release-notes\.js\?v=0\.51\.5/g)||[]).length,1);
- assert(html.indexOf('release-notes.js?v=0.51.5')<html.indexOf('notifications.js?v=0.51.5'),'changelog must load before bell');
+ assert.equal((html.match(/release-notes\.js\?v=0\.51\.6/g)||[]).length,1);
+ assert(html.indexOf('release-notes.js?v=0.51.6')<html.indexOf('notifications.js?v=0.51.6'),'changelog must load before bell');
  const {releases}=boot();
  const current=releases.filter(r=>r.version===version);
  assert.equal(current.length,1);
@@ -39,13 +39,13 @@ test('the published NPlay version always has specific editorial release notes',(
 
 test('the current version names the sci-fi opening sound and has a direct preview button',()=>{
  const {core}=boot(),{current,old}=core.releaseEntries();
- assert.equal(current.version,'0.51.5');
- assert(current.changes.some(c=>/ressonância leve e profunda/.test(c)));
- assert(current.changes.some(c=>/duas batidas fortes/.test(c)));
+ assert.equal(current.version,'0.51.6');
+ assert(current.changes.some(c=>/gravação selecionada/.test(c)));
+ assert(current.changes.some(c=>/parte final do áudio/.test(c)));
  assert.equal(current.action,'preview-intro-audio');
- assert.match(current.actionLabel,/Ouvir novo som/);
+ assert.match(current.actionLabel,/Ouvir áudio da abertura/);
  assert.equal(current.historical,false);
- assert.equal(old.length,4);
+ assert.equal(old.length,5);
  assert(old.every(entry=>entry.historical&&entry.action==null));
  assert(old.some(entry=>entry.version==='0.51.3'&&entry.changes.some(c=>/som da abertura/.test(c))));
 });
@@ -55,6 +55,7 @@ test('version IDs preserve the previous notifications-read state',()=>{
  assert.equal(core.versionId('0.51.3'),-51003);
  assert.equal(core.versionId('0.51.4'),-51004);
  assert.equal(core.versionId('0.51.5'),-51005);
+ assert.equal(core.versionId('0.51.6'),-51006);
  assert.equal(core.versionId('invalid'),null);
  assert(core.versionId('0.51.3')>core.versionId('0.51.4'));
 });
