@@ -26,11 +26,9 @@ function releaseEntries(){
   action:old?null:r.action,actionLabel:old?null:r.actionLabel,
   historical:old,created_at:r.date?r.date+"T12:00:00":new Date().toISOString()
  });
- const current=selected?convert(selected):versionId(version)!==null?{
-  id:versionId(version),version,title:"NPlay atualizada · versão "+version,
-  body:"Uma atualização do aplicativo está disponível. Confira os avisos para saber mais.",
-  category:"atualizacao",created_at:new Date().toISOString()
- }:null;
+ // Admin-only maintenance must never create an automatic customer notice.
+ // The bell announces a release only if editorial customer-facing notes exist.
+ const current=selected?convert(selected):null;
  const old=all.filter(r=>r.version!==version&&versionId(r.version)!==null&&versionId(r.version)>versionId(version))
   .map(r=>convert(r,true));
  return {current,old};
