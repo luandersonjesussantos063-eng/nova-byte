@@ -89,7 +89,7 @@
  <p class="muted">O limite do cliente não aumenta as três vagas de canais diferentes do receptor. YouTube, Drive e conteúdo em breve ficam no aplicativo NPlay.</p>
  <button class="primary" id="iptv-save" type="submit">Criar acesso IPTV</button></form>
  <div id="iptv-delivery" hidden style="margin:18px 0"><h3>Acesso pronto para entregar</h3><p class="muted">A senha aparece somente nesta entrega. Se perder, gere outra pelo botão Redefinir senha.</p><textarea id="iptv-credentials" readonly rows="10" style="width:100%;overflow-wrap:anywhere"></textarea><button type="button" class="primary" id="iptv-copy">Copiar acesso</button><button type="button" class="outline" id="iptv-hide">Ocultar dados</button></div>
- <p id="iptv-status" class="feedback" role="status" aria-live="polite"></p><button id="iptv-refresh" class="outline" type="button">Atualizar acessos IPTV</button><div id="iptv-list"></div>
+ <p id="iptv-status" class="feedback" role="status" aria-live="polite"></p><button id="iptv-refresh" class="outline" type="button">Atualizar acessos IPTV</button> <button id="iptv-check-server" class="outline" type="button">Testar conexão do servidor IPTV</button><p id="iptv-health-result" class="muted" role="status" aria-live="polite" style="white-space:pre-line;margin:12px 0"></p><div id="iptv-list"></div>
 </section>
 <section id="portal-auth-manager" class="panel" hidden style="margin:16px 0">
 <h2>Autenticação por MAC / SN / DEV</h2>
@@ -499,6 +499,6 @@
 <script src="./notifications-admin.js?v=0.50.8" defer></script>
 <script src="./presence-admin.js?v=0.51.9-watch-admin-1" defer></script>
 <script src="./portal-test.js?v=0.49.12" defer></script>
-<script src="./iptv-accounts.js?v=0.52.1" defer></script>
+<script src="./iptv-accounts.js?v=0.52.2-check-server" defer></script>
 </body>
 </html>
