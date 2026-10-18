@@ -171,7 +171,7 @@ export async function handleIptv(request,env,ctx,{validateUrl,upstream}){
   }
   const action=params.get('action');
   if((u.pathname==='/player_api.php'||u.pathname==='/panel_api.php')&&!action){
-   const now=Math.floor(Date.now()/1000);return json({user_info:{username,password,message:'NPlay',auth:1,status:'Active',exp_date:String(Math.floor(Date.parse(account.expires_at)/1000)),is_trial:'0',active_cons:account.active_connections,created_at:String(now),max_connections:String(account.max_connections),allowed_output_formats:['m3u8','ts']},server_info:{url:u.hostname,port:'443',https_port:'443',server_protocol:'https',rtmp_port:'0',timezone:'America/Campo_Grande',timestamp_now:now,time_now:new Date().toISOString().slice(0,19).replace('T',' ')}});
+   const now=Math.floor(Date.now()/1000);return json({user_info:{username,password,message:'NPlay',auth:1,status:'Active',exp_date:String(Math.floor(Date.parse(account.expires_at)/1000)),is_trial:'0',active_cons:account.active_connections,created_at:String(now),max_connections:String(account.max_connections),allowed_output_formats:['m3u8','ts']},server_info:{url:u.hostname,port:'80',https_port:'443',server_protocol:'https',rtmp_port:'0',timezone:'America/Campo_Grande',timestamp_now:now,time_now:new Date().toISOString().slice(0,19).replace('T',' ')}});
   }
   const catalog=await iptvRpc(env,'catalog',{account_id:account.id});if(!catalog.ok)throw fail('AUTH',401);
   if(u.pathname==='/get.php')return new Response(request.method==='HEAD'?null:playlist(catalog,u.origin,username,password,params.get('output')),{headers:{...baseHeaders,'Content-Type':'audio/x-mpegurl; charset=utf-8','Content-Disposition':'attachment; filename="nplay.m3u"'}});
