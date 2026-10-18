@@ -84,11 +84,11 @@ test('previously cached unsigned and negative signed IDs remain usable after cat
  assert.equal(catalogAction('get_live_streams',new URLSearchParams({category_id:'-1'}),sample).length,2);
 });
 
-test('Xtream login reports secure HTTPS 443 as its primary and HTTPS port',async()=>mocked(async()=>{
+test('Xtream login preserves legacy port 80 and secure HTTPS port 443',async()=>mocked(async()=>{
  const response=await handleIptv(new Request(origin+'/player_api.php?'+auth),env,{}, {validateUrl,upstream});
  const json=await response.json();
  assert.equal(json.user_info.auth,1);
  assert.equal(json.server_info.server_protocol,'https');
- assert.equal(json.server_info.port,'443');
+ assert.equal(json.server_info.port,'80');
  assert.equal(json.server_info.https_port,'443');
 }));
