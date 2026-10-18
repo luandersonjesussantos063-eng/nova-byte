@@ -18,11 +18,11 @@ function harness(){
  return {audio:window.NPlayIntroAudio,values,events,window,document};
 }
 test('NPlay intro uses a unique local signature without external audio or Netflix assets',()=>{
- assert.match(html,/intro-audio\.js\?v=0\.51\.4/);
+ assert.match(html,/intro-audio\.js\?v=0\.51\.5/);
  assert.match(profiles,/Som da abertura/);
  assert.doesNotMatch(code,/https?:\/\/|\.mp3|\.wav|fetch\(/i);
- assert.match(code,/clash\(/);
- assert.match(code,/swoosh\(/);
+ assert.doesNotMatch(code,/function clash\(/);
+ assert.match(code,/const frequencies=/);
  assert.match(code,/createDynamicsCompressor/);
 });
 test('sound is enabled initially, persists opt-out, and never blocks a browser without audio support',async()=>{
