@@ -38,7 +38,7 @@ test('approved returning device sees the intro, never the access wall',()=>{
  assert.match(access,/broadcastAccess\("approved"\)/);
  const s=scene();
  s.step(100);s.emit('approved');
- s.step(1549);
+ s.step(2199);
  assert.equal(s.root.hidden,false);
  assert.equal(s.classes.has('is-leaving'),false);
  s.step(1);
@@ -66,7 +66,7 @@ test('late authorization keeps the cover on until verified',()=>{
  s.emit('approved');s.step(0);
  assert.equal(s.soundCount(),1);
  assert.equal(s.classes.has('is-leaving'),false);
- s.step(1000);assert.equal(s.classes.has('is-leaving'),true);
+ s.step(2200);assert.equal(s.classes.has('is-leaving'),true);
  s.step(450);assert.equal(s.root.hidden,true);
 });
 
