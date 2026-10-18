@@ -9,7 +9,7 @@
  const start=performance.now();
  const minimum=1650;
  const fade=450;
- let settled=false,hideTimer=null;
+ let settled=false,hideTimer=null,audioRequested=false;
  const prefersReduced=()=>!!window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
  function stop(){
   if(settled)return;
@@ -20,7 +20,15 @@
  }
  function approve(){
   if(settled)return;
-  const delay=prefersReduced()?0:Math.max(0,minimum-(performance.now()-start));
+  if(!audioRequested){
+   audioRequested=true;
+   // Web Audio may be blocked until the user interacts with the browser.
+   // Never make the intro wait for a promise that can remain suspended.
+   try{void window.NPlayIntroAudio?.play?.()}catch{}
+  }
+  // Keep a little visual time after a slow approval so the signature
+  // does not begin as the logo is already fading out.
+  const delay=prefersReduced()?0:Math.max(1000,minimum-(performance.now()-start));
   if(hideTimer!==null)window.clearTimeout(hideTimer);
   hideTimer=window.setTimeout(()=>{
    if(settled)return;
