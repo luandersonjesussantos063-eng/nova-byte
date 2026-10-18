@@ -3,13 +3,13 @@
 'use strict';
 function eligible(item){try{const u=new URL(item.embed_url);return item.is_published!==false&&u.protocol==='https:'&&!u.username&&!u.password&&(item.stream_type==='hls'||/\.m3u8?(?:\?|$)/i.test(u.href));}catch{return false;}}
 function canAdd(item,proof,now=Date.now()){return !!item&&eligible(item)&&proof?.url===item.embed_url&&Number.isFinite(proof.at)&&now-proof.at>=0&&now-proof.at<24*60*60*1000;}
-async function verify(video,item,{signal,test=globalThis.NPlaySignal?.testSignal}={}){
+async function verify(video,item,{signal,client,test=globalThis.NPlaySignal?.testSignal}={}){
  if(!eligible(item)||!test)throw Error('Escolha um canal publicado com sinal HLS para testar a prévia.');
  let playback;
  try{
   await window.NPlayLiveAuth?.waitForRelease?.();
   if(signal?.aborted)throw new DOMException('Teste interrompido.','AbortError');
-  playback=await window.NPlayLiveAuth?.authorize(item.embed_url)||item.embed_url;
+  playback=await window.NPlayLiveAuth?.authorize(item.embed_url,{client})||item.embed_url;
   const result=await test(video,playback,{signal,seconds:2,audioOnly:false});
   if(signal?.aborted)throw new DOMException('Teste interrompido.','AbortError');
   if(!(result.width>0&&result.height>0&&result.seconds>=2))throw Error('A prévia precisa mostrar pelo menos dois segundos de imagem em movimento.');
@@ -29,6 +29,14 @@ async function scan(items,{signal,check,onResult=()=>{},onProgress=()=>{}}){
  }
  return {done,total:items.length,passed,failed,stopped:!!signal?.aborted};
 }
+function watchAuth(client,{getUserId,onInvalidate,onReady}){
+ return client.auth.onAuthStateChange?.((event,session)=>{
+  const previous=getUserId(),next=session?.user?.id;
+  // Same-account SIGNED_IN and TOKEN_REFRESHED are normal during playback.
+  if(event==='SIGNED_OUT'||(previous&&next&&previous!==next))setTimeout(onInvalidate,0);
+  else if(!previous&&next&&(event==='INITIAL_SESSION'||event==='SIGNED_IN'))setTimeout(onReady,0);
+ });
+}
 async function persist(client,ids){
  if(!Array.isArray(ids)||ids.length>24||new Set(ids).size!==ids.length)throw Error('Escolha até 24 canais diferentes.');
  const {data,error}=await client.from('novaplay_featured').update({tv_spotlight_ids:ids}).eq('id',1).select('tv_spotlight_ids').single();
@@ -36,9 +44,9 @@ async function persist(client,ids){
  if(!data||JSON.stringify(data.tv_spotlight_ids)!==JSON.stringify(ids))throw Error('Não foi possível confirmar o salvamento. Entre com uma conta administrativa.');
  return data.tv_spotlight_ids;
 }
-window.NPlayTvPreviewAdmin={eligible,canAdd,verify,persist,scan};
+window.NPlayTvPreviewAdmin={eligible,canAdd,verify,persist,scan,watchAuth};
 const $=id=>document.getElementById(id);if(!$('tv-preview-admin'))return;
-let db,channels=[],chosen=[],saved=new Set(),proofs=new Map(),failures=new Set(),controller=null,loading=false,saving=false,loaded=false,initialized=false,limit=24;
+let db,channels=[],chosen=[],saved=new Set(),proofs=new Map(),failures=new Set(),controller=null,loading=false,saving=false,loaded=false,initialized=false,accountId=null,reloadAfterTest=false,limit=24;
 const message=text=>{$('tv-preview-message').textContent=text;};
 function button(label,action,disabled=false){const node=document.createElement('button');node.type='button';node.className='outline compact';node.textContent=label;node.disabled=disabled;node.onclick=action;return node;}
 function render(){
@@ -69,9 +77,9 @@ async function testChannel(item){
  if(controller||saving)return;
  controller=new AbortController();proofs.delete(item.id);failures.delete(item.id);render();$('tv-preview-video').hidden=false;
  message('Testando a prévia de '+item.title+'… Aguardando imagem em movimento.');
- try{const proof=await verify($('tv-preview-video'),item,{signal:controller.signal});proofs.set(item.id,proof);message('✓ Prévia de '+item.title+' confirmada. Clique em Adicionar e depois Salvar seleção.');}
+ try{const proof=await verify($('tv-preview-video'),item,{signal:controller.signal,client:db});proofs.set(item.id,proof);message('✓ Prévia de '+item.title+' confirmada. Clique em Adicionar e depois Salvar seleção.');}
  catch(error){failures.add(item.id);message(error.name==='AbortError'?'Teste interrompido.':'Prévia não confirmada: '+error.message);}
- finally{controller=null;$('tv-preview-video').hidden=true;render();}
+ finally{controller=null;$('tv-preview-video').hidden=true;render();if(reloadAfterTest){reloadAfterTest=false;void load();}}
 }
 async function testAll(){
  if(!loaded||controller||saving||loading)return;
@@ -79,17 +87,18 @@ async function testAll(){
  const progress=$('tv-preview-progress');progress.hidden=false;progress.max=channels.length;progress.value=0;
  $('tv-preview-video').hidden=false;
  try{
-  const result=await scan(channels,{signal:controller.signal,check:(item,signal)=>verify($('tv-preview-video'),item,{signal}),
+  const result=await scan(channels,{signal:controller.signal,check:(item,signal)=>verify($('tv-preview-video'),item,{signal,client:db}),
    onResult:(item,result)=>{if(result.proof){proofs.set(item.id,result.proof);failures.delete(item.id);}else{proofs.delete(item.id);failures.add(item.id);}render();},
    onProgress:({done,total,passed,failed,item})=>{progress.value=done;message('Testadas '+done+'/'+total+' · Funcionando: '+passed+' · Sem prévia: '+failed+(item?' · Agora: '+item.title:'')+'. Mantenha esta tela aberta. Você já pode adicionar as aprovadas.');}});
   $('tv-preview-filter').value='working';limit=24;
   message((result.stopped?'Teste interrompido. ':'Teste concluído. ')+result.done+'/'+result.total+' testadas · '+result.passed+' funcionando · '+result.failed+' sem prévia. Escolha as que deseja adicionar e salve a seleção.');
- }finally{controller=null;$('tv-preview-video').hidden=true;render();}
+ }finally{controller=null;$('tv-preview-video').hidden=true;render();if(reloadAfterTest){reloadAfterTest=false;void load();}}
 }
 async function load(){
  if(loading||saving||controller)return;loading=true;loaded=false;$('tv-preview-save').disabled=true;
  try{
   const auth=await db.auth.getUser();if(!auth.data?.user){message('Entre como administrador para escolher as prévias.');return;}
+  accountId=auth.data.user.id;
   const admin=await db.from('novaplay_admins').select('user_id').eq('user_id',auth.data.user.id).limit(1);
   if(admin.error||!admin.data?.length)throw Error('Sua conta não possui permissão administrativa.');
   const preferences=await db.from('novaplay_featured').select('tv_spotlight_ids').eq('id',1).single();if(preferences.error)throw preferences.error;
@@ -113,7 +122,7 @@ function init(){
  if(!db||!window.NPlayLiveAuth||!globalThis.NPlaySignal){setTimeout(init,300);return;}
  initialized=true;$('tv-preview-test-all').onclick=testAll;$('tv-preview-filter').onchange=()=>{limit=24;render();};$('tv-preview-search').oninput=()=>{limit=24;render();};$('tv-preview-save').onclick=save;$('tv-preview-refresh').onclick=load;$('tv-preview-more').onclick=()=>{limit+=24;render();};$('tv-preview-stop').onclick=()=>controller?.abort();
  window.addEventListener('pagehide',()=>controller?.abort());document.querySelector('[data-admin-tab="canais"]')?.addEventListener('click',load);
- db.auth.onAuthStateChange?.(()=>setTimeout(()=>{controller?.abort();void load();},0));
+ watchAuth(db,{getUserId:()=>accountId,onReady:()=>{void load();},onInvalidate:()=>{accountId=null;loaded=false;proofs.clear();failures.clear();chosen=[];channels=[];if(controller){reloadAfterTest=true;controller.abort();}else void load();render();}});
  const dashboard=$('dashboard');if(dashboard)new MutationObserver(()=>{if(dashboard.hidden)controller?.abort();else void load();}).observe(dashboard,{attributes:true,attributeFilter:['hidden']});
  void load();
 }

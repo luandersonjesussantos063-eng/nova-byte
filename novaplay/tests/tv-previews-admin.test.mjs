@@ -3,7 +3,7 @@ import vm from 'node:vm';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 const source=readFileSync(new URL('../admin/tv-previews.js',import.meta.url),'utf8');
-function boot(){const calls=[];const context=vm.createContext({URL,Date,Set,Map,JSON,DOMException,document:{getElementById:()=>null},window:{NPlayLiveAuth:{authorize:async url=>{calls.push(['authorize',url]);return url+'?viewer=private';},release:url=>calls.push(['release',url]),waitForRelease:async()=>{}}}});vm.runInContext(source,context);return {core:context.window.NPlayTvPreviewAdmin,calls};}
+function boot(){const calls=[];const context=vm.createContext({URL,Date,Set,Map,JSON,DOMException,setTimeout,document:{getElementById:()=>null},window:{NPlayLiveAuth:{authorize:async (url,options)=>{calls.push(['authorize',url,options]);return url+'?viewer=private';},release:url=>calls.push(['release',url]),waitForRelease:async()=>{}}}});vm.runInContext(source,context);return {core:context.window.NPlayTvPreviewAdmin,calls};}
 const item={id:'00142c6f-bb22-5f18-8e42-4d852d8d7c00',title:'Canal A',embed_url:'https://media.example/live.m3u8',stream_type:'hls',is_published:true};
 test('only a current moving-image confirmation for the exact published HLS source enables adding it',()=>{
  const {core}=boot();const now=Date.now(),proof={at:now,url:item.embed_url};
@@ -34,7 +34,7 @@ test('saving touches only the preview selection and refuses false successes or d
 test('admin controls and mobile header spacing are integrated into the published interfaces',()=>{
  const admin=readFileSync(new URL('../admin/index.html',import.meta.url),'utf8'),css=readFileSync(new URL('../assets/tv-spotlight.css',import.meta.url),'utf8');
  for(const id of ['tv-preview-admin','tv-preview-search','tv-preview-selected','tv-preview-save','tv-preview-video','tv-preview-test-all','tv-preview-filter','tv-preview-progress'])assert(admin.includes('id="'+id+'"'));
- assert(admin.includes('tv-previews.js?v=0.51.15'));assert(css.includes('padding-top:calc(130px + env(safe-area-inset-top,0px))'));
+ assert(admin.includes('tv-previews.js?v=0.51.16'));assert(css.includes('padding-top:calc(130px + env(safe-area-inset-top,0px))'));
 });
 
 test('batch tests sequentially, reuses identical sources and reports failures without auto selecting',async()=>{
@@ -47,4 +47,29 @@ test('stopping a batch keeps completed results and never marks an interrupted pr
  const {core}=boot();const signal={aborted:false};let calls=0;const results=[];
  const summary=await core.scan([item,{...item,id:'second',embed_url:'https://second.example/a.m3u8'}, {...item,id:'third'}],{signal,check:async channel=>{calls++;if(calls===2){signal.aborted=true;throw new DOMException('Stopped','AbortError');}return {url:channel.embed_url,at:Date.now()};},onResult:channel=>results.push(channel.id)});
  assert.equal(calls,2);assert.equal(summary.done,1);assert.equal(summary.failed,0);assert.equal(summary.stopped,true);assert.deepEqual(results,[item.id]);
+});
+
+test('same-account auth notifications during authorization never interrupt the running batch',async()=>{
+ const {core}=boot();let listener,invalidations=0;const signal={aborted:false};
+ const client={auth:{onAuthStateChange:fn=>{listener=fn;}}};
+ core.watchAuth(client,{getUserId:()=> 'admin-a',onInvalidate:()=>{invalidations++;signal.aborted=true;},onReady:()=>{throw Error('Must not reload confirmed results');}});
+ const summary=await core.scan([item,{...item,id:'second',embed_url:'https://second.example/a.m3u8'}],{signal,check:async channel=>{
+  for(const event of ['INITIAL_SESSION','SIGNED_IN','TOKEN_REFRESHED','USER_UPDATED'])listener(event,{user:{id:'admin-a'}});
+  await new Promise(resolve=>setTimeout(resolve,5));return {url:channel.embed_url,at:Date.now()};
+ }});
+ assert.equal(invalidations,0);assert.equal(summary.done,2);assert.equal(summary.passed,2);assert.equal(summary.stopped,false);
+ listener('SIGNED_IN',{user:{id:'admin-b'}});await new Promise(resolve=>setTimeout(resolve,5));assert.equal(invalidations,1);
+ listener('SIGNED_OUT',null);await new Promise(resolve=>setTimeout(resolve,5));assert.equal(invalidations,2);
+});
+test('preview verification passes the existing admin client to the gateway authorization helper',async()=>{
+ const {core,calls}=boot();const client={auth:{}};
+ await core.verify({},item,{client,test:async()=>({width:640,height:360,seconds:2})});
+ assert.equal(calls.find(call=>call[0]==='authorize')[2].client,client);
+});
+test('live authorization reuses the supplied client without creating another auth subscription',async()=>{
+ const code=readFileSync(new URL('../assets/live-auth.js',import.meta.url),'utf8');let sessions=0,refreshes=0;
+ const client={auth:{getSession:async()=>{sessions++;return {data:{session:{access_token:'test-token',expires_at:Date.now()/1000+3600}}};},refreshSession:async()=>{refreshes++;throw Error('unexpected refresh');}}};
+ const context=vm.createContext({URL,Date,Set,Promise,setTimeout,clearTimeout,crypto:{randomUUID:()=> 'viewer-unique'},window:{supabase:{createClient:()=>{throw Error('Must reuse existing admin client');}}}});vm.runInContext(code,context);
+ const url=await context.window.NPlayLiveAuth.authorize('https://nplay-live-gateway.luandersonjesussantos063.workers.dev/live/00142c6f-bb22-5f18-8e42-4d852d8d7c00/index.m3u8',{client});
+ assert.equal(sessions,1);assert.equal(refreshes,0);assert.equal(new URL(url).searchParams.get('access_token'),'test-token');
 });

@@ -4,6 +4,7 @@
 (()=>{
 "use strict";
 const releases=[
+ {version:"0.51.16",date:"2026-10-18",title:"Correção do teste de prévias · versão 0.51.16",intro:"Testes continuam durante a renovação normal da sessão.",changes:["Eventos normais de autenticação da mesma conta não interrompem mais o teste individual ou em lote.","O testador usa a conexão administrativa existente para autorizar o vídeo, evitando criar clientes de autenticação durante cada teste."]},
  {version:"0.51.15",date:"2026-10-18",title:"Teste de todas as prévias no ADM · versão 0.51.15",intro:"Teste a grade e escolha os canais com imagem funcionando.",changes:["Botão para testar todas as prévias, com progresso, contagem e opção de parar.","Filtro para escolher somente os canais com imagem confirmada; seleção e salvamento continuam manuais."]},
   {
   version:"0.51.14",date:"2026-10-18",title:"Prévias escolhidas no ADM · versão 0.51.14",

@@ -36,10 +36,10 @@ test('letter animation starts only at verified access approval with recorded aud
 });
 test('registered clients receive the current opening assets while keeping the player intact',()=>{
  const sw=read('sw.js'),app=read('app.js');
- assert.match(index,/name="nplay-version" content="0\.51\.15"/);
- assert.match(index,/cinema-refresh\.css\?v=0\.51\.15/);
- assert.match(index,/soft-opening\.js\?v=0\.51\.15/);
- assert(sw.includes('novaplay-v0.51.15-tvspotlight'));
- assert(app.includes('./sw.js?v=0.51.15-tvspotlight'));
+ assert.match(index,/name="nplay-version" content="0\.51\.16"/);
+ assert.match(index,/cinema-refresh\.css\?v=0\.51\.16/);
+ assert.match(index,/soft-opening\.js\?v=0\.51\.16/);
+ assert(sw.includes('novaplay-v0.51.16-tvspotlight'));
+ assert(app.includes('./sw.js?v=0.51.16-tvspotlight'));
  assert(sw.includes('./assets/nplay-opening-original-final.m4a'));
 });
