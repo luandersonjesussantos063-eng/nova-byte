@@ -10,6 +10,19 @@
   if(!session?.access_token)throw Error("Entre novamente no NPlay para assistir a este canal.");
   const u=new URL(raw);u.searchParams.set("access_token",session.access_token);u.searchParams.set("viewer",crypto.randomUUID().replaceAll("-",""));return u.href;
  }
+ async function castSource(raw){
+  if(!protectedUrl(raw))throw Error('Canal incompatível com a transmissão protegida.');
+  const source=new URL(raw),jwt=source.searchParams.get('access_token'),id=source.pathname.split('/')[2];
+  if(!jwt)throw Error('Reabra este canal no NPlay antes de transmitir.');
+  const control=new AbortController(),timer=setTimeout(()=>control.abort(),12000);
+  try{
+   const response=await fetch(origin+'/cast/'+id,{method:'POST',headers:{Authorization:'Bearer '+jwt,'Content-Type':'application/json'},body:JSON.stringify({viewer:source.searchParams.get('viewer')}),signal:control.signal,cache:'no-store'});
+   const info=await response.json();if(!response.ok)throw Error(info.error||'Não foi possível autorizar este canal na TV.');
+   const url=new URL(info.url);
+   if(url.origin!==origin||url.pathname!=='/live/'+id+'/index.m3u8'||!url.searchParams.get('cast_ticket')||url.searchParams.has('access_token'))throw Error('Endereço de transmissão inválido.');
+   return {...info,url:url.href};
+  }finally{clearTimeout(timer);}
+ }
  const releasing=new Set();
  function release(raw){
   try{
@@ -48,5 +61,5 @@
   PC_SOURCE_TIMEOUT:'O servidor de vídeo demorou para responder ao PC. Tente novamente.',
   PC_SOURCE_UNAVAILABLE:'O PC está conectado, mas não conseguiu receber o sinal do fornecedor.'
  })[code]||'';}
- window.NPlayLiveAuth=Object.freeze({protectedUrl,authorize,failureMessage,release,waitForRelease});
+ window.NPlayLiveAuth=Object.freeze({protectedUrl,authorize,castSource,failureMessage,release,waitForRelease});
 })();

@@ -1,4 +1,5 @@
 import {handleIptv,isIptvRoute,iptvAdmin} from './iptv-api.mjs';
+import {mintLiveCast,readLiveCast} from './live-cast.mjs';
 import {channelEpg} from './epg.mjs';
 import {relayHls,hlsSource,xtreamTsSource} from './hls-relay.mjs';
 import {bridgeUrl,encryptBridge,decryptBridge,bridgeUpstream,checkBridge,pcFailureMessages,bridgeEngineStatus,inspectBridgeXtream,releaseBridgeViewer} from './pc-bridge.mjs';
@@ -75,11 +76,25 @@ export default {async fetch(request,env,ctx){
   if(request.method==='OPTIONS')return new Response(null,{status:204,headers:{'Access-Control-Allow-Origin':'*','Access-Control-Allow-Methods':'GET,HEAD,POST,OPTIONS','Access-Control-Allow-Headers':'Content-Type,Range'}});
   return handleIptv(request,env,ctx,{validateUrl:sourceUrl,upstream});
  }
- if(origin&&!allowed.includes(origin))return json({error:'Origem não autorizada.'},403);
+ let castSession=null;const castTicket=route.searchParams.get('cast_ticket');
+ if(castTicket){
+  const target=route.pathname.match(/^\/live\/([0-9a-f-]{36})\/(?:index\.m3u8|asset\/[A-Za-z0-9_-]{1,7000})$/i);
+  if(!target||!uuid.test(target[1])||!['GET','HEAD','OPTIONS'].includes(request.method))return json({error:'Transmissão inválida.'},403);
+  try{castSession=await readLiveCast(castTicket,target[1],env.HLS_MEDIA_KEY);}catch{return json({error:'Transmissão expirada. Abra novamente pelo NPlay.'},401);}
+  cors['Access-Control-Allow-Origin']='*';
+ }
+ if(origin&&!allowed.includes(origin)&&!castSession)return json({error:'Origem não autorizada.'},403);
  if(request.method==='OPTIONS')return new Response(null,{status:204,headers:cors});
  if(route.pathname==='/health')return json({service:'NPlay live gateway',protected:true});
- const jwt=token(request);if(!jwt||jwt===KEY||jwt.length>8192)return json({error:'Entre no NPlay para continuar.'},401);
+ const jwt=castSession?.jwt||token(request);if(!jwt||jwt===KEY||jwt.length>8192)return json({error:'Entre no NPlay para continuar.'},401);
  try{
+  const cast=route.pathname.match(/^\/cast\/([0-9a-f-]{36})$/i);
+  if(cast&&request.method==='POST'&&uuid.test(cast[1])){
+   if(!await published(cast[1],jwt,route.origin,'hls'))return json({error:'Canal não liberado para este aparelho.'},403);
+   const input=await readJson(request,1000);
+   let authorization;try{authorization=await mintLiveCast({id:cast[1],jwt,viewer:input.viewer,secret:env.HLS_MEDIA_KEY});}catch{return json({error:'Atualize sua sessão no NPlay e tente transmitir novamente.'},401);}
+   return json({url:route.origin+'/live/'+cast[1]+'/index.m3u8?cast_ticket='+encodeURIComponent(authorization.ticket),expires_at:authorization.expires_at,content_type:'application/x-mpegURL'});
+  }
   if(route.pathname==='/epg'&&request.method==='POST'){
    const input=await readJson(request,2000);
    if(!Array.isArray(input.ids)||!input.ids.length||input.ids.length>6||input.ids.some(id=>typeof id!=='string'||!uuid.test(id)))return json({error:'Canais inválidos.'},400);
@@ -154,7 +169,7 @@ export default {async fetch(request,env,ctx){
    const reader=r.body?.getReader();const first=reader?await reader.read():null;await reader?.cancel();
    const b=first?.value||new Uint8Array();return json({status:r.status,type:r.headers.get('Content-Type'),bytes:b.length,mpegts:b[0]===71,hls:new TextDecoder().decode(b.slice(0,10)).startsWith('#EXTM3U')});
   }
-  const viewer=route.searchParams.get('viewer')||'';
+  const viewer=castSession?.viewer||route.searchParams.get('viewer')||'';
   if(viewer&&!/^[a-f0-9]{32}$/.test(viewer))return json({error:'Sessão inválida.'},400);
   const release=route.pathname.match(/^\/live\/([0-9a-f-]{36})\/release$/i);
   if(release&&request.method==='POST'&&uuid.test(release[1])){
@@ -168,7 +183,7 @@ export default {async fetch(request,env,ctx){
   if(hls&&['GET','HEAD'].includes(request.method)&&uuid.test(hls[1])){
    if(!await published(hls[1],jwt,route.origin,'hls'))return json({error:'Canal não liberado para este aparelho.'},403);
    const entry=await hlsSource(env,hls[1]);if(!entry)return json({error:'Fonte indisponível.'},404);
-   return await relayHls({request,env,id:hls[1],jwt,origin:route.origin,rootUrl:entry.url,locator:hls[2],upstream:await configuredUpstream(env,jwt,viewer),viewer,validateUrl:sourceUrl,cors});
+   return await relayHls({request,env,id:hls[1],jwt,origin:route.origin,rootUrl:entry.url,locator:hls[2],upstream:await configuredUpstream(env,jwt,viewer),viewer,castTicket:castSession?castTicket:null,validateUrl:sourceUrl,cors});
   }
   const match=route.pathname.match(/^\/live\/([0-9a-f-]{36})\/stream\.ts$/i);
   if(!match||!['GET','HEAD'].includes(request.method)||!uuid.test(match[1]))return json({error:'Canal não encontrado.'},404);
