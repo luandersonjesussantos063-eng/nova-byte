@@ -31,12 +31,12 @@
 #nplay-presence-admin .presence-watching{margin:7px 0 5px;padding:9px 12px;border-radius:9px;border:1px solid #4a607b70;background:#15273d;color:#d4e3f7;font-size:13px;font-weight:650;overflow-wrap:anywhere;line-height:1.4}
 #nplay-presence-admin .presence-watching.is-playing{border-color:#448bb5b0;background:#123650;color:#d6f1ff}
 </style>
-<link rel="stylesheet" href="./tv-previews.css?v=0.51.20">
+<link rel="stylesheet" href="./admin-refresh.css?v=0.51.21">
 </head>
 <body>
-<header class="top"><a class="brand" href="../"><span class="mark">▶</span> N<span>Play</span></a><div class="top-right"><strong>Painel administrativo · NPlay V 0.51.20</strong><button id="logout" class="outline" hidden>Sair</button></div></header>
+<header class="top"><a class="brand" href="../"><span class="mark">▶</span> N<span>Play</span></a><div class="top-right"><strong>Painel administrativo · NPlay V 0.51.21</strong><button id="logout" class="outline" hidden>Sair</button></div></header>
 <main class="container">
-  <section id="loading" class="panel intro" hidden><div class="spin"></div><p>Preparando seu painel... <small>V 0.52.1</small></p><p id="loading-error" class="feedback" role="status"></p><button id="loading-retry" class="outline" type="button" hidden onclick="location.reload()">Tentar novamente</button></section>
+  <section id="loading" class="panel intro" hidden><div class="spin"></div><p>Preparando seu painel... <small>V 0.51.21</small></p><p id="loading-error" class="feedback" role="status"></p><button id="loading-retry" class="outline" type="button" hidden onclick="location.reload()">Tentar novamente</button></section>
   <section id="login-view" class="panel login">
     <div class="section-label">ACESSO RESTRITO</div>
     <h1>Gerencie sua NPlay</h1>
@@ -59,7 +59,7 @@
     <button class="outline" id="pending-exit">Voltar ao login</button>
   </section>
   <section id="dashboard" hidden>
-    <nav class="admin-nav" aria-label="Áreas do painel">
+    <nav class="admin-nav" role="tablist" aria-label="Áreas do painel">
       <button type="button" class="admin-tab active" data-admin-tab="catalogo">Catálogo</button>
       <button type="button" class="admin-tab" data-admin-tab="importacoes">Importações</button>
       <button type="button" class="admin-tab" data-admin-tab="youtube">YouTube</button>
@@ -70,17 +70,17 @@
       <button type="button" class="admin-tab" data-admin-tab="avisos">Avisos 🔔</button>
       <button type="button" class="admin-tab" data-admin-tab="ferramentas">Ferramentas</button>
     </nav>
-    <p class="admin-tab-help" id="admin-tab-help">Pesquise, revise e publique os títulos do catálogo.</p>
+    <div class="admin-mobile-navigation"><label for="admin-area-select">Área do painel<select id="admin-area-select"><option value="catalogo">Catálogo</option><option value="importacoes">Importações</option><option value="youtube">YouTube</option><option value="canais">TV ao vivo</option><option value="destaques">Destaques</option><option value="online">Perfis online</option><option value="acessos">Autorizações</option><option value="iptv">Acessos IPTV</option><option value="avisos">Avisos</option><option value="ferramentas">Ferramentas</option></select></label></div><div class="admin-page-heading"><h1 id="admin-tab-title">Catálogo</h1><p class="admin-tab-help" id="admin-tab-help">Encontre, revise e publique seus filmes e séries.</p></div>
     <div class="nplay-admin-alert-bar">
       <button type="button" id="nplay-admin-alerts" class="outline" aria-label="Solicitações de acesso">🔔 Pedidos de acesso <span id="nplay-admin-alert-count">0</span></button>
       <button type="button" id="nplay-alert-enable" class="primary">🔔 Ativar som e notificação</button>
-      <p id="nplay-admin-alert-status" role="status" aria-live="polite">Os alertas aparecem quando chegar uma nova solicitação. Ative para ouvir o som e receber avisos do navegador.</p>
+      <p id="nplay-admin-alert-status" role="status" aria-live="polite">Novos pedidos aparecem aqui. Ative os alertas para ouvir o aviso.</p>
     </div>
 
 <section id="nplay-iptv-admin" class="panel" hidden aria-labelledby="iptv-heading">
  <span class="section-label">APLICATIVOS IPTV</span><h2 id="iptv-heading">Acessos IPTV da NPlay</h2>
  <p class="muted">Crie um acesso para cada cliente. Ele poderá entrar por API Xtream em um aplicativo compatível ou carregar a lista M3U. Só entram conteúdos publicados com fonte compatível.</p>
- <label>Servidor NPlay<input id="iptv-server" readonly value="https://nplay-live-gateway.luandersonjesussantos063.workers.dev"></label>
+
  <form id="iptv-create"><div class="two"><label>Nome do cliente<input id="iptv-label" required maxlength="120" autocomplete="off"></label><label>Usuário<input id="iptv-username" required pattern="[A-Za-z0-9_]{4,40}" minlength="4" maxlength="40" placeholder="cliente_01" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" aria-describedby="iptv-username-help" title="Use de 4 a 40 letras, números ou sublinhado (_)."><small id="iptv-username-help" class="muted">4 a 40 letras, números ou _. Maiúsculas viram minúsculas automaticamente.</small></label></div>
  <div class="two"><label>Senha<input id="iptv-password" type="password" required minlength="12" maxlength="64" autocomplete="new-password" aria-describedby="iptv-password-help" placeholder="Mínimo de 12 caracteres"><small id="iptv-password-help" class="muted">Use de 12 a 64 caracteres ou toque em Gerar senha.</small></label><label>Validade<input id="iptv-expiry" type="date" required></label></div>
  <button id="iptv-generate" type="button" class="outline">Gerar senha</button>
@@ -90,8 +90,9 @@
  <p class="muted">O limite do cliente não aumenta as três vagas de canais diferentes do receptor. YouTube, Drive e conteúdo em breve ficam no aplicativo NPlay.</p>
  <button class="primary" id="iptv-save" type="submit">Criar acesso IPTV</button></form>
  <div id="iptv-delivery" hidden style="margin:18px 0"><h3>Acesso pronto para entregar</h3><p class="muted">A senha aparece somente nesta entrega. Se perder, gere outra pelo botão Redefinir senha.</p><textarea id="iptv-credentials" readonly rows="10" style="width:100%;overflow-wrap:anywhere"></textarea><button type="button" class="primary" id="iptv-copy">Copiar acesso</button><button type="button" class="outline" id="iptv-hide">Ocultar dados</button></div>
- <p id="iptv-status" class="feedback" role="status" aria-live="polite"></p><button id="iptv-refresh" class="outline" type="button">Atualizar acessos IPTV</button> <button id="iptv-check-server" class="outline" type="button">Testar conexão do servidor IPTV</button><p id="iptv-health-result" class="muted" role="status" aria-live="polite" style="white-space:pre-line;margin:12px 0"></p><div id="iptv-list"></div>
+ <p id="iptv-status" class="feedback" role="status" aria-live="polite"></p><button id="iptv-refresh" class="outline" type="button">Atualizar acessos IPTV</button> <details class="admin-fold"><summary>Servidor e diagnóstico de conexão</summary><div><label>Servidor NPlay<input id="iptv-server" readonly value="https://nplay-live-gateway.luandersonjesussantos063.workers.dev"></label><button id="iptv-check-server" class="outline" type="button">Testar conexão do servidor IPTV</button><p id="iptv-health-result" class="muted" role="status" aria-live="polite" style="white-space:pre-line;margin:12px 0"></p></div></details><div class="admin-filters"><label for="iptv-search">Buscar acesso IPTV<input type="search" id="iptv-search" placeholder="Nome ou identificação…" autocomplete="off"></label><label for="iptv-filter">Situação<select id="iptv-filter"><option value="all">Todos</option><option value="active">Ativos</option><option value="expired">Expirados</option><option value="blocked">Bloqueados</option></select></label></div><p id="iptv-filter-count" class="admin-list-count" role="status"></p><div id="iptv-list"></div>
 </section>
+<section id="admin-diagnostics" class="panel" hidden aria-labelledby="admin-diagnostics-title"><span class="section-label">CONEXÃO DOS CANAIS</span><h2 id="admin-diagnostics-title">Diagnóstico de reprodução IPTV</h2><div id="iptv-diagnostic-host"></div></section>
 <section id="portal-auth-manager" class="panel" hidden style="margin:16px 0">
 <h2>Autenticação por MAC / SN / DEV</h2>
 <p class="muted">Teste a conexão com seu portal Ministra/Stalker. Os identificadores ficam apenas nesta tela e são enviados ao portal durante o teste. A autenticação não publica canais nem confirma reprodução.</p>
@@ -109,7 +110,7 @@
 <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:16px"><button type="submit" class="primary">Testar autenticação</button><button id="portal-clear" type="button" class="outline">Limpar dados</button></div>
 <p id="portal-test-result" class="feedback" role="status" aria-live="polite"></p>
 </form></section>
-    <section id="nplay-presence-admin" class="panel" hidden style="margin:16px 0"><h2>Perfis online · O que estão assistindo</h2><p class="muted">Veja o nome informado no cadastro, o perfil conectado, o tempo de uso e o título aberto. Reproduzindo, pausado e carregando são confirmados pelo player da NPlay. Para YouTube e players externos, aparece “Player aberto” porque o provedor não confirma a reprodução. A leitura é atualizada a cada 10 segundos. Depois de 45 segundos sem sinal, o perfil aparece offline. Somente o administrador vê estas informações.</p><button id="presence-refresh" class="outline" type="button">Atualizar perfis</button><p id="presence-status" role="status" aria-live="polite"></p><div id="presence-list" class="presence-list"></div></section>
+    <section id="nplay-presence-admin" class="panel" hidden style="margin:16px 0"><h2>Perfis online · O que estão assistindo</h2><p class="muted">Veja o nome informado no cadastro, o perfil conectado, o tempo de uso e o título aberto. Reproduzindo, pausado e carregando são confirmados pelo player da NPlay. Para YouTube e players externos, aparece “Player aberto” porque o provedor não confirma a reprodução. A leitura é atualizada a cada 10 segundos. Depois de 45 segundos sem sinal, o perfil aparece offline. Somente o administrador vê estas informações.</p><button id="presence-refresh" class="outline" type="button">Atualizar perfis</button><p id="presence-status" role="status" aria-live="polite"></p><div class="admin-filters"><label for="presence-search">Buscar cliente ou perfil<input type="search" id="presence-search" placeholder="Nome ou identificação…" autocomplete="off"></label><label for="presence-filter">Situação<select id="presence-filter"><option value="all">Todos</option><option value="online">Online</option><option value="background">Em segundo plano</option><option value="offline">Offline</option></select></label></div><div id="presence-list" class="presence-list"></div></section>
     <section id="nplay-news-admin" class="panel" hidden style="margin:16px 0">
       <h2>🔔 Novidades para os clientes</h2>
       <p class="muted">Publique comunicados que aparecerão no sino da NPlay. As mensagens não alteram o catálogo nem enviam e-mails.</p>
@@ -124,15 +125,7 @@
       <button type="button" id="nplay-news-refresh" class="outline">Atualizar avisos</button>
       <div id="nplay-news-admin-list"></div>
     </section>
-    <section id="nplay-access-admin" class="panel" hidden style="margin:16px 0"><h2>Autorizações de acesso</h2><p class="muted">Aprove ou revogue dispositivos. Somente administradores podem alterar o acesso.</p><button id="nplay-access-refresh" type="button" class="outline">Atualizar solicitações</button><p id="nplay-access-admin-status"></p><div id="nplay-access-admin-list"></div></section><section id="live-embed-manager" class="panel" hidden><h2>Canais ao vivo · testar e publicar</h2><section id="tv-preview-admin" aria-labelledby="tv-preview-heading">
-<h3 id="tv-preview-heading">Prévias e destaques da tela TV ao vivo</h3>
-<p class="muted">Escolha até 24 canais publicados. Teste a imagem, adicione à lista e salve. Somente canais selecionados entram na faixa de prévias; nenhum será escolhido automaticamente.</p>
-<div class="tv-preview-toolbar"><button type="button" id="tv-preview-test-all" class="primary" disabled>Testar todas as prévias</button><button type="button" id="tv-preview-refresh" class="outline">Atualizar canais</button><button type="button" id="tv-preview-save" class="primary" disabled>Salvar seleção</button><button type="button" id="tv-preview-stop" class="outline" hidden>Parar teste</button></div>
-<progress id="tv-preview-progress" value="0" max="1" hidden aria-label="Progresso dos testes"></progress><p id="tv-preview-message" role="status" aria-live="polite">Carregando seleção…</p><video id="tv-preview-video" controls muted playsinline hidden></video>
-<h4>Seus canais <span id="tv-preview-count">0/24</span></h4><div id="tv-preview-selected"></div>
-<label for="tv-preview-search">Buscar canal publicado</label><input id="tv-preview-search" type="search" placeholder="Ex.: Discovery, SBT, Sportv…" autocomplete="off">
-<label for="tv-preview-filter">Resultado dos testes</label><select id="tv-preview-filter"><option value="all">Todos os canais</option><option value="working">Só as que funcionaram</option><option value="failed">Sem prévia</option><option value="pending">Ainda não testadas</option></select><div id="tv-preview-results"></div><button type="button" id="tv-preview-more" class="outline" hidden>Mostrar mais canais</button>
-</section><div id="live-embed-controls"></div></section>
+    <section id="nplay-access-admin" class="panel" hidden style="margin:16px 0"><h2>Autorizações de acesso</h2><p class="muted">Aprove ou revogue dispositivos. Somente administradores podem alterar o acesso.</p><button id="nplay-access-refresh" type="button" class="outline">Atualizar solicitações</button><p id="nplay-access-admin-status"></p><div class="admin-filters"><label for="access-search">Buscar solicitação<input type="search" id="access-search" placeholder="Nome ou identificação…" autocomplete="off"></label><label for="access-filter">Situação<select id="access-filter"><option value="all">Todas</option><option value="pending">Pendentes</option><option value="approved">Aprovadas</option><option value="denied">Recusadas</option><option value="revoked">Revogadas</option></select></label></div><div id="nplay-access-admin-list"></div></section><section id="live-embed-manager" class="panel" hidden><h2>Canais ao vivo · testar e publicar</h2><p class="muted">A grade de canais continua disponível. As prévias automáticas estão desativadas.</p><div id="live-embed-controls"></div></section>
     <div class="intro-text"><span class="section-label">CENTRAL DE CONTEÚDO</span><h1>Seus filmes, suas regras.</h1><p>Escolha um vídeo do telefone, envie uma capa e publique dentro da NPlay.</p></div>
     <div class="stats">
       <div class="stat"><strong id="stat-total">0</strong><span>Total de vídeos</span></div>
@@ -141,7 +134,7 @@
     </div>
     <p id="source-summary" class="muted" role="status" style="margin:0 0 15px">Conferindo fontes de vídeo...</p>
     <div class="panel" style="margin:16px 0 24px;padding:18px 22px;border-left:3px solid #f3b45a"><strong>Importações do Google Drive</strong><p class="muted" style="margin:8px 0 0">Títulos importados de listas externas ficam como rascunho privado. Confira a autorização de exibição pública e teste o link antes de publicar. Use a busca abaixo para localizar qualquer filme e a paginação para revisar o acervo.</p></div>
-    
+
     <section class="panel" hidden aria-labelledby="r2-test-heading" style="margin:16px 0 24px;padding:18px 22px;border:1px solid #3a6396;border-radius:14px">
       <div class="section-label">CLOUDFLARE R2 · TESTE</div>
       <h2 id="r2-test-heading">Enviar vídeo do computador</h2>
@@ -332,7 +325,7 @@
         <section class="panel" aria-labelledby="magnet-import-heading" style="margin:18px 0"><div class="section-label">IMPORTAÇÃO LICENCIADA · TORRENT</div><h2 id="magnet-import-heading">Importar filme ou pacote por magnet</h2><p class="muted">Cadastre o magnet e a licença para preparar a importação. Quando houver vários vídeos, abra o pacote na lista abaixo e escolha “Importar todos os vídeos” ou selecione os arquivos desejados. Cada um terá uma tarefa própria. O download começa com o processador conectado.</p><form id="magnet-import-form"><label for="magnet-title">Título do filme ou pacote<input id="magnet-title" required minlength="2" maxlength="140" placeholder="Nome do filme"></label><label for="magnet-uri">Link magnet<textarea id="magnet-uri" required rows="3" maxlength="8192" placeholder="magnet:?xt=urn:btih:..."></textarea></label><label for="magnet-license">Referência da licença / contrato<input id="magnet-license" required minlength="5" maxlength="500" placeholder="Número do contrato ou documento de autorização"></label><label class="publish-check"><input id="magnet-rights" type="checkbox" required><span><strong>Confirmo que possuo autorização válida para obter e distribuir este filme pela NPlay</strong><small>A autorização será mantida no cadastro. A publicação depende da preparação do vídeo e dos dados do catálogo.</small></span></label><button type="submit" id="magnet-submit" class="primary">Cadastrar importação por magnet</button><p id="magnet-status" class="feedback" role="status" aria-live="polite"></p></form><div style="margin-top:20px;padding-top:16px;border-top:1px solid #365075"><h3>Importações e vídeos prontos para cadastro</h3><p class="muted">O processador cria o rascunho e preenche os dados técnicos automaticamente. Revise apenas as informações pendentes. A fila se atualiza a cada 15 segundos. Atualizar apenas consulta o andamento; novas tentativas temporárias são automáticas. Fontes indisponíveis ou falta de espaço exigem a ação indicada no cartão.</p><button id="magnet-refresh" type="button" class="outline">Atualizar solicitações</button><div id="magnet-pending-list" style="margin-top:14px"></div><p id="magnet-approval-status" class="feedback" role="status"></p></div></section>
     </section>
     <section class="panel library">
-      <div class="section-title"><div><span class="section-label">BIBLIOTECA</span><h2>Seus uploads</h2></div><button id="refresh-list" class="outline compact">Atualizar</button></div>
+      <div class="section-title"><div><span class="section-label">BIBLIOTECA</span><h2>Filmes e séries</h2></div><button id="refresh-list" class="outline compact">Atualizar</button></div>
       <section class="panel" style="margin:10px 0 16px;padding:15px;border:1px solid #40639a;border-radius:12px">
         <strong>Adicionar capas em lote</strong>
         <p class="muted">Selecione várias imagens com os nomes dos arquivos preparados para os títulos da NPlay. O sistema encontra o filme automaticamente, troca somente a capa e preserva os vídeos, direitos e publicação.</p>
@@ -340,7 +333,7 @@
         <button id="batch-cover-upload" class="outline compact" type="button">Aplicar capas selecionadas</button>
         <p class="feedback" id="batch-cover-message" role="status" aria-live="polite"></p>
       </section>
-      
+
       <div class="panel" style="margin:8px 0 14px;padding:14px;border:1px solid rgba(150,186,250,.32);border-radius:12px">
         <strong>Publicação em lote</strong>
         <p class="muted" style="margin:8px 0 12px">Depois de revisar os links e os direitos de exibição de todos os rascunhos, use <b>Marcar todos como conferidos</b> para salvar a conferência de uma vez. Títulos com publicação automática ativada serão publicados quando vídeo, sinopse, gênero e capa também estiverem prontos. Os demais podem ser liberados no botão ao lado.</p>
@@ -368,7 +361,7 @@
     </section>
     </div>
   </section>
-</main>
+</main><button id="admin-back-top" type="button" hidden aria-label="Voltar ao topo do painel">↑ Topo</button>
 <script src="./youtube-manager.js?v=0.50.0"></script>
 <script>
 (function(){
@@ -446,7 +439,7 @@
  }
  function startAdmin(){
   if(!window.supabase||typeof window.supabase.createClient!=="function"){fail();return}
-  load("./admin.js?v=0.50.0",function(){},function(){if(msg)msg.textContent="Falha ao carregar o módulo administrativo. Atualize a página."});
+  load("./admin.js?v=0.51.21",function(){},function(){if(msg)msg.textContent="Falha ao carregar o módulo administrativo. Atualize a página."});
  }
  function fail(){if(msg)msg.textContent="Não foi possível carregar a biblioteca de autenticação. Confira a conexão e tente novamente.";}
  function attempt(i){
@@ -457,58 +450,21 @@
  attempt(0);
 })();
 </script>
-<script>
-(function(){
- function setup(){
-  var dash=document.getElementById("dashboard");if(!dash)return;
-  var groups={
-   catalogo:[dash.querySelector(".workspace .library")],
-   importacoes:[dash.querySelector(".workspace .editor")],
-   youtube:[dash.querySelector("#youtube-manager")],
-   canais:[dash.querySelector("#live-embed-manager")],
-   online:[dash.querySelector("#nplay-presence-admin")],
-   acessos:[dash.querySelector("#nplay-access-admin")],
-   iptv:[dash.querySelector("#nplay-iptv-admin")],
-   avisos:[dash.querySelector("#nplay-news-admin")],
-   destaques:[dash.querySelector(".featured-manager")],
-   ferramentas:[dash.querySelector("#portal-auth-manager"),dash.querySelector(".licensed-manager"),dash.querySelector(".issue-manager")]
-  };
-  var descriptions={iptv:"Crie, renove e bloqueie usuários que assistem à NPlay em aplicativos IPTV.",youtube:"Adicione vídeos por link e organize as quatro categorias da Seleção YouTube.",online:"Veja quem está online, o tempo de sessão e qual filme, série ou canal está aberto.",catalogo:"Pesquise, revise e publique os títulos do catálogo.",importacoes:"Acompanhe download, preparação e envio. O rascunho é criado automaticamente; revise as informações pendentes para publicar.",canais:"Importe, teste e publique canais ao vivo.",acessos:"Analise solicitações e autorize ou revogue dispositivos.",avisos:"Publique mensagens e atualizações para o sino dos clientes.",destaques:"Organize as capas e os títulos da página inicial.",ferramentas:"Teste autenticação MAC/SN/DEV e gerencie links e problemas de reprodução."};
-  var workspace=dash.querySelector(".workspace");if(workspace)workspace.classList.add("admin-workspace");
-  var intro=dash.querySelector(".intro-text"),stats=dash.querySelector(".stats"),source=dash.querySelector("#source-summary"),drive=dash.querySelector(".intro-text + .stats + #source-summary + .panel");
-  function show(name){
-   Object.keys(groups).forEach(function(k){groups[k].forEach(function(el){if(el)el.hidden=k!==name;});});
-   dash.querySelectorAll("[data-admin-tab]").forEach(function(b){var active=b.dataset.adminTab===name;b.classList.toggle("active",active);b.setAttribute("aria-selected",String(active));});
-   if(intro)intro.hidden=name!=="catalogo";
-   if(stats)stats.hidden=name!=="catalogo";
-   if(source)source.hidden=name!=="catalogo";
-   if(drive)drive.hidden=true;
-   var help=document.getElementById("admin-tab-help");if(help)help.textContent=descriptions[name];
-   try{sessionStorage.setItem("nplay-admin-tab",name);}catch(e){}
-  }
-  dash.querySelectorAll("[data-admin-tab]").forEach(function(b){b.addEventListener("click",function(){show(b.dataset.adminTab);});});
-  var saved="catalogo";try{saved=sessionStorage.getItem("nplay-admin-tab")||saved;}catch(e){}
-  show(groups[saved]?saved:"catalogo");
-  var newButton=document.getElementById("licensed-new");
-  if(newButton)newButton.addEventListener("click",function(){show("importacoes");});
- }
- if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",setup);else setup();
-})();
-</script>
+<script src="./admin-shell.js?v=0.51.21" defer></script>
 <script defer src="https://cdn.jsdelivr.net/npm/hls.js@1.7.3/dist/hls.min.js"></script>
-<script src="../assets/live-auth.js?v=0.51.20-preview-release" defer></script>
+<script src="../assets/live-auth.js?v=0.51.21-preview-release" defer></script>
 <script defer src="https://cdn.jsdelivr.net/npm/mpegts.js@1.7.3/dist/mpegts.js"></script>
 <script src="./gateway-config.js?v=0.49.6" defer></script>
 <script src="./m3u-core.js?v=0.49.6" defer></script>
 <script src="./signal-test.js?v=0.50.0" defer></script>
-<script src="./iptv-diagnostics.js?v=0.50.0" defer></script>
-<script src="./live-embeds.js?v=0.50.0" defer></script>
-<script src="./tv-previews.js?v=0.51.20" defer></script>
-<script src="./pc-tv.js?v=0.50.0" defer></script>
-<script src="./access-admin.js?v=0.50.7" defer></script>
+<script src="./iptv-diagnostics.js?v=0.51.21" defer></script>
+<script src="./live-embeds.js?v=0.51.21" defer></script>
+
+<script src="./pc-tv.js?v=0.51.21" defer></script>
+<script src="./access-admin.js?v=0.51.21" defer></script>
 <script src="./notifications-admin.js?v=0.50.8" defer></script>
-<script src="./presence-admin.js?v=0.51.20" defer></script>
+<script src="./presence-admin.js?v=0.51.21" defer></script>
 <script src="./portal-test.js?v=0.49.12" defer></script>
-<script src="./iptv-accounts.js?v=0.51.20" defer></script>
+<script src="./iptv-accounts.js?v=0.51.21" defer></script>
 </body>
 </html>
