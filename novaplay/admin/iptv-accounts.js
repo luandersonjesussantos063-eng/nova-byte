@@ -1,7 +1,7 @@
 (()=>{
 'use strict';
 const $=id=>document.getElementById(id),server='https://nplay-live-gateway.luandersonjesussantos063.workers.dev';
-let db,busy=false,deliveredUser=null;
+let db,busy=false,deliveredUser=null,cachedAccounts=[],loadingAccounts=false;
 const message=(text,error=false)=>{const n=$('iptv-status');n.textContent=text;n.classList.toggle('error',error);};
 function password(){return [...crypto.getRandomValues(new Uint8Array(18))].map(n=>n.toString(16).padStart(2,'0')).join('');}
 async function api(action,data){
@@ -16,13 +16,18 @@ function delivery(user,pass){
  $('iptv-delivery').hidden=false;
 }
 
+function filterAccounts(items,query='',state='all',now=Date.now()){
+ const normalize=value=>String(value||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+ const search=normalize(query).trim();
+ return items.filter(item=>{const status=!item.enabled?'blocked':Date.parse(item.expires_at)<=now?'expired':'active';return (state==='all'||status===state)&&(!search||normalize(item.label+' '+item.username).includes(search));});
+}
 async function removeAccount(item,{confirmDelete=globalThis.confirm,request=api}={}){
  if(!confirmDelete('Excluir o acesso '+item.label+' ('+item.username+')? O login e suas sessões serão apagados.'))return false;
  const result=await request('delete',{id:item.id});
  if(result?.ok!==true||result.id!==item.id)throw Error('Não foi possível confirmar a exclusão. Atualize a lista.');
  return true;
 }
-window.NPlayIptvAdmin={removeAccount};
+window.NPlayIptvAdmin={removeAccount,filterAccounts};
 
 
 /* Safe connectivity probe: the username does not exist, so no real user's
@@ -113,15 +118,16 @@ async function diagnoseIptvAccount(username,password,report){
 }
 
 async function update(item,data){await api('update',{id:item.id,...data});await refresh();}
-async function refresh(){
- try{
- const items=await api('list');$('iptv-list').replaceChildren();
+function renderAccounts(){
+ const items=filterAccounts(cachedAccounts,$('iptv-search')?.value||'',$('iptv-filter')?.value||'all');$('iptv-list').replaceChildren();
+ const count=$('iptv-filter-count');if(count)count.textContent=items.length+' de '+cachedAccounts.length+' acessos neste filtro';
  for(const x of items){
   const row=document.createElement('article');row.style.cssText='border:1px solid #365075;border-radius:14px;padding:16px;margin:12px 0';
   const title=document.createElement('h3');title.textContent=x.label+' · '+x.username;
   const info=document.createElement('p');const expired=Date.parse(x.expires_at)<Date.now();info.textContent=(x.enabled?(expired?'Expirado':'Ativo'):'Bloqueado')+' · validade '+new Date(x.expires_at).toLocaleString('pt-BR',{timeZone:'America/Cuiaba'})+' · '+x.active_connections+'/'+x.max_connections+' transmissões';
   row.append(title,info);
-  const add=(label,handler)=>{const b=document.createElement('button');b.type='button';b.className='outline';b.style.margin='4px';b.textContent=label;b.onclick=async()=>{b.disabled=true;try{await handler();}catch(e){message(e.message,true);}finally{b.disabled=false;}};row.append(b);};
+  const actions=document.createElement('div');actions.className='admin-client-actions';row.append(actions);
+  const add=(label,handler)=>{const b=document.createElement('button');b.type='button';b.className='outline';b.style.margin='4px';b.textContent=label;if(label==='Excluir acesso')b.classList.add('danger');b.onclick=async()=>{b.disabled=true;try{await handler();}catch(e){message(e.message,true);}finally{b.disabled=false;}};actions.append(b);};
   add(x.enabled?'Bloquear':'Desbloquear',()=>update(x,{enabled:!x.enabled}));
   add('Excluir acesso',async()=>{if(!await removeAccount(x))return;if(deliveredUser===x.username){$('iptv-credentials').value='';$('iptv-delivery').hidden=true;deliveredUser=null;}await refresh();message('Acesso '+x.username+' excluído.');});
   add('Renovar 30 dias',()=>{const base=Math.max(Date.now(),Date.parse(x.expires_at));return update(x,{expires_at:new Date(base+30*86400000).toISOString(),enabled:true});});
@@ -156,8 +162,14 @@ async function refresh(){
   row.append(check);
   $('iptv-list').append(row);
  }
- message(items.length+' acessos IPTV cadastrados.');
+ if(!items.length){const empty=document.createElement('p');empty.className='admin-empty';empty.textContent=cachedAccounts.length?'Nenhum acesso corresponde à busca.':'Nenhum acesso cadastrado. Use Criar acesso IPTV para começar.';$('iptv-list').append(empty);}
+}
+async function refresh(){
+ if(loadingAccounts)return;loadingAccounts=true;$('iptv-refresh').disabled=true;
+ try{
+  const items=await api('list');if(!Array.isArray(items))throw Error('Lista de acessos inválida. Tente atualizar novamente.');cachedAccounts=items;renderAccounts();message(items.length+' acessos IPTV cadastrados.');
  }catch(e){message(e.message,true);}
+ finally{loadingAccounts=false;$('iptv-refresh').disabled=false;}
 }
 function start(){
  if(!window.supabase?.createClient){setTimeout(start,300);return;}
@@ -175,7 +187,7 @@ function start(){
  $('iptv-generate').onclick=()=>{$('iptv-password').value=password();message('Senha gerada. Ela será mostrada na entrega após criar o acesso.');};
  $('iptv-hide').onclick=()=>{$('iptv-credentials').value='';$('iptv-delivery').hidden=true;};
  $('iptv-copy').onclick=async()=>{try{await navigator.clipboard.writeText($('iptv-credentials').value);message('Acesso copiado.');}catch{$('iptv-credentials').select();message('Selecione e copie os dados acima.');}};
- $('iptv-refresh').onclick=refresh;
+ $('iptv-refresh').onclick=refresh;$('iptv-search')?.addEventListener('input',renderAccounts);$('iptv-filter')?.addEventListener('change',renderAccounts);
  $('iptv-check-server').onclick=checkIptvServer;
  $('iptv-create').onsubmit=async event=>{event.preventDefault();if(busy)return;busy=true;$('iptv-save').disabled=true;
  try{const user=$('iptv-username').value.trim().toLowerCase(),pass=$('iptv-password').value;

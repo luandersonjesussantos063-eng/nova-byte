@@ -18,17 +18,16 @@ async function inspect(url){
  return results;
 }
 function attach(){
- const tab=document.querySelector('[data-admin-tab="canais"]');if(!tab)return;
- const root=document.createElement('section');root.style.cssText='border:1px solid #365075;border-radius:12px;padding:14px;margin:14px 0';
- const h=document.createElement('h3');h.textContent='Diagnóstico de reprodução IPTV';
+ const host=document.getElementById('iptv-diagnostic-host');if(!host||document.getElementById('iptv-diagnostic-form'))return;
+ const root=document.createElement('section');root.id='iptv-diagnostic-form';root.style.cssText='border:1px solid #365075;border-radius:12px;padding:14px;margin:14px 0';
+
  const p=document.createElement('p');p.textContent='Verifique HLS e MPEG-TS de um canal NPlay sem alterar o catálogo. Não cole URLs do fornecedor nem credenciais.';
- const input=document.createElement('input');input.type='url';input.placeholder='Cole o endereço NPlay /live/.../index.m3u8';input.style.width='100%';input.autocomplete='off';
+ const input=document.createElement('input');input.type='url';input.placeholder='Cole o endereço NPlay /live/.../index.m3u8';input.style.width='100%';input.autocomplete='off';input.id='iptv-diagnostic-url';const label=document.createElement('label');label.htmlFor=input.id;label.textContent='Endereço do canal na NPlay';label.append(input);
  const btn=document.createElement('button');btn.type='button';btn.textContent='Testar formatos HLS e MPEG-TS';
  const out=document.createElement('pre');out.style.cssText='white-space:pre-wrap;overflow-wrap:anywhere';
  btn.onclick=async()=>{btn.disabled=true;out.textContent='Consultando gateway…';try{const results=await inspect(input.value.trim());out.textContent=results.map(r=>r.format+': '+(r.http?'HTTP '+r.http:'sem resposta')+(r.type?' · '+r.type:'')+(r.error?' · '+r.error:'')).join('\n');}catch(e){out.textContent=e.message;}finally{btn.disabled=false;}};
- root.append(h,p,input,btn,out);
- const target=document.querySelector('#live-embed-url')?.closest('section')||document.querySelector('[data-admin-panel="canais"]')||tab.parentElement;
- target?.append(root);
+ btn.className='outline';root.append(p,label,btn,out);
+ host.append(root);
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',attach);else attach();
 })();

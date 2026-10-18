@@ -31,10 +31,9 @@ test('saving touches only the preview selection and refuses false successes or d
  const missing={from:()=>({update:()=>({eq:()=>({select:()=>({single:async()=>({data:{tv_spotlight_ids:[]},error:null})})})})})};
  await assert.rejects(core.persist(missing,ids),/confirmar o salvamento/);
 });
-test('admin controls and mobile header spacing are integrated into the published interfaces',()=>{
- const admin=readFileSync(new URL('../admin/index.html',import.meta.url),'utf8'),css=readFileSync(new URL('../assets/tv-spotlight.css',import.meta.url),'utf8');
- for(const id of ['tv-preview-admin','tv-preview-search','tv-preview-selected','tv-preview-save','tv-preview-video','tv-preview-test-all','tv-preview-filter','tv-preview-progress'])assert(admin.includes('id="'+id+'"'));
- assert(admin.includes('tv-previews.js?v=0.51.20'));assert(css.includes('padding-top:calc(130px + env(safe-area-inset-top,0px))'));
+test('disabled preview controls are not offered by the current admin interface',()=>{
+ const admin=readFileSync(new URL('../admin/index.html',import.meta.url),'utf8');
+ assert(!admin.includes('id="tv-preview-admin"'));assert(!admin.includes('src="./tv-previews.js'));assert(admin.includes('As prévias automáticas estão desativadas.'));
 });
 
 test('batch tests sequentially, reuses identical sources and reports failures without auto selecting',async()=>{

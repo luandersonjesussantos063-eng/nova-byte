@@ -17,6 +17,11 @@ on:
       - 'novaplay/assets/live-auth.js'
       - 'novaplay/assets/tv-spotlight.js'
       - 'novaplay/admin/tv-previews.js'
+      - 'novaplay/admin/admin-shell.js'
+      - 'novaplay/admin/admin-refresh.css'
+      - 'novaplay/admin/index.html'
+      - 'novaplay/admin/access-admin.js'
+      - 'novaplay/tests/admin-shell.test.mjs'
       - 'novaplay/tests/tv-previews-admin.test.mjs'
       - 'novaplay/assets/tv-spotlight.css'
       - 'novaplay/tests/tv-spotlight.test.mjs'
@@ -71,8 +76,8 @@ jobs:
           const app=fs.readFileSync('novaplay/app.js','utf8');
           const css=fs.readFileSync('novaplay/assets/cinema-refresh.css','utf8');
           const sw=fs.readFileSync('novaplay/sw.js','utf8');
-          for(const phrase of ['id="nplay-soft-opening"','assets/cinema-refresh.css?v=0.51.20','assets/soft-opening.js?v=0.51.20','assets/release-notes.js?v=0.51.20','NPlay V 0.51.20'])assert(index.includes(phrase),phrase);
-          assert(sw.includes('novaplay-v0.51.20-tvspotlight'));
+          for(const phrase of ['id="nplay-soft-opening"','assets/cinema-refresh.css?v=0.51.21','assets/soft-opening.js?v=0.51.21','assets/release-notes.js?v=0.51.21','NPlay V 0.51.21'])assert(index.includes(phrase),phrase);
+          assert(sw.includes('novaplay-v0.51.21-tvspotlight'));
           assert(sw.includes('./assets/cinema-refresh.css'));
           assert(sw.includes('./assets/intro-audio.js'));
           assert(sw.includes('./assets/release-notes.js'));
@@ -94,7 +99,7 @@ jobs:
           assert(app.includes('Séries para acompanhar'));
           assert(css.includes('prefers-reduced-motion'));
           assert(!app.includes('openTimeshift'));
-          console.log('NPlay interface 0.51.20 — integração validada');
+          console.log('NPlay interface 0.51.21 — integração validada');
           JS
       - name: Testes de catalogo ao vivo na home
-        run: node --test novaplay/tests/live-cast.test.mjs novaplay/tests/casting.test.mjs novaplay/tests/live-gateway.test.mjs novaplay/tests/tv-previews-admin.test.mjs novaplay/tests/tv-spotlight.test.mjs novaplay/tests/favorites.test.mjs novaplay/tests/epg.test.mjs novaplay/tests/home-live.test.mjs novaplay/tests/soft-opening.test.mjs novaplay/tests/intro-audio.test.mjs novaplay/tests/release-notes.test.mjs novaplay/tests/youtube-layout.test.mjs novaplay/tests/opening-logo.test.mjs
+        run: node --test novaplay/tests/admin-shell.test.mjs novaplay/tests/live-cast.test.mjs novaplay/tests/casting.test.mjs novaplay/tests/live-gateway.test.mjs novaplay/tests/tv-previews-admin.test.mjs novaplay/tests/tv-spotlight.test.mjs novaplay/tests/favorites.test.mjs novaplay/tests/epg.test.mjs novaplay/tests/home-live.test.mjs novaplay/tests/soft-opening.test.mjs novaplay/tests/intro-audio.test.mjs novaplay/tests/release-notes.test.mjs novaplay/tests/youtube-layout.test.mjs novaplay/tests/opening-logo.test.mjs

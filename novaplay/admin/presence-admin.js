@@ -61,11 +61,16 @@ async function registeredProfiles(client,rows){
  }
  return rows.map(row=>({...row,registration_name:names.get(row.user_id)||'Cadastro sem nome'}));
 }
+function filterProfiles(rows,query='',state='all',now=serverNow()){
+ const normalize=value=>String(value||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase(),search=normalize(query).trim();
+ return rows.filter(row=>(state==='all'||presenceState(row,now).state===state)&&(!search||normalize([row.registration_name,row.profile_name,row.user_id].join(' ')).includes(search)));
+}
 function draw(rows){
  list.replaceChildren();rendered=[];
  snapshot=rows;
  list.style.display='flex';list.style.flexDirection='column';list.style.gap='10px';
- for(const row of rows){
+ const filtered=filterProfiles(rows,document.getElementById('presence-search')?.value||'',document.getElementById('presence-filter')?.value||'all');
+ for(const row of filtered){
   const card=document.createElement('article');card.className='presence-card';
   const name=document.createElement('strong');name.textContent=row.registration_name||'Cadastro sem nome';
   const status=document.createElement('span');status.className='presence-state';
@@ -80,9 +85,9 @@ function draw(rows){
   list.append(card);
   rendered.push({row,status,time,watch,seen});
  }
- if(!rows.length){
+ if(!filtered.length){
   const empty=document.createElement('p');empty.className='muted';
-  empty.textContent='Nenhum perfil registrado. Abra a NPlay e selecione um perfil em um aparelho autorizado.';
+  empty.textContent=rows.length?'Nenhum cliente corresponde a este filtro.':'Nenhum perfil registrado. Abra a NPlay e selecione um perfil em um aparelho autorizado.';
   list.append(empty);
   message.textContent='0 perfis online · Nenhum perfil registrado · Consulta automática a cada 10s';
  }
@@ -111,6 +116,7 @@ async function refresh(){
   console.warn('NPlay presença: consulta indisponível',e?.code||e?.message||'erro');
  }finally{busy=false}
 }
+for(const [id,event] of [['presence-search','input'],['presence-filter','change']])document.getElementById(id)?.addEventListener(event,()=>draw(snapshot));
 document.getElementById('presence-refresh')?.addEventListener('click',refresh);
 new MutationObserver(refresh).observe(panel,{attributes:true,attributeFilter:['hidden']});
 const dashboard=document.getElementById('dashboard');

@@ -11,7 +11,7 @@ let client=null,editing=null,items=[],busy=false,currentUpload=null,sessionUser=
 let magnetLoading=false,packSaving=false;
 let libraryPage=0;
 let playbackIssues=[],issueSaving=false;
-const LIBRARY_PAGE_SIZE=48;
+const LIBRARY_PAGE_SIZE=24;
 const featuredDefaults=["lostworld","nosferatu","lua","caligari"];
 const classicFeatureFilms=[
  {id:"lostworld",title:"O Mundo Perdido",cover:"../assets/posters/lostworld.svg"},
@@ -546,7 +546,7 @@ function renderPlaybackIssues(){
    const edit=document.createElement("button");edit.type="button";edit.className="outline compact";
    edit.textContent="Corrigir fonte";edit.onclick=()=>{
     beginEdit(movie);
-    document.querySelector(".editor")?.scrollIntoView({behavior:"smooth",block:"start"});
+    $("legacy-upload-options")?.scrollIntoView({behavior:"smooth",block:"start"});
    };
    controls.append(edit);
   }
@@ -623,7 +623,7 @@ function renderLibrary(){
   return true;
  });
  const list=$("library-list");list.replaceChildren();
- if(!shown.length){const p=document.createElement("p");p.className="muted";p.textContent=filter?"Nenhum vídeo encontrado.":"Nenhum vídeo enviado ainda. Comece pelo formulário ao lado.";list.append(p);return}
+ if(!shown.length){const p=document.createElement("p");p.className="muted";p.textContent=filter?"Nenhum vídeo encontrado.":"Nenhum título neste filtro. Use Importações para adicionar conteúdo.";list.append(p);return}
  const pageCount=Math.ceil(shown.length/LIBRARY_PAGE_SIZE);
  libraryPage=Math.max(0,Math.min(libraryPage,pageCount-1));
  shown.slice(libraryPage*LIBRARY_PAGE_SIZE,(libraryPage+1)*LIBRARY_PAGE_SIZE).forEach(row=>{
@@ -657,7 +657,7 @@ function renderLibrary(){
   list.append(item);
  });
  if(pageCount>1){
-  const bar=document.createElement("div");bar.style.cssText="display:flex;align-items:center;gap:12px;justify-content:space-between;margin-top:18px;flex-wrap:wrap";
+  const bar=document.createElement("div");bar.className="library-pagination";bar.style.cssText="display:flex;align-items:center;gap:12px;justify-content:space-between;margin-top:18px;flex-wrap:wrap";
   const prev=document.createElement("button");prev.type="button";prev.className="outline compact";prev.textContent="‹ Anterior";prev.disabled=libraryPage===0;
   const next=document.createElement("button");next.type="button";next.className="outline compact";next.textContent="Próxima ›";next.disabled=libraryPage>=pageCount-1;
   const info=document.createElement("span");info.className="muted";info.textContent="Mostrando "+(libraryPage*LIBRARY_PAGE_SIZE+1)+"–"+Math.min((libraryPage+1)*LIBRARY_PAGE_SIZE,shown.length)+" de "+shown.length+" · Página "+(libraryPage+1)+" de "+pageCount;
@@ -674,8 +674,8 @@ function beginEdit(row){
  if(busy){status("upload-message","Aguarde a operação atual terminar antes de editar.",true);return;}
  // O formulário fica oculto na aba Importações; abrir a aba antes de rolar.
  document.querySelector('[data-admin-tab="importacoes"]')?.click();
- document.getElementById("legacy-upload-options").hidden=false;
- document.getElementById("magnet-import-form").parentElement.hidden=true;
+ document.getElementById("legacy-upload-options").hidden=false;document.getElementById("legacy-upload-options").removeAttribute("aria-hidden");
+ document.getElementById("magnet-import-form").parentElement.hidden=true;if($("admin-magnet-form"))$("admin-magnet-form").hidden=true;
  const releasing=!!row.catalog_only;
  editing=row;$("form-title").textContent=releasing?"Liberar título para assistir":"Editar conteúdo";$("cancel-edit").hidden=false;
  $("title").value=row.title;$("kind").value=row.kind;setKind();
@@ -698,12 +698,12 @@ function beginEdit(row){
  $("poster-file-label").textContent="Trocar capa (opcional)";
  $("submit-upload").textContent=isNetflixReference(row)?"Salvar referência privada":releasing?"Salvar e liberar para assistir":"Salvar alterações";
  status("upload-message",releasing?"“"+row.title+"” já está na grade como Em breve. Adicione o arquivo ou link do vídeo autorizado. Ao salvar, sairá de Em breve e terá reprodução habilitada. Sem um vídeo, não será liberado.":"Editando “"+row.title+"”. Você pode mudar só o texto ou trocar arquivos.",false,releasing);
- requestAnimationFrame(()=>document.querySelector(".editor")?.scrollIntoView({behavior:"smooth",block:"start"}));
+ requestAnimationFrame(()=>$("legacy-upload-options")?.scrollIntoView({behavior:"smooth",block:"start"}));
  status("upload-message","Editando “"+row.title+"”. Altere nome, capa ou outros dados e clique em Salvar alterações.");
 }
 function resetForm(){
  document.getElementById("legacy-upload-options").hidden=true;
- document.getElementById("magnet-import-form").parentElement.hidden=false;
+ document.getElementById("magnet-import-form").parentElement.hidden=false;if($("admin-magnet-form"))$("admin-magnet-form").hidden=false;
  editing=null;$("upload-form").reset();$("form-title").textContent="Adicionar filme ou episódio";
  $("cancel-edit").hidden=true;$("series-fields").hidden=true;$("series-name").required=false;$("episode-number").required=false;
  $("source-type").value="upload";$("r2-catalog-key").value="";$("r2-rights").checked=false;$("youtube-url").value="";$("drive-url").value="";$("licensed-url").value="";$("licensed-rights").checked=false;$("netflix-url").value="";$("youtube-poster-file").value="";setSourceType();
@@ -1006,7 +1006,7 @@ function openReadyMagnetInCatalog(job){
  const title=$("form-title");if(title)title.textContent="Cadastrar filme importado no catálogo";
  status("upload-message","Vídeo recebido do R2. A autorização registrada na importação foi mantida. Complete gênero, sinopse e capa para publicar.");
  document.querySelector('[data-admin-tab="importacoes"]')?.click();
- requestAnimationFrame(()=>document.querySelector(".editor")?.scrollIntoView({behavior:"smooth",block:"start"}));
+ requestAnimationFrame(()=>$("legacy-upload-options")?.scrollIntoView({behavior:"smooth",block:"start"}));
 }
 
 function importDiagnosticLines(job){
@@ -1286,7 +1286,7 @@ function init(){
   $("publish").checked=false;
   $("form-title").textContent="Adicionar filme licenciado";
   status("upload-message","Cole o link de vídeo fornecido pelo licenciador. Salve como rascunho até ter os direitos confirmados.",false,true);
-  document.querySelector(".editor").scrollIntoView({behavior:"smooth",block:"start"});
+  $("legacy-upload-options").scrollIntoView({behavior:"smooth",block:"start"});
   $("title").focus();
  };
  $("cancel-edit").onclick=()=>{resetForm();status("upload-message","Edição cancelada.")};
