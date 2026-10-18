@@ -85,6 +85,9 @@ for(const id of ['nplay-access-wall','nplay-profile-gate']){
  const element=document.getElementById(id);
  if(element)observer.observe(element,{attributes:true,attributeFilter:['hidden']});
 }
+// Share this tab ID with the playback reporter so stale/other tabs cannot
+// claim that another profile's content is currently playing.
+window.NPlayPresence=Object.freeze({tabId:tab,pulse});
 setInterval(pulse,HEARTBEAT_MS);
 pulse();
 })();
