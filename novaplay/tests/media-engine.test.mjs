@@ -130,3 +130,11 @@ test('three simultaneous channel startups reserve separate receivers while same-
  const result=await Promise.all(starts);assert.equal(new Set(result.map(x=>x.receiver)).size,3);
  assert.equal((await duplicate).receiver,result[0].receiver);await m.close();
 });
+
+test('HLS redirect preserves the authorized original URL for playlist renewal and final CDN URL for relative assets',async()=>{
+ const source='http://provider.example/user/pass/42.m3u8';
+ const client=new XtreamClient({fetcher:async url=>({url:'http://cdn.example/live/session/index.m3u8',response:Object.assign(Readable.from(['#EXTM3U\n']),{statusCode:200,headers:{}})})});
+ const media=await client.openHls({identity:{origin:'http://provider.example',user:'user',password:'pass',id:'42'},session:{}},new AbortController().signal);
+ assert.equal(media.requestUrl,'http://provider.example/live/user/pass/42.m3u8');
+ assert.equal(media.url,'http://cdn.example/live/session/index.m3u8');media.response.destroy();
+});

@@ -71,7 +71,7 @@ export class XtreamClient{
     const media=await this.fetcher(candidates[n],null,signal,{...session,headerTimeout:8000});
     if(media.response.statusCode===404&&n===0){media.response.destroy();continue;}
     if(media.response.statusCode!==200){media.response.destroy();throw Object.assign(Error('HLS source denied'),{code:'ENGINE_SOURCE_HTTP'});}
-    return media;
+    return {...media,requestUrl:candidates[n]};
    }catch(error){
     if(error.code==='ECONNRESET'&&n===0&&!signal.aborted){
      console.warn(JSON.stringify({event:'media_hls_source_reset_retry',candidate:1}));

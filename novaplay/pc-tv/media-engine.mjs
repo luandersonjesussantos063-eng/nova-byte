@@ -107,9 +107,9 @@ export class MediaEngine{
     return Buffer.concat(parts);
    };
    s.hlsTask=(async()=>{
-    let playlistUrl=media.url,initial=media.response,sequence=-1,missing=0;
+    let playlistUrl=media.url,playlistRequestUrl=media.requestUrl||raw,initial=media.response,sequence=-1,missing=0;
     while(!signal.aborted){
-     const playlist=initial?{response:initial,url:playlistUrl}:await this.client.fetcher(playlistUrl,null,signal,{headerTimeout:8000});
+     const playlist=initial?{response:initial,url:playlistUrl}:await this.client.fetcher(playlistRequestUrl,null,signal,{headerTimeout:8000});
      initial=null;
      if(playlist.response.statusCode!==200){console.warn(JSON.stringify({event:'media_hls_playlist_http',status:playlist.response.statusCode,session:s.id.slice(0,8)}));playlist.response.destroy();throw failure('ENGINE_SOURCE_HTTP');}
      playlistUrl=playlist.url||playlistUrl;
@@ -120,7 +120,7 @@ export class MediaEngine{
      if(lines.some(x=>x.startsWith('#EXT-X-STREAM-INF:'))){
       if(!uris.length)throw failure('ENGINE_SOURCE_INVALID');
       const child=hlsAssetUrl(uris[0],playlistUrl);
-      playlistUrl=child.href;continue;
+      playlistUrl=child.href;playlistRequestUrl=child.href;continue;
      }
      const base=Number((lines.find(x=>x.startsWith('#EXT-X-MEDIA-SEQUENCE:'))||'').split(':')[1]||0);
      if(!Number.isSafeInteger(base)||base<0)throw failure('ENGINE_SOURCE_INVALID');
