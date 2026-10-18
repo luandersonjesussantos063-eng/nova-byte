@@ -1,5 +1,6 @@
 {
   "published_ids": [
+    "tag:developer.android.com,2026-09-22:/blog/posts/land-your-apps-on-googlebook-with-adaptive-development",
     "2026-10-16-Updating-the-Indexing-API-quota-page",
     "tag:blogger.com,1999:blog-6755709643044947179.post-6854566470509824044",
     "https://developer.chrome.com/blog/new-in-devtools-october-2026?hl=en",
@@ -46,6 +47,15 @@
     "tag:developer.android.com,2026-10-13:/blog/posts/google-play-discovery-engagement-growth"
   ],
   "posts": [
+    {
+      "slug": "coloque-seus-aplicativos-no-googlebook-com-desenvolvimento-adaptavel",
+      "title": "Coloque seus aplicativos no Googlebook com desenvolvimento adaptável",
+      "description": "Coloque seus aplicativos no Googlebook com desenvolvimento adaptável. Entenda a novidade e o impacto prático para empresas, sites, aplicativos e profission",
+      "date": "2026-10-18",
+      "category": "Android e aplicativos",
+      "image": "/assets/news/coloque-seus-aplicativos-no-googlebook-com-desenvolvimento-adaptavel.svg",
+      "source": "https://developer.android.com/blog/posts/land-your-apps-on-googlebook-with-adaptive-development"
+    },
     {
       "slug": "updating-the-indexing-api-quota-page",
       "title": "Updating the Indexing API quota page",
