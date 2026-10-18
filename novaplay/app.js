@@ -34,10 +34,21 @@ function favoriteId(value){
  const id=String(typeof value==="string"?value:value?.staticId||value?.id||"");
  return /^(?:live-)?[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)?"channel-"+id.replace(/^live-/,"").toLowerCase():id;
 }
-function isFavorite(value){return favorite.has(favoriteId(value));}
-function favoriteItems(){return [...new Map(all.filter(isFavorite).map(item=>[favoriteId(item),item])).values()];}
+function favoriteChannelKey(value){
+ const item=typeof value==="object"?value:map.get(favoriteId(value));
+ return item?.kind==="tv"?window.NPlayChannelOrder?.key(item)||"":"";
+}
+function syncFavoriteChannels(){favoriteChannelKeys=new Set([...favorite].map(favoriteChannelKey).filter(Boolean));}
+function isFavorite(value){return favorite.has(favoriteId(value))||favoriteChannelKeys.has(favoriteChannelKey(value));}
+function uniqueChannelItems(items){
+ const core=window.NPlayChannelOrder;if(!core)return items;
+ const grouped=new Map(core.unique(items.filter(x=>x.kind==="tv")).map(x=>[core.key(x),x])),seen=new Set();
+ return items.flatMap(item=>{if(item.kind!=="tv")return [item];const key=core.key(item);if(seen.has(key))return [];seen.add(key);return [grouped.get(key)];});
+}
+function favoriteItems(){return uniqueChannelItems([...new Map(all.filter(isFavorite).map(item=>[favoriteId(item),item])).values()]);}
 const savedFavorites=read(favKey,[]);
 const favorite=new Set((Array.isArray(savedFavorites)?savedFavorites:[]).filter(x=>typeof x==="string").map(favoriteId));
+let favoriteChannelKeys=new Set();syncFavoriteChannels();
 const searchText=value=>String(value??"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLocaleLowerCase("pt-BR");
 let progress=read(progressKey,{});
 if(!progress||typeof progress!=="object"||Array.isArray(progress))progress={};
@@ -129,11 +140,12 @@ function refreshPlayerFavorite(){
 }
 function toggleFavorite(item){
  const id=favoriteId(item);if(!id)return false;
- const wasSaved=favorite.has(id),next=new Set(favorite);
- if(wasSaved)next.delete(id);else next.add(id);
+ const wasSaved=isFavorite(item),next=new Set(favorite),channelKey=favoriteChannelKey(item);
+ if(wasSaved){for(const saved of next)if(saved===id||channelKey&&favoriteChannelKey(saved)===channelKey)next.delete(saved);}else next.add(id);
  try{localStorage.setItem(favKey,JSON.stringify([...next]));}
  catch{toast("Não foi possível salvar os favoritos neste navegador.");return false;}
  favorite.clear();for(const saved of next)favorite.add(saved);
+ syncFavoriteChannels();
  toast(wasSaved?"Removido da minha lista":"Adicionado à minha lista");
  if(selected)refreshFavoriteButton();refreshPlayerFavorite();
  window.dispatchEvent(new CustomEvent("nplay:favorites-change"));
@@ -145,6 +157,7 @@ window.addEventListener("storage",event=>{
  if(event.key!==favKey&&event.key!==null)return;
  const saved=read(favKey,[]);favorite.clear();
  for(const id of Array.isArray(saved)?saved:[])if(typeof id==="string")favorite.add(favoriteId(id));
+ syncFavoriteChannels();
  if(selected)refreshFavoriteButton();refreshPlayerFavorite();
  window.dispatchEvent(new CustomEvent("nplay:favorites-change"));
  if(view==="favoritos")renderCategory("favoritos");
@@ -307,7 +320,7 @@ function renderRows(){
  // This is display-only: content rights, access checks and player routes are unchanged.
  const availableFilms=uploadedCatalog.filter(x=>x.kind==="film"&&!x.catalogOnly&&x.mode!=="youtube");
  const availableSeries=uploadedCatalog.filter(x=>x.kind==="series"&&!x.catalogOnly);
- const tvChannels=[...homeLiveChannels,...db.channels];
+ const tvChannels=uniqueChannelItems([...homeLiveChannels,...db.channels]);
  const grouped=genreGroups();
  const curatedGenres=["Ação","Animação","Comédia","Suspense","Drama"].map(name=>[
   name==="Animação"?"Animações para assistir":name+" para sua sessão",
@@ -574,7 +587,7 @@ function renderSearch(){
   const recent=read(recentSearchKey,[]);
   if(Array.isArray(recent)&&recent.length){const panel=document.createElement("div");panel.className="search-recent";const h=document.createElement("h2");h.textContent="Buscas recentes";panel.append(h);for(const term of recent.filter(x=>typeof x==="string")){const b=document.createElement("button");b.type="button";b.className="genre-chip";b.textContent=term;b.onclick=()=>{$("search-input").value=term;renderSearch()};panel.append(b);}const clear=document.createElement("button");clear.type="button";clear.className="genre-chip";clear.textContent="Limpar histórico";clear.onclick=()=>{save(recentSearchKey,[]);renderSearch()};panel.append(clear);results.append(panel);}return;
  }
- const list=all.filter(x=>(searchKind==="Tudo"||searchKind==="Filmes"&&x.kind==="film"&&x.mode!=="youtube"||searchKind==="Séries"&&x.kind==="series"||searchKind==="TV"&&x.kind==="tv"||searchKind==="YouTube"&&x.mode==="youtube")&&searchText(x.title+" "+x.description+" "+x.category+" "+(x.year||"")).includes(q));
+ const list=uniqueChannelItems(all.filter(x=>(searchKind==="Tudo"||searchKind==="Filmes"&&x.kind==="film"&&x.mode!=="youtube"||searchKind==="Séries"&&x.kind==="series"||searchKind==="TV"&&x.kind==="tv"||searchKind==="YouTube"&&x.mode==="youtube")&&searchText(x.title+" "+x.description+" "+x.category+" "+(x.year||"")).includes(q)));
  $("search-summary").textContent=list.length+" resultado"+(list.length===1?"":"s")+" para “"+q.slice(0,70)+"”";
  if(!list.length)results.append(empty("Nenhum título encontrado","Tente outro nome, gênero ou ano."));else list.forEach(x=>results.append(card(x,x.kind==="tv")));
 }
@@ -614,7 +627,7 @@ function openOfficialChannel(item){
 }
 function startWatching(item){
  if(!item)return;
- if(item.liveRecord){window.dispatchEvent(new CustomEvent("nplay:channel-play",{detail:item.liveRecord}));return;}
+ if(item.liveRecord){window.dispatchEvent(new CustomEvent("nplay:channel-play",{detail:{...item.liveRecord,title:item.title}}));return;}
  if(item.kind==="tv"&&item.mode==="external"){
   openOfficialChannel(item);return;
  }
@@ -1015,6 +1028,7 @@ function openLiveHls(url,title,mode="hls",audioOnly=false,channel){
 window.NPlayLiveCatalog={staticChannels:()=>db.channels,isFavorite,toggleFavorite:id=>toggleFavorite(map.get(favoriteId(id))||{id:favoriteId(id)}),setChannels(channels){
  for(let i=all.length-1;i>=0;i--)if(all[i].liveRecord){map.delete(all[i].id);all.splice(i,1);}
  for(const record of channels){const id="channel-"+record.id;const item={id,title:record.title,kind:"tv",live:true,mode:record.stream_type,category:record.category||"TV ao vivo",description:"Transmissão ao vivo · "+(record.category||"TV"),cover:record.logo_url||"",customLabel:record.logo_url?null:record.title,liveRecord:record};all.push(item);map.set(id,item);}
+ syncFavoriteChannels();
  if(view==="buscar")renderSearch();if(view==="favoritos")renderCategory("favoritos");
 }};
 window.NovaPlayPlayer={openStatic:id=>{const item=byId(id);if(!item)return false;startWatching(item);return true;},openHls:(url,title,channel)=>openLiveHls(url,title,"hls",false,channel),openRadio:(url,title,mode,channel)=>openLiveHls(url,title,mode==="mpegts"?"mpegts":"hls",true,channel),openMpegts:(url,title,channel)=>openLiveHls(url,title,"mpegts",false,channel),openEmbed:openLiveEmbed,closeEmbed:()=>{if(current?.item?.liveEmbedUrl)closePlayer()}};
@@ -1309,7 +1323,7 @@ document.addEventListener("keydown",e=>{
 document.addEventListener("visibilitychange",()=>{if(document.hidden){stopHeroPreview();if(!$("player-layer").hidden)$("video").pause()}});
 window.addEventListener("scroll",()=>$("app-header").classList.toggle("is-scrolled",window.scrollY>24),{passive:true});
 if("serviceWorker" in navigator&&location.protocol==="https:"){
- window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js?v=0.51.22-tvspotlight",{updateViaCache:"none"}).catch(()=>{}));
+ window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js?v=0.51.23-tvspotlight",{updateViaCache:"none"}).catch(()=>{}));
 }
 $("hero-play").onclick=()=>navigate("tv");
 $("hero-info").onclick=()=>navigate("filmes");

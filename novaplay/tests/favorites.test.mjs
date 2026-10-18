@@ -4,13 +4,14 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 const app=readFileSync(new URL('../app.js',import.meta.url),'utf8');
 const id='00142c6f-bb22-5f18-8e42-4d852d8d7c00',key='novaplay-favorites-v2';
-function setup(storage=new Map()){
+function setup(storage=new Map(),{channelOrder=false}={}){
  const handlers={},events=[],messages=[],button={hidden:true,setAttribute(k,v){this[k]=v;}};
  const item={id:'channel-'+id,title:'Canal A',kind:'tv',liveRecord:{id,embed_url:'https://example.org/live.m3u8'}};
  const context=vm.createContext({console,URL,CustomEvent:class{constructor(type){this.type=type;}},localStorage:{getItem:k=>storage.get(k)||null,setItem:(k,v)=>storage.set(k,v)},window:{addEventListener:(type,fn)=>handlers[type]=fn,dispatchEvent:event=>events.push(event.type)},$:()=>button,toast:m=>messages.push(m),icon:()=>'<svg/>',refreshFavoriteButton(){},renderCategory(){},renderRows(){},play(item){context.played=item;}});
  const helpers=app.slice(app.indexOf('function favoriteId('),app.indexOf('const searchText='));
  const functions=app.slice(app.indexOf('function favLabel('),app.indexOf('function progressItem('));
- vm.runInContext(`const favKey='${key}'; function read(k,f){try{return JSON.parse(localStorage.getItem(k))??f}catch{return f}};const all=[];const map=new Map();let current=null,selected=null,view='tv';${helpers}${functions};globalThis.lab={favoriteId,isFavorite,favoriteItems,toggleFavorite,refreshPlayerFavorite,add:item=>{all.push(item);map.set(item.id,item)},watch:item=>{current={item};refreshPlayerFavorite()}};`,context);
+ if(channelOrder)vm.runInContext(readFileSync(new URL('../assets/channel-order.js',import.meta.url),'utf8'),context);
+ vm.runInContext(`const favKey='${key}'; function read(k,f){try{return JSON.parse(localStorage.getItem(k))??f}catch{return f}};const all=[];const map=new Map();let current=null,selected=null,view='tv';${helpers}${functions};globalThis.lab={favoriteId,isFavorite,favoriteItems,toggleFavorite,refreshPlayerFavorite,add:item=>{all.push(item);map.set(item.id,item);syncFavoriteChannels()},watch:item=>{current={item};refreshPlayerFavorite()}};`,context);
  context.lab.add(item);context.lab.add({id:'live-'+id,title:'Canal A',kind:'tv'});
  return {context,lab:context.lab,storage,handlers,events,messages,button,item};
 }
@@ -43,4 +44,18 @@ test('authorized HLS playback keeps the catalog ID and never uses a session URL 
  s.context.openLiveHls('https://example.org/live.m3u8?access_token=private&viewer=temporary','Canal A','hls',false,{id});
  assert.equal(s.context.played.id,'channel-'+id);assert.equal(s.context.played.mode,'hls');
  s.lab.toggleFavorite(s.context.played);assert.equal(s.storage.get(key).includes('private'),false);
+});
+test('a favorite saved on a hidden quality or regional variant stays marked on the single channel card',()=>{
+ const s=setup(new Map([[key,JSON.stringify(['channel-sportv-hd','channel-sportv-4k','channel-globo-rj'])]]),{channelOrder:true});
+ const hd={id:'channel-sportv-hd',kind:'tv',title:'SPORTV HD²'},fhd={id:'channel-sportv-fhd',kind:'tv',title:'SPORTV FHD'},fourk={id:'channel-sportv-4k',kind:'tv',title:'SPORTV 4K'};
+ for(const row of [hd,fhd,fourk,{id:'channel-globo-rj',kind:'tv',title:'GB RJ CAPITAL HD'},{id:'channel-globo-sp',kind:'tv',title:'GB SP SP FHD'}])s.lab.add(row);
+ assert.equal(s.lab.isFavorite(fhd),true);
+ assert.equal(s.lab.isFavorite('channel-globo-sp'),true);
+ assert.equal(s.lab.favoriteItems().filter(x=>x.title==='SporTV').length,1);
+ assert.equal(s.lab.favoriteItems().filter(x=>x.title==='Globo').length,1);
+ s.lab.watch(fhd);s.button.onclick();
+ assert.equal(s.lab.isFavorite(hd),false);assert.equal(s.lab.isFavorite(fourk),false);
+ assert.deepEqual(JSON.parse(s.storage.get(key)),['channel-globo-rj']);
+ s.button.onclick();assert.equal(s.lab.isFavorite(hd),true);
+ assert.deepEqual(JSON.parse(s.storage.get(key)),['channel-globo-rj','channel-sportv-fhd']);
 });
