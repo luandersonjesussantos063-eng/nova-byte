@@ -35,7 +35,7 @@
 <body>
 <header class="top"><a class="brand" href="../"><span class="mark">▶</span> N<span>Play</span></a><div class="top-right"><strong>Painel administrativo · NPlay V 0.51.8</strong><button id="logout" class="outline" hidden>Sair</button></div></header>
 <main class="container">
-  <section id="loading" class="panel intro" hidden><div class="spin"></div><p>Preparando seu painel... <small>V 0.52.0</small></p><p id="loading-error" class="feedback" role="status"></p><button id="loading-retry" class="outline" type="button" hidden onclick="location.reload()">Tentar novamente</button></section>
+  <section id="loading" class="panel intro" hidden><div class="spin"></div><p>Preparando seu painel... <small>V 0.52.1</small></p><p id="loading-error" class="feedback" role="status"></p><button id="loading-retry" class="outline" type="button" hidden onclick="location.reload()">Tentar novamente</button></section>
   <section id="login-view" class="panel login">
     <div class="section-label">ACESSO RESTRITO</div>
     <h1>Gerencie sua NPlay</h1>
@@ -80,8 +80,8 @@
  <span class="section-label">APLICATIVOS IPTV</span><h2 id="iptv-heading">Acessos IPTV da NPlay</h2>
  <p class="muted">Crie um acesso para cada cliente. Ele poderá entrar por API Xtream em um aplicativo compatível ou carregar a lista M3U. Só entram conteúdos publicados com fonte compatível.</p>
  <label>Servidor NPlay<input id="iptv-server" readonly value="https://nplay-live-gateway.luandersonjesussantos063.workers.dev"></label>
- <form id="iptv-create"><div class="two"><label>Nome do cliente<input id="iptv-label" required maxlength="120" autocomplete="off"></label><label>Usuário<input id="iptv-username" required pattern="[a-z0-9_]{4,40}" minlength="4" maxlength="40" placeholder="cliente_01" autocomplete="off"></label></div>
- <div class="two"><label>Senha<input id="iptv-password" type="password" required minlength="12" maxlength="64" autocomplete="new-password"></label><label>Validade<input id="iptv-expiry" type="date" required></label></div>
+ <form id="iptv-create"><div class="two"><label>Nome do cliente<input id="iptv-label" required maxlength="120" autocomplete="off"></label><label>Usuário<input id="iptv-username" required pattern="[A-Za-z0-9_]{4,40}" minlength="4" maxlength="40" placeholder="cliente_01" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" aria-describedby="iptv-username-help" title="Use de 4 a 40 letras, números ou sublinhado (_)."><small id="iptv-username-help" class="muted">4 a 40 letras, números ou _. Maiúsculas viram minúsculas automaticamente.</small></label></div>
+ <div class="two"><label>Senha<input id="iptv-password" type="password" required minlength="12" maxlength="64" autocomplete="new-password" aria-describedby="iptv-password-help" placeholder="Mínimo de 12 caracteres"><small id="iptv-password-help" class="muted">Use de 12 a 64 caracteres ou toque em Gerar senha.</small></label><label>Validade<input id="iptv-expiry" type="date" required></label></div>
  <button id="iptv-generate" type="button" class="outline">Gerar senha</button>
  <label>Transmissões simultâneas<select id="iptv-screens"><option value="1">1</option><option value="2">2</option><option value="3">3</option></select></label>
  <label class="publish-check"><input id="iptv-live" type="checkbox" checked><span>Liberar canais ao vivo</span></label>
@@ -499,6 +499,6 @@
 <script src="./notifications-admin.js?v=0.50.8" defer></script>
 <script src="./presence-admin.js?v=0.51.9-watch-admin-1" defer></script>
 <script src="./portal-test.js?v=0.49.12" defer></script>
-<script src="./iptv-accounts.js?v=0.52.0" defer></script>
+<script src="./iptv-accounts.js?v=0.52.1" defer></script>
 </body>
 </html>

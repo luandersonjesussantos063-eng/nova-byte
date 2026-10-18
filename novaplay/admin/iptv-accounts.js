@@ -36,6 +36,15 @@ async function refresh(){
 function start(){
  if(!window.supabase?.createClient){setTimeout(start,300);return;}
  db=window.supabase.createClient('https://vajlhodqxskozuxxlujv.supabase.co','sb_publishable_uT0b4y0Bex1k1QWZoyIfKg_K0pm-yS3');
+ const username=$('iptv-username');
+ const normalizeUsername=()=>{
+  const position=username.selectionStart,next=username.value.toLowerCase();
+  if(next!==username.value){username.value=next;if(position!==null)username.setSelectionRange(position,position);}
+  username.setCustomValidity('');
+ };
+ username.addEventListener('input',normalizeUsername);
+ username.addEventListener('blur',()=>{username.value=username.value.trim();normalizeUsername();});
+ username.addEventListener('invalid',()=>{if(username.validity.patternMismatch||username.validity.tooShort)username.setCustomValidity('Use de 4 a 40 letras, números ou sublinhado (_), sem espaços ou acentos.');});
  $('iptv-expiry').value=new Date(Date.now()+30*86400000).toISOString().slice(0,10);
  $('iptv-generate').onclick=()=>{$('iptv-password').value=password();message('Senha gerada. Ela será mostrada na entrega após criar o acesso.');};
  $('iptv-hide').onclick=()=>{$('iptv-credentials').value='';$('iptv-delivery').hidden=true;};
