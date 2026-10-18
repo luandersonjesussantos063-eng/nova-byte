@@ -5,6 +5,15 @@
 "use strict";
 const releases=[
  {
+  version:"0.51.14",date:"2026-10-18",title:"Prévias escolhidas no ADM · versão 0.51.14",
+  intro:"A faixa de TV agora mostra somente os canais escolhidos e testados pelo administrador.",
+  changes:[
+   "No ADM, em TV ao vivo, teste a imagem de um canal, adicione à seleção e salve a ordem dos destaques.",
+   "O destaque só aparece depois de receber imagem em movimento; prévias que falharem ou pararem são escondidas.",
+   "Sem canais escolhidos ou sem sinal confirmado, a faixa fica oculta. O topo da tela também foi ajustado no celular."
+  ]
+ },
+ {
   version:"0.51.13",date:"2026-10-18",title:"TV em destaque · versão 0.51.13",
   intro:"Descubra o que está passando antes de escolher seu canal.",
   changes:[

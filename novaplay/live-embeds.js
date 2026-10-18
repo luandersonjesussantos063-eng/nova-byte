@@ -50,7 +50,9 @@ async function load(){
   const channels=(data||[]).filter(item=>item.embed_url);
   window.NPlayLiveCatalog?.setChannels(channels);
   const television=window.NPlayMusic?.select(channels,"tv")||channels;
-  window.NPlayTvSpotlight?.setChannels(television);
+  const spotlight=await db.from("novaplay_featured").select("tv_spotlight_ids").eq("id",1).maybeSingle();
+  if(sequence!==loadSequence)return;
+  window.NPlayTvSpotlight?.setChannels(television,spotlight.error?[]:spotlight.data?.tv_spotlight_ids||[]);
   const previews=television.filter(item=>!window.NPlayLiveAuth?.protectedUrl(item.embed_url));
   window.NPlayHeroLive?.setChannels(previews);
   window.NPlayHomeLive?.setChannels(previews);

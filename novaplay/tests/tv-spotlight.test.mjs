@@ -3,15 +3,15 @@ import vm from 'node:vm';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 const source=readFileSync(new URL('../assets/tv-spotlight.js',import.meta.url),'utf8');
-function setup({denyAudio=false,pendingAuth=false,mobile=false}={}){
+function setup({denyAudio=false,pendingAuth=false,mobile=false,autoProgress=true}={}){
  const elements=new Map(),windowEvents={},documentEvents={},instances=[],released=[],authorized=[],events=[],stored=new Map(),timers=new Map();let serial=0,resolveAuth;
  const classes=()=>{const s=new Set();return {add:(...v)=>v.forEach(x=>s.add(x)),remove:(...v)=>v.forEach(x=>s.delete(x)),contains:v=>s.has(v)};};
  class Node{
-  constructor(tag='div'){this.tag=tag;this.children=[];this.classList=classes();this.attrs={};this.handlers={};this.hidden=false;this.scrollTop=0;this.scrollLeft=0;this.muted=true;this.parentElement=null;}
+  constructor(tag='div'){this.tag=tag;this.children=[];this.style={};this.classList=classes();this.attrs={};this.handlers={};this.hidden=false;this.scrollTop=0;this.scrollLeft=0;this.muted=true;this.parentElement=null;}
   setAttribute(k,v){this.attrs[k]=v;}removeAttribute(k){delete this.attrs[k];}addEventListener(k,f){(this.handlers[k]??=[]).push(f);}emit(k,e={}){for(const f of this.handlers[k]||[])f(e);}
   append(...nodes){for(const n of nodes){n.remove?.();n.parentElement=this;this.children.push(n);}}replaceChildren(...n){for(const c of this.children)c.parentElement=null;this.children=[];this.append(...n);}remove(){if(this.parentElement){this.parentElement.children=this.parentElement.children.filter(n=>n!==this);this.parentElement=null;}}
   pause(){this.paused=true;}load(){}canPlayType(){return true;}
-  play(){if(denyAudio&&!this.muted){denyAudio=false;return Promise.reject(Object.assign(Error('autoplay'),{name:'NotAllowedError'}));}this.paused=false;this.emit('playing');return Promise.resolve();}
+  play(){if(denyAudio&&!this.muted){denyAudio=false;return Promise.reject(Object.assign(Error('autoplay'),{name:'NotAllowedError'}));}this.paused=false;this.emit('playing');if(!this.progressed&&autoProgress){this.progressed=true;this.videoWidth=640;this.videoHeight=360;this.readyState=3;for(let i=0;i<=3;i++){this.currentTime=i;this.emit('timeupdate');}}return Promise.resolve();}
   getBoundingClientRect(){
    if(this.hidden)return {left:0,top:0,right:0,bottom:0,width:0,height:0};
    if(mobile&&this===elements.get('tv-spotlight-frame'))return {left:18,top:100,right:372,bottom:299,width:354,height:199};
@@ -32,12 +32,12 @@ function setup({denyAudio=false,pendingAuth=false,mobile=false}={}){
   constructor(){this.events={};instances.push(this);}on(k,f){this.events[k]=f;}attachMedia(v){this.video=v;}loadSource(url){this.url=url;this.events.manifest();}destroy(){this.destroyed=true;}
  }
  const context=vm.createContext({console,URL,innerWidth:mobile?390:1000,innerHeight:mobile?844:800,location:{hash:'#tv',href:'https://novabytesolucoes.com.br/novaplay/#tv'},sessionStorage:{getItem:k=>stored.get(k),setItem:(k,v)=>stored.set(k,v)},MutationObserver:class{observe(){}},setTimeout:(f)=>{timers.set(++serial,f);return serial;},clearTimeout:id=>timers.delete(id),CustomEvent:class{constructor(type,{detail}){this.type=type;this.detail=detail;}},document:{body,hidden:false,getElementById:id=>elements.get(id),createElement:t=>new Node(t),addEventListener:(k,f)=>documentEvents[k]=f},window:{Hls,NPlayLiveAuth:{waitForRelease:async()=>{},authorize:async url=>{authorized.push(url);if(pendingAuth)return new Promise(r=>resolveAuth=r);return url+'?access_token=private&viewer=test';},release:url=>{if(url)released.push(url);}},NPlayLiveCatalog:{isFavorite:()=>false,toggleFavorite:id=>events.push({type:'favorite',id})},addEventListener:(k,f)=>(windowEvents[k]??=[]).push(f),dispatchEvent:e=>{events.push(e);for(const f of windowEvents[e.type]||[])f(e);}}});
- vm.runInContext(source,context);const api=context.window.NPlayTvSpotlight;
+ vm.runInContext(source,context);const realApi=context.window.NPlayTvSpotlight;const api={...realApi,setChannels:(items,selection=items.map(item=>item.id))=>realApi.setChannels(items,selection)};
  const items=Array.from({length:7},(_,i)=>({id:'channel-'+i,title:'Canal '+i,embed_url:'https://media.example/'+i+'.m3u8',stream_type:'hls'}));
  function emit(type,detail){context.window.dispatchEvent({type,detail});}
- const flush=async()=>{for(let i=0;i<5;i++)await new Promise(r=>setImmediate(r));};
+ const flush=async()=>{for(let i=0;i<5;i++){api.sync();await new Promise(r=>setImmediate(r));}};
  const videos=()=>instances.filter(x=>!x.destroyed&&x.video.parentElement);
- return {api,items,elements,context,emit,flush,videos,instances,released,authorized,events,stored,documentEvents,resolveAuth:value=>resolveAuth(value)};
+ return {api,items,elements,context,emit,flush,videos,instances,released,authorized,events,stored,documentEvents,timers,resolveAuth:value=>resolveAuth(value)};
 }
 test('TV entry starts an audible feature and at most two muted visible previews, including on touch layouts',async()=>{
  const s=setup();s.api.setChannels(s.items);s.api.sync();await s.flush();
@@ -72,7 +72,7 @@ test('late authorization after leaving is cancelled and released instead of star
  s.resolveAuth('https://media.example/0.m3u8?viewer=late');await s.flush();
  assert.equal(s.videos().length,0);assert.equal(s.instances.length,0);assert(s.released.some(url=>url.includes('viewer=late')));
 });
-test('unavailable feature signals fail over within a bounded number of attempts; duplicate qualities are collapsed',async()=>{
+test('unavailable feature signals fail over within a bounded number of attempts; duplicate sources are collapsed',async()=>{
  const s=setup();s.api.setChannels([...s.items,{...s.items[0],id:'duplicate',title:'Canal 0 FHD'}]);s.api.sync();await s.flush();
  assert.equal(s.elements.get('tv-spotlight-rail').children.length,7);
  const featured=s.videos().find(x=>!x.video.muted);featured.events.error(null,{fatal:true});await s.flush();
@@ -103,4 +103,21 @@ test('mobile horizontal scrolling plays only the visible previews and leaves the
  assert.equal(s.videos().length,3);const firstThumb=s.videos()[1];
  s.elements.get('tv-spotlight-rail').scrollLeft=394;s.api.sync();await s.flush();
  assert.equal(firstThumb.destroyed,true);assert.equal(s.videos().length,3);assert.equal(s.videos().filter(x=>!x.video.muted).length,1);
+});
+
+test('an unconfigured selection never auto-promotes arbitrary HLS channels',async()=>{
+ const s=setup();s.context.window.NPlayTvSpotlight.setChannels(s.items);s.api.sync();await s.flush();
+ assert.equal(s.videos().length,0);assert.equal(s.elements.get('tv-spotlight').hidden,true);
+});
+test('the feature stays hidden until video dimensions and two seconds of advancement are confirmed',async()=>{
+ const s=setup({autoProgress:false});s.api.setChannels([s.items[0]]);s.api.sync();await s.flush();
+ const v=s.videos()[0].video;assert.equal(s.elements.get('tv-spotlight').hidden,true);
+ v.readyState=3;v.videoWidth=0;for(const t of [0,1,2,3]){v.currentTime=t;v.emit('timeupdate');}
+ assert.equal(s.elements.get('tv-spotlight').hidden,true);
+ v.videoWidth=640;for(const t of [4,5,6]){v.currentTime=t;v.emit('timeupdate');}
+ assert.equal(s.elements.get('tv-spotlight').hidden,false);assert.equal(v.muted,false);
+});
+test('failed thumbnails disappear instead of displaying unavailable preview cards',async()=>{
+ const s=setup();s.api.setChannels(s.items);s.api.sync();await s.flush();const preview=s.videos()[1],node=preview.video.parentElement.parentElement;
+ preview.events.error(null,{fatal:true});assert.equal(node.hidden,true);assert.equal(preview.destroyed,true);assert(!node.children.some(n=>n.textContent==='Prévia indisponível'));
 });
