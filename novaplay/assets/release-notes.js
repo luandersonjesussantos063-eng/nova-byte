@@ -5,6 +5,17 @@
 "use strict";
 const releases=[
  {
+  version:"0.51.9",
+  date:"2026-10-17",
+  title:"Novidades da NPlay · versão 0.51.9",
+  intro:"A aba YouTube recebeu uma correção de visualização para facilitar a escolha dos vídeos.",
+  changes:[
+   "Capas dos vídeos maiores e na proporção horizontal 16:9, sem miniaturas achatadas.",
+   "Cada categoria agora ocupa uma fileira inteira, com rolagem horizontal no computador e no celular.",
+   "Títulos mais legíveis, exibidos em até duas linhas, sem mexer nos vídeos cadastrados."
+  ]
+ },
+ {
   version:"0.51.8",
   date:"2026-10-17",
   title:"Novidades da NPlay · versão 0.51.8",
