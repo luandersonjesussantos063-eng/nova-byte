@@ -25,7 +25,7 @@ test('foreign origins cannot request a protected stream',async()=>{
  const r=await worker.fetch(new Request(safe,{headers:{Origin:'https://foreign.example',Authorization:'Bearer valid'}}),{});assert.equal(r.status,403);
 });
 test('viewer tokens are attached only to the owned gateway, never arbitrary providers',async()=>{
- let sessions=0;const window={NPlayAccessClient:{auth:{getSession:async()=>{sessions++;return {data:{session:{access_token:'viewer-secret',expires_at:Date.now()/1000+3600}}}}}}};vm.runInNewContext(readFileSync(new URL('../assets/live-auth.js',import.meta.url),'utf8'),{window,URL,Date,Error,Object});
+ let sessions=0;const window={NPlayAccessClient:{auth:{getSession:async()=>{sessions++;return {data:{session:{access_token:'viewer-secret',expires_at:Date.now()/1000+3600}}}}}}};vm.runInNewContext(readFileSync(new URL('../assets/live-auth.js',import.meta.url),'utf8'),{window,URL,Date,Error,Object,crypto});
  assert.equal(await window.NPlayLiveAuth.authorize('https://provider.example/live.ts'),'https://provider.example/live.ts');assert.equal(sessions,0);
  const protectedUrl=await window.NPlayLiveAuth.authorize(safe);assert.equal(new URL(protectedUrl).searchParams.get('access_token'),'viewer-secret');assert.equal(sessions,1);
 });

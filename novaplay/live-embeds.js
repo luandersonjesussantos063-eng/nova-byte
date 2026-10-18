@@ -86,6 +86,7 @@ function renderChannels(channels){
  const list=$("iframe-channel-list");if(!list)return;
  if(!livePreviews&&window.NPlayLivePreviews)livePreviews=window.NPlayLivePreviews.create(list);
  livePreviews?.reset();
+ window.NPlayEpg?.reset();
  list.replaceChildren();
  const count=$("nplay-live-count");if(count)count.textContent=visibleChannels.length+" de "+scoped.length+(liveScope==="musica"?" canais de música":" canais");
  if(!visibleChannels.length&&scoped.length){const empty=document.createElement("p");empty.className="nplay-channel-empty";empty.textContent="Nenhum canal encontrado. Tente outro nome ou categoria.";list.append(empty)}
@@ -129,6 +130,7 @@ function renderChannels(channels){
   const media=document.createElement("div");media.className="nplay-live-media";media.append(button);
   const favorite=document.createElement("button");favorite.type="button";favorite.className="live-favorite";const saved=window.NPlayLiveCatalog?.isFavorite(favoriteId(item));favorite.textContent=saved?"♥":"♡";favorite.setAttribute("aria-label",(saved?"Remover dos favoritos: ":"Favoritar canal: ")+item.title);favorite.setAttribute("aria-pressed",String(!!saved));favorite.onclick=()=>{window.NPlayLiveCatalog?.toggleFavorite(favoriteId(item));renderChannels(liveChannelData);};
   media.append(favorite);card.append(media,title,subtitle);list.append(card);
+  window.NPlayEpg?.observe(card,item);
   if(!window.NPlayLiveAuth?.protectedUrl(item.embed_url)&&(item.stream_type==="hls"||/\.m3u8?(?:\?|$)/i.test(item.embed_url))){
    const sound=document.createElement("button");sound.type="button";sound.className="nplay-live-sound";sound.hidden=true;media.append(sound);
    livePreviews?.register({card,cover:button,sound,url:item.embed_url,title:item.title});

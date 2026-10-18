@@ -1,4 +1,5 @@
 import {handleIptv,isIptvRoute,iptvAdmin} from './iptv-api.mjs';
+import {channelEpg} from './epg.mjs';
 import {relayHls,hlsSource,xtreamTsSource} from './hls-relay.mjs';
 import {bridgeUrl,encryptBridge,decryptBridge,bridgeUpstream,checkBridge,pcFailureMessages,bridgeEngineStatus,inspectBridgeXtream,releaseBridgeViewer} from './pc-bridge.mjs';
 // Private provider URLs live in KV; viewers receive only channel IDs.
@@ -79,6 +80,24 @@ export default {async fetch(request,env,ctx){
  if(route.pathname==='/health')return json({service:'NPlay live gateway',protected:true});
  const jwt=token(request);if(!jwt||jwt===KEY||jwt.length>8192)return json({error:'Entre no NPlay para continuar.'},401);
  try{
+  if(route.pathname==='/epg'&&request.method==='POST'){
+   const input=await readJson(request,2000);
+   if(!Array.isArray(input.ids)||!input.ids.length||input.ids.length>6||input.ids.some(id=>typeof id!=='string'||!uuid.test(id)))return json({error:'Canais inválidos.'},400);
+   const ids=[...new Set(input.ids)];
+   const r=await fetch(DB+'/rest/v1/novaplay_live_embeds?select=id,embed_url&is_published=eq.true&id=in.('+ids.join(',')+')',{headers:dbHeaders(jwt)});
+   if(!r.ok){await r.body?.cancel();return json({error:'Entre novamente para consultar a programação.'},401);}
+   const rows=await readJson(r,20000),result={};
+   const permitted=rows.filter(row=>ids.includes(row.id)&&[route.origin+'/live/'+row.id+'/index.m3u8',route.origin+'/live/'+row.id+'/stream.ts'].includes(row.embed_url));
+   if(!permitted.length)return json({channels:result});
+   const deliver=await configuredUpstream(env,jwt),cache=globalThis.caches?.default;
+   for(let offset=0;offset<permitted.length;offset+=3){
+    await Promise.all(permitted.slice(offset,offset+3).map(async row=>{
+     const entry=await hlsSource(env,row.id);
+     result[row.id]=entry?await channelEpg({id:row.id,source:entry.url,deliver,readJson,cache,origin:route.origin}):{current:null,next:null};
+    }));
+   }
+   return json({channels:result});
+  }
   if(route.pathname==='/admin/iptv'&&['GET','POST'].includes(request.method)){
    if(!await admin(jwt))return json({error:'Acesso administrativo necessário.'},403);
    const response=await iptvAdmin(request,jwt);const headers=new Headers(response.headers);for(const [k,v] of Object.entries(cors))headers.set(k,v);return new Response(response.body,{status:response.status,headers});
