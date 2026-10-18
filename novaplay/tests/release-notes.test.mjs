@@ -27,7 +27,7 @@ function boot(){
 
 test('the published NPlay version always has specific editorial release notes',()=>{
  assert.match(version,/^\d+\.\d+\.\d+$/);
- assert.equal((html.match(/release-notes\.js\?v=0\.51\.6/g)||[]).length,1);
+ assert.equal((html.match(/release-notes\.js\?v=0\.51\.7/g)||[]).length,1);
  assert(html.indexOf('release-notes.js?v=0.51.7')<html.indexOf('notifications.js?v=0.51.7'),'changelog must load before bell');
  const {releases}=boot();
  const current=releases.filter(r=>r.version===version);
