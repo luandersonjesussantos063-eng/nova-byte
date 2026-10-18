@@ -14,7 +14,8 @@ test('YouTube sections stay full width instead of inheriting category-grid colum
  assert.match(css,/\.category-grid\.youtube-selection\s*\{\s*display:block;/);
  assert.match(css,/\.category-grid\.youtube-selection\s*>\s*\.shelf\s*\{[^}]*width:100%/s);
  assert.match(css,/\.category-grid\.youtube-selection\s+\.shelf-track\s*\{[^}]*display:flex;[^}]*flex-wrap:nowrap;[^}]*overflow-x:auto/s);
- assert.match(index,/cinema-refresh\.css\?v=0\.51\.9/);
+ const version=index.match(/<meta name="nplay-version" content="([^"]+)"/)?.[1];
+ assert(version&&index.includes('cinema-refresh.css?v='+version));
 });
 
 test('YouTube cards remain wide with 16:9 thumbnails, not a strip of tiny thumbnails',()=>{
