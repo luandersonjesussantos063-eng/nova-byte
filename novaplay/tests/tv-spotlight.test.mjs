@@ -11,7 +11,7 @@ function setup({denyAudio=false,pendingAuth=false,mobile=false,autoProgress=true
   setAttribute(k,v){this.attrs[k]=v;}removeAttribute(k){delete this.attrs[k];}addEventListener(k,f){(this.handlers[k]??=[]).push(f);}emit(k,e={}){for(const f of this.handlers[k]||[])f(e);}
   append(...nodes){for(const n of nodes){n.remove?.();n.parentElement=this;this.children.push(n);}}replaceChildren(...n){for(const c of this.children)c.parentElement=null;this.children=[];this.append(...n);}remove(){if(this.parentElement){this.parentElement.children=this.parentElement.children.filter(n=>n!==this);this.parentElement=null;}}
   pause(){this.paused=true;}load(){}canPlayType(){return true;}
-  play(){if(denyAudio&&!this.muted){denyAudio=false;return Promise.reject(Object.assign(Error('autoplay'),{name:'NotAllowedError'}));}this.paused=false;this.emit('playing');if(!this.progressed&&autoProgress){this.progressed=true;this.videoWidth=640;this.videoHeight=360;this.readyState=3;for(let i=0;i<=3;i++){this.currentTime=i;this.emit('timeupdate');}}return Promise.resolve();}
+  play(){if(denyAudio&&!this.muted){denyAudio=false;return Promise.reject(Object.assign(Error('autoplay'),{name:'NotAllowedError'}));}this.paused=false;this.emit('playing');let ancestor=this;while(ancestor){if(ancestor.hidden)return Promise.resolve();ancestor=ancestor.parentElement;}if(!this.progressed&&autoProgress){this.progressed=true;this.videoWidth=640;this.videoHeight=360;this.readyState=3;for(let i=0;i<=3;i++){this.currentTime=i;this.emit('timeupdate');}}return Promise.resolve();}
   getBoundingClientRect(){
    if(this.hidden)return {left:0,top:0,right:0,bottom:0,width:0,height:0};
    if(mobile&&this===elements.get('tv-spotlight-frame'))return {left:18,top:100,right:372,bottom:299,width:354,height:199};
@@ -26,6 +26,7 @@ function setup({denyAudio=false,pendingAuth=false,mobile=false,autoProgress=true
  const ids=['tv-spotlight','tv-spotlight-rail','tv-spotlight-frame','tv-spotlight-status','tv-spotlight-sound','tv-spotlight-title','tv-spotlight-category','tv-spotlight-favorite','tv-spotlight-next','tv-spotlight-watch','view-category','nplay-profile-gate','nplay-access-wall','player-layer'];
  for(const id of ids)elements.set(id,new Node());
  for(const id of ['nplay-profile-gate','nplay-access-wall','player-layer'])elements.get(id).hidden=true;
+ elements.get('tv-spotlight').append(elements.get('tv-spotlight-frame'),elements.get('tv-spotlight-rail'));
  const body=new Node('body');
  class Hls{
   static isSupported=()=>true;static Events={MANIFEST_PARSED:'manifest',ERROR:'error'};
@@ -109,15 +110,21 @@ test('an unconfigured selection never auto-promotes arbitrary HLS channels',asyn
  const s=setup();s.context.window.NPlayTvSpotlight.setChannels(s.items);s.api.sync();await s.flush();
  assert.equal(s.videos().length,0);assert.equal(s.elements.get('tv-spotlight').hidden,true);
 });
-test('the feature stays hidden until video dimensions and two seconds of advancement are confirmed',async()=>{
+test('the pending player stays laid out while unconfirmed thumbnails stay hidden until moving video is confirmed',async()=>{
  const s=setup({autoProgress:false});s.api.setChannels([s.items[0]]);s.api.sync();await s.flush();
- const v=s.videos()[0].video;assert.equal(s.elements.get('tv-spotlight').hidden,true);
+ const root=s.elements.get('tv-spotlight'),v=s.videos()[0].video;assert.equal(root.hidden,false);assert(root.classList.contains('is-loading'));assert.equal(s.videos().length,1);
  v.readyState=3;v.videoWidth=0;for(const t of [0,1,2,3]){v.currentTime=t;v.emit('timeupdate');}
- assert.equal(s.elements.get('tv-spotlight').hidden,true);
+ assert(root.classList.contains('is-loading'));
  v.videoWidth=640;for(const t of [4,5,6]){v.currentTime=t;v.emit('timeupdate');}
- assert.equal(s.elements.get('tv-spotlight').hidden,false);assert.equal(v.muted,false);
+ assert.equal(root.hidden,false);assert.equal(root.classList.contains('is-loading'),false);assert.equal(root.attrs['aria-busy'],'false');assert.equal(v.muted,false);
 });
 test('failed thumbnails disappear instead of displaying unavailable preview cards',async()=>{
  const s=setup();s.api.setChannels(s.items);s.api.sync();await s.flush();const preview=s.videos()[1],node=preview.video.parentElement.parentElement;
  preview.events.error(null,{fatal:true});assert.equal(node.hidden,true);assert.equal(preview.destroyed,true);assert(!node.children.some(n=>n.textContent==='Prévia indisponível'));
+});
+
+test('mobile media does not need to decode inside a display-none ancestor to reveal the saved selection',async()=>{
+ const s=setup({mobile:true});s.api.setChannels(s.items,[s.items[3].id,s.items[4].id]);await s.flush();
+ assert.equal(s.elements.get('tv-spotlight').hidden,false);assert.equal(s.elements.get('tv-spotlight').classList.contains('is-loading'),false);
+ assert.equal(s.elements.get('tv-spotlight-title').textContent,'Canal 3');assert(s.videos().some(x=>x.video.videoWidth>0));
 });
