@@ -5,6 +5,19 @@
 "use strict";
 const releases=[
  {
+  version:"0.51.7",
+  date:"2026-10-17",
+  title:"Novidades da NPlay · versão 0.51.7",
+  intro:"A abertura está mais limpa, com a marca NPlay em um único logotipo horizontal.",
+  changes:[
+   "Substituímos o N separado e o texto duplicado por uma única marca horizontal.",
+   "A logo fica centralizada e se adapta ao tamanho da tela do celular ou do computador.",
+   "Mantivemos o som original da abertura, as transições e a segurança de acesso."
+  ],
+  action:"preview-intro-audio",
+  actionLabel:"▶ Ouvir áudio da abertura"
+ },
+ {
   version:"0.51.6",
   date:"2026-10-17",
   title:"Novidades da NPlay · versão 0.51.6",
