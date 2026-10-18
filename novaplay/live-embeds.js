@@ -81,7 +81,8 @@ function renderChannels(channels){
  const pool=liveScope==="tv"?allChannels(channels):channels;
  const scoped=window.NPlayMusic?.select(pool,liveScope)||pool;
  const searched=filterLiveChannels(scoped,$("nplay-live-search")?.value||"");
- const visibleChannels=searched.filter(item=>(liveDisplayMode==="Todos"||liveDisplayMode==="Favoritos"&&window.NPlayLiveCatalog?.isFavorite(favoriteId(item))||subject(item)===liveDisplayMode)&&(liveRegion==="Todos"||(liveRegion==="Internacionais"?international(item):!international(item))));
+ const filteredChannels=searched.filter(item=>(liveDisplayMode==="Todos"||liveDisplayMode==="Favoritos"&&window.NPlayLiveCatalog?.isFavorite(favoriteId(item))||subject(item)===liveDisplayMode)&&(liveRegion==="Todos"||(liveRegion==="Internacionais"?international(item):!international(item))));
+ const visibleChannels=liveScope==="tv"&&liveDisplayMode==="Todos"?(window.NPlayChannelOrder?.sort(filteredChannels)||filteredChannels):filteredChannels;
  renderFilters();
  const list=$("iframe-channel-list");if(!list)return;
  if(!livePreviews&&window.NPlayLivePreviews)livePreviews=window.NPlayLivePreviews.create(list);
