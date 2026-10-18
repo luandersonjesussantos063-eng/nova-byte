@@ -76,3 +76,37 @@ test('closed or hidden administration panel does not trigger unnecessary API cal
  const refresh=h.intervals.find(x=>x.period===10000).callback;
  await refresh();assert.equal(h.rpcCalls(),first);
 });
+
+
+test('ADM shows the correct title and confirms playing only with a fresh media heartbeat',async()=>{
+ const now=Date.now(),h=harness([{user_id:'12345678',profile_name:'Cliente A',is_visible:true,
+  last_seen:new Date(now-10000).toISOString(),server_now:new Date(now).toISOString(),
+  session_seconds:20,today_seconds:45,watch_title:'Filme de teste',watch_kind:'film',
+  watch_state:'playing',watch_updated_at:new Date(now-6000).toISOString()}]);
+ await flush();
+ const card=h.items['presence-list'].children[0];
+ assert.equal(card.children[4].textContent,'▶ Assistindo: Filme de teste');
+ assert.match(h.items['presence-status'].textContent,/1 reproduzindo/);
+ h.tick(46000);
+ assert.equal(card.children[4].textContent,'Sem reprodução ativa');
+});
+
+test('ADM never treats an external iframe as confirmed watching',async()=>{
+ const now=Date.now(),h=harness([{user_id:'12345678',profile_name:'Cliente B',is_visible:true,
+  last_seen:new Date(now-5000).toISOString(),server_now:new Date(now).toISOString(),
+  session_seconds:100,today_seconds:120,watch_title:'Canal de teste',watch_kind:'tv',
+  watch_state:'open',watch_updated_at:new Date(now-4000).toISOString()}]);
+ await flush();
+ const watch=h.items['presence-list'].children[0].children[4];
+ assert.match(watch.textContent,/Player aberto \(reprodução não confirmada\): Canal de teste/);
+ assert.match(h.items['presence-status'].textContent,/0 reproduzindo/);
+});
+
+test('ADM clears title immediately when playback is stopped or session is offline',async()=>{
+ const now=Date.now(),h=harness([{user_id:'12345678',profile_name:'Cliente C',is_visible:true,
+  last_seen:new Date(now-1500).toISOString(),server_now:new Date(now).toISOString(),
+  session_seconds:80,today_seconds:120,watch_title:null,watch_state:null}]);
+ await flush();
+ assert.equal(h.items['presence-list'].children[0].children[4].textContent,'Nenhum conteúdo em reprodução confirmado');
+ assert.match(original,/rpc\('novaplay_profiles_watching'\)/);
+});
