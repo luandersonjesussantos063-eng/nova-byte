@@ -17,6 +17,8 @@ function pool(items,selection){
   }catch{return false;}
  }).slice(0,24);
 }
+function prepare(){root.hidden=false;root.classList.add('is-loading');root.setAttribute('aria-busy','true');}
+function ready(){root.classList.remove('is-loading');root.setAttribute('aria-busy','false');}
 function status(text){el('tv-spotlight-status').textContent=text;}
 function soundControl(){
  const state=states.get(selected?.id),audible=!!state?.playing&&!state.video.muted;
@@ -55,7 +57,7 @@ function remember(){try{sessionStorage.setItem(lastKey,selected.id);}catch{}}
 function choose(item){
  if(!item||!entered)return;
  for(const state of states.values())state.video.muted=true;
- selected=item;soundWanted=true;remember();root.hidden=!states.get(item.id)?.confirmed;root.classList.remove('is-playing');describe();status('Conectando ao sinal ao vivo…');sync();
+ selected=item;soundWanted=true;remember();if(states.get(item.id)?.confirmed){root.hidden=false;ready();}else prepare();root.classList.remove('is-playing');describe();status('Conectando ao sinal ao vivo…');sync();
 }
 function fail(state){
  if(states.get(state.item.id)!==state)return;
@@ -110,7 +112,7 @@ async function start(item){
   if(state.ticks<3||video.currentTime-state.started<2)return;
   state.confirmed=true;state.lastPosition=video.currentTime;clearTimeout(state.timeout);state.motionTimer=setTimeout(()=>fail(state),15000);
   const card=cards.get(item.id);if(card){card.node.style.visibility='';card.node.classList.add('is-playing');card.note.textContent='● Ao vivo';}
-  if(item.id===selected?.id){root.hidden=false;mount(state);play(state);}
+  if(item.id===selected?.id){root.hidden=false;ready();mount(state);play(state);}
   schedule();
  });
  video.addEventListener('error',()=>fail(state));
@@ -135,7 +137,7 @@ function sync(){
  const wanted=[];
  if(selected&&!failed.has(selected.id)&&(root.hidden||visible(frame)))wanted.push(selected);
  for(const item of channels){
-  if(root.hidden||wanted.length>=3)break;
+  if(root.hidden||!states.get(selected?.id)?.confirmed||wanted.length>=3)break;
   if(item.id===selected?.id||failed.has(item.id))continue;
   const card=cards.get(item.id);if(card&&visible(card.node,rail))wanted.push(item);
  }
@@ -160,7 +162,7 @@ function selectForEntry(){
  if(!channels.length)return;
  let previous='';try{previous=sessionStorage.getItem(lastKey)||'';}catch{}
  const index=channels.findIndex(item=>item.id===previous);selected=channels[(index+1)%channels.length];
- remember();describe();status('Conectando ao sinal ao vivo…');
+ prepare();remember();describe();status('Conectando ao sinal ao vivo…');
 }
 function enter(){
  if(entered)return;
@@ -174,7 +176,7 @@ function setChannels(items,selection=[]){
  stop();root.hidden=true;channels=next;renderRail();
  if(!channels.length){root.hidden=true;selected=null;describe();status('Nenhum sinal de prévia disponível neste momento. Explore a grade abaixo.');return;}
  const refreshed=channels.find(item=>item.id===selected?.id);selected=refreshed||null;
- if(entered){if(!selected)selectForEntry();else describe();schedule();}
+ if(entered){if(!selected)selectForEntry();else{prepare();describe();}schedule();}
 }
 el('tv-spotlight-sound').onclick=()=>{const state=states.get(selected?.id);if(!state)return;soundWanted=state.video.muted;play(state);soundControl();};
 el('tv-spotlight-next').onclick=()=>{featureFailures=0;const i=channels.findIndex(item=>item.id===selected?.id);const next=channels[(i+1)%channels.length];if(next){failed.delete(next.id);choose(next);}};

@@ -31,3 +31,7 @@
 
 #tv-spotlight:not([hidden]) + .category-intro{padding-top:28px}
 @media(max-width:760px){.tv-spotlight{padding-top:calc(130px + env(safe-area-inset-top,0px))}}
+
+/* Keep the pending video laid out: display:none can suspend mobile decoding. */
+.tv-spotlight.is-loading .tv-spotlight-frame::after{content:'Conectando à prévia ao vivo…';position:absolute;inset:0;z-index:1;display:grid;place-items:center;padding:24px;text-align:center;color:#b4c9e8;background:#0c1422;font-size:14px}
+.tv-spotlight.is-loading .tv-spotlight-rail{display:none}
