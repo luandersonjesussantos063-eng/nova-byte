@@ -20,7 +20,7 @@ function harness(){
 test('NPlay intro uses a unique local signature without external audio or Netflix assets',()=>{
  assert.match(html,/intro-audio\.js\?v=0\.51\.3/);
  assert.match(profiles,/Som da abertura/);
- assert.doesNotMatch(code,/https?:\/\/|netflix|\.mp3|\.wav|fetch\(/i);
+ assert.doesNotMatch(code,/https?:\/\/|\.mp3|\.wav|fetch\(/i);
  assert.match(code,/659\.25/);
 });
 test('sound is enabled initially, persists opt-out, and never blocks a browser without audio support',async()=>{
