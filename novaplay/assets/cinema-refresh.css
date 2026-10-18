@@ -292,8 +292,9 @@ body{background:#070b13!important}
 #nplay-soft-opening.is-playing .nplay-opening-letter-a{animation-delay:.64s}
 #nplay-soft-opening.is-playing .nplay-opening-letter-y{animation-delay:.80s}
 @keyframes nplay-glyph-reveal{
-  from{opacity:0;filter:blur(5px);transform:translateY(7px) scale(.985)}
-  to{opacity:1;filter:blur(0);transform:translateY(0) scale(1)}
+  /* Do not animate transform: each glyph already has SVG position transforms. */
+  from{opacity:0;filter:blur(5px)}
+  to{opacity:1;filter:blur(0)}
 }
 /* Restored signature: a modest horizontal reflection directly beneath NPlay. */
 #nplay-soft-opening .nplay-opening-reflection{
