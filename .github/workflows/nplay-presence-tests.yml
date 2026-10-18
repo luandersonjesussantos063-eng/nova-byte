@@ -1,0 +1,27 @@
+name: NPlay - verificar perfis online
+on:
+  push:
+    paths:
+      - 'novaplay/presence.js'
+      - 'novaplay/admin/presence-admin.js'
+      - 'novaplay/tests/presence.test.mjs'
+      - 'novaplay/tests/presence-admin.test.mjs'
+      - '.github/workflows/nplay-presence-tests.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  presence:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validar a sintaxe dos scripts
+        run: |
+          node --check novaplay/presence.js
+          node --check novaplay/admin/presence-admin.js
+      - name: Testar sinais, saída, troca de perfil e painel
+        run: node --test novaplay/tests/presence.test.mjs novaplay/tests/presence-admin.test.mjs
