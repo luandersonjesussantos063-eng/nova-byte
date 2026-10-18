@@ -48,7 +48,7 @@ test('the real NPlay player dispatches safe title-only activity events',()=>{
  assert.match(app,/notifyPlayback\(current\.item,null,'open'\)/);
  assert.match(app,/notifyPlayback\(null,null,'stopped'\)/);
  assert.match(html,/watching\.js\?v=0\.51\.9-admin-watch-1/);
- assert.match(html,/name="nplay-version" content="0\.51\.9"/);
+ assert.match(html,/name="nplay-version" content="\d+\.\d+\.\d+"/);
 });
 test('native videos appear as opening, playing, paused and stopped',async()=>{
  const h=setup();

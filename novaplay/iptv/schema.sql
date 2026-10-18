@@ -59,6 +59,11 @@ begin
   -- Invalidate current playback immediately after a block, password reset or scope change.
   delete from nplay_iptv_private.sessions where account_id=target;
   return jsonb_build_object('ok',true);
+ elsif p_action='delete' then
+  target:=(p_input->>'id')::uuid;
+  delete from nplay_iptv_private.accounts where id=target returning * into a;
+  if not found then raise exception 'ACCOUNT_NOT_FOUND';end if;
+  return jsonb_build_object('ok',true,'id',a.id);
  end if;
  raise exception 'INVALID_ACTION';
 end;$$;

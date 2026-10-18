@@ -3,6 +3,8 @@ on:
   push:
     paths:
       - 'novaplay/admin/iptv-accounts.js'
+      - 'novaplay/tests/iptv-delete-account.test.mjs'
+      - 'novaplay/worker/iptv-api.mjs'
       - 'novaplay/admin/index.html'
       - 'novaplay/tests/iptv-health-admin.test.mjs'
       - 'novaplay/tests/iptv-account-diagnostic.test.mjs'
@@ -27,4 +29,4 @@ jobs:
           node --check novaplay/admin/iptv-accounts.js
           node --check novaplay/worker/iptv-api.mjs
       - name: Testar gateway e integração do painel
-        run: node --test novaplay/tests/iptv-health-admin.test.mjs novaplay/tests/iptv-api.test.mjs novaplay/tests/iptv-account-diagnostic.test.mjs novaplay/tests/iptv-backend-concurrency.test.mjs
+        run: node --test novaplay/tests/iptv-delete-account.test.mjs novaplay/tests/iptv-health-admin.test.mjs novaplay/tests/iptv-api.test.mjs novaplay/tests/iptv-account-diagnostic.test.mjs novaplay/tests/iptv-backend-concurrency.test.mjs

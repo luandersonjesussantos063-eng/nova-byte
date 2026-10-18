@@ -52,16 +52,25 @@ function repaintTime(){
  message.textContent=online+' perfil(is) online · '+playing+' reproduzindo · '+background+' em segundo plano · '+snapshot.length+' registrado(s)'+(snapshot.length===500?' (500 mais recentes)':'')+' · Sinal atualizado às '+new Date(lastUpdated).toLocaleTimeString('pt-BR')+' · Consulta automática a cada 10s';
  if(errorText)message.textContent+=' · '+errorText;
 }
+async function registeredProfiles(client,rows){
+ const ids=[...new Set(rows.map(row=>row.user_id).filter(Boolean))],names=new Map();
+ for(let offset=0;offset<ids.length;offset+=100){
+  const {data,error}=await client.from('novaplay_access_requests').select('user_id,display_name').in('user_id',ids.slice(offset,offset+100));
+  if(error)throw error;
+  for(const item of data||[])names.set(item.user_id,String(item.display_name||'').trim());
+ }
+ return rows.map(row=>({...row,registration_name:names.get(row.user_id)||'Cadastro sem nome'}));
+}
 function draw(rows){
  list.replaceChildren();rendered=[];
  snapshot=rows;
  list.style.display='flex';list.style.flexDirection='column';list.style.gap='10px';
  for(const row of rows){
   const card=document.createElement('article');card.className='presence-card';
-  const name=document.createElement('strong');name.textContent=row.profile_name||'Perfil';
+  const name=document.createElement('strong');name.textContent=row.registration_name||'Cadastro sem nome';
   const status=document.createElement('span');status.className='presence-state';
   const device=document.createElement('small');
-  device.textContent='Aparelho '+String(row.user_id||'').slice(0,8).toUpperCase();
+  device.textContent='Perfil: '+(row.profile_name||'Sem nome')+' · Aparelho '+String(row.user_id||'').slice(0,8).toUpperCase();
   const time=document.createElement('p');
   const watch=document.createElement('p');watch.className='presence-watching';
   const seen=document.createElement('small');
@@ -94,7 +103,7 @@ async function refresh(){
   clientTick=clock();
   lastUpdated=Date.now();
   errorText='';
-  draw(rows);
+  draw(await registeredProfiles(db,rows));
  }catch(e){
   errorText='Falha na atualização; exibindo a última leitura.';
   if(!snapshot.length)message.textContent='Não foi possível consultar os perfis. Confira sua sessão administrativa e tente atualizar.';

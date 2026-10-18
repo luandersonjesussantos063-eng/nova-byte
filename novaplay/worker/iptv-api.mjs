@@ -11,10 +11,10 @@ export async function iptvRpc(env,action,input={}){
 }
 export async function iptvAdmin(request,jwt){
  const input=request.method==='GET'?{action:'list'}:await request.json();
- if(!['list','create','update'].includes(input.action))return Response.json({error:'Ação inválida.'},{status:400});
+ if(!['list','create','update','delete'].includes(input.action))return Response.json({error:'Ação inválida.'},{status:400});
  const r=await fetch(DB+'/rest/v1/rpc/nplay_iptv_admin',{method:'POST',headers:{apikey:KEY,Authorization:'Bearer '+jwt,'Content-Type':'application/json'},body:JSON.stringify({p_action:input.action,p_input:input.data||{}}),signal:AbortSignal.timeout(15000)});
  const data=await r.json();
- if(!r.ok){const raw=String(data.message||'');const message=raw.includes('PASSWORD_MIN_12')?'A senha precisa ter entre 12 e 64 caracteres.':raw.includes('duplicate key')?'Este usuário já existe.':raw.includes('ADMIN_REQUIRED')?'Acesso administrativo necessário.':'Não foi possível salvar. Confira usuário, validade e limite de telas.';return Response.json({error:message},{status:400});}
+ if(!r.ok){const raw=String(data.message||'');const message=raw.includes('PASSWORD_MIN_12')?'A senha precisa ter entre 12 e 64 caracteres.':raw.includes('duplicate key')?'Este usuário já existe.':raw.includes('ADMIN_REQUIRED')?'Acesso administrativo necessário.':raw.includes('ACCOUNT_NOT_FOUND')?'Este acesso já foi excluído. Atualize a lista.':'Não foi possível salvar. Confira usuário, validade e limite de telas.';return Response.json({error:message},{status:400});}
  return Response.json({ok:true,data});
 }
 const hash=async raw=>[...new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(raw)))].map(x=>x.toString(16).padStart(2,'0')).join('');
