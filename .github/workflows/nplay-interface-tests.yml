@@ -8,6 +8,10 @@ on:
       - 'novaplay/tests/epg.test.mjs'
       - 'novaplay/index.html'
       - 'novaplay/app.js'
+      - 'novaplay/assets/live-auth.js'
+      - 'novaplay/assets/tv-spotlight.js'
+      - 'novaplay/assets/tv-spotlight.css'
+      - 'novaplay/tests/tv-spotlight.test.mjs'
       - 'novaplay/live-embeds.js'
       - 'novaplay/tests/favorites.test.mjs'
       - 'novaplay/assets/cinema-refresh.css'
@@ -41,6 +45,7 @@ jobs:
           node-version: '22'
       - name: Sintaxe dos arquivos alterados
         run: |
+          node --check novaplay/assets/tv-spotlight.js
           node --check novaplay/app.js
           node --check novaplay/live-embeds.js
           node --check novaplay/assets/soft-opening.js
@@ -58,8 +63,8 @@ jobs:
           const app=fs.readFileSync('novaplay/app.js','utf8');
           const css=fs.readFileSync('novaplay/assets/cinema-refresh.css','utf8');
           const sw=fs.readFileSync('novaplay/sw.js','utf8');
-          for(const phrase of ['id="nplay-soft-opening"','assets/cinema-refresh.css?v=0.51.12','assets/soft-opening.js?v=0.51.12','assets/release-notes.js?v=0.51.12','NPlay V 0.51.12'])assert(index.includes(phrase),phrase);
-          assert(sw.includes('novaplay-v0.51.12-favorites'));
+          for(const phrase of ['id="nplay-soft-opening"','assets/cinema-refresh.css?v=0.51.13','assets/soft-opening.js?v=0.51.13','assets/release-notes.js?v=0.51.13','NPlay V 0.51.13'])assert(index.includes(phrase),phrase);
+          assert(sw.includes('novaplay-v0.51.13-tvspotlight'));
           assert(sw.includes('./assets/cinema-refresh.css'));
           assert(sw.includes('./assets/intro-audio.js'));
           assert(sw.includes('./assets/release-notes.js'));
@@ -81,7 +86,7 @@ jobs:
           assert(app.includes('Séries para acompanhar'));
           assert(css.includes('prefers-reduced-motion'));
           assert(!app.includes('openTimeshift'));
-          console.log('NPlay interface 0.51.12 — integração validada');
+          console.log('NPlay interface 0.51.13 — integração validada');
           JS
       - name: Testes de catalogo ao vivo na home
-        run: node --test novaplay/tests/favorites.test.mjs novaplay/tests/epg.test.mjs novaplay/tests/home-live.test.mjs novaplay/tests/soft-opening.test.mjs novaplay/tests/intro-audio.test.mjs novaplay/tests/release-notes.test.mjs novaplay/tests/youtube-layout.test.mjs novaplay/tests/opening-logo.test.mjs
+        run: node --test novaplay/tests/tv-spotlight.test.mjs novaplay/tests/favorites.test.mjs novaplay/tests/epg.test.mjs novaplay/tests/home-live.test.mjs novaplay/tests/soft-opening.test.mjs novaplay/tests/intro-audio.test.mjs novaplay/tests/release-notes.test.mjs novaplay/tests/youtube-layout.test.mjs novaplay/tests/opening-logo.test.mjs

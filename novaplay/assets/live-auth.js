@@ -10,16 +10,17 @@
   if(!session?.access_token)throw Error("Entre novamente no NPlay para assistir a este canal.");
   const u=new URL(raw);u.searchParams.set("access_token",session.access_token);u.searchParams.set("viewer",crypto.randomUUID().replaceAll("-",""));return u.href;
  }
- let releasing=Promise.resolve();
+ const releasing=new Set();
  function release(raw){
   try{
    if(!protectedUrl(raw))return;
    const u=new URL(raw);if(!u.searchParams.has('viewer'))return;
    u.pathname=u.pathname.replace(/(?:index\.m3u8|stream\.ts)$/,'release');
-   releasing=fetch(u.href,{method:'POST',keepalive:true}).catch(()=>{});
+   const task=fetch(u.href,{method:'POST',keepalive:true}).catch(()=>{}).finally(()=>releasing.delete(task));
+   releasing.add(task);return task;
   }catch{}
  }
- async function waitForRelease(){await Promise.race([releasing,new Promise(resolve=>setTimeout(resolve,22000))]);}
+ async function waitForRelease(){let timer;try{await Promise.race([Promise.allSettled([...releasing]),new Promise(resolve=>{timer=setTimeout(resolve,22000);})]);}finally{clearTimeout(timer);}}
  function failureMessage(code){return ({
  PC_XTREAM_CATALOG_INVALID:'O fornecedor não retornou uma grade Xtream válida para esta conta.',
  PC_XTREAM_LOGIN_RESET:'O servidor encerrou a conexão durante o login Xtream, antes de receber o vídeo. Consulte o receptor no ADM.',

@@ -5,6 +5,15 @@
 "use strict";
 const releases=[
  {
+  version:"0.51.13",date:"2026-10-18",title:"TV em destaque · versão 0.51.13",
+  intro:"Descubra o que está passando antes de escolher seu canal.",
+  changes:[
+   "A tela TV ao vivo ganhou uma transmissão em destaque no topo e uma faixa rolável com prévias silenciosas de outros canais.",
+   "O destaque muda ao sair e voltar para a tela. O áudio é iniciado quando o navegador permite, com botão para ativar o som.",
+   "As prévias fora da tela são encerradas. Você pode favoritar o destaque ou abrir o player completo."
+  ]
+ },
+ {
   version:"0.51.12",
   date:"2026-10-18",
   title:"Favoritos no player · versão 0.51.12",
