@@ -14,6 +14,36 @@ function delivery(user,pass){
  $('iptv-credentials').value=`NPlay — acesso IPTV\n\nServidor: ${server}\nUsuário: ${user}\nSenha: ${pass}\n\nLista M3U: ${server}/get.php?${query}\n\nEPG: ${server}/xmltv.php?${new URLSearchParams({username:user,password:pass})}\n\nNo aplicativo, escolha API Xtream / usuário e senha. Use HTTPS.`;
  $('iptv-delivery').hidden=false;
 }
+
+/* Safe connectivity probe: the username does not exist, so no real user's
+   lockout counter, password, account settings or session can be touched. */
+async function checkIptvServer(){
+ const btn=$('iptv-check-server'),out=$('iptv-health-result');
+ if(!btn||!out)return;
+ btn.disabled=true;
+ out.textContent='Verificando gateway e autenticação IPTV…';
+ const ctrl=new AbortController(),timer=setTimeout(()=>ctrl.abort(),12000);
+ try{
+  const health=await fetch(server+'/health',{method:'GET',cache:'no-store',signal:ctrl.signal});
+  if(!health.ok){out.textContent='O servidor IPTV respondeu HTTP '+health.status+'. Verifique o gateway Cloudflare.';return;}
+  // A nonexistent test user must receive 401 only AFTER the Worker has
+  // successfully consulted the protected Supabase backend.
+  const probe='/live/diag_gateway_check/SyntheticOnlyNotARealCredential2026/999999.ts';
+  const login=await fetch(server+probe,{method:'HEAD',cache:'no-store',signal:ctrl.signal});
+  if(login.status===401){
+   out.textContent='✓ Gateway Cloudflare acessível.\n✓ Banco e serviço de login responderam corretamente.\nSe um aplicativo IPTV ainda falhar, confira o endereço HTTPS, usuário e senha do acesso. Se o login funcionar mas o vídeo não iniciar, o problema pode estar no receptor ou na fonte do canal.';
+  }else if(login.status===503){
+   out.textContent='Gateway online, mas houve falha HTTP 503 ao consultar a autenticação no banco. Confira a integração IPTV_BACKEND_KEY e Supabase.';
+  }else if(login.status===429){
+   out.textContent='O gateway respondeu HTTP 429 (muitas tentativas). Aguarde o limite do servidor e teste novamente.';
+  }else{
+   out.textContent='Gateway respondeu ao teste, mas o login não retornou o resultado esperado (HTTP '+login.status+'). Informe esse código ao suporte técnico.';
+  }
+ }catch(error){
+  out.textContent=error?.name==='AbortError'?'O teste ultrapassou 12 segundos. Verifique a conexão e o gateway.':'Não foi possível acessar o gateway IPTV neste aparelho. Verifique DNS, HTTPS e conexão com a internet.';
+ }finally{clearTimeout(timer);btn.disabled=false;}
+}
+
 async function update(item,data){await api('update',{id:item.id,...data});await refresh();}
 async function refresh(){
  try{
@@ -21,7 +51,7 @@ async function refresh(){
  for(const x of items){
   const row=document.createElement('article');row.style.cssText='border:1px solid #365075;border-radius:14px;padding:16px;margin:12px 0';
   const title=document.createElement('h3');title.textContent=x.label+' · '+x.username;
-  const info=document.createElement('p');const expired=Date.parse(x.expires_at)<Date.now();info.textContent=(x.enabled?(expired?'Expirado':'Ativo'):'Bloqueado')+' · validade '+new Date(x.expires_at).toLocaleDateString('pt-BR')+' · '+x.active_connections+'/'+x.max_connections+' transmissões';
+  const info=document.createElement('p');const expired=Date.parse(x.expires_at)<Date.now();info.textContent=(x.enabled?(expired?'Expirado':'Ativo'):'Bloqueado')+' · validade '+new Date(x.expires_at).toLocaleString('pt-BR',{timeZone:'America/Cuiaba'})+' · '+x.active_connections+'/'+x.max_connections+' transmissões';
   row.append(title,info);
   const add=(label,handler)=>{const b=document.createElement('button');b.type='button';b.className='outline';b.style.margin='4px';b.textContent=label;b.onclick=async()=>{b.disabled=true;try{await handler();}catch(e){message(e.message,true);}finally{b.disabled=false;}};row.append(b);};
   add(x.enabled?'Bloquear':'Desbloquear',()=>update(x,{enabled:!x.enabled}));
@@ -50,6 +80,7 @@ function start(){
  $('iptv-hide').onclick=()=>{$('iptv-credentials').value='';$('iptv-delivery').hidden=true;};
  $('iptv-copy').onclick=async()=>{try{await navigator.clipboard.writeText($('iptv-credentials').value);message('Acesso copiado.');}catch{$('iptv-credentials').select();message('Selecione e copie os dados acima.');}};
  $('iptv-refresh').onclick=refresh;
+ $('iptv-check-server').onclick=checkIptvServer;
  $('iptv-create').onsubmit=async event=>{event.preventDefault();if(busy)return;busy=true;$('iptv-save').disabled=true;
  try{const user=$('iptv-username').value.trim().toLowerCase(),pass=$('iptv-password').value;
  await api('create',{username:user,password:pass,label:$('iptv-label').value.trim(),expires_at:new Date($('iptv-expiry').value+'T23:59:59-04:00').toISOString(),max_connections:Number($('iptv-screens').value),allow_live:$('iptv-live').checked,allow_vod:$('iptv-vod').checked});
