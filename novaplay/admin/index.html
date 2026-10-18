@@ -35,7 +35,7 @@
 <body>
 <header class="top"><a class="brand" href="../"><span class="mark">▶</span> N<span>Play</span></a><div class="top-right"><strong>Painel administrativo · NPlay V 0.51.8</strong><button id="logout" class="outline" hidden>Sair</button></div></header>
 <main class="container">
-  <section id="loading" class="panel intro" hidden><div class="spin"></div><p>Preparando seu painel... <small>V 0.50.0</small></p><p id="loading-error" class="feedback" role="status"></p><button id="loading-retry" class="outline" type="button" hidden onclick="location.reload()">Tentar novamente</button></section>
+  <section id="loading" class="panel intro" hidden><div class="spin"></div><p>Preparando seu painel... <small>V 0.52.0</small></p><p id="loading-error" class="feedback" role="status"></p><button id="loading-retry" class="outline" type="button" hidden onclick="location.reload()">Tentar novamente</button></section>
   <section id="login-view" class="panel login">
     <div class="section-label">ACESSO RESTRITO</div>
     <h1>Gerencie sua NPlay</h1>
@@ -65,6 +65,7 @@
       <button type="button" class="admin-tab" data-admin-tab="canais">TV ao vivo</button><button type="button" class="admin-tab" data-admin-tab="destaques">Destaques</button>
       <button type="button" class="admin-tab" data-admin-tab="online">Perfis online</button>
       <button type="button" class="admin-tab" data-admin-tab="acessos">Autorizações</button>
+      <button type="button" class="admin-tab" data-admin-tab="iptv">Acessos IPTV</button>
       <button type="button" class="admin-tab" data-admin-tab="avisos">Avisos 🔔</button>
       <button type="button" class="admin-tab" data-admin-tab="ferramentas">Ferramentas</button>
     </nav>
@@ -75,6 +76,21 @@
       <p id="nplay-admin-alert-status" role="status" aria-live="polite">Os alertas aparecem quando chegar uma nova solicitação. Ative para ouvir o som e receber avisos do navegador.</p>
     </div>
 
+<section id="nplay-iptv-admin" class="panel" hidden aria-labelledby="iptv-heading">
+ <span class="section-label">APLICATIVOS IPTV</span><h2 id="iptv-heading">Acessos IPTV da NPlay</h2>
+ <p class="muted">Crie um acesso para cada cliente. Ele poderá entrar por API Xtream em um aplicativo compatível ou carregar a lista M3U. Só entram conteúdos publicados com fonte compatível.</p>
+ <label>Servidor NPlay<input id="iptv-server" readonly value="https://nplay-live-gateway.luandersonjesussantos063.workers.dev"></label>
+ <form id="iptv-create"><div class="two"><label>Nome do cliente<input id="iptv-label" required maxlength="120" autocomplete="off"></label><label>Usuário<input id="iptv-username" required pattern="[a-z0-9_]{4,40}" minlength="4" maxlength="40" placeholder="cliente_01" autocomplete="off"></label></div>
+ <div class="two"><label>Senha<input id="iptv-password" type="password" required minlength="12" maxlength="64" autocomplete="new-password"></label><label>Validade<input id="iptv-expiry" type="date" required></label></div>
+ <button id="iptv-generate" type="button" class="outline">Gerar senha</button>
+ <label>Transmissões simultâneas<select id="iptv-screens"><option value="1">1</option><option value="2">2</option><option value="3">3</option></select></label>
+ <label class="publish-check"><input id="iptv-live" type="checkbox" checked><span>Liberar canais ao vivo</span></label>
+ <label class="publish-check"><input id="iptv-vod" type="checkbox" checked><span>Liberar filmes e séries compatíveis</span></label>
+ <p class="muted">O limite do cliente não aumenta as três vagas de canais diferentes do receptor. YouTube, Drive e conteúdo em breve ficam no aplicativo NPlay.</p>
+ <button class="primary" id="iptv-save" type="submit">Criar acesso IPTV</button></form>
+ <div id="iptv-delivery" hidden style="margin:18px 0"><h3>Acesso pronto para entregar</h3><p class="muted">A senha aparece somente nesta entrega. Se perder, gere outra pelo botão Redefinir senha.</p><textarea id="iptv-credentials" readonly rows="10" style="width:100%;overflow-wrap:anywhere"></textarea><button type="button" class="primary" id="iptv-copy">Copiar acesso</button><button type="button" class="outline" id="iptv-hide">Ocultar dados</button></div>
+ <p id="iptv-status" class="feedback" role="status" aria-live="polite"></p><button id="iptv-refresh" class="outline" type="button">Atualizar acessos IPTV</button><div id="iptv-list"></div>
+</section>
 <section id="portal-auth-manager" class="panel" hidden style="margin:16px 0">
 <h2>Autenticação por MAC / SN / DEV</h2>
 <p class="muted">Teste a conexão com seu portal Ministra/Stalker. Os identificadores ficam apenas nesta tela e são enviados ao portal durante o teste. A autenticação não publica canais nem confirma reprodução.</p>
@@ -443,11 +459,12 @@
    canais:[dash.querySelector("#live-embed-manager")],
    online:[dash.querySelector("#nplay-presence-admin")],
    acessos:[dash.querySelector("#nplay-access-admin")],
+   iptv:[dash.querySelector("#nplay-iptv-admin")],
    avisos:[dash.querySelector("#nplay-news-admin")],
    destaques:[dash.querySelector(".featured-manager")],
    ferramentas:[dash.querySelector("#portal-auth-manager"),dash.querySelector(".licensed-manager"),dash.querySelector(".issue-manager")]
   };
-  var descriptions={youtube:"Adicione vídeos por link e organize as quatro categorias da Seleção YouTube.",online:"Veja quem está online, o tempo de sessão e qual filme, série ou canal está aberto.",catalogo:"Pesquise, revise e publique os títulos do catálogo.",importacoes:"Acompanhe download, preparação e envio. O rascunho é criado automaticamente; revise as informações pendentes para publicar.",canais:"Importe, teste e publique canais ao vivo.",acessos:"Analise solicitações e autorize ou revogue dispositivos.",avisos:"Publique mensagens e atualizações para o sino dos clientes.",destaques:"Organize as capas e os títulos da página inicial.",ferramentas:"Teste autenticação MAC/SN/DEV e gerencie links e problemas de reprodução."};
+  var descriptions={iptv:"Crie, renove e bloqueie usuários que assistem à NPlay em aplicativos IPTV.",youtube:"Adicione vídeos por link e organize as quatro categorias da Seleção YouTube.",online:"Veja quem está online, o tempo de sessão e qual filme, série ou canal está aberto.",catalogo:"Pesquise, revise e publique os títulos do catálogo.",importacoes:"Acompanhe download, preparação e envio. O rascunho é criado automaticamente; revise as informações pendentes para publicar.",canais:"Importe, teste e publique canais ao vivo.",acessos:"Analise solicitações e autorize ou revogue dispositivos.",avisos:"Publique mensagens e atualizações para o sino dos clientes.",destaques:"Organize as capas e os títulos da página inicial.",ferramentas:"Teste autenticação MAC/SN/DEV e gerencie links e problemas de reprodução."};
   var workspace=dash.querySelector(".workspace");if(workspace)workspace.classList.add("admin-workspace");
   var intro=dash.querySelector(".intro-text"),stats=dash.querySelector(".stats"),source=dash.querySelector("#source-summary"),drive=dash.querySelector(".intro-text + .stats + #source-summary + .panel");
   function show(name){
@@ -482,5 +499,6 @@
 <script src="./notifications-admin.js?v=0.50.8" defer></script>
 <script src="./presence-admin.js?v=0.51.9-watch-admin-1" defer></script>
 <script src="./portal-test.js?v=0.49.12" defer></script>
+<script src="./iptv-accounts.js?v=0.52.0" defer></script>
 </body>
 </html>

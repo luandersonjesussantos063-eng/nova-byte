@@ -1,3 +1,4 @@
+import {handleIptv,isIptvRoute,iptvAdmin} from './iptv-api.mjs';
 import {relayHls,hlsSource,xtreamTsSource} from './hls-relay.mjs';
 import {bridgeUrl,encryptBridge,decryptBridge,bridgeUpstream,checkBridge,pcFailureMessages,bridgeEngineStatus,inspectBridgeXtream,releaseBridgeViewer} from './pc-bridge.mjs';
 // Private provider URLs live in KV; viewers receive only channel IDs.
@@ -64,16 +65,24 @@ async function channelId(url){
 async function equalSecret(a,b){
  if(!a||!b)return false;const hash=async s=>new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s)));const aa=await hash(a),bb=await hash(b);let diff=0;for(let i=0;i<aa.length;i++)diff|=aa[i]^bb[i];return diff===0;
 }
-export default {async fetch(request,env){
+export default {async fetch(request,env,ctx){
  const route=new URL(request.url),origin=request.headers.get('Origin')||'';
  const allowed=['https://novabytesolucoes.com.br','https://www.novabytesolucoes.com.br'];
  const cors={'Access-Control-Allow-Origin':allowed.includes(origin)?origin:allowed[0],'Access-Control-Allow-Headers':'Authorization,Content-Type,Range','Access-Control-Allow-Methods':'GET,HEAD,POST,OPTIONS','Access-Control-Expose-Headers':'Content-Length,Content-Range,Accept-Ranges,X-NPlay-Error,X-NPlay-Upstream-Status','Cache-Control':'no-store','Referrer-Policy':'no-referrer','Vary':'Origin','X-Content-Type-Options':'nosniff'};
  const json=(data,status=200)=>Response.json(data,{status,headers:cors});
+ if(isIptvRoute(route.pathname)){
+  if(request.method==='OPTIONS')return new Response(null,{status:204,headers:{'Access-Control-Allow-Origin':'*','Access-Control-Allow-Methods':'GET,HEAD,POST,OPTIONS','Access-Control-Allow-Headers':'Content-Type,Range'}});
+  return handleIptv(request,env,ctx,{validateUrl:sourceUrl,upstream});
+ }
  if(origin&&!allowed.includes(origin))return json({error:'Origem não autorizada.'},403);
  if(request.method==='OPTIONS')return new Response(null,{status:204,headers:cors});
  if(route.pathname==='/health')return json({service:'NPlay live gateway',protected:true});
  const jwt=token(request);if(!jwt||jwt===KEY||jwt.length>8192)return json({error:'Entre no NPlay para continuar.'},401);
  try{
+  if(route.pathname==='/admin/iptv'&&['GET','POST'].includes(request.method)){
+   if(!await admin(jwt))return json({error:'Acesso administrativo necessário.'},403);
+   const response=await iptvAdmin(request,jwt);const headers=new Headers(response.headers);for(const [k,v] of Object.entries(cors))headers.set(k,v);return new Response(response.body,{status:response.status,headers});
+  }
   if(route.pathname==='/admin/xtream-inspect'&&request.method==='POST'){
    if(!await admin(jwt))return json({error:'Acesso administrativo necessário.'},403);
    const input=await readJson(request,2000);if(!uuid.test(input.id||''))return json({error:'Canal inválido.'},400);
