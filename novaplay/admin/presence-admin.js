@@ -1,4 +1,4 @@
-/* NPlay: presence admin v0.51.8.
+/* NPlay: administrator-only now-watching status, internal build 2026.10.17.
    Server timestamps are authoritative; local perf clock only animates the
    elapsed display between reads. This is foreground app usage, not playback. */
 (()=>{
@@ -25,8 +25,8 @@ function visiblePanel(){
 function repaintTime(){
  if(!visiblePanel()||!snapshot.length||!lastUpdated)return;
  const now=serverNow();
- let online=0,background=0;
- rendered.forEach(({row,status,time,seen},index)=>{
+ let online=0,background=0,playing=0;
+ rendered.forEach(({row,status,time,seen,watch},index)=>{
   const state=presenceState(row,now);
   status.className='presence-state'+(state.state==='online'?' online':'');
   status.textContent=state.state==='online'?'● Online':state.state==='background'?'Em segundo plano':'Offline';
@@ -34,11 +34,22 @@ function repaintTime(){
   if(state.state==='background')background++;
   time.textContent='Sessão '+(state.state==='online'?'atual':'anterior')+': '+duration(Number(row.session_seconds)+state.seconds)+' · Hoje: '+duration(Number(row.today_seconds)+state.seconds);
   seen.textContent='Último sinal há '+duration(state.age/1000);
+  const watchAge=now-new Date(row.watch_updated_at).getTime();
+  const freshWatch=state.state==='online'&&row.watch_title&&
+   Number.isFinite(watchAge)&&watchAge>=-5000&&watchAge<45000;
+  const playback=freshWatch?row.watch_state:null;
+  const title=freshWatch?String(row.watch_title).slice(0,160):'';
+  watch.className='presence-watching'+(playback==='playing'?' is-playing':'');
+  if(playback==='playing'){watch.textContent='▶ Assistindo: '+title;playing++;}
+  else if(playback==='paused')watch.textContent='❚❚ Pausado: '+title;
+  else if(playback==='buffering')watch.textContent='◌ Carregando: '+title;
+  else if(playback==='open')watch.textContent='▣ Player aberto (reprodução não confirmada): '+title;
+  else watch.textContent=state.state==='online'?'Nenhum conteúdo em reprodução confirmado':'Sem reprodução ativa';
   // Keep all devices registered, but show currently active profiles first.
   const card=status.parentElement;
   if(card)card.style.order=state.state==='online'?'-2':state.state==='background'?'-1':String(index);
  });
- message.textContent=online+' perfil(is) online · '+background+' em segundo plano · '+snapshot.length+' registrado(s)'+(snapshot.length===500?' (500 mais recentes)':'')+' · Sinal atualizado às '+new Date(lastUpdated).toLocaleTimeString('pt-BR')+' · Consulta automática a cada 10s';
+ message.textContent=online+' perfil(is) online · '+playing+' reproduzindo · '+background+' em segundo plano · '+snapshot.length+' registrado(s)'+(snapshot.length===500?' (500 mais recentes)':'')+' · Sinal atualizado às '+new Date(lastUpdated).toLocaleTimeString('pt-BR')+' · Consulta automática a cada 10s';
  if(errorText)message.textContent+=' · '+errorText;
 }
 function draw(rows){
@@ -52,12 +63,13 @@ function draw(rows){
   const device=document.createElement('small');
   device.textContent='Aparelho '+String(row.user_id||'').slice(0,8).toUpperCase();
   const time=document.createElement('p');
+  const watch=document.createElement('p');watch.className='presence-watching';
   const seen=document.createElement('small');
   const absolute=new Date(row.last_seen);
   seen.title=Number.isFinite(absolute.getTime())?'Último sinal: '+absolute.toLocaleString('pt-BR',{timeZone:'America/Cuiaba'}):'Horário desconhecido';
-  card.append(name,status,device,time,seen);
+  card.append(name,status,device,time,watch,seen);
   list.append(card);
-  rendered.push({row,status,time,seen});
+  rendered.push({row,status,time,watch,seen});
  }
  if(!rows.length){
   const empty=document.createElement('p');empty.className='muted';
@@ -74,7 +86,7 @@ async function refresh(){
  try{
   // Supabase JS clients use the same persisted auth session as the main ADM.
   db??=window.supabase.createClient('https://vajlhodqxskozuxxlujv.supabase.co','sb_publishable_uT0b4y0Bex1k1QWZoyIfKg_K0pm-yS3');
-  const {data,error}=await db.rpc('novaplay_profiles_online');
+  const {data,error}=await db.rpc('novaplay_profiles_watching');
   if(error)throw error;
   const rows=Array.isArray(data)?data:[];
   const at=Date.parse(rows[0]?.server_now);
