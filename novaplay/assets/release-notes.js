@@ -5,6 +5,17 @@
 "use strict";
 const releases=[
  {
+  version:"0.51.8",
+  date:"2026-10-17",
+  title:"Novidades da NPlay · versão 0.51.8",
+  intro:"Melhoramos o acompanhamento dos perfis online no painel administrativo.",
+  changes:[
+   "Perfis conectados enviam sinais de atividade a cada 15 segundos enquanto a NPlay estiver visível.",
+   "No ADM, a lista de perfis é atualizada a cada 10 segundos e o tempo de sessão avança em tempo real.",
+   "Aparelhos sem sinal por 45 segundos passam a ser mostrados como offline, e a troca de perfil registra a mudança mais rapidamente."
+  ]
+ },
+ {
   version:"0.51.7",
   date:"2026-10-17",
   title:"Novidades da NPlay · versão 0.51.7",
