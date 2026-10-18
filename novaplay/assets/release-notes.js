@@ -5,6 +5,19 @@
 "use strict";
 const releases=[
  {
+  version:"0.51.5",
+  date:"2026-10-17",
+  title:"Novidades da NPlay · versão 0.51.5",
+  intro:"Refinamos o som da abertura para ficar mais suave e cinematográfico.",
+  changes:[
+   "Novo efeito de encerramento: uma ressonância leve e profunda, inspirada apenas na parte final do áudio de referência.",
+   "Removemos as duas batidas fortes da introdução anterior.",
+   "Ouça o resultado pelo sininho ou em Perfil → Configurações → Ouvir som da abertura."
+  ],
+  action:"preview-intro-audio",
+  actionLabel:"▶ Ouvir novo som da abertura"
+ },
+ {
   version:"0.51.4",
   date:"2026-10-17",
   title:"Novidades da NPlay · versão 0.51.4",
