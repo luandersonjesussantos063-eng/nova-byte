@@ -48,13 +48,13 @@ jobs:
           const app=fs.readFileSync('novaplay/app.js','utf8');
           const css=fs.readFileSync('novaplay/assets/cinema-refresh.css','utf8');
           const sw=fs.readFileSync('novaplay/sw.js','utf8');
-          for(const phrase of ['id="nplay-soft-opening"','assets/cinema-refresh.css?v=0.51.2','assets/soft-opening.js?v=0.51.3','assets/release-notes.js?v=0.51.4','NPlay V 0.51.4'])assert(index.includes(phrase),phrase);
-          assert(sw.includes('novaplay-v0.51.4'));
+          for(const phrase of ['id="nplay-soft-opening"','assets/cinema-refresh.css?v=0.51.2','assets/soft-opening.js?v=0.51.3','assets/release-notes.js?v=0.51.5','NPlay V 0.51.5'])assert(index.includes(phrase),phrase);
+          assert(sw.includes('novaplay-v0.51.5'));
           assert(sw.includes('./assets/cinema-refresh.css'));
           assert(sw.includes('./assets/intro-audio.js'));
           assert(sw.includes('./assets/release-notes.js'));
           assert(sw.includes('./assets/notifications.js'));
-          assert(index.includes('assets/intro-audio.js?v=0.51.4'));
+          assert(index.includes('assets/intro-audio.js?v=0.51.5'));
           const version=index.match(/<meta name="nplay-version" content="([^"]+)"/)?.[1];
           const notes=fs.readFileSync('novaplay/assets/release-notes.js','utf8');
           assert(version&&notes.includes('version:"'+version+'"'),'Toda versão publicada precisa ter novidades detalhadas');
@@ -62,7 +62,7 @@ jobs:
           assert(app.includes('Séries para acompanhar'));
           assert(css.includes('prefers-reduced-motion'));
           assert(!app.includes('openTimeshift'));
-          console.log('NPlay interface 0.51.4 — integração validada');
+          console.log('NPlay interface 0.51.5 — integração validada');
           JS
       - name: Testes de catalogo ao vivo na home
         run: node --test novaplay/tests/home-live.test.mjs novaplay/tests/soft-opening.test.mjs novaplay/tests/intro-audio.test.mjs novaplay/tests/release-notes.test.mjs
