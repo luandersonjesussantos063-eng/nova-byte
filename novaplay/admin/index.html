@@ -28,7 +28,7 @@
 </style>
 </head>
 <body>
-<header class="top"><a class="brand" href="../"><span class="mark">▶</span> N<span>Play</span></a><div class="top-right"><strong>Painel administrativo · NPlay V 0.50.8</strong><button id="logout" class="outline" hidden>Sair</button></div></header>
+<header class="top"><a class="brand" href="../"><span class="mark">▶</span> N<span>Play</span></a><div class="top-right"><strong>Painel administrativo · NPlay V 0.51.8</strong><button id="logout" class="outline" hidden>Sair</button></div></header>
 <main class="container">
   <section id="loading" class="panel intro" hidden><div class="spin"></div><p>Preparando seu painel... <small>V 0.50.0</small></p><p id="loading-error" class="feedback" role="status"></p><button id="loading-retry" class="outline" type="button" hidden onclick="location.reload()">Tentar novamente</button></section>
   <section id="login-view" class="panel login">
@@ -87,7 +87,7 @@
 <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:16px"><button type="submit" class="primary">Testar autenticação</button><button id="portal-clear" type="button" class="outline">Limpar dados</button></div>
 <p id="portal-test-result" class="feedback" role="status" aria-live="polite"></p>
 </form></section>
-    <section id="nplay-presence-admin" class="panel" hidden style="margin:16px 0"><h2>Perfis online</h2><p class="muted">Veja quem está com a NPlay aberta e o tempo aproximado de uso. Conta o tempo com o aplicativo visível; não confirma reprodução. Atualização a cada 30 segundos. Sem sinal por 75 segundos, o perfil aparece offline. O total de hoje usa o horário de Mato Grosso e começa nesta versão.</p><button id="presence-refresh" class="outline" type="button">Atualizar perfis</button><p id="presence-status" role="status" aria-live="polite"></p><div id="presence-list" class="presence-list"></div></section>
+    <section id="nplay-presence-admin" class="panel" hidden style="margin:16px 0"><h2>Perfis online</h2><p class="muted">Veja quem está com a NPlay aberta e o tempo aproximado de uso. Conta o tempo com o aplicativo visível; não confirma reprodução. O painel consulta o banco a cada 10 segundos e atualiza o contador a cada segundo. Se o aparelho ficar 45 segundos sem sinal, o perfil aparece offline. O total de hoje usa o horário de Mato Grosso e começa nesta versão.</p><button id="presence-refresh" class="outline" type="button">Atualizar perfis</button><p id="presence-status" role="status" aria-live="polite"></p><div id="presence-list" class="presence-list"></div></section>
     <section id="nplay-news-admin" class="panel" hidden style="margin:16px 0">
       <h2>🔔 Novidades para os clientes</h2>
       <p class="muted">Publique comunicados que aparecerão no sino da NPlay. As mensagens não alteram o catálogo nem enviam e-mails.</p>
@@ -475,7 +475,7 @@
 <script src="./pc-tv.js?v=0.50.0" defer></script>
 <script src="./access-admin.js?v=0.50.7" defer></script>
 <script src="./notifications-admin.js?v=0.50.8" defer></script>
-<script src="./presence-admin.js?v=0.49.12" defer></script>
+<script src="./presence-admin.js?v=0.51.8" defer></script>
 <script src="./portal-test.js?v=0.49.12" defer></script>
 </body>
 </html>
