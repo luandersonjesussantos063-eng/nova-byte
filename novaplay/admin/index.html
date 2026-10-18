@@ -26,6 +26,11 @@
 .nplay-news-admin-row small{color:#a7bfdc}
 #nplay-news-admin input,#nplay-news-admin textarea,#nplay-news-admin select{display:block;width:100%;max-width:800px}
 </style>
+
+<style id="nplay-admin-watching-styles">
+#nplay-presence-admin .presence-watching{margin:7px 0 5px;padding:9px 12px;border-radius:9px;border:1px solid #4a607b70;background:#15273d;color:#d4e3f7;font-size:13px;font-weight:650;overflow-wrap:anywhere;line-height:1.4}
+#nplay-presence-admin .presence-watching.is-playing{border-color:#448bb5b0;background:#123650;color:#d6f1ff}
+</style>
 </head>
 <body>
 <header class="top"><a class="brand" href="../"><span class="mark">▶</span> N<span>Play</span></a><div class="top-right"><strong>Painel administrativo · NPlay V 0.51.8</strong><button id="logout" class="outline" hidden>Sair</button></div></header>
@@ -87,7 +92,7 @@
 <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:16px"><button type="submit" class="primary">Testar autenticação</button><button id="portal-clear" type="button" class="outline">Limpar dados</button></div>
 <p id="portal-test-result" class="feedback" role="status" aria-live="polite"></p>
 </form></section>
-    <section id="nplay-presence-admin" class="panel" hidden style="margin:16px 0"><h2>Perfis online</h2><p class="muted">Veja quem está com a NPlay aberta e o tempo aproximado de uso. Conta o tempo com o aplicativo visível; não confirma reprodução. O painel consulta o banco a cada 10 segundos e atualiza o contador a cada segundo. Se o aparelho ficar 45 segundos sem sinal, o perfil aparece offline. O total de hoje usa o horário de Mato Grosso e começa nesta versão.</p><button id="presence-refresh" class="outline" type="button">Atualizar perfis</button><p id="presence-status" role="status" aria-live="polite"></p><div id="presence-list" class="presence-list"></div></section>
+    <section id="nplay-presence-admin" class="panel" hidden style="margin:16px 0"><h2>Perfis online · O que estão assistindo</h2><p class="muted">Veja o perfil conectado, o tempo de uso e o título aberto. Reproduzindo, pausado e carregando são confirmados pelo player da NPlay. Para YouTube e players externos, aparece “Player aberto” porque o provedor não confirma a reprodução. A leitura é atualizada a cada 10 segundos. Depois de 45 segundos sem sinal, o perfil aparece offline. Somente o administrador vê estas informações.</p><button id="presence-refresh" class="outline" type="button">Atualizar perfis</button><p id="presence-status" role="status" aria-live="polite"></p><div id="presence-list" class="presence-list"></div></section>
     <section id="nplay-news-admin" class="panel" hidden style="margin:16px 0">
       <h2>🔔 Novidades para os clientes</h2>
       <p class="muted">Publique comunicados que aparecerão no sino da NPlay. As mensagens não alteram o catálogo nem enviam e-mails.</p>
@@ -442,7 +447,7 @@
    destaques:[dash.querySelector(".featured-manager")],
    ferramentas:[dash.querySelector("#portal-auth-manager"),dash.querySelector(".licensed-manager"),dash.querySelector(".issue-manager")]
   };
-  var descriptions={youtube:"Adicione vídeos por link e organize as quatro categorias da Seleção YouTube.",online:"Acompanhe o tempo de conexão de cada perfil e o total de hoje.",catalogo:"Pesquise, revise e publique os títulos do catálogo.",importacoes:"Acompanhe download, preparação e envio. O rascunho é criado automaticamente; revise as informações pendentes para publicar.",canais:"Importe, teste e publique canais ao vivo.",acessos:"Analise solicitações e autorize ou revogue dispositivos.",avisos:"Publique mensagens e atualizações para o sino dos clientes.",destaques:"Organize as capas e os títulos da página inicial.",ferramentas:"Teste autenticação MAC/SN/DEV e gerencie links e problemas de reprodução."};
+  var descriptions={youtube:"Adicione vídeos por link e organize as quatro categorias da Seleção YouTube.",online:"Veja quem está online, o tempo de sessão e qual filme, série ou canal está aberto.",catalogo:"Pesquise, revise e publique os títulos do catálogo.",importacoes:"Acompanhe download, preparação e envio. O rascunho é criado automaticamente; revise as informações pendentes para publicar.",canais:"Importe, teste e publique canais ao vivo.",acessos:"Analise solicitações e autorize ou revogue dispositivos.",avisos:"Publique mensagens e atualizações para o sino dos clientes.",destaques:"Organize as capas e os títulos da página inicial.",ferramentas:"Teste autenticação MAC/SN/DEV e gerencie links e problemas de reprodução."};
   var workspace=dash.querySelector(".workspace");if(workspace)workspace.classList.add("admin-workspace");
   var intro=dash.querySelector(".intro-text"),stats=dash.querySelector(".stats"),source=dash.querySelector("#source-summary"),drive=dash.querySelector(".intro-text + .stats + #source-summary + .panel");
   function show(name){
@@ -475,7 +480,7 @@
 <script src="./pc-tv.js?v=0.50.0" defer></script>
 <script src="./access-admin.js?v=0.50.7" defer></script>
 <script src="./notifications-admin.js?v=0.50.8" defer></script>
-<script src="./presence-admin.js?v=0.51.8" defer></script>
+<script src="./presence-admin.js?v=0.51.9-watch-admin-1" defer></script>
 <script src="./portal-test.js?v=0.49.12" defer></script>
 </body>
 </html>
