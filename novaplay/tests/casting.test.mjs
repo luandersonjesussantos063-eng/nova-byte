@@ -36,3 +36,9 @@ test('account bearer URLs and stale media are never sent to a TV',async()=>{
  const l=lab();l.media.getSource=async()=>({url:'https://video.test/watch/id?access_token=account-secret'});await l.click('cinema-cast');assert(l.node('tv-google').disabled);assert.match(l.node('tv-feedback').textContent,/compatível/);assert.equal(l.requests.length,0);
  let release;const m=lab();m.media.getSource=()=>new Promise(resolve=>release=resolve);const opening=m.click('cinema-cast');m.api.reset();release({url:'https://video.test/cast-media/old?ticket=scoped'});await opening;assert.equal(m.requests.length,0);assert(m.node('cinema-cast').hidden);
 });
+
+test('a live channel uses LIVE stream metadata and starts at the live edge instead of movie resume time',async()=>{
+ const l=lab();l.media.live=true;l.media.title='Canal ao vivo';l.media.getSource=async()=>({url:'https://video.test/live/id/index.m3u8?cast_ticket=scoped',content_type:'application/x-mpegURL'});
+ await l.click('cinema-cast');assert.equal(l.node('cinema-cast').hidden,false);await l.click('tv-google');
+ assert.equal(l.requests[0].media.streamType,'LIVE');assert.equal(l.requests[0].currentTime,0);assert.equal(l.requests[0].media.metadata.title,'Canal ao vivo');assert.equal(l.video.paused,true);
+});

@@ -1100,7 +1100,7 @@ function play(item,episode){
  const progressId=item.kind==="tv"?null:episode?episode.id:item.id;
  setResume(v,progressId,seq);
  if(item.kind==="tv")timer=setTimeout(()=>{if(seq===attempt&&((!item.audioOnly&&!v.videoWidth)||v.readyState<2)&&!tryMpegts())fail("O canal está demorando para carregar. Verifique a conexão ou tente novamente.")},window.NPlayLiveAuth?.protectedUrl(src)?45000:22000);
- if(!media.youtube_id&&!media.google_drive_id&&!window.NPlayLiveAuth?.protectedUrl(media.src))window.NPlayCasting?.configure({
+ if(!media.youtube_id&&!media.google_drive_id)window.NPlayCasting?.configure({
   title:episode?item.title+" · "+episode.label:item.title,live:item.kind==="tv",
   onChange:updateCinemaControls,
   onProgress(position,duration){
@@ -1109,6 +1109,7 @@ function play(item,episode){
    if(position/duration>.96)delete progress[progressId];else progress[progressId]={position,duration,updated:now};save(progressKey,progress);
   },
   async getSource(){
+   if(item.kind==="tv"&&window.NPlayLiveAuth?.protectedUrl(src))return window.NPlayLiveAuth.castSource(src);
    if(media.r2_object_key){
     const auth=(window.NPlayAccessClient||remoteDb)?.auth;
     let session=(await auth?.getSession())?.data?.session;
@@ -1127,7 +1128,7 @@ function play(item,episode){
    }
    const url=src||v.currentSrc;
    if(!url||url.startsWith("blob:"))throw Error("Aguarde o vídeo carregar e tente novamente.");
-   return {url,content_type:/\.m3u8(?:\?|$)/i.test(url)?"application/x-mpegURL":/\.webm(?:\?|$)/i.test(url)?"video/webm":/\.ogv(?:\?|$)/i.test(url)?"video/ogg":"video/mp4"};
+   return {url,content_type:/\.m3u8(?:\?|$)/i.test(url)?"application/x-mpegURL":/\.ts(?:\?|$)/i.test(url)?"video/mp2t":/\.webm(?:\?|$)/i.test(url)?"video/webm":/\.ogv(?:\?|$)/i.test(url)?"video/ogg":"video/mp4"};
   },
   setNativeSource(url){
    if(seq!==attempt)return;
@@ -1304,7 +1305,7 @@ document.addEventListener("keydown",e=>{
 document.addEventListener("visibilitychange",()=>{if(document.hidden){stopHeroPreview();if(!$("player-layer").hidden)$("video").pause()}});
 window.addEventListener("scroll",()=>$("app-header").classList.toggle("is-scrolled",window.scrollY>24),{passive:true});
 if("serviceWorker" in navigator&&location.protocol==="https:"){
- window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js?v=0.51.17-tvspotlight",{updateViaCache:"none"}).catch(()=>{}));
+ window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js?v=0.51.18-tvspotlight",{updateViaCache:"none"}).catch(()=>{}));
 }
 $("hero-play").onclick=()=>navigate("tv");
 $("hero-info").onclick=()=>navigate("filmes");

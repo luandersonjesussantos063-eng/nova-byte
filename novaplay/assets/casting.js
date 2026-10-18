@@ -48,7 +48,7 @@
   if(pending)return pending;
   const seq=generation,selected=media;
   pending=(async()=>{
-   if(!selected)throw Error('Abra um filme para transmitir.');
+   if(!selected)throw Error('Abra um vídeo ou canal ao vivo para transmitir.');
    const source=await selected.getSource();
    if(seq!==generation)throw Error('O vídeo foi alterado. Abra a transmissão novamente.');
    const url=new URL(source.url);
@@ -70,10 +70,10 @@
   if(!media)return;
   if(!dialog.open)dialog.showModal();
   const seq=generation;
-  notice(active()?'Transmitindo na TV. Os controles do filme controlam a televisão.':'Preparando transmissão…');updateChoices();
+  notice(active()?'Transmitindo na TV. Os controles do player controlam a televisão.':'Preparando transmissão…');updateChoices();
   // The picker itself is opened by a second, explicit click, preserving user activation.
   const availability=sdk().then(()=>{if(seq===generation)updateChoices();});
-  try{await prepare();if(seq===generation){notice(active()?'Transmitindo na TV. Use os controles do filme ou volte para este aparelho.':'Escolha uma opção abaixo. A TV e este aparelho precisam estar na mesma rede Wi-Fi.');updateChoices();}}
+  try{await prepare();if(seq===generation){notice(active()?'Transmitindo na TV. Use os controles do player ou volte para este aparelho.':'Escolha uma opção abaixo. A TV e este aparelho precisam estar na mesma rede Wi-Fi.');updateChoices();}}
   catch(error){if(seq===generation)notice(error.message||'Não foi possível preparar a transmissão.');}
   await availability;
  }
@@ -94,7 +94,7 @@
    if(seq!==generation){session.endSession(true);return;}
    owned=true;video.pause();changed();dialog.close();
   }catch(error){
-   if(seq===generation)notice(error?.code==='cancel'||error==='cancel'?'Seleção cancelada. O filme continua neste aparelho.':'Não foi possível transmitir. Confira o Wi-Fi, a compatibilidade da TV e o formato do vídeo.');
+   if(seq===generation)notice(error?.code==='cancel'||error==='cancel'?'Seleção cancelada. O vídeo continua neste aparelho.':'Não foi possível transmitir. Confira o Wi-Fi, a compatibilidade da TV e o formato do vídeo.');
   }finally{busy=false;updateChoices();}
  }
  function nativePicker(kind){

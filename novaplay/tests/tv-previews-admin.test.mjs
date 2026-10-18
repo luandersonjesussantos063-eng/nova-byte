@@ -34,7 +34,7 @@ test('saving touches only the preview selection and refuses false successes or d
 test('admin controls and mobile header spacing are integrated into the published interfaces',()=>{
  const admin=readFileSync(new URL('../admin/index.html',import.meta.url),'utf8'),css=readFileSync(new URL('../assets/tv-spotlight.css',import.meta.url),'utf8');
  for(const id of ['tv-preview-admin','tv-preview-search','tv-preview-selected','tv-preview-save','tv-preview-video','tv-preview-test-all','tv-preview-filter','tv-preview-progress'])assert(admin.includes('id="'+id+'"'));
- assert(admin.includes('tv-previews.js?v=0.51.17'));assert(css.includes('padding-top:calc(130px + env(safe-area-inset-top,0px))'));
+ assert(admin.includes('tv-previews.js?v=0.51.18'));assert(css.includes('padding-top:calc(130px + env(safe-area-inset-top,0px))'));
 });
 
 test('batch tests sequentially, reuses identical sources and reports failures without auto selecting',async()=>{
