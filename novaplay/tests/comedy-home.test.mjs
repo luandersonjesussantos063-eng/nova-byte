@@ -14,7 +14,7 @@ function lab(){
  const holder={children:[],replaceChildren(){this.children=[]},append(row){this.children.push(row)}};
  const catalog=[native,movie,sketch,documentary,{...movie},{...sketch,id:'unpublished',catalogOnly:true}];
  const c=vm.createContext({window:{},db:{films:catalog,channels:[]},uploadedCatalog:[native],homeLivePreviews:null,homeLiveChannels:[],
-  $:()=>holder,continued:()=>[],favoriteItems:()=>[],shelf:(title,items,key,live)=>items.length?{title,items,key,live}:null});
+  $:()=>holder,continued:()=>[],favoriteItems:()=>[],uniqueChannelItems:items=>items,shelf:(title,items,key,live)=>items.length?{title,items,key,live}:null});
  vm.runInContext(read('assets/youtube-core.js'),c);
  c.youtubeFilms=()=>c.window.NPlayYouTube.select(c.db.films);
  vm.runInContext(app.slice(app.indexOf('const genreOrder='),app.indexOf('const defaultFeatured=')),c);

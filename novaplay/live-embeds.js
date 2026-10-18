@@ -68,12 +68,12 @@ async function load(){
 function filterLiveChannels(channels,query){
  const normalize=value=>String(value||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLocaleLowerCase("pt-BR");
  const terms=normalize(query).trim().split(/\s+/).filter(Boolean);
- return channels.filter(item=>terms.every(term=>normalize(item.title+" "+(item.category||"")).includes(term)));
+ return channels.filter(item=>terms.every(term=>normalize([item.title,item.category,...(item.channelNames||[]),...(item.channelCategories||[])].join(" ")).includes(term)));
 }
 let liveDisplayMode="Todos",liveRegion="Todos",liveLimit=60;
 const norm=value=>String(value||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase();
 function subject(item){const t=norm(item.category+" "+item.title);if(/esport|sport|espn|premiere|nba|nfl|dazn|combate|bein/.test(t))return "Esportes";if(/noticia|news|jornal/.test(t))return "Notícias";if(/infantil|kids|cartoon|gloob|disney|tooncast/.test(t))return "Infantil";if(/filme|serie|cinema|telecine|hbo/.test(t))return "Filmes e séries";if(/document|discovery|history/.test(t))return "Documentários";return "Variedades";}
-function international(item){return /portugal|usa|canada|latinos|argentina|uruguai|deportes|bein|ziggo|sky cinema|sky sports|africa/.test(norm(item.category));}
+function international(item){return /\[(?:US|USA|PT|ES|UK|AR|UY)\]/i.test(item.originalTitle||item.title)||/portugal|usa|canada|latinos|argentina|uruguai|deportes|bein|ziggo|sky cinema|sky sports|africa/.test(norm(item.category));}
 function favoriteId(item){return item.staticId||"channel-"+item.id;}
 function allChannels(channels){const list=[...channels],seen=new Set(list.map(x=>x.embed_url));for(const item of window.NPlayLiveCatalog?.staticChannels()||[]){const url=item.src||item.sourcePage;if(url&&!seen.has(url)){list.push({id:item.id,staticId:item.id,title:item.title,category:item.category||"TV aberta",embed_url:url,stream_type:item.mode,logo_url:item.cover});seen.add(url);}}return list;}
 function renderFilters(){const host=$("nplay-live-mode");if(!host)return;host.replaceChildren();
@@ -83,10 +83,12 @@ function renderFilters(){const host=$("nplay-live-mode");if(!host)return;host.re
 function renderChannels(channels){
  liveChannelData=channels;
  const pool=liveScope==="tv"?allChannels(channels):channels;
- const scoped=window.NPlayMusic?.select(pool,liveScope)||pool;
+ const raw=window.NPlayMusic?.select(pool,liveScope)||pool;
+ const regional=raw.filter(item=>liveRegion==="Todos"||(liveRegion==="Internacionais"?international(item):!international(item)));
+ const scoped=window.NPlayChannelOrder?.unique(regional)||regional;
  const searched=filterLiveChannels(scoped,$("nplay-live-search")?.value||"");
- const filteredChannels=searched.filter(item=>(liveDisplayMode==="Todos"||liveDisplayMode==="Favoritos"&&window.NPlayLiveCatalog?.isFavorite(favoriteId(item))||subject(item)===liveDisplayMode)&&(liveRegion==="Todos"||(liveRegion==="Internacionais"?international(item):!international(item))));
- const visibleChannels=liveScope==="tv"&&liveDisplayMode==="Todos"?(window.NPlayChannelOrder?.sort(filteredChannels)||filteredChannels):filteredChannels;
+ const filteredChannels=searched.filter(item=>liveDisplayMode==="Todos"||liveDisplayMode==="Favoritos"&&window.NPlayLiveCatalog?.isFavorite(favoriteId(item))||subject(item)===liveDisplayMode);
+ const visibleChannels=liveScope==="tv"?(window.NPlayChannelOrder?.sort(filteredChannels)||filteredChannels):filteredChannels;
  renderFilters();
  const list=$("iframe-channel-list");if(!list)return;
  if(!livePreviews&&window.NPlayLivePreviews)livePreviews=window.NPlayLivePreviews.create(list);
