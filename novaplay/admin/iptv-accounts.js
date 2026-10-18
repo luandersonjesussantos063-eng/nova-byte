@@ -1,7 +1,7 @@
 (()=>{
 'use strict';
 const $=id=>document.getElementById(id),server='https://nplay-live-gateway.luandersonjesussantos063.workers.dev';
-let db,busy=false;
+let db,busy=false,deliveredUser=null;
 const message=(text,error=false)=>{const n=$('iptv-status');n.textContent=text;n.classList.toggle('error',error);};
 function password(){return [...crypto.getRandomValues(new Uint8Array(18))].map(n=>n.toString(16).padStart(2,'0')).join('');}
 async function api(action,data){
@@ -10,10 +10,20 @@ async function api(action,data){
  const result=await r.json();if(!r.ok||!result.ok)throw Error(result.error||'Não foi possível concluir a ação.');return result.data;
 }
 function delivery(user,pass){
+ deliveredUser=user;
  const query=new URLSearchParams({username:user,password:pass,type:'m3u_plus',output:'ts'});
  $('iptv-credentials').value=`NPlay — acesso IPTV\n\nServidor: ${server}\nUsuário: ${user}\nSenha: ${pass}\n\nLista M3U: ${server}/get.php?${query}\n\nEPG: ${server}/xmltv.php?${new URLSearchParams({username:user,password:pass})}\n\nNo aplicativo, escolha API Xtream / usuário e senha. Use HTTPS.`;
  $('iptv-delivery').hidden=false;
 }
+
+async function removeAccount(item,{confirmDelete=globalThis.confirm,request=api}={}){
+ if(!confirmDelete('Excluir o acesso '+item.label+' ('+item.username+')? O login e suas sessões serão apagados.'))return false;
+ const result=await request('delete',{id:item.id});
+ if(result?.ok!==true||result.id!==item.id)throw Error('Não foi possível confirmar a exclusão. Atualize a lista.');
+ return true;
+}
+window.NPlayIptvAdmin={removeAccount};
+
 
 /* Safe connectivity probe: the username does not exist, so no real user's
    lockout counter, password, account settings or session can be touched. */
@@ -113,6 +123,7 @@ async function refresh(){
   row.append(title,info);
   const add=(label,handler)=>{const b=document.createElement('button');b.type='button';b.className='outline';b.style.margin='4px';b.textContent=label;b.onclick=async()=>{b.disabled=true;try{await handler();}catch(e){message(e.message,true);}finally{b.disabled=false;}};row.append(b);};
   add(x.enabled?'Bloquear':'Desbloquear',()=>update(x,{enabled:!x.enabled}));
+  add('Excluir acesso',async()=>{if(!await removeAccount(x))return;if(deliveredUser===x.username){$('iptv-credentials').value='';$('iptv-delivery').hidden=true;deliveredUser=null;}await refresh();message('Acesso '+x.username+' excluído.');});
   add('Renovar 30 dias',()=>{const base=Math.max(Date.now(),Date.parse(x.expires_at));return update(x,{expires_at:new Date(base+30*86400000).toISOString(),enabled:true});});
   add('Redefinir senha',async()=>{if(!confirm('A senha anterior deixará de funcionar. Redefinir o acesso de '+x.username+'?'))return;const pass=password();await update(x,{password:pass});delivery(x.username,pass);});
   const label=document.createElement('label');label.textContent='Transmissões simultâneas';const select=document.createElement('select');for(const n of [1,2,3]){const o=document.createElement('option');o.value=n;o.textContent=n;select.append(o);}select.value=x.max_connections;select.onchange=async()=>{select.disabled=true;try{await update(x,{max_connections:Number(select.value)});}catch(e){message(e.message,true);}finally{select.disabled=false;}};label.append(select);row.append(label);

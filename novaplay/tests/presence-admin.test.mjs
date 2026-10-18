@@ -6,7 +6,7 @@ const original=fs.readFileSync(new URL('../admin/presence-admin.js',import.meta.
 // Inject a pure helper only in this test runtime; production code is untouched.
 const script=original.replace("document.getElementById('presence-refresh')?.addEventListener", "window.__presenceMath={presenceState,duration};document.getElementById('presence-refresh')?.addEventListener");
 const flush=()=>new Promise(resolve=>setImmediate(resolve));
-function harness(rows=[]){
+function harness(rows=[],registrations=[]){
  let elapsed=0,rpcCalls=0;
  const handlers={},timers=[],created=[];
  class Node{
@@ -26,7 +26,7 @@ function harness(rows=[]){
   addEventListener:(event,callback)=>handlers['document:'+event]=callback
  };
  const window={
-  supabase:{createClient:()=>({rpc:async()=>{rpcCalls++;return {data:rows,error:null}}})},
+  supabase:{createClient:()=>({rpc:async()=>{rpcCalls++;return {data:rows,error:null}},from:()=>({select:()=>({in:async()=>({data:registrations,error:null})})})})},
   addEventListener:(event,callback)=>handlers['window:'+event]=callback
  };
  const sandbox={document,window,MutationObserver:class{observe(){}},performance:{now:()=>elapsed},
@@ -109,4 +109,11 @@ test('ADM clears title immediately when playback is stopped or session is offlin
  await flush();
  assert.equal(h.items['presence-list'].children[0].children[4].textContent,'Nenhum conteúdo em reprodução confirmado');
  assert.match(original,/rpc\('novaplay_profiles_watching'\)/);
+});
+
+test('online card uses the registered person as primary name and keeps avatar profile secondary',async()=>{
+ const now=new Date().toISOString();
+ const h=harness([{user_id:'user-a',profile_name:'Batman',last_seen:now,server_now:now,is_visible:true}],[{user_id:'user-a',display_name:'  Maria Silva  '}]);await flush();
+ const card=h.items['presence-list'].children[0];assert.equal(card.children[0].textContent,'Maria Silva');assert.match(card.children[2].textContent,/Perfil: Batman/);
+ const missing=harness([{user_id:'user-b',profile_name:'Superman',last_seen:now,server_now:now,is_visible:true}]);await flush();assert.equal(missing.items['presence-list'].children[0].children[0].textContent,'Cadastro sem nome');
 });
