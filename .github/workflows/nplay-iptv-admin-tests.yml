@@ -7,6 +7,8 @@ on:
       - 'novaplay/tests/iptv-health-admin.test.mjs'
       - 'novaplay/tests/iptv-account-diagnostic.test.mjs'
       - 'novaplay/tests/iptv-api.test.mjs'
+      - 'novaplay/tests/iptv-backend-concurrency.test.mjs'
+      - 'novaplay/iptv/migrations/read_catalog_without_account_row_lock_20261018.sql'
       - '.github/workflows/nplay-iptv-admin-tests.yml'
   workflow_dispatch:
 permissions:
@@ -25,4 +27,4 @@ jobs:
           node --check novaplay/admin/iptv-accounts.js
           node --check novaplay/worker/iptv-api.mjs
       - name: Testar gateway e integração do painel
-        run: node --test novaplay/tests/iptv-health-admin.test.mjs novaplay/tests/iptv-api.test.mjs novaplay/tests/iptv-account-diagnostic.test.mjs
+        run: node --test novaplay/tests/iptv-health-admin.test.mjs novaplay/tests/iptv-api.test.mjs novaplay/tests/iptv-account-diagnostic.test.mjs novaplay/tests/iptv-backend-concurrency.test.mjs
