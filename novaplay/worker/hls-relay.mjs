@@ -11,7 +11,7 @@ export async function hlsSource(env,id){
  if(names.length){const encoded=names.map(name=>env[name]).join('');if(encoded.length>16000)throw Error('Catalog shard too large');const data=Uint8Array.from(atob(encoded),c=>c.charCodeAt(0));const stream=new Blob([data]).stream().pipeThrough(new DecompressionStream('gzip'));const map=JSON.parse(await textLimited(new Response(stream),256000));if(typeof map[id]==='string')return {url:map[id]};}
  return await env.LIVE_SOURCES.get(id,'json');
 }
-export async function relayHls({request,env,id,jwt,origin,rootUrl,locator,upstream,validateUrl,cors}){
+export async function relayHls({request,env,id,jwt,origin,rootUrl,locator,upstream,validateUrl,cors,viewer=''}){
  const source=locator?await unseal(locator,id,env.HLS_MEDIA_KEY):rootUrl;
  validateUrl(source);
  const r=await upstream(source,request.signal,request.headers.get('Range'),{xtream:!locator});
@@ -21,7 +21,7 @@ export async function relayHls({request,env,id,jwt,origin,rootUrl,locator,upstre
   if(request.method==='HEAD'){await r.body?.cancel();return new Response(null,{headers:{...cors,'Content-Type':'application/vnd.apple.mpegurl'}});}
   const text=await textLimited(r);if(!text.trimStart().startsWith('#EXTM3U')||/\{\$/.test(text))throw Error('Unsupported manifest');
   const base=r.url||source;
-  const local=async raw=>{const url=validateUrl(new URL(raw,base).href).href;const encrypted=await seal(url,id,env.HLS_MEDIA_KEY);return origin+'/live/'+id+'/asset/'+encrypted+'?access_token='+encodeURIComponent(jwt);};
+  const local=async raw=>{const url=validateUrl(new URL(raw,base).href).href;const encrypted=await seal(url,id,env.HLS_MEDIA_KEY);return origin+'/live/'+id+'/asset/'+encrypted+'?access_token='+encodeURIComponent(jwt)+(viewer?'&viewer='+encodeURIComponent(viewer):'');};
   const lines=[];
   for(const raw of text.split(/\r?\n/)){
    let line=raw.trim();

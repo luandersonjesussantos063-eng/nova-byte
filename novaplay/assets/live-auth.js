@@ -8,8 +8,18 @@
   let session=(await client?.auth.getSession())?.data?.session;
   if(session?.expires_at*1000<Date.now()+60000)session=(await client.auth.refreshSession())?.data?.session;
   if(!session?.access_token)throw Error("Entre novamente no NPlay para assistir a este canal.");
-  const u=new URL(raw);u.searchParams.set("access_token",session.access_token);return u.href;
+  const u=new URL(raw);u.searchParams.set("access_token",session.access_token);u.searchParams.set("viewer",crypto.randomUUID().replaceAll("-",""));return u.href;
  }
+ let releasing=Promise.resolve();
+ function release(raw){
+  try{
+   if(!protectedUrl(raw))return;
+   const u=new URL(raw);if(!u.searchParams.has('viewer'))return;
+   u.pathname=u.pathname.replace(/(?:index\.m3u8|stream\.ts)$/,'release');
+   releasing=fetch(u.href,{method:'POST',keepalive:true}).catch(()=>{});
+  }catch{}
+ }
+ async function waitForRelease(){await Promise.race([releasing,new Promise(resolve=>setTimeout(resolve,22000))]);}
  function failureMessage(code){return ({
  PC_XTREAM_CATALOG_INVALID:'O fornecedor não retornou uma grade Xtream válida para esta conta.',
  PC_XTREAM_LOGIN_RESET:'O servidor encerrou a conexão durante o login Xtream, antes de receber o vídeo. Consulte o receptor no ADM.',
@@ -23,7 +33,7 @@
  PC_MEDIA_SOURCE_INVALID:'O fornecedor não entregou um sinal de vídeo compatível com o receptor.',
  PC_MEDIA_SOURCE_RESET:'O login Xtream foi aceito, mas a conexão do vídeo foi encerrada pelo caminho até o fornecedor.',
  PC_MEDIA_SOURCE_CONNECTION:'O receptor entrou na conta, mas não conseguiu receber o vídeo.',
- PC_MEDIA_BUSY:'O receptor do PC já está recebendo outro canal para uma sessão ativa. Aguarde a liberação.',
+ PC_MEDIA_BUSY:'As três vagas de canais simultâneos estão em uso. Feche um canal em outro aparelho e tente novamente.',
  PC_MEDIA_START_TIMEOUT:'O receptor não ficou pronto no tempo limite. Confira o estado no ADM.',
  PC_MEDIA_PROCESS_FAILED:'O receptor recebeu dados, mas não conseguiu gerar o vídeo para o navegador. Confira o ADM.',
  PC_MEDIA_NOT_INSTALLED:'Atualize a TV-PC para instalar o receptor Xtream e FFmpeg.',
@@ -37,5 +47,5 @@
   PC_SOURCE_TIMEOUT:'O servidor de vídeo demorou para responder ao PC. Tente novamente.',
   PC_SOURCE_UNAVAILABLE:'O PC está conectado, mas não conseguiu receber o sinal do fornecedor.'
  })[code]||'';}
- window.NPlayLiveAuth=Object.freeze({protectedUrl,authorize,failureMessage});
+ window.NPlayLiveAuth=Object.freeze({protectedUrl,authorize,failureMessage,release,waitForRelease});
 })();

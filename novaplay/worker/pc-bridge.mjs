@@ -58,6 +58,10 @@ export async function inspectBridgeXtream(config,url){
  if(!r.ok){await r.body?.cancel();throw bridgeFailure(r.status===404?'PC_MEDIA_NOT_INSTALLED':'PC_BRIDGE_OFFLINE');}
  const info=await bridgeJson(r,100000);if(info.ok!==true)throw bridgeFailure(engineCodes[info.code]||'PC_XTREAM_CATALOG_INVALID');return info;
 }
+export async function releaseBridgeViewer(config,url,owner){
+ const r=await fetch(config.url+'/engine/release',{method:'POST',headers:{Authorization:'Bearer '+config.secret,'Content-Type':'application/json'},body:JSON.stringify({url,owner}),redirect:'manual',signal:AbortSignal.timeout(20000)});
+ await r.body?.cancel();if(!r.ok)throw bridgeFailure('PC_BRIDGE_OFFLINE');
+}
 export async function bridgeUpstream(config,validateUrl,owner=''){
  return async(raw,signal,range,options={})=>{
   validateUrl(raw);
@@ -78,7 +82,7 @@ export async function bridgeUpstream(config,validateUrl,owner=''){
    }
   }
   let r;const timeout=new AbortController(),timer=setTimeout(()=>timeout.abort(),20000);
-  try{r=await fetch(config.url+'/fetch',{method:'POST',headers:{Authorization:'Bearer '+config.secret,'Content-Type':'application/json'},body:JSON.stringify({url:raw,range,xtream:options.xtream===true}),signal:AbortSignal.any([signal||new AbortController().signal,timeout.signal]),redirect:'manual'});}catch{const error=Error('PC bridge unavailable');error.code='PC_BRIDGE_OFFLINE';throw error;}finally{clearTimeout(timer);}
+  try{r=await fetch(config.url+'/fetch',{method:'POST',headers:{Authorization:'Bearer '+config.secret,'Content-Type':'application/json'},body:JSON.stringify({url:raw,range,xtream:options.xtream===true,owner}),signal:AbortSignal.any([signal||new AbortController().signal,timeout.signal]),redirect:'manual'});}catch{const error=Error('PC bridge unavailable');error.code='PC_BRIDGE_OFFLINE';throw error;}finally{clearTimeout(timer);}
   if(r.status>=300&&r.status<400){await r.body?.cancel();const error=Error('PC bridge redirect refused');error.code='PC_BRIDGE_OFFLINE';throw error;}
   if(!r.ok&&!r.headers.has('X-NPlay-Upstream-Url')){
    const reasons={UPSTREAM_TLS:'PC_SOURCE_TLS',UPSTREAM_RESET:'PC_SOURCE_RESET',UPSTREAM_DNS:'PC_SOURCE_DNS',UPSTREAM_TIMEOUT:'PC_SOURCE_TIMEOUT',UPSTREAM_DESTINATION:'PC_SOURCE_UNAVAILABLE',UPSTREAM_CONNECTION:'PC_SOURCE_UNAVAILABLE'};
@@ -109,7 +113,7 @@ export const pcFailureMessages={
  PC_MEDIA_SOURCE_INVALID:'O fornecedor não entregou um sinal de vídeo compatível com o receptor.',
  PC_MEDIA_SOURCE_RESET:'O login Xtream foi aceito, mas a conexão do vídeo foi encerrada pelo caminho até o fornecedor.',
  PC_MEDIA_SOURCE_CONNECTION:'O receptor entrou na conta, mas não conseguiu receber o vídeo.',
- PC_MEDIA_BUSY:'O receptor do PC já está recebendo outro canal para uma sessão ativa. Aguarde a liberação.',
+ PC_MEDIA_BUSY:'As três vagas de canais simultâneos estão em uso. Feche um canal em outro aparelho e tente novamente.',
  PC_MEDIA_START_TIMEOUT:'O receptor não ficou pronto no tempo limite. Confira o estado no ADM.',
  PC_MEDIA_PROCESS_FAILED:'O receptor recebeu dados, mas não conseguiu gerar o vídeo para o navegador. Confira o ADM.',
  PC_MEDIA_NOT_INSTALLED:'Atualize a TV-PC para instalar o receptor Xtream e FFmpeg.',

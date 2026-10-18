@@ -1,5 +1,5 @@
 import {relayHls,hlsSource,xtreamTsSource} from './hls-relay.mjs';
-import {bridgeUrl,encryptBridge,decryptBridge,bridgeUpstream,checkBridge,pcFailureMessages,bridgeEngineStatus,inspectBridgeXtream} from './pc-bridge.mjs';
+import {bridgeUrl,encryptBridge,decryptBridge,bridgeUpstream,checkBridge,pcFailureMessages,bridgeEngineStatus,inspectBridgeXtream,releaseBridgeViewer} from './pc-bridge.mjs';
 // Private provider URLs live in KV; viewers receive only channel IDs.
 const DB="https://vajlhodqxskozuxxlujv.supabase.co",KEY="sb_publishable_uT0b4y0Bex1k1QWZoyIfKg_K0pm-yS3";
 const uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -48,10 +48,13 @@ async function storedBridge(env,jwt){
  const rows=await readJson(r,16000),cipher=rows?.[0]?.pc_bridge_config;
  return cipher?await decryptBridge(cipher,env.HLS_MEDIA_KEY):null;
 }
-async function configuredUpstream(env,jwt){
+async function viewerOwner(jwt,viewer=''){
+ const hash=new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(jwt+(viewer?'\n'+viewer:''))));
+ return [...hash].map(x=>x.toString(16).padStart(2,'0')).join('');
+}
+async function configuredUpstream(env,jwt,viewer=''){
  const config=await storedBridge(env,jwt);
- const hash=new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(jwt)));
- const owner=[...hash].map(x=>x.toString(16).padStart(2,'0')).join('');
+ const owner=await viewerOwner(jwt,viewer);
  return config?await bridgeUpstream(config,sourceUrl,owner):upstream;
 }
 async function channelId(url){
@@ -123,11 +126,21 @@ export default {async fetch(request,env){
    const reader=r.body?.getReader();const first=reader?await reader.read():null;await reader?.cancel();
    const b=first?.value||new Uint8Array();return json({status:r.status,type:r.headers.get('Content-Type'),bytes:b.length,mpegts:b[0]===71,hls:new TextDecoder().decode(b.slice(0,10)).startsWith('#EXTM3U')});
   }
+  const viewer=route.searchParams.get('viewer')||'';
+  if(viewer&&!/^[a-f0-9]{32}$/.test(viewer))return json({error:'Sessão inválida.'},400);
+  const release=route.pathname.match(/^\/live\/([0-9a-f-]{36})\/release$/i);
+  if(release&&request.method==='POST'&&uuid.test(release[1])){
+   if(!viewer)return json({error:'Sessão inválida.'},400);
+   if(!await published(release[1],jwt,route.origin,'hls')&&!await published(release[1],jwt,route.origin,'ts'))return json({error:'Canal não liberado para este aparelho.'},403);
+   const entry=await hlsSource(env,release[1]),config=await storedBridge(env,jwt);
+   if(entry&&config)await releaseBridgeViewer(config,entry.url,await viewerOwner(jwt,viewer));
+   return json({ok:true});
+  }
   const hls=route.pathname.match(/^\/live\/([0-9a-f-]{36})\/(?:index\.m3u8|asset\/([A-Za-z0-9_-]{1,7000}))$/i);
   if(hls&&['GET','HEAD'].includes(request.method)&&uuid.test(hls[1])){
    if(!await published(hls[1],jwt,route.origin,'hls'))return json({error:'Canal não liberado para este aparelho.'},403);
    const entry=await hlsSource(env,hls[1]);if(!entry)return json({error:'Fonte indisponível.'},404);
-   return await relayHls({request,env,id:hls[1],jwt,origin:route.origin,rootUrl:entry.url,locator:hls[2],upstream:await configuredUpstream(env,jwt),validateUrl:sourceUrl,cors});
+   return await relayHls({request,env,id:hls[1],jwt,origin:route.origin,rootUrl:entry.url,locator:hls[2],upstream:await configuredUpstream(env,jwt,viewer),viewer,validateUrl:sourceUrl,cors});
   }
   const match=route.pathname.match(/^\/live\/([0-9a-f-]{36})\/stream\.ts$/i);
   if(!match||!['GET','HEAD'].includes(request.method)||!uuid.test(match[1]))return json({error:'Canal não encontrado.'},404);
@@ -135,7 +148,7 @@ export default {async fetch(request,env){
   const entry=await hlsSource(env,match[1]);if(!entry)return json({error:'Fonte indisponível.'},404);
   const source=/\.m3u8$/i.test(new URL(entry.url).pathname)?xtreamTsSource(entry.url):entry.url;
   if(!source)return json({error:'Esta fonte não oferece a alternativa MPEG-TS.'},422);
-  const deliver=await configuredUpstream(env,jwt);
+  const deliver=await configuredUpstream(env,jwt,viewer);
   const r=await deliver(source,request.signal,request.headers.get('Range'),{xtream:true});
   if(!r.ok){await r.body?.cancel();return json({error:'O fornecedor não disponibilizou o sinal deste canal.'},502);}
   const type=r.headers.get('Content-Type')||'';if(/text\/|json|html/i.test(type)){await r.body?.cancel();return json({error:'A fonte não retornou um vídeo compatível.'},502);}

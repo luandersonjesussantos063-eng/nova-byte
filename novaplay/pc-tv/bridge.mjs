@@ -24,9 +24,9 @@ export function createBridge({secret,fetchUpstream=fetchMedia,fetchRoot=fetchXtr
  return http.createServer(async(req,res)=>{
   const json=(status,data)=>{if(res.headersSent||res.destroyed)return;const headers={'Content-Type':'application/json','Cache-Control':'no-store'};if(data.reason)headers['X-NPlay-Bridge-Error']=data.reason;res.writeHead(status,headers);res.end(JSON.stringify(data));};
   if(!authorized(req.headers.authorization,secret)){req.resume();json(401,{error:'AUTH_REQUIRED'});return;}
-  if(req.url==='/health'&&req.method==='GET'){json(200,{service:'nplay-pc-tv',version:'0.50.3',capabilities:{xtream:!!engine,media_engine:!!engine}});return;}
+  if(req.url==='/health'&&req.method==='GET'){json(200,{service:'nplay-pc-tv',version:'0.50.4',capabilities:{xtream:!!engine,media_engine:!!engine}});return;}
   if(req.url==='/engine/status'&&req.method==='GET'){json(200,engine?engine.status():{stage:'unavailable',code:'ENGINE_NOT_INSTALLED'});return;}
-  if(!['/fetch','/engine/start','/xtream/inspect'].includes(req.url)||req.method!=='POST'){req.resume();json(404,{error:'NOT_FOUND'});return;}
+  if(!['/fetch','/engine/start','/engine/release','/xtream/inspect'].includes(req.url)||req.method!=='POST'){req.resume();json(404,{error:'NOT_FOUND'});return;}
   const controller=new AbortController();req.on('aborted',()=>controller.abort());
   res.on('close',()=>{if(!res.writableFinished)controller.abort();});
   let media;
@@ -42,6 +42,10 @@ export function createBridge({secret,fetchUpstream=fetchMedia,fetchRoot=fetchXtr
     catch(error){json(200,{ok:false,code:ENGINE_CODES.has(error.code)?error.code:'XTREAM_CATALOG_INVALID'});}
     return;
    }
+   if(req.url==='/engine/release'){
+    if(!engine||!/^[a-f0-9]{64}$/.test(input.owner||'')){json(400,{error:'INVALID_REQUEST'});return;}
+    json(200,await engine.release(input.url,input.owner));return;
+   }
    if(req.url==='/engine/start'){
     if(!engine){json(404,{error:'NOT_FOUND'});return;}
     try{json(200,await engine.start(input.url,/^[a-f0-9]{64}$/.test(input.owner||'')?input.owner:'default'));}
@@ -50,7 +54,7 @@ export function createBridge({secret,fetchUpstream=fetchMedia,fetchRoot=fetchXtr
    }
    const root=new URL(input.url);
    const sharedTs=engine&&input.xtream&&!root.search&&!root.hash&&/^\/(?:live\/)?[^/]+\/[^/]+\/\d+\.ts$/.test(root.pathname);
-   if(isEngineUrl(input.url)&&engine)media=await engine.asset(input.url);
+   if(isEngineUrl(input.url)&&engine)media=await engine.asset(input.url,/^[a-f0-9]{64}$/.test(input.owner||'')?input.owner:'default');
    else if(sharedTs)media=await engine.stream(input.url,controller.signal,/^[a-f0-9]{64}$/.test(input.owner||'')?input.owner:'default');
    else media=await (input.xtream?fetchRoot:fetchUpstream)(input.url,input.range,controller.signal);
    const {response,url}=media;

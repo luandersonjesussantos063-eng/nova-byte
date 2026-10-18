@@ -42,7 +42,7 @@ export class MediaEngine{
   this.client=client;this.ffmpeg=ffmpeg;this.mode=mode==='copy'?'copy':'compatible';this.idleMs=idleMs;this.readyMs=readyMs;this.root=root;this.current=null;this.last={stage:'idle',code:null};this.lock=Promise.resolve();
   this.sweep=setInterval(()=>{const s=this.current;if(s&&Date.now()-s.touched>this.idleMs)void this.stop(s).catch(()=>{});},2000);this.sweep.unref();
  }
- status(){const s=this.current;return {engine:'nplay-xtream-ffmpeg',version:'0.50.3',mode:this.mode,stage:s?.stage||this.last.stage,code:(s?s.error:this.last.code)||null,bytes_received:s?.bytes||0,started_at:s?.startedAt||null,account:s?.account||null,video_codec:this.mode==='copy'?'original':'h264',audio_codec:'aac',channels_receiving:s?1:0};}
+ status(){const s=this.current;return {engine:'nplay-xtream-ffmpeg',version:'0.50.4',mode:this.mode,stage:s?.stage||this.last.stage,code:(s?s.error:this.last.code)||null,bytes_received:s?.bytes||0,started_at:s?.startedAt||null,account:s?.account||null,video_codec:this.mode==='copy'?'original':'h264',audio_codec:'aac',channels_receiving:s?1:0};}
  async stop(s=this.current){
   if(!s)return;
   s.stopping=true;
@@ -62,7 +62,7 @@ export class MediaEngine{
   s=this.current;
   console.info(JSON.stringify({event:'media_engine_request',existing:!!s,same_source:!!s&&s.key===sourceKey,stage:s?.stage||'idle',failed:!!s?.error}));
   if(s&&(s.key!==sourceKey||s.error||s.controller.signal.aborted)){
-   if(s.owner!==owner&&Date.now()-s.touched<8000&&!s.error)throw failure('ENGINE_BUSY');
+   if(s.owner!==owner&&Date.now()-s.touched<8000&&!s.error&&!s.controller.signal.aborted)throw failure('ENGINE_BUSY');
    await this.stop(s);s=null;
   }
   if(!s){

@@ -798,6 +798,7 @@ function notifyPlayback(item,episode,state){
  window.dispatchEvent(new CustomEvent('nplay:watch',{detail:{id,title:title.slice(0,160),kind,state:'open'}}));
 }
 function stopPlayback(){
+ window.NPlayLiveAuth?.release(current?.item?.src);
  if(current?.item)notifyPlayback(null,null,'stopped');
  window.NPlayCasting?.reset();
  clearNplayShieldTimer();const started=$("nplay-live-video-started");if(started){started.hidden=true;started.disabled=false;started.textContent="Vídeo começou"}
@@ -983,7 +984,12 @@ function play(item,episode){
  registerCatalogInterest(episode||item,"play_attempt");
  // A camada de detalhes fecha, mas o player continua aberto.
  $("detail-layer").hidden=true;selected=null;
- stopPlayback();current={item,episode:episode||null};
+ stopPlayback();
+ if(window.NPlayLiveAuth?.protectedUrl(item.src)){
+  const playbackUrl=new URL(item.src);playbackUrl.searchParams.set('viewer',crypto.randomUUID().replaceAll('-',''));
+  item={...item,src:playbackUrl.href};
+ }
+ current={item,episode:episode||null};
  notifyPlayback(item,episode,'open');
  const media=episode||item;
  $("player-layer").hidden=false;document.body.classList.add("modal-open");
@@ -1197,6 +1203,8 @@ function play(item,episode){
     if(error||!data?.signedUrl){fail("Este vídeo não está liberado para reprodução. Tente novamente mais tarde.");return}
     src=data.signedUrl;startSource();
   }).catch(()=>{if(seq===attempt)fail("Não foi possível conectar ao armazenamento do vídeo.")});
+ }else if(window.NPlayLiveAuth?.protectedUrl(src)){
+  window.NPlayLiveAuth.waitForRelease().then(()=>{if(seq===attempt)startSource();});
  }else startSource();
  // No extra focus change or intermediate details screen: playback opens immediately.
 }
@@ -1259,4 +1267,5 @@ $("hero-play").onclick=()=>navigate("tv");
 $("hero-info").onclick=()=>navigate("filmes");
 navigate((location.hash||"").slice(1)||"inicio");
 loadUploadedCatalog();
+window.addEventListener("pagehide",()=>window.NPlayLiveAuth?.release(current?.item?.src));
 })();
