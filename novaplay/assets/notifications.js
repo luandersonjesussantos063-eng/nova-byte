@@ -96,7 +96,7 @@ async function refresh(){
  const releases=releaseEntries();
  history=releases.old;
  news=[...(releases.current?[releases.current]:[]),...(data||[])];
- if(error&&!("nplay-notice-status" in window)){
+ if(error){
   console.warn("NPlay: avisos remotos temporariamente indisponíveis",error.message);
  }
  paint();
