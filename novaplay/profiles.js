@@ -112,7 +112,17 @@ if(avatar){
  const deviceCode=document.createElement("span");deviceCode.style.cssText="font-size:13px;color:#b7c9e7;word-break:break-word";
  const copy=makeButton("Copiar identificação",async()=>{const code=document.getElementById("nplay-device-code")?.textContent?.replace(/^Aparelho:\\s*/,"").trim();if(!code)return;try{await navigator.clipboard.writeText(code);copy.textContent="✓ Código copiado"}catch{copy.textContent="Não foi possível copiar"}});
  device.append(deviceTitle,deviceCode,copy);
- menu.append(heading,profileName,makeButton("👤 Trocar perfil",()=>{menu.hidden=true;avatar.setAttribute("aria-expanded","false");show()}),makeButton("✏️ Editar perfis",()=>{menu.hidden=true;options();loadDraft();dialog.showModal()}),device);
+ const introSound=window.NPlayIntroAudio;
+ const soundButton=makeButton("",()=>{
+  if(!introSound)return;
+  const on=introSound.setEnabled(!introSound.enabled());
+  soundButton.textContent=on?"🔊 Som da abertura: ligado":"🔇 Som da abertura: desligado";
+  if(on)void introSound.preview();
+ });
+ soundButton.textContent=introSound?.enabled?.()?"🔊 Som da abertura: ligado":"🔇 Som da abertura: desligado";
+ const listenButton=makeButton("▶ Ouvir som da abertura",()=>{void introSound?.preview?.()});
+ if(!introSound){soundButton.disabled=true;listenButton.disabled=true;}
+ menu.append(heading,profileName,makeButton("👤 Trocar perfil",()=>{menu.hidden=true;avatar.setAttribute("aria-expanded","false");show()}),makeButton("✏️ Editar perfis",()=>{menu.hidden=true;options();loadDraft();dialog.showModal()}),soundButton,listenButton,device);
  document.body.append(menu);
  avatar.setAttribute("aria-haspopup","true");avatar.setAttribute("aria-expanded","false");
  const close=()=>{menu.hidden=true;avatar.setAttribute("aria-expanded","false")};
