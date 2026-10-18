@@ -786,7 +786,19 @@ $("cinema-fullscreen").onclick=()=>{
  }
  showCinemaUi();
 };
+function notifyPlayback(item,episode,state){
+ if(state==='stopped'){window.dispatchEvent(new CustomEvent('nplay:watch',{detail:null}));return;}
+ const media=episode||item;
+ const candidate=String(media?.id||item?.id||'');
+ // Some live-item IDs embed full upstream URLs. Never send those to the ADM.
+ const id=/^[A-Za-z0-9_-]{1,110}$/.test(candidate)?candidate:'live-channel';
+ const title=episode?[item?.title,episode.label||episode.title].filter(Boolean).join(' · '):String(item?.title||'Conteúdo');
+ const kind=item?.audioOnly?'radio':media?.youtube_id?'youtube':
+  item?.kind==='tv'?'tv':item?.kind==='series'?'series':item?.kind==='film'?'film':'other';
+ window.dispatchEvent(new CustomEvent('nplay:watch',{detail:{id,title:title.slice(0,160),kind,state:'open'}}));
+}
 function stopPlayback(){
+ if(current?.item)notifyPlayback(null,null,'stopped');
  window.NPlayCasting?.reset();
  clearNplayShieldTimer();const started=$("nplay-live-video-started");if(started){started.hidden=true;started.disabled=false;started.textContent="Vídeo começou"}
  const shield=$("nplay-live-touch-shield"),toggle=$("nplay-live-touch-toggle");if(shield)shield.hidden=true;if(toggle)toggle.hidden=true;
@@ -828,6 +840,7 @@ function playerStatus(msg){
 }
 function playbackFailed(msg,seq){
  if(seq!==attempt||$("player-layer").hidden)return;
+ notifyPlayback(null,null,'stopped');
  $("player-layer").classList.add("has-player-error");
  showCinemaUi();
  clearTimeout(timer);$("player-error").textContent=msg;
@@ -932,6 +945,7 @@ function openLiveEmbed(url,title){
  $("detail-layer").hidden=true;selected=null;
  stopPlayback();
  current={item:{title:String(title||"Canal ao vivo"),kind:"tv",liveEmbedUrl:source.href},episode:null};
+ notifyPlayback(current.item,null,'open');
  const layer=$("player-layer"),frame=$("fallback-frame");
  layer.hidden=false;layer.classList.add("live-embed-active");document.body.classList.add("modal-open");
  $("video").hidden=true;$("cinema-controls").hidden=true;
@@ -970,6 +984,7 @@ function play(item,episode){
  // A camada de detalhes fecha, mas o player continua aberto.
  $("detail-layer").hidden=true;selected=null;
  stopPlayback();current={item,episode:episode||null};
+ notifyPlayback(item,episode,'open');
  const media=episode||item;
  $("player-layer").hidden=false;document.body.classList.add("modal-open");
  const yt=!!media.youtube_id,drive=!!media.google_drive_id,externalEmbed=yt||drive;
