@@ -65,8 +65,8 @@ jobs:
           const app=fs.readFileSync('novaplay/app.js','utf8');
           const css=fs.readFileSync('novaplay/assets/cinema-refresh.css','utf8');
           const sw=fs.readFileSync('novaplay/sw.js','utf8');
-          for(const phrase of ['id="nplay-soft-opening"','assets/cinema-refresh.css?v=0.51.14','assets/soft-opening.js?v=0.51.14','assets/release-notes.js?v=0.51.14','NPlay V 0.51.14'])assert(index.includes(phrase),phrase);
-          assert(sw.includes('novaplay-v0.51.14-tvspotlight'));
+          for(const phrase of ['id="nplay-soft-opening"','assets/cinema-refresh.css?v=0.51.15','assets/soft-opening.js?v=0.51.15','assets/release-notes.js?v=0.51.15','NPlay V 0.51.15'])assert(index.includes(phrase),phrase);
+          assert(sw.includes('novaplay-v0.51.15-tvspotlight'));
           assert(sw.includes('./assets/cinema-refresh.css'));
           assert(sw.includes('./assets/intro-audio.js'));
           assert(sw.includes('./assets/release-notes.js'));
@@ -88,7 +88,7 @@ jobs:
           assert(app.includes('Séries para acompanhar'));
           assert(css.includes('prefers-reduced-motion'));
           assert(!app.includes('openTimeshift'));
-          console.log('NPlay interface 0.51.14 — integração validada');
+          console.log('NPlay interface 0.51.15 — integração validada');
           JS
       - name: Testes de catalogo ao vivo na home
         run: node --test novaplay/tests/tv-previews-admin.test.mjs novaplay/tests/tv-spotlight.test.mjs novaplay/tests/favorites.test.mjs novaplay/tests/epg.test.mjs novaplay/tests/home-live.test.mjs novaplay/tests/soft-opening.test.mjs novaplay/tests/intro-audio.test.mjs novaplay/tests/release-notes.test.mjs novaplay/tests/youtube-layout.test.mjs novaplay/tests/opening-logo.test.mjs

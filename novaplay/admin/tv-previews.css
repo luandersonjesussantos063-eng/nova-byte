@@ -4,3 +4,5 @@
 .tv-preview-row>div,.tv-preview-row>strong{flex:1;min-width:180px}.tv-preview-row small{display:block;color:#b4c6e2;margin-top:5px}
 #tv-preview-video{width:min(100%,520px);aspect-ratio:16/9;background:#000;margin-top:14px;border-radius:12px}
 .tv-preview-toolbar{display:flex;gap:10px;flex-wrap:wrap;margin:16px 0}#tv-preview-message{overflow-wrap:anywhere;color:#c4daf9}
+
+#tv-preview-progress{width:100%;height:18px;accent-color:#64a5ff}#tv-preview-filter{display:block;margin:10px 0 18px;max-width:100%;padding:10px;background:#182941;color:#fff;border:1px solid #526985;border-radius:8px}
