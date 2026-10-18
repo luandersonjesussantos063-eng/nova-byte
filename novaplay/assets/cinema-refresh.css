@@ -128,3 +128,122 @@ body{background:#070b13!important}
  .nplay-opening-center,.nplay-opening-glow,.nplay-opening-line{animation:none;transform:none;opacity:1;filter:none}
  #view-home .poster-card .cover{transition:none}
 }
+
+
+/* NPlay 0.51.9 — corrige miniaturas esmagadas da aba YouTube.
+   O contêiner também tem a classe category-grid, mas contém SEÇÕES inteiras,
+   e não um grid de cards. O estilo específico impede que as seções sejam
+   distribuídas em dezenas de colunas estreitas. */
+.category-grid.youtube-selection{
+  display:block;
+  width:100%;
+  max-width:100%;
+  min-width:0;
+  box-sizing:border-box;
+  padding-top:8px;
+}
+.category-grid.youtube-selection > .youtube-filters,
+.category-grid.youtube-selection > .youtube-count,
+.category-grid.youtube-selection > .youtube-feature,
+.category-grid.youtube-selection > .shelf{
+  display:block;
+  width:100%;
+  max-width:100%;
+  min-width:0;
+  box-sizing:border-box;
+}
+.category-grid.youtube-selection > .youtube-filters{
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:8px;
+}
+.category-grid.youtube-selection > .shelf{
+  margin:0 0 30px;
+  padding:0;
+  overflow:visible;
+}
+.category-grid.youtube-selection .shelf-top{
+  display:flex;
+  width:100%;
+  align-items:center;
+  justify-content:space-between;
+  padding:0;
+  margin:0 0 12px;
+}
+.category-grid.youtube-selection .shelf-rail{
+  position:relative;
+  display:block;
+  width:100%;
+  max-width:100%;
+  min-width:0;
+}
+.category-grid.youtube-selection .shelf-track{
+  display:flex;
+  flex-wrap:nowrap;
+  gap:14px;
+  width:100%;
+  max-width:100%;
+  min-width:0;
+  box-sizing:border-box;
+  overflow-x:auto;
+  overflow-y:hidden;
+  scroll-snap-type:x proximity;
+  padding:4px 2px 14px;
+}
+.category-grid.youtube-selection .shelf-track > .poster-card.youtube-card{
+  flex:0 0 clamp(230px,23vw,330px);
+  width:clamp(230px,23vw,330px);
+  min-width:230px;
+  max-width:330px;
+  scroll-snap-align:start;
+}
+.category-grid.youtube-selection .shelf-track > .poster-card.youtube-card .cover{
+  display:block;
+  width:100%;
+  height:auto;
+  aspect-ratio:16/9;
+  border-radius:10px;
+  overflow:hidden;
+  background:#152239;
+}
+.category-grid.youtube-selection .poster-card.youtube-card .cover > img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+}
+.category-grid.youtube-selection .poster-card.youtube-card h3{
+  display:-webkit-box;
+  -webkit-box-orient:vertical;
+  -webkit-line-clamp:2;
+  line-clamp:2;
+  white-space:normal;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  min-height:2.8em;
+  line-height:1.4;
+  margin:9px 0 4px;
+  font-size:13px;
+}
+.category-grid.youtube-selection .poster-card.youtube-card p{
+  display:block;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  line-height:1.45;
+  color:#9cacc4;
+  font-size:12px;
+}
+@media(max-width:760px){
+  .category-grid.youtube-selection{padding:6px 15px 100px}
+  .category-grid.youtube-selection > .shelf{margin-bottom:25px}
+  .category-grid.youtube-selection .shelf-track{gap:10px;padding-right:2px}
+  .category-grid.youtube-selection .shelf-track > .poster-card.youtube-card{
+    flex:0 0 min(70vw,290px);
+    width:min(70vw,290px);
+    min-width:min(70vw,290px);
+    max-width:290px;
+  }
+  .category-grid.youtube-selection .poster-card.youtube-card h3{font-size:12px}
+  .category-grid.youtube-selection .shelf-title{font-size:17px}
+}
