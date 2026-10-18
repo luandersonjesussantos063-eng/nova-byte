@@ -8,23 +8,24 @@ function sourceKey(raw){
  return createHash('sha256').update(JSON.stringify([i.origin,i.user,i.password,i.id])).digest('hex');
 }
 
-// Two independent upstream channel sessions; viewers of the same channel reuse one.
+// Bounded independent channel sessions; viewers of the same channel reuse one.
 export class MultiEngine {
- constructor({capacity=2}={}){
-  this.slots=Array.from({length:capacity},()=>({key:null,engine:new MediaEngine()}));
+ constructor({capacity=2,engineFactory=()=>new MediaEngine()}={}){
+  this.slots=Array.from({length:capacity},()=>({key:null,pending:0,engine:engineFactory()}));
   this.client=this.slots[0].engine.client;
  }
- choose(raw){
+ async use(method,raw,args){
   const key=sourceKey(raw);
   let slot=this.slots.find(s=>s.key===key);
-  if(slot)return slot.engine;
-  slot=this.slots.find(s=>!s.key||!s.engine.current);
+  if(!slot)slot=this.slots.find(s=>!s.key||(!s.engine.current&&!s.pending));
   if(!slot)throw fail('ENGINE_BUSY');
   slot.key=key;
-  return slot.engine;
+  slot.pending++;
+  try{return await slot.engine[method](raw,...args);}
+  finally{slot.pending--;}
  }
- async start(raw,owner='default'){return this.choose(raw).start(raw,owner);}
- async stream(raw,signal,owner='default'){return this.choose(raw).stream(raw,signal,owner);}
+ async start(raw,owner='default'){return this.use('start',raw,[owner]);}
+ async stream(raw,signal,owner='default'){return this.use('stream',raw,[signal,owner]);}
  async asset(raw){
   const u=new URL(raw);
   if(u.origin!==ENGINE_ORIGIN)throw fail('ENGINE_ASSET_GONE');

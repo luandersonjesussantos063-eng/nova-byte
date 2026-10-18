@@ -29,12 +29,20 @@ export async function openMediaInput(client,login,signal,preferHls=false){
   }
  }
 }
+// transport.fetchMedia validates each redirect and pins its public DNS result.
+// HLS assets belong to the validated final playlist origin, which can be the
+// provider's CDN instead of the original account/login hostname.
+export function hlsAssetUrl(raw,playlistUrl){
+ const base=new URL(playlistUrl),url=new URL(raw,base);
+ if(!['http:','https:'].includes(url.protocol)||url.username||url.password||url.origin!==base.origin||url.href.length>4096)throw failure('ENGINE_SOURCE_INVALID');
+ return url;
+}
 export class MediaEngine{
  constructor({client=new XtreamClient(),ffmpeg='ffmpeg',mode='compatible',idleMs=90000,readyMs=14000,root=tmpdir()}={}){
   this.client=client;this.ffmpeg=ffmpeg;this.mode=mode==='copy'?'copy':'compatible';this.idleMs=idleMs;this.readyMs=readyMs;this.root=root;this.current=null;this.last={stage:'idle',code:null};this.lock=Promise.resolve();
   this.sweep=setInterval(()=>{const s=this.current;if(s&&Date.now()-s.touched>this.idleMs)void this.stop(s).catch(()=>{});},2000);this.sweep.unref();
  }
- status(){const s=this.current;return {engine:'nplay-xtream-ffmpeg',version:'0.50.2',mode:this.mode,stage:s?.stage||this.last.stage,code:(s?s.error:this.last.code)||null,bytes_received:s?.bytes||0,started_at:s?.startedAt||null,account:s?.account||null,video_codec:this.mode==='copy'?'original':'h264',audio_codec:'aac',channels_receiving:s?1:0};}
+ status(){const s=this.current;return {engine:'nplay-xtream-ffmpeg',version:'0.50.3',mode:this.mode,stage:s?.stage||this.last.stage,code:(s?s.error:this.last.code)||null,bytes_received:s?.bytes||0,started_at:s?.startedAt||null,account:s?.account||null,video_codec:this.mode==='copy'?'original':'h264',audio_codec:'aac',channels_receiving:s?1:0};}
  async stop(s=this.current){
   if(!s)return;
   s.stopping=true;
@@ -110,8 +118,7 @@ export class MediaEngine{
      const uris=lines.filter(x=>!x.startsWith('#'));
      if(lines.some(x=>x.startsWith('#EXT-X-STREAM-INF:'))){
       if(!uris.length)throw failure('ENGINE_SOURCE_INVALID');
-      const child=new URL(uris[0],playlistUrl);
-      if(child.origin!==identity.origin)throw failure('ENGINE_SOURCE_INVALID');
+      const child=hlsAssetUrl(uris[0],playlistUrl);
       playlistUrl=child.href;continue;
      }
      const base=Number((lines.find(x=>x.startsWith('#EXT-X-MEDIA-SEQUENCE:'))||'').split(':')[1]||0);
@@ -119,8 +126,8 @@ export class MediaEngine{
      let refresh=false;
      for(let n=0;n<uris.length&&!signal.aborted;n++){
       if(base+n<=sequence)continue;
-      const segmentUrl=new URL(uris[n],playlistUrl);
-      if(segmentUrl.origin!==identity.origin||!segmentUrl.pathname.endsWith('.ts'))throw failure('ENGINE_SOURCE_INVALID');
+      const segmentUrl=hlsAssetUrl(uris[n],playlistUrl);
+      if(!segmentUrl.pathname.endsWith('.ts'))throw failure('ENGINE_SOURCE_INVALID');
       const segment=await this.client.fetcher(segmentUrl.href,null,signal,{headerTimeout:8000});
       if(segment.response.statusCode===404||segment.response.statusCode===410){
        const status=segment.response.statusCode;segment.response.destroy();

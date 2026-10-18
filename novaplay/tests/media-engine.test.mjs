@@ -1,9 +1,10 @@
+import {MultiEngine} from '../pc-tv/multi-engine.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {Readable} from 'node:stream';
 import {spawn,spawnSync} from 'node:child_process';
 import {XtreamClient} from '../pc-tv/xtream-client.mjs';
-import {MediaEngine,ENGINE_ORIGIN,openMediaInput} from '../pc-tv/media-engine.mjs';
+import {MediaEngine,ENGINE_ORIGIN,hlsAssetUrl,openMediaInput} from '../pc-tv/media-engine.mjs';
 import {bridgeUpstream} from '../worker/pc-bridge.mjs';
 import {createBridge} from '../pc-tv/bridge.mjs';
 import worker from '../worker/live-gateway.mjs';
@@ -38,10 +39,10 @@ test('Xtream authenticates first, scopes API cookies to the provider and refuses
  account={...account,active_cons:'1'};await assert.rejects(client.login(source,new AbortController().signal),{code:'XTREAM_CONNECTION_LIMIT'});
  account={...account,auth:0};await assert.rejects(client.login(source,new AbortController().signal),{code:'XTREAM_LOGIN_DENIED'});
 });
-test('login reset is reported before any video or FFmpeg startup; no raw credentials appear in status',async()=>{
+test('direct M3U source reset is reported before FFmpeg startup without exposing credentials',async()=>{
  const client=new XtreamClient({fetcher:async()=>{throw Object.assign(Error('private-user private-password'),{code:'ECONNRESET'});}});
  const engine=new MediaEngine({client});
- try{await assert.rejects(engine.start(source),{code:'XTREAM_LOGIN_RESET'});const status=engine.status();assert.equal(status.code,'XTREAM_LOGIN_RESET');assert.equal(status.channels_receiving,0);assert.ok(!JSON.stringify(status).includes('password'));}finally{await engine.close();}
+ try{await assert.rejects(engine.start(source),{code:'ENGINE_SOURCE_RESET'});const status=engine.status();assert.equal(status.code,'ENGINE_SOURCE_RESET');assert.equal(status.channels_receiving,0);assert.ok(!JSON.stringify(status).includes('password'));}finally{await engine.close();}
 });
 test('engine control uses bounded JSON and preserves an explicit login failure instead of reporting generic source unavailable',async()=>{
  const old=globalThis.fetch;
@@ -84,7 +85,7 @@ test('FFmpeg receives live video/audio through a pipe and serves decodable HLS t
    const delivered=await worker.fetch(new Request(resource),env);assert.equal(delivered.status,200);assert.equal(new Uint8Array(await delivered.arrayBuffer())[0],71);assert.equal(opens,1);
   }finally{globalThis.fetch=realFetch;}
   // Different viewers and legacy/canonical TS URLs must share the first HLS
-  // login even when the provider would reject a second connection.
+  // receiver without opening a second provider connection.
   const tsUrls=[source.replace('/user/','/live/user/').replace('.m3u8','.ts'),source.replace('.m3u8','.ts')];
   const viewers=await Promise.all(tsUrls.map((url,i)=>fetch(base+'/fetch',{method:'POST',headers,body:JSON.stringify({url,xtream:true,owner:String(i+1).repeat(64)})})));
   assert.deepEqual(viewers.map(r=>r.status),[200,200]);
@@ -93,7 +94,7 @@ test('FFmpeg receives live video/audio through a pipe and serves decodable HLS t
   for(const part of received){assert.equal(part.done,false);assert.equal(part.value[0],71);}
   await Promise.all(readers.map(r=>r.cancel()));
   const afterDisconnect=await engine.start(source,'d'.repeat(64));assert.equal(afterDisconnect.base,data.base);
-  assert.equal(opens,1);assert.equal(logins,1);
+  assert.equal(opens,1);assert.equal(logins,0);
   const status=await(await fetch(base+'/engine/status',{headers})).json();assert.equal(status.stage,'playing');assert.ok(status.bytes_received>0);assert.equal(status.channels_receiving,1);
   for(const path of ['../../etc/passwd','seg000000000.ts?x=1'])await assert.rejects(engine.asset(data.base.replace('index.m3u8',path)),{code:'ENGINE_ASSET_GONE'});
   await engine.close();assert.equal(engine.status().channels_receiving,0);
@@ -108,4 +109,24 @@ test('Xtream grade inspection returns categories, channel and decoded EPG withou
  else body={epg_listings:[{title:Buffer.from('Programa de teste').toString('base64'),start:'2026-10-16 18:00:00'}]};
  return {url,response:reply(body)};}});
  const info=await client.inspect(source,new AbortController().signal);assert.equal(info.channel_count,1);assert.equal(info.categories[0].name,'Documentários');assert.equal(info.epg[0].title,'Programa de teste');assert.ok(!JSON.stringify(info).includes('secret.example'));assert.ok(!JSON.stringify(info).includes('password'));
+});
+
+ test('HLS assets use the validated final CDN playlist origin after a provider redirect',()=>{
+  const final='http://cdn.example/hls/session/index.m3u8';
+  assert.equal(hlsAssetUrl('seg001.ts',final).href,'http://cdn.example/hls/session/seg001.ts');
+  assert.equal(hlsAssetUrl('/hls/child.m3u8',final).origin,'http://cdn.example');
+  for(const raw of ['http://foreign.example/segment.ts','http://127.0.0.1/segment.ts','http://user:pass@cdn.example/segment.ts','data:text/plain,test'])assert.throws(()=>hlsAssetUrl(raw,final),{code:'ENGINE_SOURCE_INVALID'});
+  assert.throws(()=>hlsAssetUrl('http://cdn.example/seg.ts','https://cdn.example/index.m3u8'),{code:'ENGINE_SOURCE_INVALID'});
+ });
+
+test('three simultaneous channel startups reserve separate receivers while same-channel viewers share a slot',async()=>{
+ let release;const gate=new Promise(resolve=>release=resolve);let id=0;
+ const m=new MultiEngine({capacity:3,engineFactory:()=>{
+  const number=++id;return {current:null,client:{},start:async function(){await gate;this.current={id:String(number)};return {receiver:number};},close:async()=>{}};
+ }});
+ const url=n=>'http://provider.example/user/pass/'+n+'.m3u8';
+ const starts=[m.start(url(1)),m.start(url(2)),m.start(url(3))],duplicate=m.start(url(1));
+ await assert.rejects(m.start(url(4)),{code:'ENGINE_BUSY'});release();
+ const result=await Promise.all(starts);assert.equal(new Set(result.map(x=>x.receiver)).size,3);
+ assert.equal((await duplicate).receiver,result[0].receiver);await m.close();
 });
