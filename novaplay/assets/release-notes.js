@@ -5,6 +5,19 @@
 "use strict";
 const releases=[
  {
+  version:"0.51.6",
+  date:"2026-10-17",
+  title:"Novidades da NPlay · versão 0.51.6",
+  intro:"A abertura agora toca o trecho exato escolhido para a NPlay.",
+  changes:[
+   "O som de abertura passou a usar a gravação selecionada, em vez de uma recriação eletrônica.",
+   "Apenas a parte final do áudio foi aproveitada, sem as batidas anteriores.",
+   "A animação foi sincronizada ao trecho e você pode ouvi-lo pelo sininho ou pelas configurações do perfil."
+  ],
+  action:"preview-intro-audio",
+  actionLabel:"▶ Ouvir áudio da abertura"
+ },
+ {
   version:"0.51.5",
   date:"2026-10-17",
   title:"Novidades da NPlay · versão 0.51.5",
