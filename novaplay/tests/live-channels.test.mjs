@@ -113,12 +113,15 @@ test('TV grade reads published channels only and never restores the fixed provid
 test('live playback prefers managed HLS and registers autoplay before loading a manifest',()=>{
  const app=read('app.js'),start=app.indexOf(' function startSource(){');
  const code=app.slice(start,app.indexOf(' if(media.youtube_id){',start));
- let loaded,played=0,nativeSrc,attached=false,instance;
+ let loaded,played=0,nativeSrc,attached=false,instance,recoveryAllowed=true;
  class Hls{static isSupported=()=>true;static Events={ERROR:'error',MANIFEST_PARSED:'manifest'};static ErrorTypes={NETWORK_ERROR:'network'};constructor(){instance=this;this.handlers={};}destroy(){this.destroyed=true;}on(e,fn){this.handlers[e]=fn;}attachMedia(){attached=true;}loadSource(url){assert.equal(attached,true);loaded=url;assert.equal(typeof this.handlers.manifest,'function');this.handlers.manifest();}}
  const video={canPlayType:()=>true,set src(value){nativeSrc=value;}};
- const context=vm.createContext({window:{Hls},seq:1,attempt:1,src:'https://example.org/live.m3u8',media:{mode:'hls'},playbackMode:'hls',tryMpegts:()=>false,item:{kind:'tv'},v:video,hls:null,networkRecoveries:0,fail:message=>{throw Error(message)},playerStatus:()=>{},startAutoplay:()=>played++});
+ const context=vm.createContext({window:{Hls},seq:1,attempt:1,src:'https://example.org/live.m3u8',media:{mode:'hls'},playbackMode:'hls',tryMpegts:()=>false,item:{kind:'tv'},v:video,hls:null,manifestReady:false,hlsAutoplayIssued:false,playbackRecovery:{network:()=>recoveryAllowed},fail:message=>{throw Error(message)},playerStatus:()=>{},startAutoplay:()=>played++});
+ vm.runInContext(read('assets/playback-stability.js'),context);
  vm.runInContext(code,context);context.startSource();assert.equal(nativeSrc,undefined);assert.equal(loaded,'https://example.org/live.m3u8');assert.equal(played,1);
- instance.handlers.error(null,{fatal:true,type:'network'});assert.equal(instance.destroyed,true);assert.equal(nativeSrc,loaded);assert.equal(played,2);
+ instance.handlers.error(null,{fatal:true,type:'network'});assert.equal(instance.destroyed,undefined);assert.equal(nativeSrc,undefined);assert.equal(played,1);
+ instance.handlers.manifest();assert.equal(played,1,'a retry must not force another autoplay');
+ recoveryAllowed=false;instance.handlers.error(null,{fatal:true,type:'network'});assert.equal(instance.destroyed,true);assert.equal(nativeSrc,loaded);assert.equal(played,2);
  Hls.isSupported=()=>false;context.startSource();assert.equal(nativeSrc,loaded);assert.equal(played,3);
 });
 test('admin separates new HLS, legacy provider and individual channels with status/search filters',()=>{

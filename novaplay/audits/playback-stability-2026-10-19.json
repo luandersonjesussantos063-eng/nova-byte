@@ -1,0 +1,46 @@
+{
+  "release": "0.51.24",
+  "checked_at": "2026-10-19",
+  "findings": [
+    "Após o início, o evento waiting apenas atualizava o texto, sem monitorar uma parada persistente da imagem.",
+    "Erro fatal de rede podia trocar HLS para MPEG-TS antes de tentar recuperar o mesmo sinal.",
+    "Recuperação do decoder não tinha limite de tentativas; o manifesto protegido estava sem retries configurados."
+  ],
+  "changes": {
+    "live_forward_buffer_seconds": 40,
+    "live_max_buffer_seconds": 60,
+    "live_back_buffer_seconds": 10,
+    "network_retries": 3,
+    "decoder_retries": 2,
+    "retry_delays_ms": [
+      1000,
+      2000,
+      4000
+    ],
+    "stable_playback_before_reset_seconds": 20,
+    "decoder_stall_grace_seconds": 12,
+    "empty_buffer_grace_seconds": 30
+  },
+  "verification": {
+    "tests_passed": 189,
+    "live_gateway_health": 200,
+    "movie_gateway_health": 200,
+    "scenarios": [
+      "manifesto ainda não carregado",
+      "falha temporária 5xx",
+      "negação 401/403 sem novas tentativas",
+      "imagem congelada com buffer",
+      "falta de dados sem reinício excessivo",
+      "pausa e busca manual",
+      "encerramento e troca de canal",
+      "MPEG-TS descarrega antes de reconectar",
+      "renovação R2 mantém posição e estado de pausa"
+    ],
+    "method": "Testes automatizados com relógio e vídeo simulados e integração dos eventos do player. Sem teste prolongado de reprodução em navegador ou aparelho do cliente."
+  },
+  "references": [
+    "https://github.com/video-dev/hls.js/blob/v1.7.3/docs/API.md",
+    "https://hlsjs.video-dev.org/api-docs/hls.js.hls.startload",
+    "https://github.com/xqq/mpegts.js/blob/master/docs/api.md"
+  ]
+}

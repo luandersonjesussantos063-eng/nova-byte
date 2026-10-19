@@ -47,6 +47,6 @@ test('database / gateway errors are reported separately without exposing passwor
 test('the admin UI has an explicit test button and shows client expiry time in Mato Grosso',()=>{
  assert.match(html,/id="iptv-check-server"/);
  assert.match(html,/id="iptv-health-result"/);
- assert.match(html,/iptv-accounts\.js\?v=0\.51\.23/);
+ assert.match(html,/iptv-accounts\.js\?v=0\.51\.24/);
  assert.match(code,/timeZone:'America\/Cuiaba'/);
 });
