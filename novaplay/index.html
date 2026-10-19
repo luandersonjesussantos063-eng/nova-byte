@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#080d17">
-<meta name="nplay-version" content="0.51.24">
+<meta name="nplay-version" content="0.51.25">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="NPlay">
@@ -145,12 +145,6 @@
 .nplay-channel-fallback-art .nplay-channel-wordmark{position:relative;padding:0;font-size:clamp(16px,2vw,26px);line-height:1.12;overflow-wrap:normal;word-break:normal;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;overflow:hidden;text-shadow:0 2px 10px #0008}
 .nplay-channel-category{position:relative;max-width:100%;font-size:10px;line-height:1.2;letter-spacing:1.5px;font-weight:700;text-transform:uppercase;color:#c2d6f4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 @media(max-width:540px){.nplay-channel-fallback-art{gap:8px;padding:30px 32px 22px 14px}.nplay-channel-fallback-art .nplay-channel-wordmark{font-size:15px}.nplay-channel-category{font-size:8px;letter-spacing:1px}}
-.nplay-volume-control{display:flex;align-items:center;gap:7px;color:#fff;font-size:12px;white-space:nowrap}
-.nplay-volume-control input{width:80px;min-width:45px;accent-color:#67b1ff;cursor:pointer}
-.nplay-volume-control output{min-width:34px;font-variant-numeric:tabular-nums}
-.nplay-volume-label{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
-@media(max-width:600px){.nplay-volume-control{gap:4px}.nplay-volume-control input{width:52px}.cinema-toolbar-group{flex-wrap:wrap}}
-
 /* Canais externos usam a mesma camada de cinema dos filmes. */
 .player-layer.cinema.live-embed-active .player-bar{opacity:1;pointer-events:auto;background:linear-gradient(180deg,#000e,#0007,transparent)}
 .player-layer.cinema.live-embed-active .cinema-controls,.player-layer.cinema.live-embed-active .player-info,.player-layer.cinema.live-embed-active #player-content-note{display:none!important}
@@ -193,9 +187,10 @@
 #nplay-notice-history[hidden]{display:none}
 @media(max-width:600px){#nplay-notice-bell{width:34px;height:34px}#nplay-notice-panel{position:fixed;top:68px;right:10px;max-height:70vh}}
 </style>
-<link rel="stylesheet" href="./assets/cinema-refresh.css?v=0.51.24">
-<link rel="stylesheet" href="./assets/tv-spotlight.css?v=0.51.24">
-<link rel="stylesheet" href="./assets/live-epg.css?v=0.51.24">
+<link rel="stylesheet" href="./assets/cinema-refresh.css?v=0.51.25">
+<link rel="stylesheet" href="./assets/tv-spotlight.css?v=0.51.25">
+<link rel="stylesheet" href="./assets/live-epg.css?v=0.51.25">
+<link rel="stylesheet" href="./assets/cinema-player.css?v=0.51.25">
 </head>
 <body>
 <style id="nplay-access-style">
@@ -230,7 +225,7 @@
 .access-creator strong{font-size:14px;font-weight:750;color:#f3f6ff}
 .access-version{font-size:11px;font-weight:700;white-space:nowrap;border:1px solid #c8dcff36;border-radius:30px;padding:9px 12px;background:#080e1c99;backdrop-filter:blur(8px)}
 </style>
-<div id="nplay-access-wall" data-state="loading" hidden><div class="access-catalog" aria-hidden="true"><div class="access-poster-wall"><img loading="lazy" src="./assets/nplay-posters/10_coisas_que_eu_odeio_em_voce.jpg" alt="" decoding="async" width="320" height="480"><img loading="lazy" src="./assets/featured-covers/a_era_do_gelo.avif" alt="" decoding="async" width="320" height="480"><img loading="lazy" src="./assets/approved-covers-v2/a_vinganca_perfeita.jpg" alt="" decoding="async" width="320" height="480"><img loading="lazy" src="./assets/nplay-posters/10_segundos_para_vencer.jpg" alt="" decoding="async" width="320" height="480"><img loading="lazy" src="./assets/featured-covers/a_era_do_gelo_2.avif" alt="" decoding="async" width="320" height="480"><img loading="lazy" src="./assets/approved-covers-v2/a_vizinhanca_assombrada.jpg" alt="" decoding="async" width="320" height="480"><img loading="lazy" src="./assets/nplay-posters/12_homens_e_outro_segredo.jpg" alt="" decoding="async" width="320" height="480"><img loading="lazy" src="./assets/featured-covers/a_era_do_gelo_3.avif" alt="" decoding="async" width="320" height="480"><img loading="lazy" src="./assets/approved-covers-v2/another_legendado.jpg" alt="" decoding="async" width="320" height="480"><img loading="lazy" src="./assets/nplay-posters/13_fantasmas.jpg" alt="" decoding="async" width="320" height="480"><img loading="lazy" src="./assets/featured-covers/a_era_do_gelo_4.avif" alt="" decoding="async" width="320" height="480"><img loading="lazy" src="./assets/approved-covers-v2/arcane_legendado.jpg" alt="" decoding="async" width="320" height="480"><img loading="lazy" src="./assets/nplay-posters/2001_uma_odisseia_no_espaco.jpg" alt="" decoding="async" width="320" height="480"><img loading="lazy" src="./assets/featured-covers/a_familia_do_futuro.avif" alt="" decoding="async" width="320" height="480"><img loading="lazy" src="./assets/approved-covers-v2/belle_e_sebastian_a_aventura_continua.jpg" alt="" decoding="async" width="320" height="480"><img loading="lazy" src="./assets/nplay-posters/300.jpg" alt="" decoding="async" width="320" height="480"><img loading="lazy" src="./assets/featured-covers/a_fantastica_fabrica_de_chocolate.jpg" alt="" decoding="async" width="320" height="480"><img loading="lazy" src="./assets/approved-covers-v2/black_clover_dublado.jpg" alt="" decoding="async" width="320" height="480"><img loading="lazy" src="./assets/nplay-posters/300_a_ascensao_do_imperio.jpg" alt="" decoding="async" width="320" height="480"><img loading="lazy" src="./assets/featured-covers/a_grande_familia_o_roubo.jpg" alt="" decoding="async" width="320" height="480"><img loading="lazy" src="./assets/approved-covers-v2/castlevania_dublado.jpg" alt="" decoding="async" width="320" height="480"><img loading="lazy" src="./assets/nplay-posters/500_dias_com_ela.jpg" alt="" decoding="async" width="320" height="480"><img loading="lazy" src="./assets/approved-covers-v2/date_a_live_iv.jpg" alt="" decoding="async" width="320" height="480"><img loading="lazy" src="./assets/nplay-posters/a_arvore_da_maldicao.jpg" alt="" decoding="async" width="320" height="480"><img loading="lazy" src="./assets/approved-covers-v2/great_pretender_razbliuto_filme.jpg" alt="" decoding="async" width="320" height="480"><img loading="lazy" src="./assets/nplay-posters/a_caminho_de_casa.jpg" alt="" decoding="async" width="320" height="480"><img loading="lazy" src="./assets/approved-covers-v2/jibaku_shounen_hanako_kun_dublado.jpg" alt="" decoding="async" width="320" height="480"></div></div><header class="access-topline"><div class="access-creator"><span>CRIADO POR</span><strong>NovaByte Soluções</strong></div><span class="access-version">NPlay · v0.51.24</span></header><main class="inner" aria-labelledby="nplay-access-title">
+<div id="nplay-access-wall" data-state="loading" hidden><div class="access-catalog" aria-hidden="true"><div class="access-poster-wall"><img loading="lazy" src="./assets/nplay-posters/10_coisas_que_eu_odeio_em_voce.jpg" alt="" decoding="async" width="320" height="480"><img loading="lazy" src="./assets/featured-covers/a_era_do_gelo.avif" alt="" decoding="async" width="320" height="480"><img loading="lazy" src="./assets/approved-covers-v2/a_vinganca_perfeita.jpg" alt="" decoding="async" width="320" height="480"><img loading="lazy" src="./assets/nplay-posters/10_segundos_para_vencer.jpg" alt="" decoding="async" width="320" height="480"><img loading="lazy" src="./assets/featured-covers/a_era_do_gelo_2.avif" alt="" decoding="async" width="320" height="480"><img loading="lazy" src="./assets/approved-covers-v2/a_vizinhanca_assombrada.jpg" alt="" decoding="async" width="320" height="480"><img loading="lazy" src="./assets/nplay-posters/12_homens_e_outro_segredo.jpg" alt="" decoding="async" width="320" height="480"><img loading="lazy" src="./assets/featured-covers/a_era_do_gelo_3.avif" alt="" decoding="async" width="320" height="480"><img loading="lazy" src="./assets/approved-covers-v2/another_legendado.jpg" alt="" decoding="async" width="320" height="480"><img loading="lazy" src="./assets/nplay-posters/13_fantasmas.jpg" alt="" decoding="async" width="320" height="480"><img loading="lazy" src="./assets/featured-covers/a_era_do_gelo_4.avif" alt="" decoding="async" width="320" height="480"><img loading="lazy" src="./assets/approved-covers-v2/arcane_legendado.jpg" alt="" decoding="async" width="320" height="480"><img loading="lazy" src="./assets/nplay-posters/2001_uma_odisseia_no_espaco.jpg" alt="" decoding="async" width="320" height="480"><img loading="lazy" src="./assets/featured-covers/a_familia_do_futuro.avif" alt="" decoding="async" width="320" height="480"><img loading="lazy" src="./assets/approved-covers-v2/belle_e_sebastian_a_aventura_continua.jpg" alt="" decoding="async" width="320" height="480"><img loading="lazy" src="./assets/nplay-posters/300.jpg" alt="" decoding="async" width="320" height="480"><img loading="lazy" src="./assets/featured-covers/a_fantastica_fabrica_de_chocolate.jpg" alt="" decoding="async" width="320" height="480"><img loading="lazy" src="./assets/approved-covers-v2/black_clover_dublado.jpg" alt="" decoding="async" width="320" height="480"><img loading="lazy" src="./assets/nplay-posters/300_a_ascensao_do_imperio.jpg" alt="" decoding="async" width="320" height="480"><img loading="lazy" src="./assets/featured-covers/a_grande_familia_o_roubo.jpg" alt="" decoding="async" width="320" height="480"><img loading="lazy" src="./assets/approved-covers-v2/castlevania_dublado.jpg" alt="" decoding="async" width="320" height="480"><img loading="lazy" src="./assets/nplay-posters/500_dias_com_ela.jpg" alt="" decoding="async" width="320" height="480"><img loading="lazy" src="./assets/approved-covers-v2/date_a_live_iv.jpg" alt="" decoding="async" width="320" height="480"><img loading="lazy" src="./assets/nplay-posters/a_arvore_da_maldicao.jpg" alt="" decoding="async" width="320" height="480"><img loading="lazy" src="./assets/approved-covers-v2/great_pretender_razbliuto_filme.jpg" alt="" decoding="async" width="320" height="480"><img loading="lazy" src="./assets/nplay-posters/a_caminho_de_casa.jpg" alt="" decoding="async" width="320" height="480"><img loading="lazy" src="./assets/approved-covers-v2/jibaku_shounen_hanako_kun_dublado.jpg" alt="" decoding="async" width="320" height="480"></div></div><header class="access-topline"><div class="access-creator"><span>CRIADO POR</span><strong>NovaByte Soluções</strong></div><span class="access-version">NPlay · v0.51.25</span></header><main class="inner" aria-labelledby="nplay-access-title">
  <div class="access-brand"><img src="./assets/brand/nplay-wordmark-v0482.svg" alt="NPlay" width="180" height="65"></div>
  <span id="nplay-access-badge">ACESSO POR APARELHO</span>
  <h1 id="nplay-access-title">Preparando seu acesso</h1>
@@ -431,7 +426,7 @@
   </section>
 </div>
 <div id="player-layer" class="player-layer" hidden role="dialog" aria-modal="true" aria-label="Reprodutor NPlay">
-  <div class="player-bar"><button id="player-back" class="player-back" aria-label="Voltar"><svg><use href="#i-arrow-left"/></svg></button><span class="player-brand">N<span>Play</span></span><span class="player-bar-title" id="player-heading"></span><button type="button" id="player-issue-open" class="player-issue-trigger" hidden aria-label="Informar problema com este vídeo">⚠ Problema no vídeo?</button><button type="button" id="player-favorite" class="player-favorite" hidden aria-label="Salvar nos favoritos" aria-pressed="false"><svg aria-hidden="true"><use href="#i-heart"/></svg></button><button type="button" id="player-live-reload" class="nplay-live-reload" hidden aria-label="Recarregar transmissão">↻</button><button id="player-close" class="round-close" aria-label="Fechar vídeo"><svg><use href="#i-close"/></svg></button></div>
+  <div class="player-bar"><button id="player-back" class="player-back" aria-label="Voltar"><svg><use href="#i-arrow-left"/></svg></button><span class="player-brand">N<span>Play</span></span><span class="player-bar-title" id="player-heading"></span><button type="button" id="player-issue-open" class="player-issue-trigger" hidden aria-label="Informar problema com este vídeo">⚠ Problema no vídeo?</button><button type="button" id="player-favorite" class="player-favorite" hidden aria-label="Salvar nos favoritos" aria-pressed="false"><svg aria-hidden="true"><use href="#i-heart"/></svg></button><button type="button" id="player-live-reload" class="nplay-live-reload" hidden aria-label="Recarregar transmissão">↻</button><button type="button" id="cinema-cast" aria-label="Transmitir para TV" title="Transmitir para TV" aria-pressed="false" hidden><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 8V4h18v14h-8M3 13a8 8 0 0 1 8 8M3 17a4 4 0 0 1 4 4"/><circle cx="3" cy="21" r="1" fill="currentColor"/></svg><span>TV</span></button><button type="button" id="cinema-fullscreen" class="cinema-header-button" aria-label="Alternar tela cheia" title="Tela cheia">⛶</button><button type="button" id="cinema-lock" class="cinema-header-button" aria-label="Bloquear controles" aria-pressed="false"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path class="cinema-lock-open" d="M10 14V9a6 6 0 0 1 12-1"/><path class="cinema-lock-closed" d="M10 14V9a6 6 0 0 1 12 0v5"/><rect x="7" y="14" width="19" height="15" rx="1.5"/><path d="M13 21h7"/></svg></button><button id="player-close" class="round-close" aria-label="Fechar vídeo"><svg><use href="#i-close"/></svg></button></div>
   <div id="player-issue-panel" class="player-issue-panel" hidden role="dialog" aria-label="Problema ao assistir">
     <div class="player-issue-card">
       <h2>Não conseguiu assistir?</h2>
@@ -445,26 +440,33 @@
     </div>
   </div>
   <div class="player-main" id="player-main">
-    <div id="player-loading" role="status" hidden style="position:absolute;z-index:16;top:44%;left:50%;transform:translate(-50%,-50%);max-width:85%;padding:14px 20px;border-radius:12px;background:#081427e8;text-align:center;color:#fff;pointer-events:none"></div><div class="video-wrap"><video id="video" x-webkit-airplay="allow" playsinline preload="metadata"></video><iframe id="fallback-frame" title="Player oficial do conteúdo" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen hidden></iframe></div>
+    <div id="player-loading" role="status" hidden style="position:absolute;z-index:16;top:44%;left:50%;transform:translate(-50%,-50%);max-width:85%;padding:14px 20px;border-radius:12px;background:#081427e8;text-align:center;color:#fff;pointer-events:none"></div><div class="video-wrap"><video id="video" x-webkit-airplay="allow" playsinline preload="metadata"></video><div id="cinema-dimmer" aria-hidden="true"></div><iframe id="fallback-frame" title="Player oficial do conteúdo" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen hidden></iframe></div>
     <div class="cinema-controls" id="cinema-controls" hidden aria-label="Controles do vídeo">
+      <label class="cinema-brightness-control">
+        <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><circle cx="16" cy="16" r="5"/><path d="M16 1v6m0 18v6M1 16h6m18 0h6M5.4 5.4l4.2 4.2m12.8 12.8 4.2 4.2M5.4 26.6l4.2-4.2M22.4 9.6l4.2-4.2"/></svg>
+        <input id="cinema-brightness" type="range" min="0" max="100" value="100" aria-label="Brilho do vídeo">
+      </label>
+      <div class="cinema-center-controls">
+        <button type="button" id="cinema-rewind" aria-label="Voltar 10 segundos"><svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M16 13a26 26 0 1 1-9 17M8 5v15h15"/><text x="32" y="42" text-anchor="middle" fill="currentColor" stroke="none" font-size="23" font-family="Arial,sans-serif">10</text></svg></button>
+        <button type="button" id="cinema-play" class="cinema-control-main" aria-label="Reproduzir"><svg viewBox="0 0 64 64" aria-hidden="true"><path fill="currentColor" d="M17 7v50l39-25z"/></svg></button>
+        <button type="button" id="cinema-forward" aria-label="Avançar 10 segundos"><svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><g transform="translate(64 0) scale(-1 1)"><path d="M16 13a26 26 0 1 1-9 17M8 5v15h15"/></g><text x="32" y="42" text-anchor="middle" fill="currentColor" stroke="none" font-size="23" font-family="Arial,sans-serif">10</text></svg></button>
+      </div>
       <div class="cinema-timeline">
-        <span id="cinema-elapsed" aria-label="Tempo decorrido">0:00</span>
+        <span id="cinema-elapsed" class="cinema-sr-only" aria-label="Tempo decorrido">0:00</span>
         <input id="cinema-seek" aria-label="Avançar ou voltar no vídeo" type="range" min="0" max="100" value="0" step="0.1">
-        <span id="cinema-duration" aria-label="Duração">0:00</span>
+        <span id="cinema-duration" aria-label="Tempo restante">0:00</span>
       </div>
-      <div class="cinema-toolbar">
-        <div class="cinema-toolbar-group">
-          <button type="button" id="cinema-play" class="cinema-control-main" aria-label="Reproduzir" title="Reproduzir ou pausar">▶</button>
-          <button type="button" id="cinema-rewind" aria-label="Voltar 10 segundos" title="Voltar 10 segundos">↶ <span>10</span></button>
-          <button type="button" id="cinema-forward" aria-label="Avançar 10 segundos" title="Avançar 10 segundos">↷ <span>10</span></button>
-          <button type="button" id="cinema-mute" aria-label="Silenciar ou ativar áudio" title="Silenciar ou ativar áudio">♫</button>
-          <label class="nplay-volume-control"><span class="nplay-volume-label">Volume</span><input id="cinema-volume" type="range" min="0" max="100" step="1" value="100" aria-label="Volume do vídeo"><output id="cinema-volume-level" aria-live="off">100%</output></label>
-        </div>
-        <div class="cinema-toolbar-group">
-          <button type="button" id="cinema-cast" aria-label="Transmitir para TV" title="Transmitir para TV" aria-pressed="false" hidden><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 8V4h18v14h-8M3 13a8 8 0 0 1 8 8M3 17a4 4 0 0 1 4 4"/><circle cx="3" cy="21" r="1" fill="currentColor"/></svg><span>TV</span></button>
-          <button type="button" id="cinema-fullscreen" aria-label="Alternar tela cheia" title="Tela cheia">⛶</button>
-        </div>
+      <div class="cinema-bottom-actions">
+        <button type="button" id="cinema-clip"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><circle cx="7" cy="8" r="4"/><circle cx="7" cy="24" r="4"/><path d="M10 11l19 15M10 21 29 6M17 16l-4 3"/></svg><span>Recortar</span></button>
+        <button type="button" id="cinema-speed"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M6 26a13 13 0 1 1 20 0M16 18l7-9"/><circle cx="16" cy="18" r="2" fill="currentColor"/></svg><span id="cinema-speed-label">Velocidade (1x)</span></button>
+        <button type="button" id="cinema-tracks"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M3 4h26v19H18v6l-7-6H3zM7 10h7m3 0h8M7 15h18"/></svg><span>Idioma e legendas</span></button>
       </div>
+    </div>
+    <div id="cinema-settings" class="cinema-settings" hidden role="dialog" aria-modal="true" aria-labelledby="cinema-settings-title">
+      <section class="cinema-settings-panel">
+        <header><h2 id="cinema-settings-title"></h2><button type="button" id="cinema-settings-close" aria-label="Fechar opções">×</button></header>
+        <div id="cinema-settings-body"></div>
+      </section>
     </div>
     <div id="tv-connected" class="tv-connected" role="status" hidden>Transmitindo na TV · use os controles abaixo</div>
     <dialog id="tv-dialog" class="tv-dialog" aria-labelledby="tv-title">
@@ -485,7 +487,7 @@
 </div>
 <aside id="nplay-install-banner" hidden style="position:fixed;z-index:1000;bottom:calc(76px + env(safe-area-inset-bottom,0px));left:12px;right:12px;max-width:480px;margin:auto;padding:15px 16px;border-radius:16px;border:1px solid #5474a2;background:#122541;box-shadow:0 12px 38px #000b;color:#fff"><div style="display:flex;align-items:center;gap:12px"><img src="./assets/brand/nplay-icon-192-v0482.png" alt="" width="48" height="48" style="border-radius:12px"><div style="flex:1"><strong>Instale a NPlay</strong><div id="nplay-install-description" style="font-size:12px;color:#b8cbed;margin-top:3px">Assista com um toque na tela inicial.</div></div><button id="nplay-install-dismiss" type="button" aria-label="Fechar sugestão de instalação" style="background:transparent;color:white;border:0;font-size:20px;cursor:pointer">✕</button></div><button id="nplay-install-action" type="button" style="margin-top:12px;width:100%;background:#326ad6;color:white;border:0;border-radius:10px;padding:12px;font-weight:800;cursor:pointer">Instalar aplicativo</button></aside>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
-<footer class="app-footer"><div>NPlay V 0.51.24 · Filmes, séries e TV em português · Artes ilustrativas da NPlay · O uso comercial de cada conteúdo exige verificação dos direitos.</div></footer>
+<footer class="app-footer"><div>NPlay V 0.51.25 · Filmes, séries e TV em português · Artes ilustrativas da NPlay · O uso comercial de cada conteúdo exige verificação dos direitos.</div></footer>
 <script src="./assets/cover.js?v=0.39.2-covers2"></script>
 <script src="./assets/card-hover.js?v=0.39.2"></script>
 <script src="./assets/hero-scenes.js?v=0.39.2"></script>
@@ -493,22 +495,23 @@
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.58.0/dist/umd/supabase.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/hls.js@1.7.3/dist/hls.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/mpegts.js@1.7.3/dist/mpegts.js"></script>
-<script src="./assets/live-auth.js?v=0.51.24-preview-release" defer></script>
-<script src="./assets/casting.js?v=0.51.24" defer></script>
+<script src="./assets/live-auth.js?v=0.51.25-preview-release" defer></script>
+<script src="./assets/casting.js?v=0.51.25" defer></script>
 <script src="./assets/music-core.js?v=0.50.0" defer></script>
-<script src="./assets/release-notes.js?v=0.51.24" defer></script>
-<script src="./assets/notifications.js?v=0.51.24" defer></script>
-<script src="./assets/youtube-core.js?v=0.51.24" defer></script>
-<script src="./assets/channel-order.js?v=0.51.24-order1" defer></script>
-<script src="./assets/playback-stability.js?v=0.51.24" defer></script>
+<script src="./assets/release-notes.js?v=0.51.25" defer></script>
+<script src="./assets/notifications.js?v=0.51.25" defer></script>
+<script src="./assets/youtube-core.js?v=0.51.25" defer></script>
+<script src="./assets/channel-order.js?v=0.51.25-order1" defer></script>
+<script src="./assets/playback-stability.js?v=0.51.25" defer></script>
+<script src="./assets/cinema-player.js?v=0.51.25" defer></script>
 <!-- Prévias da TV ao vivo desativadas por solicitação do administrador. -->
-<script src="./app.js?v=0.51.24-viewer-release" defer></script>
+<script src="./app.js?v=0.51.25-viewer-release" defer></script>
 <script src="./assets/intro-audio.js?v=0.51.6" defer></script>
-<script src="./assets/soft-opening.js?v=0.51.24" defer></script>
+<script src="./assets/soft-opening.js?v=0.51.25" defer></script>
 <script src="./assets/live-preview.js?v=0.50.0" defer></script>
 <script src="./assets/hero-live.js?v=0.51.1-film-first" defer></script>
-<script src="./assets/live-epg.js?v=0.51.24" defer></script>
-<script src="./live-embeds.js?v=0.51.24-order1" defer></script>
+<script src="./assets/live-epg.js?v=0.51.25" defer></script>
+<script src="./live-embeds.js?v=0.51.25-order1" defer></script>
 <script src="./install.js?v=0.49.12" defer></script>
 <script src="./profiles.js?v=0.51.3" defer></script>
 <script src="./presence.js?v=0.51.9-admin-watch-1" defer></script>
