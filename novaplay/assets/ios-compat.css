@@ -92,3 +92,48 @@
  html.nplay-ios .nplay-profile-hero{height:140px;}
  html.nplay-ios .nplay-profile-body{padding-top:12px!important;}
 }
+
+
+/* v0.51.29 — iPhone Home Screen / Safari safe-area fixes.
+   Unlike Android's normal browser viewport, iOS standalone draws into
+   the area underneath the clock and camera cutout. */
+@media (max-width:760px){
+ html.nplay-ios{--nplay-ios-top-inset:0px;}
+ html.nplay-ios.nplay-ios-standalone{
+  --nplay-ios-top-inset:max(44px,env(safe-area-inset-top,0px));
+ }
+ html.nplay-ios .app-header{
+  box-sizing:border-box!important;
+  top:0!important;
+  height:calc(61px + var(--nplay-ios-top-inset))!important;
+  min-height:calc(61px + var(--nplay-ios-top-inset))!important;
+  padding:var(--nplay-ios-top-inset) max(14px,env(safe-area-inset-right,0px)) 0 max(14px,env(safe-area-inset-left,0px))!important;
+  gap:8px!important;
+  align-items:center;
+  background:linear-gradient(180deg,#060b16 0%,#060b16e8 72%,#060b1600)!important;
+ }
+ html.nplay-ios .mobile-chips{
+  top:calc(61px + var(--nplay-ios-top-inset))!important;
+  padding-inline:max(14px,env(safe-area-inset-left,0px))!important;
+ }
+ html.nplay-ios #view-home .hero-art{
+  background-color:#172744;
+  background-repeat:no-repeat;
+  background-position:center 28%;
+  background-size:cover;
+ }
+ html.nplay-ios #view-home .hero-shade{
+  background:linear-gradient(0deg,rgba(7,11,19,.97) 0%,rgba(7,11,19,.84) 26%,rgba(7,11,19,.30) 55%,rgba(7,11,19,.10) 84%),
+             linear-gradient(90deg,rgba(7,11,19,.23),transparent 72%)!important;
+ }
+ html.nplay-ios .nplay-settings header{
+  padding-top:max(13px,env(safe-area-inset-top,0px));
+ }
+ /* The video scene is visually disabled on phones, so do not force
+    expensive backdrop compositing on the home screen. */
+ html.nplay-ios .app-header.is-scrolled,
+ html.nplay-ios #nplay-account-menu{
+  backdrop-filter:none!important;
+  -webkit-backdrop-filter:none!important;
+ }
+}
