@@ -1,13 +1,18 @@
 /* Buffer and bounded recovery shared by the main video player. */
 (()=>{
  'use strict';
- function hlsConfig({live=false,protectedSource=false}={}){
+ function hlsConfig({live=false,protectedSource=false,ios=false}={}){
   const retry=()=>({maxNumRetry:2,retryDelayMs:1000,maxRetryDelayMs:4000});
   return {enableWorker:true,lowLatencyMode:false,maxBufferLength:live?40:60,
    maxMaxBufferLength:live?60:120,maxBufferSize:(live?32:48)*1024*1024,backBufferLength:live?10:30,
    startLevel:0,capLevelToPlayerSize:true,abrEwmaDefaultEstimate:400000,startOnSegmentBoundary:true,
    ...(live?{liveSyncDurationCount:4,liveMaxLatencyDurationCount:Infinity,maxLiveSyncPlaybackRate:1}:{}),
-   ...(protectedSource?{manifestLoadPolicy:{default:{maxTimeToFirstByteMs:40000,maxLoadTimeMs:45000,timeoutRetry:retry(),errorRetry:retry()}}}:{})};
+   ...(protectedSource?{manifestLoadPolicy:{default:{maxTimeToFirstByteMs:40000,maxLoadTimeMs:45000,timeoutRetry:retry(),errorRetry:retry()}}}:{}),
+   // Only on iOS, when Safari's native HLS must fall back to hls.js.
+   ...(ios?{enableWorker:false,maxBufferLength:live?16:25,maxMaxBufferLength:live?28:40,
+      maxBufferSize:16*1024*1024,backBufferLength:live?4:8,
+      abrEwmaDefaultEstimate:450000,...(live?{liveSyncDurationCount:5}:{})}:{}),
+  };
  }
  function mpegtsConfig(){return {enableWorker:true,lazyLoad:false,enableStashBuffer:true,stashInitialSize:512*1024,
   liveBufferLatencyChasing:false,liveSync:false,autoCleanupSourceBuffer:true,autoCleanupMaxBackwardDuration:30,autoCleanupMinBackwardDuration:15};}
