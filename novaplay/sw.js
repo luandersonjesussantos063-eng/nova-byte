@@ -1,5 +1,5 @@
-const CACHE="novaplay-v0.51.26-tvspotlight1";
-const CORE=["./assets/app-settings.js","./assets/app-settings.css","./assets/cinema-player.js","./assets/cinema-player.css","./assets/playback-stability.js","./assets/tv-spotlight.js","./assets/tv-spotlight.css","./assets/channel-order.js","./assets/live-epg.js","./assets/live-epg.css","./","./index.html","./styles.css","./assets/experience.css","./assets/cinema-refresh.css","./assets/intro-audio.js","./assets/nplay-opening-original-final.m4a","./assets/soft-opening.js","./assets/release-notes.js","./assets/notifications.js","./assets/hero-live.js","./assets/casting.js","./access.js","./app.js","./live-embeds.js","./assets/music-core.js","./assets/youtube-core.js","./assets/live-preview.js","./assets/live-auth.js","./profiles.js","./presence.js","./watching.js","./install.js","./catalog.js","./manifest.webmanifest","./assets/icon.svg","./assets/brand/nplay-wordmark-v0482.svg","./assets/brand/nplay-icon-192-v0482.png","./assets/brand/nplay-icon-512-v0482.png"];
+const CACHE="novaplay-v0.51.28-ios-refresh1";
+const CORE=["./","./index.html","./styles.css","./assets/cinema-refresh.css","./assets/app-settings.css","./assets/app-settings.js","./assets/ios-compat.css","./assets/ios-compat.js","./profiles.js","./app.js","./manifest.webmanifest","./version.json"];
 self.addEventListener("install",event=>{
  event.waitUntil(caches.open(CACHE).then(async cache=>{
   await Promise.allSettled(CORE.map(url=>cache.add(new Request(url,{cache:"reload"}))));
@@ -18,7 +18,7 @@ self.addEventListener("fetch",event=>{
  const isNavigation=request.mode==="navigate"||/\/(?:index\.html)?$/.test(url.pathname);
  event.respondWith((async()=>{
   try{
-   const response=await fetch(request,isNavigation?{cache:"no-store"}:{cache:"no-cache"});
+   const response=await fetch(request,isNavigation?{cache:"reload"}:{cache:"no-cache"});
    if(response.ok&&response.type==="basic"){
     const copy=response.clone();
     event.waitUntil(caches.open(CACHE).then(cache=>cache.put(request,copy)).catch(()=>{}));
