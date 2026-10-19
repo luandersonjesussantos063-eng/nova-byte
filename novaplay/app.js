@@ -1046,6 +1046,9 @@ function play(item,episode){
  let src=media.licensed_stream_url||media.src;
  let hasFailed=false,r2ExpiresAt=0,r2Refreshing=false,manifestReady=false,hlsAutoplayIssued=false;
  let playbackMode=media.mode,formatFallbackUsed=false,switchingFormat=false;
+ // Safari on iOS decodes HLS natively, without a second JS/MSE buffer.
+ const iosPlayback=!!window.NPlayIOS;
+ let triedManagedHlsOnIOS=false,forceManagedHlsOnIOS=false;
  function tryMpegts(){
   if(seq!==attempt||formatFallbackUsed||switchingFormat||item.kind!=="tv"||playbackMode!=="hls"||!window.NPlayLiveAuth?.protectedUrl(src)||!window.mpegts?.isSupported())return false;
   const next=new URL(src);if(!next.pathname.endsWith('/index.m3u8'))return false;
@@ -1059,12 +1062,33 @@ function play(item,episode){
   timer=setTimeout(()=>{if(seq!==attempt)return;switchingFormat=false;v.onerror=previousError;timer=setTimeout(()=>{if(seq===attempt&&((!item.audioOnly&&!v.videoWidth)||v.readyState<2))fail("Não foi possível iniciar este canal em nenhum dos formatos disponíveis.");},22000);startSource();},400);
   return true;
  }
+ function fallbackToManagedHlsOnIOS(){
+  // A single fallback only: Safari native first, managed HLS if it fails.
+  // Never switch MP4, YouTube or provider-managed embeds.
+  if(seq!==attempt||!iosPlayback||triedManagedHlsOnIOS||switchingFormat||
+     !(playbackMode==="hls"||/\.m3u8?(?:\?|$)/i.test(src))||
+     !v.canPlayType("application/vnd.apple.mpegurl")||!window.Hls?.isSupported())return false;
+  triedManagedHlsOnIOS=true;forceManagedHlsOnIOS=true;
+  clearTimeout(timer);timer=0;
+  v.onerror=null;v.pause();v.removeAttribute("src");v.load();
+  v.onerror=onVideoError;
+  hlsAutoplayIssued=false;hasFailed=false;
+  playerStatus("Tentando reprodução alternativa no iPhone…");
+  startSource();
+  installPlaybackRecovery();
+  if(item.kind==="tv")timer=setTimeout(()=>{
+   if(seq===attempt&&v.readyState<2&&!hasFailed)fail("O canal não iniciou no modo alternativo.");
+  },30000);
+  return true;
+ }
  const fail=msg=>{if(seq===attempt&&!hasFailed){hasFailed=true;playbackFailed(msg,seq)}};
- v.onerror=()=>{
+ const onVideoError=()=>{
   if(media.r2_object_key&&r2ExpiresAt&&Date.now()>=r2ExpiresAt-30000&&!r2Refreshing){loadR2(true);return;}
+  if(fallbackToManagedHlsOnIOS())return;
   if(tryMpegts())return;
   fail(v.error?.code===3?"O navegador não conseguiu decodificar este vídeo. O arquivo precisa de uma versão compatível.":"Não foi possível carregar o vídeo. Tente novamente ou informe o problema ao administrador.");
  };
+ v.onerror=onVideoError;
  v.onplaying=()=>{
    if(seq!==attempt)return;hasFailed=false;if(item.kind!=="tv"||item.audioOnly||v.videoWidth>0)clearTimeout(timer);
    $("player-layer").classList.remove("has-player-error");
@@ -1076,11 +1100,14 @@ function play(item,episode){
  v.oncanplay=()=>{if(seq===attempt&&!hasFailed){if(item.kind!=="tv")clearTimeout(timer);playerStatus(v.paused?"Preparando reprodução automática...":"▶ Reproduzindo")}};
  const progressId=item.kind==="tv"?null:episode?episode.id:item.id;
  setResume(v,progressId,seq);
- if(!externalEmbed)playbackRecovery=window.NPlayPlayback.create({video:v,
+ function installPlaybackRecovery(){
+  if(externalEmbed)return;
+  playbackRecovery?.destroy();
+  playbackRecovery=window.NPlayPlayback.create({video:v,
   getEngine:()=>({hls,ts:tsPlayer,source:src,manifestReady}),
   isActive:()=>seq===attempt&&!hasFailed&&!switchingFormat&&!$("player-layer").hidden&&!document.hidden&&!window.NPlayCasting?.state(),
   onStatus:playerStatus,autoplay:()=>startAutoplay(v,seq),
-  onExhausted:()=>{if(!tryMpegts())fail("O vídeo parou de receber dados ou imagem. Tente novamente.");},
+  onExhausted:()=>{if(!fallbackToManagedHlsOnIOS()&&!tryMpegts())fail("O vídeo parou de receber dados ou imagem. Tente novamente.");},
   reloadNative:()=>{
    if(seq!==attempt||v.paused||switchingFormat)return false;
    if(media.r2_object_key&&r2ExpiresAt&&Date.now()>=r2ExpiresAt-30000){loadR2(true);return true;}
@@ -1088,8 +1115,10 @@ function play(item,episode){
    v.addEventListener("loadedmetadata",()=>{if(seq!==attempt)return;if(Number.isFinite(v.duration)&&position>0&&position<v.duration-1)try{v.currentTime=position}catch{};startAutoplay(v,seq);},{once:true});
    v.load();return true;
   }
- });
- if(item.kind==="tv")timer=setTimeout(()=>{if(seq===attempt&&((!item.audioOnly&&!v.videoWidth)||v.readyState<2)&&!tryMpegts())fail("O canal está demorando para carregar. Verifique a conexão ou tente novamente.")},window.NPlayLiveAuth?.protectedUrl(src)?45000:22000);
+  });
+ }
+ installPlaybackRecovery();
+ if(item.kind==="tv")timer=setTimeout(()=>{if(seq===attempt&&((!item.audioOnly&&!v.videoWidth)||v.readyState<2)&&!fallbackToManagedHlsOnIOS()&&!tryMpegts())fail("O canal está demorando para carregar. Verifique a conexão ou tente novamente.")},window.NPlayLiveAuth?.protectedUrl(src)?45000:22000);
  if(!media.youtube_id&&!media.google_drive_id)window.NPlayCasting?.configure({
   title:episode?item.title+" · "+episode.label:item.title,live:item.kind==="tv",
   onChange:updateCinemaControls,
@@ -1144,11 +1173,11 @@ function play(item,episode){
   }else if(playbackMode==="hls"||/\.m3u8?(?:\?|$)/i.test(src)){
     const nativeHls=v.canPlayType("application/vnd.apple.mpegurl");
     const managedHls=window.Hls&&window.Hls.isSupported();
-    if(nativeHls&&!(item.kind==="tv"&&managedHls)){
+    if(nativeHls&&(iosPlayback&&!forceManagedHlsOnIOS||!(item.kind==="tv"&&managedHls))&&!forceManagedHlsOnIOS){
       v.src=src;startAutoplay(v,seq);
     }else if(window.Hls&&window.Hls.isSupported()){
       manifestReady=false;
-      hls=new window.Hls(window.NPlayPlayback.hlsConfig({live:item.kind==="tv",protectedSource:!!window.NPlayLiveAuth?.protectedUrl(src)}));
+      hls=new window.Hls(window.NPlayPlayback.hlsConfig({live:item.kind==="tv",protectedSource:!!window.NPlayLiveAuth?.protectedUrl(src),ios:iosPlayback}));
       hls.on(window.Hls.Events.ERROR,(event,data)=>{
         if(seq!==attempt||!data.fatal)return;
         const code=data.networkDetails?.getResponseHeader?.("X-NPlay-Error");
