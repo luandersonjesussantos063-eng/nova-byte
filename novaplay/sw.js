@@ -1,4 +1,4 @@
-const CACHE="novaplay-v0.51.29-ios-header1";
+const CACHE="novaplay-v0.51.30-ios-video1";
 const CORE=["./","./index.html","./styles.css","./assets/cinema-refresh.css","./assets/app-settings.css","./assets/app-settings.js","./assets/ios-compat.css","./assets/ios-compat.js","./profiles.js","./app.js","./manifest.webmanifest","./version.json"];
 self.addEventListener("install",event=>{
  event.waitUntil(caches.open(CACHE).then(async cache=>{
@@ -13,6 +13,12 @@ self.addEventListener("fetch",event=>{
  if(request.method!=="GET")return;
  const url=new URL(request.url);
  if(url.origin!==self.location.origin)return;
+ // Leave actual media streaming to Safari/the browser. Intercepting byte
+ // ranges or caching live segments can cause iOS buffering stalls and
+ // can fill WebKit's relatively small cache with video data.
+ if(request.headers.has("Range")||request.headers.has("range")||
+    request.destination==="video"||request.destination==="audio"||
+    /\.(?:mp4|m4v|mov|webm|ogv|m3u8|mpd|m4s|ts|aac|m4a|mp3|wav)(?:$)/i.test(url.pathname))return;
  if(url.searchParams.has("nplay-diagnostic")){event.respondWith(fetch(request,{cache:"no-store"}));return;}
  if(url.pathname.includes("/admin/")){event.respondWith(fetch(request,{cache:"no-store"}));return}
  const isNavigation=request.mode==="navigate"||/\/(?:index\.html)?$/.test(url.pathname);
