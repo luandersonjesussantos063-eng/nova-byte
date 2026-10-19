@@ -50,6 +50,7 @@ function errorText(err){
 async function hasAdmin(){
  const {data:{user},error}=await client.auth.getUser();
  if(error||!user)return null;
+ if(!user.email||!user.email_confirmed_at||user.is_anonymous)return false;
  // O servidor concede acesso SOMENTE ao proprietário logado,
  // com e-mail verificado e ID confirmado pelo Supabase Auth.
  // Não há senha de administrador no código nem acesso liberado por e-mail digitado.
