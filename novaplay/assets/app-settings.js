@@ -96,6 +96,24 @@ function init(){
   }else if(action||href)el.append(make("span",href?"↗":"›","nplay-settings-chevron"));
   parent.append(el);return el;
  }
+ async function addAdminAccess(parent,token){
+  // Only verified, logged-in administrators can see this shortcut.
+  // All privileged operations remain protected independently by Supabase RLS.
+  const client=window.NPlayAccessClient;
+  if(!client)return;
+  try{
+   const {data,error}=await client.auth.getUser();
+   const user=data?.user;
+   if(error||!user?.email||!user.email_confirmed_at||user.is_anonymous)return;
+   // Follow the owner-claim flow of the existing protected admin screen.
+   await client.rpc("novaplay_claim_owner_access");
+   const {data:admin,error:accessError}=await client.from("novaplay_admins").select("user_id").eq("user_id",user.id).maybeSingle();
+   if(accessError||!admin||token!==job||layer.hidden||page!=="main"||!parent.isConnected)return;
+   row(parent,"Painel ADM","Gerenciar o aplicativo · "+user.email,{symbol:"shield",action:()=>location.assign(new URL("./admin/",location.href).href)});
+  }catch{
+   // Fail closed if the identity or role cannot be verified.
+  }
+ }
  const deviceCode=()=>document.getElementById("nplay-device-code")?.textContent?.replace(/^Aparelho:\s*/,"").trim()||document.getElementById("nplay-access-code")?.textContent||"Não informado";
  const version=()=>document.querySelector('meta[name="nplay-version"]')?.content||"";
  const dataLabels={auto:"Automático",economy:"Economizar dados",maximum:"Melhor qualidade"};
@@ -142,7 +160,7 @@ function init(){
    const storage=section("Armazenamento");row(storage,"Local de armazenamento","Neste aparelho · navegador da NPlay",{symbol:"storage"});
    row(storage,"Limpar arquivos temporários","Libera o cache do app; mantém perfis, favoritos e acesso.",{symbol:"trash",action:()=>render("clear")});
    const meter=make("div","Consultando espaço…","nplay-storage-summary");storage.append(meter);void loadStorage(meter,job);
-   const about=section("Sobre");row(about,"Aparelho","NPlay "+version()+" · informações deste navegador",{symbol:"phone",action:()=>render("device")});row(about,"Conta e perfil",window.NPlayProfiles?.current?.()?.name||"Meu perfil",{symbol:"account",action:()=>render("account")});
+   const about=section("Sobre");row(about,"Aparelho","NPlay "+version()+" · informações deste navegador",{symbol:"phone",action:()=>render("device")});row(about,"Conta e perfil",window.NPlayProfiles?.current?.()?.name||"Meu perfil",{symbol:"account",action:()=>render("account")});void addAdminAccess(about,job);
    const diagnostics=section("Diagnóstico");row(diagnostics,"Verifique a rede","Conexão e acesso à NPlay",{symbol:"wifi",action:()=>render("network")});row(diagnostics,"Especificação de reprodução","Formatos de vídeo e modo do aplicativo",{symbol:"video",action:()=>render("specs")});diagnostic(diagnostics,"Teste a velocidade da internet","speed");
    const legal=section("Informações e privacidade");row(legal,"Licenças de código aberto",null,{action:()=>render("licenses")});row(legal,"Privacidade e dados",null,{symbol:"shield",action:()=>render("privacy")});row(legal,"Política de privacidade da NovaByte",null,{symbol:"shield",href:"/privacidade.html"});row(legal,"Termos de uso do portal NovaByte",null,{href:"/termos.html"});
    content.append(make("p","NPlay "+version()+" · NovaByte Soluções","nplay-settings-signature"));
