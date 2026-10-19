@@ -1103,7 +1103,7 @@ function play(item,episode){
  function installPlaybackRecovery(){
   if(externalEmbed)return;
   playbackRecovery?.destroy();
-  playbackRecovery=window.NPlayPlayback.create({video:v,
+  playbackRecovery=window.NPlayPlayback.create({video:v,ios:iosPlayback,
   getEngine:()=>({hls,ts:tsPlayer,source:src,manifestReady}),
   isActive:()=>seq===attempt&&!hasFailed&&!switchingFormat&&!$("player-layer").hidden&&!document.hidden&&!window.NPlayCasting?.state(),
   onStatus:playerStatus,autoplay:()=>startAutoplay(v,seq),
@@ -1333,7 +1333,7 @@ document.addEventListener("keydown",e=>{
 document.addEventListener("visibilitychange",()=>{if(document.hidden){stopHeroPreview();if(!$("player-layer").hidden)$("video").pause()}});
 window.addEventListener("scroll",()=>$("app-header").classList.toggle("is-scrolled",window.scrollY>24),{passive:true});
 if("serviceWorker" in navigator&&location.protocol==="https:"){
- window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js?v=0.51.29-ios-header",{updateViaCache:"none"}).catch(()=>{}));
+ window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js?v=0.51.30-ios-video",{updateViaCache:"none"}).catch(()=>{}));
 }
 window.addEventListener("nplay-settings-change",()=>window.NPlaySettings?.configureHls(hls));
 navigator.connection?.addEventListener?.("change",()=>window.NPlaySettings?.configureHls(hls));
