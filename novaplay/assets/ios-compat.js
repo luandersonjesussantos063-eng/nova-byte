@@ -4,6 +4,48 @@
  const ios=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);
  if(!ios)return;
  document.documentElement.classList.add("nplay-ios");
+ const standalone=window.matchMedia?.("(display-mode: standalone)")?.matches||navigator.standalone===true;
+ if(standalone)document.documentElement.classList.add("nplay-ios-standalone");
+ let artRequest=0;
+ function verifyHeroArtwork(backdrop,cover){
+  const token=++artRequest;
+  const art=document.getElementById("hero-art");
+  if(!art)return;
+  const sources=[backdrop,cover,"./assets/profile-hero-wide-v04515.webp"];
+  const seen=new Set();
+  const images=sources.map(source=>{
+   try{
+    const url=new URL(String(source||""),location.href);
+    if(!["https:","http:"].includes(url.protocol)||seen.has(url.href))return null;
+    seen.add(url.href);return url.href;
+   }catch{return null;}
+  }).filter(Boolean);
+  let index=0;
+  function next(){
+   if(token!==artRequest||index>=images.length)return;
+   const url=images[index++],img=new Image();
+   let settled=false;
+   const timeout=setTimeout(()=>{
+    if(settled)return;
+    settled=true;img.onload=null;img.onerror=null;next();
+   },6500);
+   img.onload=()=>{
+    if(settled)return;
+    settled=true;clearTimeout(timeout);
+    if(token!==artRequest||document.getElementById("hero")?.classList.contains("hero-live-mode"))return;
+    if(img.naturalWidth>0)art.style.backgroundImage="url("+JSON.stringify(url)+")";
+    else next();
+   };
+   img.onerror=()=>{
+    if(settled)return;
+    settled=true;clearTimeout(timeout);next();
+   };
+   img.src=url;
+  }
+  next();
+ }
+ window.NPlayIOS=Object.freeze({verifyHeroArtwork});
+
  const current=document.querySelector('meta[name="nplay-version"]')?.content||"";
  let lastCheck=0,checking=false,pending="";
  const activePlayer=()=>{
