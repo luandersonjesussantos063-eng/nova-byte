@@ -836,10 +836,16 @@ function closePlayer(skipFullscreen=false){
  Promise.resolve(exitTask).then(finish,finish);
 }
 function playerStatus(msg){
- $("player-status").textContent=msg;
+ // Keep live buffering text out of the picture without disabling recovery.
+ const live=current?.item?.kind==="tv";
+ const quietLiveWait=live&&/aguardando (?:dados|imagem) da transmissão/i.test(msg);
+ $("player-status").textContent=quietLiveWait?"":msg;
  const loading=$("player-loading");
  const media=current?.episode||current?.item;
- if(loading){loading.textContent=msg;loading.hidden=!(current?.item&&!current.item.liveEmbedUrl&&!media?.youtube_id&&!media?.google_drive_id&&!$("player-layer").hidden&&!/reproduzindo/i.test(msg));}
+ if(loading){
+  loading.textContent=live?"":msg;
+  loading.hidden=live||!(current?.item&&!current.item.liveEmbedUrl&&!media?.youtube_id&&!media?.google_drive_id&&!$("player-layer").hidden&&!/reproduzindo/i.test(msg));
+ }
 }
 function playbackFailed(msg,seq){
  if(seq!==attempt||$("player-layer").hidden)return;
