@@ -50,7 +50,7 @@ function render(){
   const label=document.createElement("span");label.className="nplay-profile-name";label.textContent=p.name;
   b.append(icon,label);
   if(p.kids){const small=document.createElement("small");small.textContent="Infantil";icon.append(small)}
-  b.onclick=()=>{try{localStorage.setItem(activeKey,String(i));sessionStorage.setItem("nplay-profile-selected","1")}catch{}updateHeader(i);hide()};
+  b.onclick=()=>chooseProfile(i);
   grid.append(b);
  });
  if(edit)grid.append(edit);
@@ -78,7 +78,8 @@ function loadDraft(){
  const p=creating?{name:"",avatar:profiles.length%characters.length}:profiles[Number(slot.value)]||profiles[0];
  name.value=p.name;draftAvatar=p.avatar;feedback.textContent="";saveButton.textContent=creating?"Criar perfil":"Salvar perfil";remove.hidden=creating||profiles.length<=1;renderPicker();
 }
-edit.onclick=()=>{options();loadDraft();dialog.showModal()};
+function manageProfiles(){options();loadDraft();dialog.showModal();}
+edit.onclick=manageProfiles;
 document.getElementById("nplay-profile-cancel").onclick=()=>dialog.close();
 add.onclick=()=>{slot.value="new";loadDraft();name.focus()};
 slot.onchange=loadDraft;
@@ -98,37 +99,55 @@ remove.onclick=()=>{
  try{localStorage.setItem(activeKey,String(nextActive))}catch{}
  options(nextActive);loadDraft();render();updateHeader(nextActive);feedback.textContent="Perfil removido.";
 };
+function chooseProfile(index){
+ if(!Number.isInteger(index)||!profiles[index])return false;
+ try{localStorage.setItem(activeKey,String(index));sessionStorage.setItem("nplay-profile-selected","1")}catch{}
+ updateHeader(index);hide();return true;
+}
+Object.assign(window.NPlayProfiles,{
+ all:()=>profiles.map(profile=>({...profile})),active:activeIndex,select:chooseProfile,manage:manageProfiles,picker:show,
+ exit(){try{sessionStorage.removeItem("nplay-profile-selected")}catch{}window.dispatchEvent(new Event("nplay-profile-exit"));show();window.dispatchEvent(new Event("nplay-profile-change"));}
+});
 if(avatar){
  updateHeader(activeIndex());refreshAdminLink();
- const menu=document.createElement("section");
- menu.id="nplay-account-menu";menu.hidden=true;
- menu.setAttribute("aria-label","Configurações da conta");
- menu.style.cssText="position:fixed;right:14px;top:calc(72px + env(safe-area-inset-top,0px));z-index:2147483000;width:min(330px,calc(100vw - 28px));padding:16px;border:1px solid #3c567c;border-radius:20px;background:#101d32;color:#f3f7ff;box-shadow:0 20px 55px #000b;font:14px system-ui";
- const heading=document.createElement("strong");heading.textContent="Configurações";heading.style.cssText="display:block;font-size:18px;margin-bottom:12px";
- const profileName=document.createElement("p");profileName.style.cssText="margin:0 0 14px;color:#b7c9e7";
- const makeButton=(label,handler)=>{const b=document.createElement("button");b.type="button";b.textContent=label;b.style.cssText="display:block;width:100%;padding:13px 12px;margin:7px 0;border:1px solid #354e70;border-radius:12px;background:#1a2c48;color:#f2f6ff;text-align:left;font:600 14px system-ui;cursor:pointer";b.addEventListener("click",handler);return b};
- const device=document.createElement("div");device.style.cssText="margin-top:14px;padding:12px;border-radius:12px;background:#172940;border:1px solid #334a69";
- const deviceTitle=document.createElement("strong");deviceTitle.textContent="Este aparelho";deviceTitle.style.cssText="display:block;margin-bottom:5px";
- const deviceCode=document.createElement("span");deviceCode.style.cssText="font-size:13px;color:#b7c9e7;word-break:break-word";
- const copy=makeButton("Copiar identificação",async()=>{const code=document.getElementById("nplay-device-code")?.textContent?.replace(/^Aparelho:\\s*/,"").trim();if(!code)return;try{await navigator.clipboard.writeText(code);copy.textContent="✓ Código copiado"}catch{copy.textContent="Não foi possível copiar"}});
- device.append(deviceTitle,deviceCode,copy);
- const introSound=window.NPlayIntroAudio;
- const soundButton=makeButton("",()=>{
-  if(!introSound)return;
-  const on=introSound.setEnabled(!introSound.enabled());
-  soundButton.textContent=on?"🔊 Som da abertura: ligado":"🔇 Som da abertura: desligado";
-  if(on)void introSound.preview();
+ const menu=document.createElement("section");menu.id="nplay-account-menu";menu.hidden=true;
+ menu.setAttribute("role","dialog");menu.setAttribute("aria-modal","true");menu.setAttribute("aria-label","Perfil");
+ const heading=document.createElement("h2");heading.className="nplay-account-heading";heading.textContent="Perfil";
+ const dismiss=document.createElement("button");dismiss.type="button";dismiss.textContent="×";dismiss.setAttribute("aria-label","Fechar perfil");heading.append(dismiss);
+ const card=document.createElement("div");card.className="nplay-account-current";
+ const currentAvatar=document.createElement("span");currentAvatar.className="nplay-profile-picture";currentAvatar.setAttribute("aria-hidden","true");
+ const currentName=document.createElement("strong");card.append(currentAvatar,currentName);
+ const choices=document.createElement("div");choices.className="nplay-account-profiles";
+ const button=(label,handler,className="nplay-account-row")=>{const el=document.createElement("button");el.type="button";el.className=className;el.textContent=label;el.addEventListener("click",handler);return el;};
+ const manage=button("Gerenciar perfis",()=>{close(false);manageProfiles();},"nplay-account-manage");
+ function close(focus=true){menu.hidden=true;document.body.classList.remove("nplay-account-open");avatar.setAttribute("aria-expanded","false");if(focus)avatar.focus();}
+ function open(){
+  currentName.textContent=profiles[activeIndex()].name;paint(currentAvatar,profiles[activeIndex()].avatar);choices.replaceChildren();
+  profiles.forEach((profile,index)=>{
+   if(index===activeIndex())return;
+   const choice=button("",()=>{close(false);chooseProfile(index);},"nplay-account-choice");
+   const picture=document.createElement("span");picture.className="nplay-profile-picture";picture.setAttribute("aria-hidden","true");paint(picture,profile.avatar);
+   const label=document.createElement("span");label.textContent=profile.name;choice.append(picture,label);choices.append(choice);
+  });
+  menu.hidden=false;document.body.classList.add("nplay-account-open");avatar.setAttribute("aria-expanded","true");dismiss.focus();
+ }
+ const paths={settings:'<circle cx="12" cy="12" r="3"/><path d="m9 3-1 3-3 1-2 3 2 3v4l3 1 2 3 4-1 3 1 2-3 3-1v-4l2-3-2-3-3-1-1-3z"/>',account:'<circle cx="12" cy="7" r="4"/><path d="M3 22v-3a9 9 0 0 1 18 0v3"/>',help:'<circle cx="12" cy="12" r="10"/><path d="M9 8a3 3 0 0 1 6 0c0 3-3 2-3 6m0 3v1"/>',exit:'<path d="M9 3H3v18h6m6-14 5 5-5 5m-8-5h13"/>'};
+ function action(label,symbol,handler){
+  const el=button("",handler),svg=document.createElementNS("http://www.w3.org/2000/svg","svg");svg.setAttribute("viewBox","0 0 24 24");svg.setAttribute("aria-hidden","true");svg.innerHTML=paths[symbol];
+  const text=document.createElement("strong");text.textContent=label;const chevron=document.createElement("span");chevron.textContent="›";el.append(svg,text,chevron);return el;
+ }
+ const settings=page=>{close(false);window.NPlaySettings?.open(page,{onClose:open});};
+ menu.append(heading,card,choices,manage,action("Configurações do aplicativo","settings",()=>settings("main")),action("Conta e perfil","account",()=>settings("account")),action("Ajuda","help",()=>settings("help")),action("Sair do perfil","exit",()=>{close(false);window.NPlayProfiles.exit();}));
+ document.body.append(menu);avatar.setAttribute("aria-haspopup","dialog");avatar.setAttribute("aria-expanded","false");
+ avatar.onclick=e=>{e.stopPropagation();if(menu.hidden)open();else close();};dismiss.onclick=()=>close();
+ document.addEventListener("click",e=>{if(!menu.hidden&&!menu.contains(e.target)&&e.target!==avatar)close(false);});
+ menu.addEventListener("keydown",e=>{
+  if(e.key==="Escape"){e.preventDefault();e.stopPropagation();close();}
+  if(e.key==="Tab"){
+   const elements=Array.from(menu.querySelectorAll("button")),first=elements[0],last=elements[elements.length-1];
+   if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}
+  }
  });
- soundButton.textContent=introSound?.enabled?.()?"🔊 Som da abertura: ligado":"🔇 Som da abertura: desligado";
- const listenButton=makeButton("▶ Ouvir som da abertura",()=>{void introSound?.preview?.()});
- if(!introSound){soundButton.disabled=true;listenButton.disabled=true;}
- menu.append(heading,profileName,makeButton("👤 Trocar perfil",()=>{menu.hidden=true;avatar.setAttribute("aria-expanded","false");show()}),makeButton("✏️ Editar perfis",()=>{menu.hidden=true;options();loadDraft();dialog.showModal()}),soundButton,listenButton,device);
- document.body.append(menu);
- avatar.setAttribute("aria-haspopup","true");avatar.setAttribute("aria-expanded","false");
- const close=()=>{menu.hidden=true;avatar.setAttribute("aria-expanded","false")};
- avatar.onclick=e=>{e.stopPropagation();menu.hidden=!menu.hidden;avatar.setAttribute("aria-expanded",String(!menu.hidden));if(!menu.hidden){profileName.textContent="Perfil: "+profiles[activeIndex()].name;deviceCode.textContent=document.getElementById("nplay-device-code")?.textContent||"Identificação indisponível";copy.textContent="Copiar identificação"}};
- document.addEventListener("click",e=>{if(!menu.hidden&&!menu.contains(e.target)&&e.target!==avatar)close()});
- document.addEventListener("keydown",e=>{if(e.key==="Escape")close()});
 }
 let selected=false;try{selected=sessionStorage.getItem("nplay-profile-selected")==="1"}catch{}
 if(!selected)show();

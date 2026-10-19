@@ -1,5 +1,5 @@
-const CACHE="novaplay-v0.51.25-tvspotlight1";
-const CORE=["./assets/cinema-player.js","./assets/cinema-player.css","./assets/playback-stability.js","./assets/tv-spotlight.js","./assets/tv-spotlight.css","./assets/channel-order.js","./assets/live-epg.js","./assets/live-epg.css","./","./index.html","./styles.css","./assets/experience.css","./assets/cinema-refresh.css","./assets/intro-audio.js","./assets/nplay-opening-original-final.m4a","./assets/soft-opening.js","./assets/release-notes.js","./assets/notifications.js","./assets/hero-live.js","./assets/casting.js","./access.js","./app.js","./live-embeds.js","./assets/music-core.js","./assets/youtube-core.js","./assets/live-preview.js","./assets/live-auth.js","./profiles.js","./presence.js","./watching.js","./install.js","./catalog.js","./manifest.webmanifest","./assets/icon.svg","./assets/brand/nplay-wordmark-v0482.svg","./assets/brand/nplay-icon-192-v0482.png","./assets/brand/nplay-icon-512-v0482.png"];
+const CACHE="novaplay-v0.51.26-tvspotlight1";
+const CORE=["./assets/app-settings.js","./assets/app-settings.css","./assets/cinema-player.js","./assets/cinema-player.css","./assets/playback-stability.js","./assets/tv-spotlight.js","./assets/tv-spotlight.css","./assets/channel-order.js","./assets/live-epg.js","./assets/live-epg.css","./","./index.html","./styles.css","./assets/experience.css","./assets/cinema-refresh.css","./assets/intro-audio.js","./assets/nplay-opening-original-final.m4a","./assets/soft-opening.js","./assets/release-notes.js","./assets/notifications.js","./assets/hero-live.js","./assets/casting.js","./access.js","./app.js","./live-embeds.js","./assets/music-core.js","./assets/youtube-core.js","./assets/live-preview.js","./assets/live-auth.js","./profiles.js","./presence.js","./watching.js","./install.js","./catalog.js","./manifest.webmanifest","./assets/icon.svg","./assets/brand/nplay-wordmark-v0482.svg","./assets/brand/nplay-icon-192-v0482.png","./assets/brand/nplay-icon-512-v0482.png"];
 self.addEventListener("install",event=>{
  event.waitUntil(caches.open(CACHE).then(async cache=>{
   await Promise.allSettled(CORE.map(url=>cache.add(new Request(url,{cache:"reload"}))));
@@ -13,6 +13,7 @@ self.addEventListener("fetch",event=>{
  if(request.method!=="GET")return;
  const url=new URL(request.url);
  if(url.origin!==self.location.origin)return;
+ if(url.searchParams.has("nplay-diagnostic")){event.respondWith(fetch(request,{cache:"no-store"}));return;}
  if(url.pathname.includes("/admin/")){event.respondWith(fetch(request,{cache:"no-store"}));return}
  const isNavigation=request.mode==="navigate"||/\/(?:index\.html)?$/.test(url.pathname);
  event.respondWith((async()=>{
