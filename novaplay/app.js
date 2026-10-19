@@ -14,7 +14,7 @@ const favKey="novaplay-favorites-v2",progressKey="novaplay-progress-v1";
 /* Métrica anônima de interesse. Conta abertura da ficha e TENTATIVAS de reprodução,
    nunca declara que um vídeo externo efetivamente foi reproduzido. */
 function registerCatalogInterest(item,eventType){
- if(!remoteDb||!item?.id?.startsWith("upload-"))return;
+ if(window.NPlaySettings?.get().statistics===false||!remoteDb||!item?.id?.startsWith("upload-"))return;
  if(eventType!=="detail_open"&&eventType!=="play_attempt")return;
  const mediaId=item.id.slice("upload-".length);
  if(!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(mediaId))return;
@@ -889,7 +889,7 @@ function setResume(video,id,seq){
  let lastSaved=0;
  video.onloadedmetadata=()=>{
    if(seq!==attempt)return;
-   const x=progressItem(id);
+   const x=window.NPlaySettings?.get().resume===false?null:progressItem(id);
    if(x&&video.duration&&x.position<video.duration-10){try{video.currentTime=x.position}catch(e){}}
  };
  video.ontimeupdate=()=>{
@@ -1163,7 +1163,7 @@ function play(item,episode){
         if(data.type===window.Hls.ErrorTypes.MEDIA_ERROR&&playbackRecovery?.media())return;
         fail("A transmissão interrompeu. Toque em Tentar novamente.");
       });
-      hls.on(window.Hls.Events.MANIFEST_PARSED,()=>{if(seq!==attempt)return;manifestReady=true;if(!hlsAutoplayIssued){hlsAutoplayIssued=true;startAutoplay(v,seq)}});
+      hls.on(window.Hls.Events.MANIFEST_PARSED,()=>{if(seq!==attempt)return;manifestReady=true;window.NPlaySettings?.configureHls(hls);if(!hlsAutoplayIssued){hlsAutoplayIssued=true;startAutoplay(v,seq)}});
       hls.attachMedia(v);hls.loadSource(src);
     }else fail("Este navegador não carregou o suporte a HLS.");
   }else{
@@ -1297,8 +1297,11 @@ document.addEventListener("keydown",e=>{
 document.addEventListener("visibilitychange",()=>{if(document.hidden){stopHeroPreview();if(!$("player-layer").hidden)$("video").pause()}});
 window.addEventListener("scroll",()=>$("app-header").classList.toggle("is-scrolled",window.scrollY>24),{passive:true});
 if("serviceWorker" in navigator&&location.protocol==="https:"){
- window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js?v=0.51.25-tvspotlight",{updateViaCache:"none"}).catch(()=>{}));
+ window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js?v=0.51.26-tvspotlight",{updateViaCache:"none"}).catch(()=>{}));
 }
+window.addEventListener("nplay-settings-change",()=>window.NPlaySettings?.configureHls(hls));
+navigator.connection?.addEventListener?.("change",()=>window.NPlaySettings?.configureHls(hls));
+window.addEventListener("nplay-profile-exit",()=>{stopHeroPreview();if(!$("player-layer").hidden)void closePlayer();if(!$("detail-layer").hidden)closeDetails();});
 $("hero-play").onclick=()=>navigate("tv");
 $("hero-info").onclick=()=>navigate("filmes");
 navigate((location.hash||"").slice(1)||"inicio");

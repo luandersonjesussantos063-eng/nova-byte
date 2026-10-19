@@ -39,8 +39,8 @@ function markRead(entry){readIds.add(Number(entry.id));saveRead();paint()}
 function paint(){
  const badge=$("nplay-notice-count"),button=$("nplay-notice-bell"),list=$("nplay-notice-items");
  if(!badge||!button||!list)return;
- const count=unread();badge.hidden=count===0;badge.textContent=count>9?"9+":String(count);
- button.setAttribute("aria-label",count?"Notificações: "+count+" não lidas":"Notificações");
+ const count=unread(),enabled=window.NPlaySettings?.get().notifications!==false;badge.hidden=count===0||!enabled;badge.textContent=count>9?"9+":String(count);
+ button.setAttribute("aria-label",count&&enabled?"Notificações: "+count+" não lidas":"Notificações");
  list.replaceChildren();
  const entries=historyShown?[...news,...history]:news;
  if(!entries.length){
@@ -106,6 +106,7 @@ function openPanel(show){
  if(show)refresh();
 }
 function setup(){
+ window.addEventListener("nplay-settings-change",paint);
  $("nplay-notice-bell")?.addEventListener("click",()=>{const panel=$("nplay-notice-panel");openPanel(panel.hidden)});
  $("nplay-notice-close")?.addEventListener("click",()=>openPanel(false));
  $("nplay-notice-read-all")?.addEventListener("click",()=>{news.forEach(n=>readIds.add(Number(n.id)));saveRead();paint()});

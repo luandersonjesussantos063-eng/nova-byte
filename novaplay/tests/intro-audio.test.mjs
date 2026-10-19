@@ -36,7 +36,7 @@ function harness(withAudio=false){
 
 test('opening plays a genuine recorded M4A excerpt, not a recreated synthesizer',()=>{
  assert.match(html,/intro-audio\.js\?v=0\.51\.6/);
- assert.match(profiles,/Som da abertura/);
+ assert.match(read('assets/app-settings.js').toString('utf8'),/Som da abertura/);
  assert.match(code,/nplay-opening-original-final\.m4a/);
  assert.doesNotMatch(code,/createOscillator|createBufferSource|function synth|const frequencies=/);
  assert.equal(sample.subarray(4,8).toString(),'ftyp');
