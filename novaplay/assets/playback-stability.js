@@ -24,7 +24,7 @@
   const status=Number(data.status||data.response?.code||data.networkDetails?.status)||0;
   return !status||[408,425,429].includes(status)||status>=500;
  }
- function create({video,getEngine,isActive=()=>true,onStatus=()=>{},onExhausted=()=>{},reloadNative=()=>false,autoplay=()=>{},
+ function create({video,getEngine,isActive=()=>true,onStatus=()=>{},onExhausted=()=>{},reloadNative=()=>false,autoplay=()=>{},ios=false,
   now=()=>Date.now(),schedule=setTimeout,cancel=clearTimeout,repeat=setInterval,stopRepeat=clearInterval}){
   let disposed=false,pending=null,exhausted=false,networkAttempts=0,mediaAttempts=0;
   let lastTime=Number(video.currentTime)||0,lastEnd=bufferedEnd(video),lastMove=now(),lastGrowth=now(),stableSince=null,hasPlayed=false;
@@ -61,7 +61,14 @@
    }else stableSince=null;
    if(end>lastEnd+.1)lastGrowth=time;
    lastTime=position;lastEnd=end;
-   if(!hasPlayed||time-lastMove<12000||pending!==null)return;
+   if(!hasPlayed){
+    // On iOS a stream can remain stuck before its first decoded frame.
+    // Existing recovery only handled a freeze after successful playback.
+    if(!ios||time-lastMove<20000||pending!==null)return;
+    if(!retry('network')&&!exhausted){exhausted=true;onExhausted();}
+    return;
+   }
+   if(time-lastMove<12000||pending!==null)return;
    const ahead=end-position;
    // Let an active download finish; do not abort a slow fragment every few seconds.
    if(ahead<2&&time-lastGrowth<30000)return;
