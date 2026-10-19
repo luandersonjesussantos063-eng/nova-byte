@@ -127,7 +127,7 @@
  window.NPlayCasting={
   configure(config){this.reset();media=config;$('cinema-cast').hidden=!config;},
   reset(){generation++;end();media=null;prepared=null;pending=null;busy=false;lastPosition=0;if(dialog.open)dialog.close();$('cinema-cast').hidden=true;$('tv-connected').hidden=true;},
-  state(){return active()?{currentTime:Number(remote.currentTime)||0,duration:Number(remote.duration)||0,paused:remote.isPaused,muted:remote.isMuted,volume:remote.volumeLevel}:null;},
+  state(){return active()?{currentTime:Number(remote.currentTime)||0,duration:Number(remote.duration)||0,canSeek:!!remote.canSeek,paused:remote.isPaused,muted:remote.isMuted,volume:remote.volumeLevel}:null;},
   command(action,value){
    if(!active())return false;
    if(action==='toggle')controller.playOrPause();

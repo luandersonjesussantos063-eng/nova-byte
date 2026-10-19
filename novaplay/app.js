@@ -55,7 +55,7 @@ if(!progress||typeof progress!=="object"||Array.isArray(progress))progress={};
 const save=(key,x)=>{try{localStorage.setItem(key,JSON.stringify(x))}catch(e){}};
 const escapeText=x=>String(x??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 let view="inicio",selected=null,featuredIndex=0,current=null,hls=null,tsPlayer=null,playbackRecovery=null,timer=0,attempt=0,timeSaved=0,toastTimeout=null;
-let playerUiTimer=null,seekActive=false;
+let playerUiTimer=null;
 let fullscreenOwned=false,closingFullscreen=false,lockedLandscape=false,playerClosing=false,cinemaSession=0;
 let issueReportBusy=false;
 let previewTimer=null,previewSequence=0,previewHls=null;
@@ -745,50 +745,27 @@ document.addEventListener("webkitfullscreenchange",()=>{
 });
 window.addEventListener("resize",()=>{if(!$("player-layer").hidden)syncLandscape()});
 window.addEventListener("orientationchange",()=>{if(!$("player-layer").hidden)syncLandscape()});
-function asClock(seconds){
- const value=Math.max(0,Math.floor(Number.isFinite(seconds)?seconds:0));
- const hours=Math.floor(value/3600),minutes=Math.floor(value%3600/60),secs=value%60;
- return (hours?hours+":"+String(minutes).padStart(2,"0"):String(minutes))+":"+String(secs).padStart(2,"0");
-}
-function updateCinemaControls(){
- const v=window.NPlayCasting?.state()||$("video");
- $("cinema-play").textContent=v.paused?"▶":"❚❚";
- $("cinema-play").setAttribute("aria-label",v.paused?"Reproduzir":"Pausar");
- $("cinema-mute").textContent=v.muted?"♪̸":"♫";
- $("cinema-mute").setAttribute("aria-label",v.muted?"Ativar áudio":"Silenciar");
- const volume=$("cinema-volume"),level=$("cinema-volume-level");
- const percent=Math.round(v.volume*100);
- if(volume)volume.value=String(percent);
- if(level)level.textContent=(v.muted?0:percent)+"%";
- const duration=v.duration;
- const seekable=Number.isFinite(duration)&&duration>0;
- $("cinema-seek").disabled=!seekable;
- $("cinema-duration").textContent=seekable?asClock(duration):(current?.item?.kind==="tv"?"AO VIVO":"Carregando…");
- if(!seekActive){
-  const position=v.currentTime||0;
-  const currentTime=seekable?Math.max(0,Math.min(duration,position)):0;
-  $("cinema-elapsed").textContent=asClock(currentTime);
-  $("cinema-seek").value=seekable?String(currentTime/duration*100):"0";
-  $("cinema-seek").style.setProperty("--played",$("cinema-seek").value+"%");
- }
-}
+let cinemaController=null;
+function updateCinemaControls(){cinemaController?.update();}
 function showCinemaUi(){
  if($("player-layer").hidden||$("player-layer").classList.contains("youtube-active")||$("player-layer").classList.contains("drive-active")||$("player-layer").classList.contains("live-embed-active"))return;
  $("player-layer").classList.remove("ui-idle");
  clearTimeout(playerUiTimer);
- if(!$("video").paused)playerUiTimer=setTimeout(()=>{
+ if(!$("video").paused&&!cinemaController?.keepsControlsVisible())playerUiTimer=setTimeout(()=>{
    if(!$("player-layer").hidden&&!$("video").paused)
      $("player-layer").classList.add("ui-idle");
  },4200);
 }
 function resetCinemaUi(){
- clearTimeout(playerUiTimer);playerUiTimer=null;seekActive=false;
- $("player-layer").classList.remove("ui-idle","youtube-active","drive-active","live-embed-active","has-player-error");
+ cinemaController?.reset();
+ clearTimeout(playerUiTimer);playerUiTimer=null;
+ $("player-layer").classList.remove("ui-idle","youtube-active","drive-active","live-embed-active","has-player-error","native-player");
  $("cinema-controls").hidden=true;
  $("player-status").hidden=false;
  $("player-content-note").hidden=false;
 }
 const cinemaVideo=$("video");
+cinemaController=window.NPlayCinema.create({layer:$("player-layer"),video:cinemaVideo,getHls:()=>hls,getRemote:()=>window.NPlayCasting?.state(),command:(action,value)=>window.NPlayCasting?.command(action,value),isLive:()=>current?.item?.kind==="tv",onInteraction:showCinemaUi});
 cinemaVideo.addEventListener("play",()=>{updateCinemaControls();showCinemaUi()});
 cinemaVideo.addEventListener("pause",()=>{updateCinemaControls();showCinemaUi()});
 cinemaVideo.addEventListener("timeupdate",updateCinemaControls);
@@ -798,35 +775,6 @@ cinemaVideo.addEventListener("loadedmetadata",updateCinemaControls);
 cinemaVideo.addEventListener("pointerdown",()=>showCinemaUi());
 $("player-layer").addEventListener("pointermove",e=>{
  if(!$("player-layer").classList.contains("youtube-active")&&!$("player-layer").classList.contains("drive-active"))showCinemaUi();
-});
-$("cinema-play").onclick=()=>{
- if(window.NPlayCasting?.command("toggle")){updateCinemaControls();showCinemaUi();return;}
- const v=$("video");if(v.paused)v.play().catch(()=>showCinemaUi());else v.pause();showCinemaUi()
-};
-$("cinema-rewind").onclick=()=>{const state=window.NPlayCasting?.state();if(state){window.NPlayCasting.command("seek",state.currentTime-10);updateCinemaControls();showCinemaUi();return;}const v=$("video");if(Number.isFinite(v.duration))v.currentTime=Math.max(0,v.currentTime-10);updateCinemaControls();showCinemaUi()};
-$("cinema-forward").onclick=()=>{const state=window.NPlayCasting?.state();if(state){window.NPlayCasting.command("seek",state.currentTime+10);updateCinemaControls();showCinemaUi();return;}const v=$("video");if(Number.isFinite(v.duration))v.currentTime=Math.min(v.duration,v.currentTime+10);updateCinemaControls();showCinemaUi()};
-$("cinema-mute").onclick=()=>{if(window.NPlayCasting?.command("mute")){updateCinemaControls();return;}const v=$("video");v.muted=!v.muted;if(!v.muted&&v.volume===0)v.volume=1;updateCinemaControls();showCinemaUi()};
-$("cinema-volume")?.addEventListener("input",e=>{
- const v=$("video"),value=Number(e.target.value);
- if(!Number.isFinite(value))return;
- if(window.NPlayCasting?.command("volume",value/100)){updateCinemaControls();return;}
- v.volume=Math.max(0,Math.min(100,value))/100;v.muted=v.volume===0;
- updateCinemaControls();showCinemaUi();
-});
-$("cinema-seek").addEventListener("input",e=>{
- const v=window.NPlayCasting?.state()||$("video");duration=v.duration;if(!Number.isFinite(duration)||duration<=0)return;
- seekActive=true;
- e.target.style.setProperty("--played",e.target.value+"%");
- const target=duration*Number(e.target.value)/100;
- $("cinema-elapsed").textContent=asClock(target);
- showCinemaUi();
-});
-$("cinema-seek").addEventListener("change",e=>{
- const state=window.NPlayCasting?.state();
- if(state){window.NPlayCasting.command("seek",state.duration*Number(e.target.value)/100);seekActive=false;updateCinemaControls();showCinemaUi();return;}
- const v=$("video");
- if(Number.isFinite(v.duration)&&v.duration>0)v.currentTime=Math.min(v.duration,Math.max(0,v.duration*Number(e.target.value)/100));
- seekActive=false;updateCinemaControls();showCinemaUi()
 });
 $("cinema-fullscreen").onclick=()=>{
  const layer=$("player-layer");
@@ -1064,6 +1012,7 @@ function play(item,episode){
  $("player-layer").classList.toggle("youtube-active",yt);
  $("player-layer").classList.toggle("drive-active",drive);
  $("cinema-controls").hidden=externalEmbed;
+ $("player-layer").classList.toggle("native-player",!externalEmbed);
  $("video").controls=false;
  $("video").autoplay=true;
  $("video").playsInline=true;
@@ -1348,7 +1297,7 @@ document.addEventListener("keydown",e=>{
 document.addEventListener("visibilitychange",()=>{if(document.hidden){stopHeroPreview();if(!$("player-layer").hidden)$("video").pause()}});
 window.addEventListener("scroll",()=>$("app-header").classList.toggle("is-scrolled",window.scrollY>24),{passive:true});
 if("serviceWorker" in navigator&&location.protocol==="https:"){
- window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js?v=0.51.24-tvspotlight",{updateViaCache:"none"}).catch(()=>{}));
+ window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js?v=0.51.25-tvspotlight",{updateViaCache:"none"}).catch(()=>{}));
 }
 $("hero-play").onclick=()=>navigate("tv");
 $("hero-info").onclick=()=>navigate("filmes");
