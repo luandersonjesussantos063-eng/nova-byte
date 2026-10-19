@@ -103,6 +103,9 @@ async function show(item){
  teardown();lastItem=item||null;
  if(!canPreviewInView())return;
  if(!item||item.catalogOnly||item.kind==="tv")return;
+ // iOS phone never displays these iframe scenes; skip network/video work
+ // instead of starting an invisible YouTube player behind the artwork.
+ if(window.NPlayIOS&&window.matchMedia("(max-width:760px)").matches)return;
  // Allow mobile previews too; browsers may require a tap before enabling sound.
  if(matchMedia("(prefers-reduced-motion:reduce)").matches||navigator.connection?.saveData)return;
  const clip=choose(item);if(!clip)return;
