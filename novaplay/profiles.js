@@ -31,7 +31,7 @@ function paint(el,id){el.classList.add("nplay-avatar-art");el.style.setProperty(
 function activeIndex(){try{const i=Number(localStorage.getItem(activeKey));return Number.isInteger(i)&&profiles[i]?i:0}catch{return 0}}
 function updateHeader(i){window.dispatchEvent(new Event("nplay-profile-change"));if(!avatar)return;const p=profiles[i]||profiles[0];avatar.textContent="";paint(avatar,p.avatar);avatar.title="Trocar perfil: "+p.name;avatar.setAttribute("aria-label","Trocar perfil: "+p.name)}
 const edit=document.getElementById("nplay-profile-edit"),form=document.getElementById("nplay-profile-form"),slot=document.getElementById("nplay-profile-slot"),name=document.getElementById("nplay-profile-name"),dialog=document.getElementById("nplay-profile-dialog"),picker=document.getElementById("nplay-avatar-picker"),feedback=document.getElementById("nplay-profile-feedback");
-const show=()=>{render();gate.hidden=false;document.body.style.overflow="hidden";};
+const show=()=>{render();gate.hidden=false;if(document.documentElement.classList.contains("nplay-ios"))gate.scrollTop=0;document.body.style.overflow="hidden";};
 const hide=()=>{gate.hidden=true;document.body.style.overflow=""};
 function render(){
  grid.replaceChildren();
