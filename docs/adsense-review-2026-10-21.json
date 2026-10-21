@@ -1,6 +1,6 @@
 {
   "date": "2026-10-21",
-  "status": "implemented_pending_publication",
+  "status": "published_awaiting_google_review",
   "reason": "Conteúdo de baixo valor informado no painel do proprietário",
   "archivedArticles": [
     "a-depuracao-sem-fio-rapida-e-confiavel-com-o-android-debug-bridge-adb-wi-fi-20.html",
@@ -122,5 +122,8 @@
     "noticias-tecnologia.html",
     "noticias-lucas-do-rio-verde.html"
   ],
-  "note": "Arquivos e históricos preservados. Anúncios removidos, noindex/follow e sitemap corrigido. Não há garantia de aprovação; não foi solicitada revisão na conta."
+  "note": "Arquivos e históricos preservados. Anúncios removidos, noindex/follow e sitemap corrigido. Não há garantia de aprovação; não foi solicitada revisão na conta.",
+  "publishedCommit": "9e7c5d62a6dbe05595403c74cb7c0061a71daa42",
+  "pagesRun": 39610226005,
+  "editorialTestRun": 39610227344
 }

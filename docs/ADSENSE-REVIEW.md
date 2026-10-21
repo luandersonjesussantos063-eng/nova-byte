@@ -30,3 +30,6 @@ Esses achados são fatores concretos a corrigir. Não afirmamos conhecer toda a 
 Esta é uma correção inicial dos problemas encontrados, não uma certificação de elegibilidade. No AdSense, depois de conferir a versão publicada, o proprietário deve usar a opção de revisão disponível no aviso. É importante continuar a revisão individual do arquivo; uma página só deve ser promovida novamente depois de corrigir a origem e oferecer uma contribuição própria útil. Noindex, remoção de anúncios, quantidade de palavras ou mudança de data, isoladamente, não resolvem qualidade nem garantem aprovação.
 
 O Google pode avaliar o domínio e suas diferentes áreas, inclusive conteúdo acessível publicamente. A decisão pode exigir outras mudanças. Não gerar cliques, tráfego artificial ou pedidos repetidos de revisão para tentar acelerar a análise.
+
+## Publicação confirmada
+GitHub Pages concluiu a implantação 39610226005 do commit 9e7c5d62a6dbe05595403c74cb7c0061a71daa42; verificação editorial 39610227344 passou. HTTP 200 e conteúdo esperado confirmados na homepage, dois índices em revisão, dois artigos de amostra, dois guias revisados, política editorial, sitemap de 50 URLs e NPlay. O aviso na conta do Google permanece sem nova avaliação solicitada por esta sessão.
