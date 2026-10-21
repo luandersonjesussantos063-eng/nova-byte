@@ -1,3 +1,4 @@
+import {automaticNewsEnabled} from "../editorial-policy.mjs";
 import fs from "node:fs";
 import path from "node:path";
 import slugify from "slugify";
@@ -182,6 +183,8 @@ function card(p){return `<a class="nb-card" href="/${esc(p.slug)}.html"><span>${
 function updateHub(){const file=path.join(ROOT,"noticias-lucas-do-rio-verde.html");let html=fs.readFileSync(file,"utf8");const cards=history.posts.slice(0,40).map(card).join("");const re=/<div class="nb-grid">[\s\S]*?<\/div>\s*<div class="local-callout">/;if(!re.test(html))throw new Error("Grade do Lucas Atualiza não encontrada.");html=html.replace(re,`<div class="nb-grid">${cards}</div>\n<div class="local-callout">`);fs.writeFileSync(file,html);}
 function updateSitemap(slug,dateISO){const file=path.join(ROOT,"sitemap.xml");let xml=fs.readFileSync(file,"utf8");if(xml.includes(`/${slug}.html</loc>`))return;xml=xml.replace("</urlset>",`  <url><loc>https://novabytesolucoes.com.br/${slug}.html</loc><lastmod>${dateISO}</lastmod></url>\n</urlset>`);fs.writeFileSync(file,xml);}
 async function main(){
+  if(!automaticNewsEnabled()){console.log("Publicação automática pausada para revisão editorial. Nenhum arquivo foi alterado.");return;}
+
   const candidates=await getCandidates();
   if(!candidates.length){console.log("Nenhuma notícia local inédita encontrada.");return;}
   let picked=null,article=null;

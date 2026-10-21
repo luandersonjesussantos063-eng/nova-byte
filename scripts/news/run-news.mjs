@@ -1,3 +1,4 @@
+import {automaticNewsEnabled} from "../editorial-policy.mjs";
 import fs from "node:fs";
 import path from "node:path";
 import Parser from "rss-parser";
@@ -298,6 +299,8 @@ function updateSitemap(slug, dateISO) {
 }
 
 async function main() {
+  if(!automaticNewsEnabled()){console.log("Publicação automática pausada para revisão editorial. Nenhum arquivo foi alterado.");return;}
+
   const candidates = await getCandidates();
   if (!candidates.length) {
     console.log("Nenhuma novidade inédita encontrada nas fontes configuradas.");
