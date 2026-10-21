@@ -10,6 +10,7 @@ test('archived articles remain accessible but cannot request Google ads and are 
   const html=read(f);assert.match(html,/<meta name="robots" content="noindex,follow">/,f);assert(!/pagead2\.googlesyndication\.com|adsbygoogle|monetization\.js/.test(html),f);assert(!sitemap.includes('/'+f+'</loc>'),f);
  }
  for(const f of ['ferramentas.html','como-saber-se-site-tem-seo.html','por-que-meu-site-nao-aparece-no-google.html'])assert(sitemap.includes('/'+f+'</loc>'),f);
+ assert(read('index.html').includes('Resolva uma tarefa.'));
  assert(read('novaplay/index.html').includes('content="index,follow,max-image-preview:large"'));
  assert(!/^Disallow:\s*\/\s*$/m.test(read('robots.txt')));
 });
