@@ -1,5 +1,6 @@
 {
   "published_ids": [
+    "tag:developer.android.com,2026-09-17:/blog/posts/introducing-the-android-x-security-state-libraries-a-unified-view-of-device-security",
     "tag:developer.android.com,2026-09-22:/blog/posts/land-your-apps-on-googlebook-with-adaptive-development",
     "2026-10-16-Updating-the-Indexing-API-quota-page",
     "tag:blogger.com,1999:blog-6755709643044947179.post-6854566470509824044",
@@ -50,6 +51,15 @@
     "tag:developer.android.com,2026-09-24:/blog/posts/build-your-way-use-any-ai-agent-of-your-choice-in-android-studio"
   ],
   "posts": [
+    {
+      "slug": "as-bibliotecas-de-estado-de-seguranca-do-androidx-uma-visao-unificada-da-seguranca",
+      "title": "as bibliotecas de estado de segurança do AndroidX: uma visão unificada da segurança",
+      "description": "as bibliotecas de estado de segurança do AndroidX: uma visão unificada da segurança. Entenda a novidade e o impacto prático para empresas, sites, aplicativ",
+      "date": "2026-10-20",
+      "category": "Android e aplicativos",
+      "image": "/assets/news/as-bibliotecas-de-estado-de-seguranca-do-androidx-uma-visao-unificada-da-seguranca.svg",
+      "source": "https://developer.android.com/blog/posts/introducing-the-android-x-security-state-libraries-a-unified-view-of-device-security"
+    },
     {
       "slug": "coloque-seus-aplicativos-no-googlebook-com-desenvolvimento-adaptavel",
       "title": "Coloque seus aplicativos no Googlebook com desenvolvimento adaptável",
