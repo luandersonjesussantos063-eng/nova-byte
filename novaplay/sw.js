@@ -1,4 +1,4 @@
-const CACHE="novaplay-v0.51.30-ios-video1";
+const CACHE="novaplay-v0.51.31-search-ads1";
 const CORE=["./","./index.html","./styles.css","./assets/cinema-refresh.css","./assets/app-settings.css","./assets/app-settings.js","./assets/ios-compat.css","./assets/ios-compat.js","./profiles.js","./app.js","./manifest.webmanifest","./version.json"];
 self.addEventListener("install",event=>{
  event.waitUntil(caches.open(CACHE).then(async cache=>{

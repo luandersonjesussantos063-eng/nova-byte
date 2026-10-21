@@ -33,3 +33,16 @@ A branch `backup-novaplay-2026-10-14` preserva o estado completo do repositório
 Foram encontrados 118 arquivos em `novaplay/`. Não há arquivos de conteúdo binário **exatamente idêntico** dentro dessa pasta, conforme hashes de blobs do Git. As capas com nomes semelhantes possuem hashes diferentes. Portanto, nenhuma exclusão de capa foi considerada segura apenas por nome.
 
 **Decisão:** manter os ativos e fluxos em uso; concentrar a documentação e a estrutura de manutenção neste guia, sem executar exclusões especulativas.
+
+## Busca do Google e AdSense — v0.51.31
+- Publicação real usa GitHub Pages na raiz do repositório nova-byte/main, com CNAME novabytesolucoes.com.br; não Hostinger nem o repositório independente NovaPlay.
+- Removidos noindex/nofollow da entrada pública e bloqueio global /novaplay/ em robots.txt. Caminhos administrativos/técnicos continuam bloqueados. Administração mantém seu noindex.
+- URL canônica sem fragmento: https://novabytesolucoes.com.br/novaplay/. #inicio é navegação interna e não uma página separada para sitemap.
+- Sitemap da raiz inclui entrada, sobre.html e privacidade.html. Metadados de compartilhamento e WebSite JSON-LD descrevem apenas recursos reais; nenhuma classificação/avaliação inventada.
+- Sobre e Privacidade são páginas públicas independentes da autorização; links também nas telas de acesso/perfil e rodapé. O catálogo, Supabase, autorizações e reprodução não foram alterados.
+- AdSense mantém o publisher existente ca-pub-2466231259507657 e ads.txt da raiz. Usuário confirmou em 21/10 que domínio consta como Pronto no AdSense; não foi possível verificar a conta diretamente.
+- monetization.js carrega a biblioteca oficial uma vez; no aplicativo aguarda evento de acesso aprovado e escolha do perfil. Em Sobre carrega normalmente; Privacidade não carrega anúncios. Não cria ad slots inventados, não gera cliques nem anúncios de vídeo e não altera parâmetros da conta.
+- A opção Anúncios automáticos e exclusões de páginas/áreas são controladas no AdSense: Anúncios → Por site → editar novabytesolucoes.com.br → ativar Anúncios automáticos → Aplicar ao site. Não foi possível ativar essa opção remotamente. Configurar/revisar também Privacidade e mensagens na conta conforme o público atendido.
+- Search Console: selecionar a propriedade do domínio; enviar https://novabytesolucoes.com.br/sitemap.xml em Sitemaps e inspecionar/solicitar indexação da URL canônica e de /novaplay/sobre.html. Não há acesso autenticado ao Search Console nesta sessão; nenhum envio foi alegado. Rastreamento, indexação, anúncios e ganhos dependem do Google.
+- Testes: 18 passaram (carregamento/publicador, gates, duplicidade, metadados, presença e reprodução). XML/JSON e sintaxe JS validados. Sem QA visual/câmera/browser nesta sessão. Sete falhas preexistentes em access.test.mjs e app-settings.test.mjs foram reproduzidas no HEAD intacto: mocks sem window.addEventListener/document.querySelectorAll/classList; não são mudanças no acesso nem corrigidas neste escopo. Workflow antigo de interface contém verificações de versões fixas anteriores; não usar como prova de publicação.
+- Confirmar o commit do GitHub Pages e HTTP público após push antes de informar publicação concluída.

@@ -1,5 +1,10 @@
 User-agent: *
 Allow: /
-Disallow: /novaplay/
+Disallow: /novaplay/admin/
+Disallow: /novaplay/importer/
+Disallow: /novaplay/pc-tv/
+Disallow: /novaplay/tests/
+Disallow: /novaplay/worker/
+Disallow: /novaplay/iptv/
 
 Sitemap: https://novabytesolucoes.com.br/sitemap.xml
