@@ -17,3 +17,6 @@
 .projects-section :focus-visible{outline-color:#07545F}
 
 .site-preview-image{display:block;width:100%;height:auto;min-height:100%;object-fit:cover;object-position:top;transition:transform .7s}.site-scroll-preview:hover .site-preview-image{transform:translateY(-6%)}.project-note{font-size:10px!important;line-height:1.7!important;color:#52717d!important;margin:10px 0 0!important}
+
+/* Links locais permanentes, disponíveis sem JavaScript. */
+.local-service-links{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-top:40px}.local-service-links a{display:block;padding:22px;border:1px solid #20d5dc25;border-radius:10px;text-decoration:none;transition:border-color .2s}.local-service-links a:hover,.local-service-links a:focus-visible{border-color:#16c6d5}.local-service-links strong{display:block;font-size:15px;line-height:1.5;color:#dae9ed}.local-service-links span{display:block;margin-top:9px;font-size:13px;line-height:1.7;color:#9bb4bf}@media(max-width:1000px){.local-service-links{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:650px){.local-service-links{grid-template-columns:1fr}}
