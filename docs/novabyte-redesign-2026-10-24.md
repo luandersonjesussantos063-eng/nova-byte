@@ -25,4 +25,8 @@
 - GitHub Pages confirmado com branch main, caminho /, CNAME novabytesolucoes.com.br, https_enforced=true e certificado approved. Instagram e tela pública W Prime responderam HTTP 200/TLS verificado. A demonstração da Digo (404) não ficou como link quebrado.
 
 ## Publicação
-Aguardar e registrar sucesso de pages build and deployment para o commit da reformulação. Depois conferir versão 2026.10.24 no HTML real, hashes de CSS/JS e links públicos por HTTPS. Nenhuma mudança de DNS, hospedagem, conta Google ou dados dos sistemas é necessária.
+Publicação confirmada para o commit 34a531be2958e499a4e1463dbd894d94a147c41c: GitHub Pages execução 40103550573 e validação da vitrine 40103550386 concluíram com sucesso. No domínio real, index.html, três CSS, home.js, logotipo, três capturas de projetos e sitemap responderam HTTP 200 e tiveram SHA-256 igual ao arquivo versionado. HTTPS respondeu 200 com validação TLS normal.
+
+Navegação repetida no domínio publicado em 320, 390, 768 e 1440 px: menu, filtros dos quatro projetos, FAQ, pausa de prévias e redução de movimento passaram; sem rolagem horizontal ou exceções JavaScript. Versão de HTML 2026.10.24. As chamadas de Analytics/AdSense continuaram neutralizadas apenas nos contextos dos testes, sem mudar o código de produção.
+
+Não houve mudança de DNS, hospedagem, conta Google ou dados dos sistemas independentes. Esta confirmação descreve publicação e QA, não promete novos clientes, classificação de busca ou aprovação de anúncios.

@@ -61,5 +61,64 @@
   "browser": "Chromium headless, viewport emulation",
   "note": "AdSense e Analytics neutralizados apenas no navegador de QA. Sem dados autenticados ou teste em aparelho físico.",
   "backupBranch": "backup/site-before-turquoise-20261024-a5eccde",
-  "backupCommit": "a5eccdee8df61392a93a2e00f2c44fd3a4448724"
+  "backupCommit": "a5eccdee8df61392a93a2e00f2c44fd3a4448724",
+  "published": {
+    "url": "https://novabytesolucoes.com.br/",
+    "commit": "34a531be2958e499a4e1463dbd894d94a147c41c",
+    "pagesRun": 40103550573,
+    "qualityRun": 40103550386,
+    "htmlVersion": "2026.10.24",
+    "http": 200,
+    "tlsVerifyResult": 0,
+    "assetHashesMatched": true,
+    "responsiveSmokeOnPublishedDomain": {
+      "report": [
+        {
+          "width": 320,
+          "overflow": false,
+          "services": 7,
+          "projects": 4,
+          "menu": true,
+          "filters": true,
+          "pause": true,
+          "faq": true,
+          "pageErrors": []
+        },
+        {
+          "width": 390,
+          "overflow": false,
+          "services": 7,
+          "projects": 4,
+          "menu": true,
+          "filters": true,
+          "pause": true,
+          "faq": true,
+          "pageErrors": []
+        },
+        {
+          "width": 768,
+          "overflow": false,
+          "services": 7,
+          "projects": 4,
+          "menu": true,
+          "filters": true,
+          "pause": true,
+          "faq": true,
+          "pageErrors": []
+        },
+        {
+          "width": 1440,
+          "overflow": false,
+          "services": 7,
+          "projects": 4,
+          "menu": true,
+          "filters": true,
+          "pause": true,
+          "faq": true,
+          "pageErrors": []
+        }
+      ],
+      "reducedMotion": true
+    }
+  }
 }
