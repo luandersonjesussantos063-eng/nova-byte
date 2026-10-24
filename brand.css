@@ -165,3 +165,26 @@ input:focus,select:focus,textarea:focus{
 @media(max-width:760px){
   .nav-links{background:#071020!important;border-color:var(--nb-line)!important}
 }
+
+/* NovaByte | identidade visual turquesa alinhada ao Instagram — outubro 2026 */
+:root{--nb-blue:#16c6d5;--nb-orange:#16c6d5;--nb-line:rgba(32,207,218,.22);--nb-cyan:#20d5dc;--nb-ink:#071923}
+body{background:#06131d!important;color:#f4fcff}
+.studio-header{background:rgba(5,19,29,.94)!important;border-bottom:1px solid rgba(32,213,220,.2)!important;backdrop-filter:blur(16px)}
+.brand-symbol,.maker-mark{background:linear-gradient(135deg,#11b8ca,#41e5dd)!important;color:#04202b!important;box-shadow:0 10px 32px rgba(32,213,220,.2)!important}
+.studio-brand em,.studio-kicker,.section-index,.value-eyebrow,.service-number{color:#20d5dc!important}
+.studio-hero h1 span,.studio-section h2 span{color:#31e1dc!important}
+.studio-button,.nav-contact{background:linear-gradient(135deg,#13bdcb,#42e0d8)!important;color:#06212a!important;border-color:transparent!important;box-shadow:0 12px 28px rgba(17,189,203,.18)!important}
+.studio-button:hover,.nav-contact:hover{filter:brightness(1.09);transform:translateY(-2px)}
+.studio-hero-sales{background:radial-gradient(ellipse at 85% 15%,rgba(19,198,211,.12),transparent 48%)}
+.hero-value-panel,.studio-service,.benefit-grid article,.maker-card,.local-points>div{border-color:rgba(32,213,220,.2)!important}
+.hero-value-panel{background:linear-gradient(145deg,#0d2c38,#091b29)!important}
+.service-tags span,.about-points span{border-color:rgba(32,213,220,.28)!important;color:#b5f4f3!important}
+.capability-strip{border-color:rgba(32,213,220,.2)!important}
+.capability-strip span:before{background:#20d5dc!important}
+.projects-section{background:#edfafa!important}
+.portfolio-cta{background:#dcf5f5!important;border-color:#b6e8e9!important}
+.preview-caption{background:linear-gradient(150deg,#10333b,#0b1f2b)!important}
+.preview-caption span{color:#42e0d8!important}
+.site-preview-window{background:#071c24!important}
+:focus-visible{outline:3px solid #20d5dc;outline-offset:3px}
+@media(max-width:760px){.studio-hero h1{font-size:clamp(2.6rem,11vw,4.8rem)}.studio-button{min-height:46px}}
