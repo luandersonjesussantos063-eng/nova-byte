@@ -1,0 +1,27 @@
+name: Validar vitrine NovaByte
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'index.html'
+      - 'studio.css'
+      - 'brand.css'
+      - 'home.js'
+      - 'assets/brand/**'
+      - 'assets/projects/**'
+      - 'scripts/tests/home-redesign.test.mjs'
+      - '.github/workflows/home-quality.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --check home.js
+      - run: node --test scripts/tests/home-redesign.test.mjs
