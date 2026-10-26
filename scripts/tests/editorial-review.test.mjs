@@ -3,11 +3,17 @@ import fs from 'node:fs';import vm from 'node:vm';import {execFileSync} from 'no
 import {automaticNewsEnabled} from '../editorial-policy.mjs';
 const audit=JSON.parse(fs.readFileSync('docs/adsense-review-2026-10-21.json','utf8'));
 const read=p=>fs.readFileSync(p,'utf8');
-test('archive pages under editorial review remain noindex, outside sitemap and without ads',()=>{
+test('retired summaries are not published and review hubs cannot advertise or request indexing',()=>{
  assert.equal(audit.archivedArticles.length,114);
  const sitemap=read('sitemap.xml');
- for(const f of [...audit.archivedArticles,...audit.archiveHubs]){
-  const html=read(f);assert.match(html,/<meta name="robots" content="noindex,follow">/,f);assert(!/pagead2\.googlesyndication\.com|adsbygoogle|monetization\.js/.test(html),f);assert(!sitemap.includes('/'+f+'</loc>'),f);
+ for(const f of audit.archivedArticles){
+  assert(!fs.existsSync(f),'retired public file: '+f);
+  assert(!sitemap.includes('/'+f+'</loc>'),f);
+ }
+ for(const f of audit.archiveHubs){
+  const html=read(f);assert.match(html,/<meta name="robots" content="noindex,follow">/,f);
+  assert(!/pagead2\.googlesyndication\.com|adsbygoogle|monetization\.js/.test(html),f);
+  assert(!sitemap.includes('/'+f+'</loc>'),f);
  }
  for(const f of ['ferramentas.html','como-saber-se-site-tem-seo.html','por-que-meu-site-nao-aparece-no-google.html'])assert(sitemap.includes('/'+f+'</loc>'),f);
  assert.match(read('index.html'), /<meta name="robots" content="index,follow/);
@@ -32,4 +38,14 @@ test('home and affected service pages contain valid inline JavaScript',()=>{
    assert.doesNotThrow(()=>new vm.Script(m[2]),f);
   }
  }
+});
+test('navigation and guides under review do not request ads; verification identity remains available',()=>{
+ const directories=['servicos','projetos','empresa','como-funciona','duvidas','atendimento-local','explorar','avaliacoes'];
+ const guides=['como-melhorar-seo-do-site','ia-consegue-criar-site-completo','ia-consegue-criar-aplicativo-completo','landing-page-ou-site-qual-escolher','quanto-custa-criar-site-profissional-2026','como-saber-se-site-esta-lento','site-ou-instagram-para-empresa','quanto-tempo-demora-criar-aplicativo','quanto-custa-criar-aplicativo'];
+ for(const file of [...directories.map(p=>p+'/index.html'),...guides.map(p=>p+'.html')]){
+  const html=read(file);assert(!/pagead2\.googlesyndication\.com\/pagead\/js\/adsbygoogle|<ins\b[^>]*adsbygoogle/.test(html),file);
+  for(const link of ['/privacidade.html','/termos.html','/politica-editorial.html'])assert(html.includes('href="'+link+'"'),file+': '+link);
+ }
+ assert(read('index.html').includes('name="google-adsense-account" content="ca-pub-2466231259507657"'));
+ assert.match(read('ads.txt'),/^google\.com, pub-2466231259507657, DIRECT, f08c47fec0942fa0\s*$/);
 });

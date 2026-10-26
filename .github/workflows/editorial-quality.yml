@@ -2,6 +2,10 @@ name: Qualidade editorial e publicação
 on:
   push:
     paths:
+      - '*.html'
+      - '*/index.html'
+      - 'sitemap.xml'
+      - 'ads.txt'
       - 'scripts/editorial-policy.*'
       - 'scripts/tests/editorial-review.test.mjs'
       - 'scripts/news/run-news.mjs'
