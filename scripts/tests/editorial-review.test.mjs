@@ -3,11 +3,11 @@ import fs from 'node:fs';import vm from 'node:vm';import {execFileSync} from 'no
 import {automaticNewsEnabled} from '../editorial-policy.mjs';
 const audit=JSON.parse(fs.readFileSync('docs/adsense-review-2026-10-21.json','utf8'));
 const read=p=>fs.readFileSync(p,'utf8');
-test('reviewed archive pages allow indexing, appear in sitemap and keep ads disabled',()=>{
+test('archive pages under editorial review remain noindex, outside sitemap and without ads',()=>{
  assert.equal(audit.archivedArticles.length,114);
  const sitemap=read('sitemap.xml');
  for(const f of [...audit.archivedArticles,...audit.archiveHubs]){
-  const html=read(f);assert.match(html,/<meta name="robots" content="index,follow,max-image-preview:large">/,f);assert(!/pagead2\.googlesyndication\.com|adsbygoogle|monetization\.js/.test(html),f);assert(sitemap.includes('/'+f+'</loc>'),f);
+  const html=read(f);assert.match(html,/<meta name="robots" content="noindex,follow">/,f);assert(!/pagead2\.googlesyndication\.com|adsbygoogle|monetization\.js/.test(html),f);assert(!sitemap.includes('/'+f+'</loc>'),f);
  }
  for(const f of ['ferramentas.html','como-saber-se-site-tem-seo.html','por-que-meu-site-nao-aparece-no-google.html'])assert(sitemap.includes('/'+f+'</loc>'),f);
  assert.match(read('index.html'), /<meta name="robots" content="index,follow/);
