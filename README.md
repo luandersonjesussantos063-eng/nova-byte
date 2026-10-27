@@ -7,7 +7,7 @@ Site principal: https://novabytesolucoes.com.br/.
 - `studio.css`: layout exclusivo da página principal, responsividade e redução de movimento.
 - `brand.css` e `portal.css`: paleta turquesa compartilhada pelas páginas institucionais que já usam esses arquivos.
 - `home.js`: menu móvel, filtros de projetos, animações progressivas e pausa das prévias. Sem formulários de envio ou acesso a dados privados.
-- `assets/brand/novabyte-instagram.jpg`: avatar/logotipo obtido do perfil público oficial confirmado pelo proprietário, @novabyte.solucoes; arquivo local para não depender de URL temporária do Instagram.
+- `assets/brand/novabyte-metal-reference.jpg`: imagem de identidade NB enviada pelo proprietário em 27/10/2026, com grafite, prata e vidro turquesa. `novabyte-metal-mark.svg` usa a própria imagem incorporada e enquadrada para o cabeçalho/rodapé, sem dependência externa. A assinatura completa aparece na abertura, inclusive no celular.
 - `assets/projects/`: capturas reais de telas públicas, sem dados de clientes ou sessões autenticadas.
 
 O WhatsApp mantém o número existente +55 31 98377-1576 e mensagens distintas por serviço. Instagram: https://www.instagram.com/novabyte.solucoes/.
@@ -29,3 +29,6 @@ W Prime Elétrica, Anuncia Lucas e NovaByte Studio. São projetos já desenvolvi
 - Testes de navegação executados com Chromium em 320, 390, 768 e 1440 px: menu, filtros, FAQ, pausa das prévias e ausência de rolagem horizontal. Preferência de redução de movimento conferida. Isso é emulação responsiva, não teste em aparelhos físicos.
 - Google Analytics e anúncios foram neutralizados somente no navegador local de QA, para não gerar eventos/impressões de teste; os scripts de produção foram preservados.
 - `scripts/tests/editorial-review.test.mjs` segue protegendo a pausa das notícias automáticas e os arquivos em revisão. A reforma não muda seu estado editorial.
+
+## Identidade visual — 27/10/2026
+O proprietário pediu adaptar o portal à referência NB metálica enviada. A página inicial usa fundo prata, cartões grafite e detalhes turquesa; as nove páginas institucionais compartilham a marca e a navegação. Conteúdo, projetos, contatos, domínio, integrações de privacidade e medição são preservados. Sistemas independentes, incluindo W Prime, não recebem mudanças. A imagem enviada é mantida localmente sem edição de pixels; o enquadramento é feito em CSS/SVG.

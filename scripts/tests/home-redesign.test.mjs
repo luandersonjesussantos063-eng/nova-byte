@@ -10,7 +10,7 @@ test('anchors, local resources, accessible controls and reduced motion are valid
  const ids=new Set([...home.matchAll(/\bid="([^"]+)"/g)].map(m=>m[1]));for(const m of home.matchAll(/href="#([^"]+)"/g))assert(ids.has(m[1]),m[1]);
  for(const m of html.matchAll(/(?:src|href)="(\/[^"?#]+)(?:\?[^"#]*)?"/g))assert(fs.existsSync('.'+m[1]),m[1]);
  assert(html.includes('aria-controls="studio-menu"'));assert(html.includes('aria-label="Filtrar projetos"'));assert(css.includes('prefers-reduced-motion:reduce'));
- assert(html.includes('assets/brand/novabyte-instagram.jpg'));assert(fs.statSync('assets/brand/novabyte-instagram.jpg').size<25000);
+ assert(html.includes('assets/brand/novabyte-metal-mark.svg'));assert(fs.statSync('assets/brand/novabyte-metal-reference.jpg').size<250000);
  for(const m of html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)){if(m[1].includes('application/ld+json')){const data=JSON.parse(m[2]);assert(data['@context']);}else if(!m[1].includes('src='))assert.doesNotThrow(()=>new vm.Script(m[2]));}
  assert.doesNotThrow(()=>new vm.Script(fs.readFileSync('home.js','utf8')));
 });
