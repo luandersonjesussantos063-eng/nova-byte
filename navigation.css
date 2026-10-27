@@ -6,3 +6,4 @@
 /* Identidade metálica: a marca também aparece na abertura móvel. */
 .nb-home:not(.nb-inner) .hero-visual.metal-visual{display:flex}
 .nav-links{background:#252d32}.header-contact{color:#176c71}
+@media(max-width:380px){.header-contact{display:none}}

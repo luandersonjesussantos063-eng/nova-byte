@@ -32,3 +32,5 @@ W Prime Elétrica, Anuncia Lucas e NovaByte Studio. São projetos já desenvolvi
 
 ## Identidade visual — 27/10/2026
 O proprietário pediu adaptar o portal à referência NB metálica enviada. A página inicial usa fundo prata, cartões grafite e detalhes turquesa; as nove páginas institucionais compartilham a marca e a navegação. Conteúdo, projetos, contatos, domínio, integrações de privacidade e medição são preservados. Sistemas independentes, incluindo W Prime, não recebem mudanças. A imagem enviada é mantida localmente sem edição de pixels; o enquadramento é feito em CSS/SVG.
+
+Validação desta identidade: seis testes automatizados passaram; recursos locais conferidos nas nove páginas; publicação GitHub Pages concluída no domínio existente, com imagens e menu verificados no navegador. O botão de contato do cabeçalho cede espaço ao menu em telas de até 380 px; os contatos seguem disponíveis no conteúdo.
