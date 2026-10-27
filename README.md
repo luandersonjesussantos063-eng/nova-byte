@@ -5,9 +5,9 @@ Site principal: https://novabytesolucoes.com.br/.
 ## Onde manter a página principal
 - `index.html`: apresentação, sete serviços, projetos reais, diferenciais, processo, contatos e SEO.
 - `studio.css`: layout exclusivo da página principal, responsividade e redução de movimento.
-- `brand.css` e `portal.css`: paleta turquesa compartilhada pelas páginas institucionais que já usam esses arquivos.
+- `brand.css` e `portal.css`: paleta azul e laranja compartilhada pelas páginas institucionais que já usam esses arquivos.
 - `home.js`: menu móvel, filtros de projetos, animações progressivas e pausa das prévias. Sem formulários de envio ou acesso a dados privados.
-- `assets/brand/novabyte-metal-reference.jpg`: imagem de identidade NB enviada pelo proprietário em 27/10/2026, com grafite, prata e vidro turquesa. `novabyte-metal-mark.svg` usa a própria imagem incorporada e enquadrada para o cabeçalho/rodapé, sem dependência externa. A assinatura completa aparece na abertura, inclusive no celular.
+- `assets/brand/novabyte-n.svg`: símbolo N geométrico azul e laranja da identidade solicitada. `assets/brand/novabyte-studio-blue-orange.jpg`: referência de ambiente enviada pelo proprietário, usada na abertura sem edição de pixels.
 - `assets/projects/`: capturas reais de telas públicas, sem dados de clientes ou sessões autenticadas.
 
 O WhatsApp mantém o número existente +55 31 98377-1576 e mensagens distintas por serviço. Instagram: https://www.instagram.com/novabyte.solucoes/.
@@ -30,7 +30,7 @@ W Prime Elétrica, Anuncia Lucas e NovaByte Studio. São projetos já desenvolvi
 - Google Analytics e anúncios foram neutralizados somente no navegador local de QA, para não gerar eventos/impressões de teste; os scripts de produção foram preservados.
 - `scripts/tests/editorial-review.test.mjs` segue protegendo a pausa das notícias automáticas e os arquivos em revisão. A reforma não muda seu estado editorial.
 
-## Identidade visual — 27/10/2026
-O proprietário pediu adaptar o portal à referência NB metálica enviada. A página inicial usa fundo prata, cartões grafite e detalhes turquesa; as nove páginas institucionais compartilham a marca e a navegação. Conteúdo, projetos, contatos, domínio, integrações de privacidade e medição são preservados. Sistemas independentes, incluindo W Prime, não recebem mudanças. A imagem enviada é mantida localmente sem edição de pixels; o enquadramento é feito em CSS/SVG.
+## Identidade visual — referência corrigida em 27/10/2026
+O proprietário rejeitou a aplicação da referência NB metálica e definiu a identidade correta: símbolo N geométrico, Nova azul/Byte laranja, base marinho e visual de empresa de tecnologia. A página inicial passa a usar “Tecnologia para um amanhã melhor.”, foto do ambiente fornecida, botões laranja, serviços sobre fundo claro e portfólio em marinho. Cabeçalhos, rodapés e a marca das nove páginas institucionais acompanham essa direção. O menu compacto, os serviços, projetos, contatos, privacidade, medição e domínio são mantidos. As referências metálicas anteriores deixam de ser usadas.
 
-Validação desta identidade: seis testes automatizados passaram; recursos locais conferidos nas nove páginas; publicação GitHub Pages concluída no domínio existente, com imagens e menu verificados no navegador. O botão de contato do cabeçalho cede espaço ao menu em telas de até 380 px; os contatos seguem disponíveis no conteúdo.
+Validação: testes automatizados e recursos locais das nove páginas conferidos. A publicação é feita no mesmo GitHub Pages; conferir a execução do commit e o domínio antes de anunciar conclusão. A revisão visual no navegador cobre desktop; a configuração responsiva é revisada no CSS, sem alegar teste em aparelho físico.
