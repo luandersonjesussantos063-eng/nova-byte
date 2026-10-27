@@ -17,7 +17,7 @@ O motivo conhecido continua sendo “Conteúdo de baixo valor”, conforme regis
 - Seis testes passaram, incluindo ausência dos resumos na publicação, bloqueio de anúncios nas páginas em revisão, pausa real dos publicadores sem modificar dados e funcionamento estrutural da página inicial.
 - Sitemap: 58 URLs únicas; arquivos locais existentes, sem noindex nas URLs declaradas e sem links locais quebrados nas páginas declaradas. 47 blocos JSON-LD puderam ser interpretados. Não é uma certificação de resultados avançados no Google.
 - Navegador Chromium: 17 páginas alteradas em 390 e 1280 px, totalizando 34 navegações. Todas retornaram 200, sem erros JavaScript não tratados ou rolagem horizontal, com links de privacidade acessíveis. Requisições externas foram bloqueadas no navegador de teste para não gerar impressões de anúncios e eventos de Analytics. Isso não verifica CMP nem o funcionamento das contas Google.
-- Múltiplos H1 dos aplicativos Anuncia Lucas e NPlay representam telas/estados e não foram classificados como defeito desta revisão. Seus fluxos e dados não foram alterados.
+- Múltiplos H1 do aplicativo Anuncia Lucas representam telas/estados e não foram classificados como defeito desta revisão. Seus fluxos e dados não foram alterados.
 
 ## O que permanece na conta do proprietário
 

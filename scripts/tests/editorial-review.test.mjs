@@ -17,7 +17,6 @@ test('retired summaries are not published and review hubs cannot advertise or re
  }
  for(const f of ['ferramentas.html','como-saber-se-site-tem-seo.html','por-que-meu-site-nao-aparece-no-google.html'])assert(sitemap.includes('/'+f+'</loc>'),f);
  assert.match(read('index.html'), /<meta name="robots" content="index,follow/);
- assert(read('novaplay/index.html').includes('content="index,follow,max-image-preview:large"'));
  assert(!/^Disallow:\s*\/\s*$/m.test(read('robots.txt')));
 });
 test('paused publication scripts exit without changing public content or fetching news',()=>{

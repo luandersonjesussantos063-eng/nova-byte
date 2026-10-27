@@ -17,10 +17,10 @@ GitHub Pages publica a raiz da branch `main` do repositório `luandersonjesussan
 Aguardar a execução de `pages build and deployment` terminar em sucesso no commit correspondente. Conferir o HTML e os arquivos CSS/JS no domínio real antes de anunciar a atualização. Cabeçalhos e tags existentes de Google Analytics, AdSense e privacidade foram mantidos; não são garantia de aprovação de anúncios ou posicionamento no Google.
 
 ## Sistemas independentes
-NPlay (`novaplay/`), Anuncia Lucas (`anuncia-lucas/`), Studio (`previa/`), Divulga (`divulga/`) e serviços/dados em `supabase/` são sistemas independentes. A reformulação da vitrine de 24/10/2026 não modifica seu código nem dados. W Prime está no projeto Sites existente e repositório estoque-vendas, fora desta publicação.
+Anuncia Lucas (`anuncia-lucas/`), Studio (`previa/`), Divulga (`divulga/`) e serviços/dados em `supabase/` são sistemas independentes. A reformulação da vitrine de 24/10/2026 não modifica seu código nem dados. W Prime está no projeto Sites existente e repositório estoque-vendas, fora desta publicação.
 
 ## Portfólio em 24/10/2026
-W Prime Elétrica, NPlay, Anuncia Lucas e NovaByte Studio. São projetos já desenvolvidos, autorizados pelo proprietário para a vitrine. Para W Prime, a captura e o link mostram o login público; o painel e os dados continuam protegidos. NPlay aponta para a apresentação pública. Studio informa que a prévia é conceitual por modelos. O proprietário pediu retirar Digo Petiscaria quando o endereço externo retornou 404; não foram feitas mudanças no site externo.
+W Prime Elétrica, Anuncia Lucas e NovaByte Studio. São projetos já desenvolvidos, autorizados pelo proprietário para a vitrine. Para W Prime, a captura e o link mostram o login público; o painel e os dados continuam protegidos. Studio informa que a prévia é conceitual por modelos. O proprietário pediu retirar Digo Petiscaria quando o endereço externo retornou 404; não foram feitas mudanças no site externo.
 
 ## Backup e verificação
 - Branch remota anterior à reforma: `backup/site-before-turquoise-20261024-a5eccde`, commit a5eccdee8df61392a93a2e00f2c44fd3a4448724.

@@ -1,40 +1,16 @@
-const CACHE="novaplay-v0.51.31-search-ads1";
-const CORE=["./","./index.html","./styles.css","./assets/cinema-refresh.css","./assets/app-settings.css","./assets/app-settings.js","./assets/ios-compat.css","./assets/ios-compat.js","./profiles.js","./app.js","./manifest.webmanifest","./version.json"];
-self.addEventListener("install",event=>{
- event.waitUntil(caches.open(CACHE).then(async cache=>{
-  await Promise.allSettled(CORE.map(url=>cache.add(new Request(url,{cache:"reload"}))));
- }).then(()=>self.skipWaiting()));
-});
-self.addEventListener("activate",event=>{
- event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(key=>key.startsWith("novaplay-")&&key!==CACHE).map(key=>caches.delete(key)))).then(()=>self.clients.claim()));
-});
-self.addEventListener("fetch",event=>{
- const request=event.request;
- if(request.method!=="GET")return;
- const url=new URL(request.url);
- if(url.origin!==self.location.origin)return;
- // Leave actual media streaming to Safari/the browser. Intercepting byte
- // ranges or caching live segments can cause iOS buffering stalls and
- // can fill WebKit's relatively small cache with video data.
- if(request.headers.has("Range")||request.headers.has("range")||
-    request.destination==="video"||request.destination==="audio"||
-    /\.(?:mp4|m4v|mov|webm|ogv|m3u8|mpd|m4s|ts|aac|m4a|mp3|wav)(?:$)/i.test(url.pathname))return;
- if(url.searchParams.has("nplay-diagnostic")){event.respondWith(fetch(request,{cache:"no-store"}));return;}
- if(url.pathname.includes("/admin/")){event.respondWith(fetch(request,{cache:"no-store"}));return}
- const isNavigation=request.mode==="navigate"||/\/(?:index\.html)?$/.test(url.pathname);
- event.respondWith((async()=>{
-  try{
-   const response=await fetch(request,isNavigation?{cache:"reload"}:{cache:"no-cache"});
-   if(response.ok&&response.type==="basic"){
-    const copy=response.clone();
-    event.waitUntil(caches.open(CACHE).then(cache=>cache.put(request,copy)).catch(()=>{}));
-   }
-   return response;
-  }catch(error){
-   const cached=await caches.match(request);
-   if(cached)return cached;
-   if(isNavigation){const home=await caches.match("./index.html");if(home)return home}
-   throw error;
-  }
- })());
+self.addEventListener('install', event => event.waitUntil(self.skipWaiting()));
+self.addEventListener('activate', event => {
+  event.waitUntil((async () => {
+    const scope = new URL(self.registration.scope);
+    const prefix = scope.pathname.split('/').filter(Boolean).at(-1) + '-';
+    const keys = await caches.keys();
+    await Promise.all(keys.filter(key => key.startsWith(prefix)).map(key => caches.delete(key)));
+    await self.clients.claim();
+    const windows = await self.clients.matchAll({type: 'window', includeUncontrolled: true});
+    await self.registration.unregister();
+    await Promise.all(windows.filter(client => {
+      const url = new URL(client.url);
+      return url.origin === scope.origin && url.pathname.startsWith(scope.pathname);
+    }).map(client => client.navigate(new URL('/404.html', scope.origin).href)));
+  })());
 });

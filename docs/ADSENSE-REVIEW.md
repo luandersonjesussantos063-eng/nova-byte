@@ -18,7 +18,7 @@ Esses achados são fatores concretos a corrigir. Não afirmamos conhecer toda a 
 - Cron/push automático dos dois workflows removidos. Execução manual também termina sem buscar/publicar enquanto editorial-policy.json mantiver automaticNewsPublication=false. Nenhum conteúdo novo foi fabricado para preencher o site.
 - Dois guias receberam conteúdo novo específico: roteiro de diagnóstico de SEO, interpretação de evidências, caso real do portal, distinção entre rastreamento/indexação/classificação, passos do Search Console e referências oficiais. Sem depoimentos, experiências ou métricas inventadas.
 - Política editorial agora informa a pausa e os critérios reais para revisão. Scripts de Analytics inválidos foram corrigidos nas quatro páginas identificadas.
-- NPlay, autorização de aparelhos, dados, vídeos e funcionalidades das ferramentas não foram alterados por esta revisão. A integração AdSense permanece preparada nas páginas próprias; não significa anúncio ativo ou conta aprovada.
+- Autorização de aparelhos, dados, vídeos e funcionalidades das ferramentas não foram alterados por esta revisão. A integração AdSense permanece preparada nas páginas próprias; não significa anúncio ativo ou conta aprovada.
 
 ## Verificação
 - Três testes de regressão passaram: todos os arquivos em revisão sem anúncios e fora do sitemap; execução real das automações sem alteração de páginas/históricos; sintaxe dos scripts da homepage e serviços.
@@ -32,4 +32,4 @@ Esta é uma correção inicial dos problemas encontrados, não uma certificaçã
 O Google pode avaliar o domínio e suas diferentes áreas, inclusive conteúdo acessível publicamente. A decisão pode exigir outras mudanças. Não gerar cliques, tráfego artificial ou pedidos repetidos de revisão para tentar acelerar a análise.
 
 ## Publicação confirmada
-GitHub Pages concluiu a implantação 39610226005 do commit 9e7c5d62a6dbe05595403c74cb7c0061a71daa42; verificação editorial 39610227344 passou. HTTP 200 e conteúdo esperado confirmados na homepage, dois índices em revisão, dois artigos de amostra, dois guias revisados, política editorial, sitemap de 50 URLs e NPlay. O aviso na conta do Google permanece sem nova avaliação solicitada por esta sessão.
+GitHub Pages concluiu a implantação 39610226005 do commit 9e7c5d62a6dbe05595403c74cb7c0061a71daa42; verificação editorial 39610227344 passou. HTTP 200 e conteúdo esperado confirmados na homepage, dois índices em revisão, dois artigos de amostra, dois guias revisados, política editorial, sitemap de 50 URLs. O aviso na conta do Google permanece sem nova avaliação solicitada por esta sessão.
