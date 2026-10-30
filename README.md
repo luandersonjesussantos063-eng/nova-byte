@@ -54,3 +54,7 @@ Conferência no domínio publicado: navegação do menu compartilhado, filtro de
 O formulário com envio por e-mail usa FormSubmit, integração e teste autorizados explicitamente pelo proprietário em 29/10/2026. Campos: nome, e-mail, WhatsApp opcional, serviço e mensagem. O destinatário é novabytesolucoes@gmail.com. A confirmação exigida pelo provedor deve ser concluída nessa caixa de entrada antes de anunciar entrega de pedidos validada. A página de retorno é contato-enviado.html, fora da indexação. Não desativar a proteção antispam.
 
 Teste automatizado de envio: FormSubmit respondeu HTTP 403 / Cloudflare 1010, recusando o cliente deste ambiente. Não houve confirmação de entrega nem de envio de e-mail de ativação. O proprietário deve enviar um teste pela página publicada no navegador e, caso solicitado pelo provedor, confirmar a ativação em novabytesolucoes@gmail.com. Não repetir o teste automatizado ou contornar o bloqueio.
+
+## Recuperação do contato após indisponibilidade do provedor
+
+O proprietário confirmou erro HTTP 521 no envio humano ao FormSubmit. O formulário não envia mais solicitações a esse provedor: prepara uma mensagem localmente e oferece um link explícito para continuar no WhatsApp. Não há envio automático, armazenamento local ou confirmação falsa de recebimento. O visitante precisa enviar a mensagem no aplicativo. E-mail pelo formulário continua pendente de uma integração validada. O link mailto permanece disponível. Não reativar o FormSubmit nem trocar o destinatário/provedor sem validação e autorização para a nova integração.
