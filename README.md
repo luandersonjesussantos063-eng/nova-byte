@@ -58,3 +58,7 @@ Teste automatizado de envio: FormSubmit respondeu HTTP 403 / Cloudflare 1010, re
 ## Recuperação do contato após indisponibilidade do provedor
 
 O proprietário confirmou erro HTTP 521 no envio humano ao FormSubmit. O formulário não envia mais solicitações a esse provedor: prepara uma mensagem localmente e oferece um link explícito para continuar no WhatsApp. Não há envio automático, armazenamento local ou confirmação falsa de recebimento. O visitante precisa enviar a mensagem no aplicativo. E-mail pelo formulário continua pendente de uma integração validada. O link mailto permanece disponível. Não reativar o FormSubmit nem trocar o destinatário/provedor sem validação e autorização para a nova integração.
+
+## Web3Forms — integração preparada
+
+O proprietário autorizou o Web3Forms como novo processador. A branch contato-web3forms prepara envio por JSON com confirmação de sucesso, timeout, preservação dos dados em caso de falha e alternativa pelo WhatsApp. `contact-config.js` deve manter emailEnabled=false e accessKey vazio até o acesso à conta do destinatário novabytesolucoes@gmail.com, criação da chave do formulário e validação do envio. A chave de formulário é um alias público do Web3Forms; não inserir credenciais de login nesse arquivo. O novo serviço exige login/criação de conta e aceite dos termos pelo proprietário. Não publicar como funcional antes dessa etapa.
