@@ -46,3 +46,9 @@ O favicon é o N geométrico. A imagem de compartilhamento é `assets/brand/nova
 Verificação desta consolidação: seis testes existentes aprovados; recursos locais, IDs e dados estruturados conferidos nas 57 páginas públicas afetadas. Scripts funcionais das ferramentas, integrações, URLs canônicas e regras editoriais preservados. Os sistemas independentes listados acima permanecem fora do escopo.
 
 Conferência no domínio publicado: navegação do menu compartilhado, filtro de projetos e busca de ferramentas operacionais em navegador desktop. Ajustados o contraste da introdução de serviços no fundo claro e a numeração duplicada do catálogo. Revisão responsiva no CSS; não foi realizado teste em aparelho físico.
+
+## Contato e mapa
+
+`contato.html`, `contact.css` e `contact.js` apresentam os canais de contato e o mapa oficial obtido pelo recurso “Incorporar um mapa” do Perfil da Empresa no Google. O mapa só se conecta ao Google após o visitante tocar em “Carregar mapa do Google”; o endereço e o link externo funcionam sem carregar o iframe. A página orienta combinar atendimento presencial previamente. A política de privacidade descreve esse carregamento.
+
+O formulário com envio por e-mail foi preparado separadamente. A integração com FormSubmit e o envio de teste dependem de aprovação explícita do proprietário para esse serviço externo. Não anunciar recebimento por formulário antes da autorização, ativação do destinatário e teste de entrega.
