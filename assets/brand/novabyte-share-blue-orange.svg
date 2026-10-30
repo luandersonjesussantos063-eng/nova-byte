@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+<rect width="1200" height="630" fill="#0B1526"/>
+<path d="M1010 0 1200 0 1200 630 1080 630 855 220Z" fill="#101F35"/>
+<path d="M1110 0 1200 0 1200 630 1160 630 960 210Z" fill="#15263F"/>
+<g transform="translate(65 52) scale(.48)"><path d="M12 152 35 45 70 83 55 152H12Z" fill="#2864CE"/><path d="M44 8H88L177 118 155 152 44 18V8Z" fill="#3173D5"/><path d="M151 8H193L177 91 137 44 151 8Z" fill="#F39869"/><path d="m137 78 39 46c8 10 5 28-9 28h-43l13-74Z" fill="#EE9B73"/></g>
+<g font-family="DejaVu Sans,sans-serif"><text x="178" y="108" font-size="43" font-weight="700" fill="#79ABF3">Nova<tspan fill="#F39869">Byte</tspan></text><text x="180" y="132" font-size="11" letter-spacing="4" fill="#ADBCD0">SOLUÇÕES DIGITAIS</text>
+<text x="70" y="265" font-size="61" font-weight="700" fill="#F0F3F8">Tecnologia para</text><text x="70" y="343" font-size="61" font-weight="700" fill="#F0F3F8">um amanhã <tspan fill="#F39869">melhor.</tspan></text>
+<text x="73" y="410" font-size="24" fill="#ADBCD0">Sites · Sistemas · Aplicativos · Design e vídeos</text><path d="M73 506H1127" stroke="#30425B"/>
+<text x="73" y="559" font-size="21" fill="#ADBCD0">novabytesolucoes.com.br</text><text x="1127" y="559" text-anchor="end" font-size="18" fill="#79ABF3">Lucas do Rio Verde — MT</text></g></svg>

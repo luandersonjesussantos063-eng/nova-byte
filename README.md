@@ -3,8 +3,8 @@
 Site principal: https://novabytesolucoes.com.br/.
 
 ## Onde manter a página principal
-- `index.html`: apresentação, sete serviços, projetos reais, diferenciais, processo, contatos e SEO.
-- `studio.css`: layout exclusivo da página principal, responsividade e redução de movimento.
+- `index.html`: apresentação compacta, três grupos de serviços, projetos selecionados, contato e SEO. O catálogo completo permanece em `servicos/` e `projetos/`.
+- `studio.css`: layout da página principal e das páginas institucionais, responsividade e redução de movimento.
 - `brand.css` e `portal.css`: paleta azul e laranja compartilhada pelas páginas institucionais que já usam esses arquivos.
 - `home.js`: menu móvel, filtros de projetos, animações progressivas e pausa das prévias. Sem formulários de envio ou acesso a dados privados.
 - `assets/brand/novabyte-n.svg`: símbolo N geométrico azul e laranja da identidade solicitada. `assets/brand/novabyte-studio-blue-orange.jpg`: referência de ambiente enviada pelo proprietário, usada na abertura sem edição de pixels.
@@ -34,3 +34,13 @@ W Prime Elétrica, Anuncia Lucas e NovaByte Studio. São projetos já desenvolvi
 O proprietário rejeitou a aplicação da referência NB metálica e definiu a identidade correta: símbolo N geométrico, Nova azul/Byte laranja, base marinho e visual de empresa de tecnologia. A página inicial passa a usar “Tecnologia para um amanhã melhor.”, foto do ambiente fornecida, botões laranja, serviços sobre fundo claro e portfólio em marinho. Cabeçalhos, rodapés e a marca das nove páginas institucionais acompanham essa direção. O menu compacto, os serviços, projetos, contatos, privacidade, medição e domínio são mantidos. As referências metálicas anteriores deixam de ser usadas.
 
 Validação: testes automatizados e recursos locais das nove páginas conferidos. A publicação é feita no mesmo GitHub Pages; conferir a execução do commit e o domínio antes de anunciar conclusão. A revisão visual no navegador cobre desktop; a configuração responsiva é revisada no CSS, sem alegar teste em aparelho físico.
+
+## Consolidação visual — 29/10/2026
+
+A direção azul e laranja de `6936570` prevalece. `brand.css` é a fonte dos tokens: base `#0B1526`, superfícies `#101F35`/`#15263F`, azul `#3475D6`/`#79ABF3`, laranja `#F39869`/`#F5AF8A` e papel `#F6F5F2`. Carregar esse arquivo depois dos estilos locais. Não reintroduzir a referência metálica, verde-limão ou roxo como identidade da NovaByte.
+
+`brand-shell.css` e `brand-shell.js` unificam a assinatura, navegação acessível e rodapé de artigos e páginas comerciais. Ferramentas e editor PDF preservam seus controles; verde e vermelho continuam disponíveis para estados funcionais. Os cartões de serviços claros e o portfólio marinho compartilham o tratamento entre a inicial e os catálogos internos.
+
+O favicon é o N geométrico. A imagem de compartilhamento é `assets/brand/novabyte-share-blue-orange.png`, com fonte editável SVG ao lado; `og-image.png` permanece compatível com links antigos. O cartão específico de avaliação mantém a arte do proprietário. Versão de cache dos estilos: `20261029-unified`.
+
+Verificação desta consolidação: seis testes existentes aprovados; recursos locais, IDs e dados estruturados conferidos nas 57 páginas públicas afetadas. Scripts funcionais das ferramentas, integrações, URLs canônicas e regras editoriais preservados. Os sistemas independentes listados acima permanecem fora do escopo.
