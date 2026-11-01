@@ -19,3 +19,5 @@ Atendimento conectado ao número comercial fornecido pelo responsável: +55 11 9
 ## Marca original
 
 Logotipo original fornecido pela cliente aplicado com maior destaque no centro do cabeçalho e no rodapé. O PNG foi preservado; apenas seu enquadramento usa CSS para reduzir as margens da arte. O crédito Nova Byte permanece no rodapé, e a faixa superior identifica a Kaia Glow e o caráter demonstrativo.
+
+Ajuste de identidade v6: fundo do logotipo removido para aplicação transparente; cabeçalho claro mais compacto, sem a segunda faixa de anúncio. Símbolo e nome mantidos em dourado.
