@@ -11,3 +11,7 @@ Publicação pelo GitHub Pages existente, raiz de main. Arquivos independentes; 
 ## Campanha e carrossel
 
 Direção visual em vinho e rosa, com quatro fotografias de campanha ilustrativas geradas para o protótipo. Cada cena aponta para um produto real (Medicube, Biodance, Celimax e SKIN1004). Imagens locais em assets. Troca automática a cada 3 segundos, fade, indicadores e botões anterior/próximo/pausa, gesto de deslizar no celular. Pausa quando fora de vista, aba oculta, foco de teclado ou diálogo aberto; preferência por movimento reduzido inicia pausado. A vitrine editorial usa fotos reais dos quatro produtos e o catálogo de 54 anúncios permanece disponível.
+
+## WhatsApp
+
+Atendimento conectado ao número comercial fornecido pelo responsável: +55 11 96567-7152. Botão flutuante, atendimento no rodapé e link contextual na ficha dos produtos via wa.me. Os links preenchem a mensagem; o visitante precisa revisar e enviar no WhatsApp. Não há envio automático nem alteração na finalização demonstrativa.
