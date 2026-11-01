@@ -22,3 +22,6 @@ header{background:#fffdfb}.head{display:grid;grid-template-columns:1fr 180px 1fr
 .brand-logo{position:relative;overflow:hidden;width:170px;height:112px}.brand-logo img{position:absolute;left:-183px;top:0;width:464px;height:112px;max-width:none;object-fit:fill;filter:url(#kaia-logo-ink);mix-blend-mode:normal}.footer-logo{width:170px;height:120px}.footer-logo img{top:4px}
 @media(max-width:1050px){.head .brand-logo{width:155px}.head .brand-logo img{left:-190.5px}}
 @media(max-width:650px){.head .brand-logo{width:130px;height:100px}.head .brand-logo img{width:414px;height:100px;left:-174px}.footer-logo{width:135px;height:105px}.footer-logo img{width:435px;height:105px;left:-184px;top:0}}
+
+/* Soft blush bridge between the gold identity and wine campaign. */
+header{background:linear-gradient(180deg,#fcf3f5 0%,#f8e9ee 72%,#f3e0e7 100%)}header nav{border-top-color:#e8cfd8}.head .search{border-bottom-color:#dfc5cf}.head .actions b{background:#eedbe3}.demo{background:#f3e8ec;color:#92727e}.demo>span,.demo button{color:#9b7c88}
