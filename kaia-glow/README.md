@@ -15,3 +15,7 @@ Direção visual em vinho e rosa, com quatro fotografias de campanha ilustrativa
 ## WhatsApp
 
 Atendimento conectado ao número comercial fornecido pelo responsável: +55 11 96567-7152. Botão flutuante, atendimento no rodapé e link contextual na ficha dos produtos via wa.me. Os links preenchem a mensagem; o visitante precisa revisar e enviar no WhatsApp. Não há envio automático nem alteração na finalização demonstrativa.
+
+## Marca original
+
+Logotipo original fornecido pela cliente aplicado com maior destaque no centro do cabeçalho e no rodapé. O PNG foi preservado; apenas seu enquadramento usa CSS para reduzir as margens da arte. O crédito Nova Byte permanece no rodapé, e a faixa superior identifica a Kaia Glow e o caráter demonstrativo.
