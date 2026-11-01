@@ -7,3 +7,7 @@ Catálogo: 54 anúncios públicos encontrados no sitemap da usekaiaglow.com.br e
 Funcionalidades: busca sem distinção de acentos, categoria/marca/preço/disponibilidade/ofertas, ordenação, paginação, favoritos locais, galeria de produto e variantes, quantidade, sacola em memória, cupom demonstrativo e finalização sem pedido. Não coleta dados pessoais, solicita pagamento, envia mensagens nem reserva estoque. Sem analytics. Não indexável.
 
 Publicação pelo GitHub Pages existente, raiz de main. Arquivos independentes; fontes Google Fonts e fotos originais como dependências externas. Validar sintaxe JavaScript e conferir no navegador catálogo, busca, filtros, galeria, variantes, sacola e layout em tela estreita.
+
+## Campanha e carrossel
+
+Direção visual em vinho e rosa, com quatro fotografias de campanha ilustrativas geradas para o protótipo. Cada cena aponta para um produto real (Medicube, Biodance, Celimax e SKIN1004). Imagens locais em assets. Troca automática a cada 3 segundos, fade, indicadores e botões anterior/próximo/pausa, gesto de deslizar no celular. Pausa quando fora de vista, aba oculta, foco de teclado ou diálogo aberto; preferência por movimento reduzido inicia pausado. A vitrine editorial usa fotos reais dos quatro produtos e o catálogo de 54 anúncios permanece disponível.

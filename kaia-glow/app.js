@@ -12,7 +12,7 @@ $('#resultCount').textContent=list.length+' '+(favOnly?'favoritos':list.length==
 $('#products').innerHTML=list.slice(0,limit).map(p=>`<article class="product"><div class="product-photo"><a href="#produto-${p.id}" data-product="${p.id}" aria-label="Ver ${esc(p.name)}"><img src="${esc(p.images[0])}" alt="${esc(p.name)}" loading="lazy" referrerpolicy="no-referrer"></a>${!p.available?'<span class="badge sold">ESGOTADO</span>':p.oldPrice>p.price?`<span class="badge">${Math.round((1-p.price/p.oldPrice)*100)}% OFF</span>`:''}<button class="wish" data-wish="${p.id}" aria-label="Favoritar ${esc(p.name)}">♡</button></div><span class="product-brand">${esc(p.brand.toUpperCase())}</span><h3><a href="#produto-${p.id}" data-product="${p.id}">${esc(p.name)}</a></h3><div class="product-price">${p.oldPrice>p.price?`<del>${money(p.oldPrice)}</del>`:''}<span>${money(p.price)}</span></div><button class="quick-add" data-quick="${p.id}" ${p.available?'':'disabled'}>${p.available?'Adicionar à sacola':'Indisponível na consulta'}<span>${p.available?'+':'—'}</span></button></article>`).join('');$('#empty').hidden=!!list.length;$('#loadMore').hidden=list.length<=limit;all('nav [data-cat]').forEach(b=>b.classList.toggle('active',b.dataset.cat===cat&&!favOnly));counts()}
 function reset(){favOnly=false;limit=12;$('#search').value='';$('#category').value='Todos';$('#brand').value='';$('#price').value='0';$('#available').checked=false;$('#onSale').checked=false;$('#sort').value='featured';render()}
 function setCategory(cat){reset();$('#category').value=cat;render();$('#colecao').scrollIntoView()}
-$('#searchForm').onsubmit=e=>{e.preventDefault();limit=12;render();$('#colecao').scrollIntoView()};$('#search').oninput=()=>{limit=12;render()};for(const id of ['category','brand','price','available','onSale','sort'])$('#'+id).onchange=()=>{limit=12;render()};$('#clearFilters').onclick=reset;$('#resetEmpty').onclick=reset;$('#loadMore').onclick=()=>{limit+=12;render()};$('#favorites').onclick=()=>{reset();favOnly=true;render();$('#colecao').scrollIntoView()};$('#offers').onclick=()=>{reset();$('#onSale').checked=true;render();$('#colecao').scrollIntoView()};$('#heroExplore').onclick=reset;
+$('#searchForm').onsubmit=e=>{e.preventDefault();limit=12;render();$('#colecao').scrollIntoView()};$('#search').oninput=()=>{limit=12;render()};for(const id of ['category','brand','price','available','onSale','sort'])$('#'+id).onchange=()=>{limit=12;render()};$('#clearFilters').onclick=reset;$('#resetEmpty').onclick=reset;$('#loadMore').onclick=()=>{limit+=12;render()};$('#favorites').onclick=()=>{reset();favOnly=true;render();$('#colecao').scrollIntoView()};$('#offers').onclick=()=>{reset();$('#onSale').checked=true;render();$('#colecao').scrollIntoView()};
 $('#brand').innerHTML+=[...new Set(catalog.map(p=>p.brand))].sort().map(b=>`<option>${esc(b)}</option>`).join('');
 const hero=catalog.find(p=>p.available&&p.name.includes('PDRN Pink Collagen Gel Mask'))||catalog.find(p=>p.available);$('#heroImage').src=hero.images[0];$('#heroName').textContent=hero.name;$('#heroProduct').onclick=()=>openProduct(hero.id);$('#editorialImage').src=(catalog.find(p=>p.name.includes('Biodance Bio Collagen'))||hero).images[0];
 const tileNames=['Skincare','Cabelos','Corpo e spa'];$('#categoryGrid').innerHTML=tileNames.map(cat=>{const p=catalog.find(x=>x.category===cat&&x.available)||catalog.find(x=>x.category===cat);return `<button class="category-tile" data-cat="${cat}"><div class="category-img">${p?`<img src="${esc(p.images[0])}" alt="Seleção de ${cat}" loading="lazy">`:'<span style="display:grid;place-items:center;height:100%;font:40px Georgia;color:#a67c53">beauty<br>edit.</span>'}</div><span>${cat==='Corpo e spa'?'Corpo & spa':cat}<small>↗</small></span></button>`}).join('');
@@ -39,7 +39,53 @@ const desirePicks=[
  catalog.find(p=>p.available&&p.name.includes('PDRN Pink Collagen Gel Mask')),
  catalog.find(p=>p.available&&p.name.includes('Biodance Bio Collagen')),
  catalog.find(p=>p.available&&p.name.includes('Celimax Retinal Shot Tightening Booster')),
- catalog.find(p=>p.available&&p.name.includes('Fino Premium Touch Máscara'))
+ catalog.find(p=>p.available&&p.brand==='SKIN1004')
 ].filter(Boolean);
-$('#desireGrid').innerHTML=desirePicks.map((p,i)=>`<article class="product desire-product"><div class="desire-number">0${i+1} / THE KAIA EDIT</div><div class="product-photo"><a href="#produto-${p.id}" data-product="${p.id}" aria-label="Descobrir ${esc(p.name)}"><img src="${esc(p.images[0])}" alt="${esc(p.name)}" loading="eager"></a><button class="wish" data-wish="${p.id}" aria-label="Favoritar ${esc(p.name)}">♡</button></div><span class="product-brand">${esc(p.brand.toUpperCase())}</span><h3><a href="#produto-${p.id}" data-product="${p.id}">${esc(p.name)}</a></h3><div class="desire-purchase"><span>${money(p.price)}</span><button data-quick="${p.id}" aria-label="Adicionar ${esc(p.name)} à sacola">Eu quero <span>↗</span></button></div></article>`).join('');
+$('#desireGrid').innerHTML=desirePicks.map((p,i)=>`<article class="product desire-product"><div class="desire-number">0${i+1} / THE KAIA EDIT</div><div class="product-photo"><a href="#produto-${p.id}" data-product="${p.id}" aria-label="Descobrir ${esc(p.name)}"><img src="${esc(p.id==='351521227'?p.images[8]:p.images[0])}" alt="${esc(p.name)}" loading="eager"></a><button class="wish" data-wish="${p.id}" aria-label="Favoritar ${esc(p.name)}">♡</button></div><span class="product-brand">${esc(p.brand.toUpperCase())}</span><h3><a href="#produto-${p.id}" data-product="${p.id}">${esc(p.name)}</a></h3><div class="desire-purchase"><span>${money(p.price)}</span><button data-quick="${p.id}" aria-label="Adicionar ${esc(p.name)} à sacola">Eu quero <span>↗</span></button></div></article>`).join('');
 counts();
+
+// Four editorial campaigns; rotate every three seconds while in view.
+(()=>{
+ const section=$('#inicio'),photos=all('[data-campaign-image]');
+ const slides=[
+  {product:desirePicks[0],headline:'O seu glow<br>começa <em>aqui.</em>',description:'Medicube PDRN Pink Collagen Gel Mask.<br>Uma pausa na rotina. Um cuidado para chamar de seu.'},
+  {product:desirePicks[1],headline:'Seu momento.<br>Seu <em>ritual.</em>',description:'Biodance Bio Collagen Real Deep Mask.<br>Descubra o prazer de reservar um tempo para você.'},
+  {product:desirePicks[2],headline:'Um cuidado.<br>Só <em>seu.</em>',description:'Celimax Retinal Shot Tightening Booster.<br>Conheça de perto um novo passo no seu ritual.'},
+  {product:desirePicks[3],headline:'Uma pausa.<br>Mais <em>você.</em>',description:'SKIN1004 Madagascar Centella Boosting Toner.<br>Uma nova descoberta para os seus momentos de cuidado.'}
+ ];
+ let index=0,timer=null,visible=true,userPaused=matchMedia('(prefers-reduced-motion: reduce)').matches,focused=false,touchStart=null;
+ const dots=$('#campaignDots');
+ dots.innerHTML=slides.map((s,i)=>`<button data-campaign-dot="${i}" aria-label="Ver campanha ${i+1}: ${esc(s.product.brand)}" aria-current="${i===0?'true':'false'}"><span></span></button>`).join('');
+ function updatePlayback(){
+  clearInterval(timer);timer=null;const running=!userPaused&&!document.hidden&&visible&&!focused&&!all('dialog').some(d=>d.open);
+  section.classList.toggle('carousel-running',running);
+  $('#campaignPause').textContent=userPaused?'▶':'Ⅱ';
+  $('#campaignPause').setAttribute('aria-label',userPaused?'Reproduzir carrossel':'Pausar carrossel');
+  $('#campaignPause').setAttribute('aria-pressed',String(userPaused));
+  if(running)timer=setInterval(()=>show(index+1),3000);
+ }
+ function show(next){
+  index=(next+slides.length)%slides.length;const s=slides[index];
+  photos.forEach((im,i)=>im.classList.toggle('active',i===index));
+  $('#campaignHeadline').innerHTML=s.headline;$('#campaignDescription').innerHTML=s.description;
+  $('#heroImage').src=s.product.id==='351521227'?s.product.images[8]:s.product.images[0];
+  $('#heroImage').alt=s.product.name;$('#heroName').textContent=s.product.name;
+  $('#heroProduct').onclick=()=>openProduct(s.product.id);
+  $('#heroExplore').href='#produto-'+s.product.id;
+  $('#heroExplore').onclick=e=>{e.preventDefault();openProduct(s.product.id)};
+  $('#campaignLabel').textContent='0'+(index+1)+' / 04 — '+s.product.brand.toUpperCase();
+  all('[data-campaign-dot]').forEach((b,i)=>b.setAttribute('aria-current',String(i===index)));
+ }
+ function manual(next){show(next);updatePlayback()}
+ $('#campaignPrevious').onclick=()=>manual(index-1);$('#campaignNext').onclick=()=>manual(index+1);
+ all('[data-campaign-dot]').forEach(b=>b.onclick=()=>manual(Number(b.dataset.campaignDot)));
+ $('#campaignPause').onclick=()=>{userPaused=!userPaused;if(!userPaused)focused=false;updatePlayback()};
+ section.addEventListener('focusin',()=>{focused=true;updatePlayback()});
+ section.addEventListener('focusout',e=>{if(!section.contains(e.relatedTarget)){focused=false;updatePlayback()}});
+ section.addEventListener('touchstart',e=>{touchStart=e.touches[0].clientX},{passive:true});
+ section.addEventListener('touchend',e=>{if(touchStart===null)return;const delta=e.changedTouches[0].clientX-touchStart;touchStart=null;if(Math.abs(delta)>60)manual(index+(delta<0?1:-1))},{passive:true});
+ document.addEventListener('visibilitychange',updatePlayback);
+ all('dialog').forEach(d=>new MutationObserver(updatePlayback).observe(d,{attributes:true,attributeFilter:['open']}));
+ if('IntersectionObserver' in window)new IntersectionObserver(entries=>{visible=entries[0].isIntersecting;updatePlayback()},{threshold:.15}).observe(section);
+ show(0);updatePlayback();
+})();
