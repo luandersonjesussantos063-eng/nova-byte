@@ -13,7 +13,8 @@ const defaults=[
  {id:106,title:'Terreno Novo Horizonte',district:'Parque das Flores',type:'Terreno',purpose:'Comprar',price:250000,area:360,beds:0,baths:0,parking:0,tour:false,image:'land',desc:'Lote ilustrativo para demonstrar anúncios de terrenos. Localização, metragem e valor são fictícios. A imagem representa apenas uma possibilidade de terreno.',features:['Área demonstrativa de 360 m²','Uso residencial ilustrativo','Cadastro de medidas','Consulta de documentação na versão real']}
 ];
 let properties=readLocal('morada-properties-v1',null);if(!Array.isArray(properties)||properties.length!==6||properties.some(p=>!p.id||!p.title))properties=structuredClone(defaults);
-let favorites=new Set(readLocal('morada-favorites-v1',[]).filter(id=>defaults.some(p=>p.id===id))),compare=new Set(),purpose='Comprar',favoritesOnly=false,currentProperty=null,galleryIndex=0;
+const savedFavorites=readLocal('morada-favorites-v1',[]);
+let favorites=new Set((Array.isArray(savedFavorites)?savedFavorites:[]).filter(id=>defaults.some(p=>p.id===id))),compare=new Set(),purpose='Comprar',favoritesOnly=false,currentProperty=null,galleryIndex=0;
 let branding=readLocal('morada-brand-v1','morada');if(typeof branding!=='string')branding='morada';
 document.querySelectorAll('[data-brand]').forEach(el=>el.textContent=branding);
 let toastTimer;function toast(msg){$('#toast').textContent=msg;$('#toast').classList.add('visible');clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('#toast').classList.remove('visible'),3200)}
@@ -53,3 +54,20 @@ $('#utilityDialog').addEventListener('click',e=>{if(e.target.id==='clearLocal'){
 $('#demoSettings').onclick=()=>{utility(`<span class="eyebrow">EXPERIMENTE A SUA MARCA</span><h2>Personalize o protótipo.</h2><p>As mudanças ficam apenas neste navegador. Não alteram o site de outros visitantes.</p><form id="brandForm" class="form-grid"><label class="full">Nome da imobiliária<input id="brandName" maxlength="24" value="${safe(branding)}" required></label><label class="full">Imóvel para editar<select id="editProperty">${properties.map(p=>`<option value="${p.id}">${safe(p.title)}</option>`).join('')}</select></label><label>Nome do imóvel<input id="editTitle" required maxlength="60"></label><label>Valor (R$)<input id="editPrice" required type="number" min="1" max="100000000" step="1"></label><button class="button full">Salvar demonstração neste navegador</button></form><button class="text-btn" id="restoreDemo" style="margin-top:18px">Restaurar dados originais</button>`);const sync=()=>{const p=properties.find(x=>x.id===+$('#editProperty').value);$('#editTitle').value=p.title;$('#editPrice').value=p.price};sync();$('#editProperty').onchange=sync;$('#brandForm').onsubmit=e=>{e.preventDefault();branding=$('#brandName').value.trim()||'morada';const p=properties.find(x=>x.id===+$('#editProperty').value);p.title=$('#editTitle').value.trim()||p.title;p.price=+$('#editPrice').value;saveLocal('morada-brand-v1',branding);saveLocal('morada-properties-v1',properties);document.querySelectorAll('[data-brand]').forEach(x=>x.textContent=branding);render();$('#utilityDialog').close();toast('Sua demonstração foi personalizada neste navegador.')};$('#restoreDemo').onclick=()=>{properties=structuredClone(defaults);branding='morada';saveLocal('morada-properties-v1',properties);saveLocal('morada-brand-v1',branding);document.querySelectorAll('[data-brand]').forEach(x=>x.textContent=branding);render();$('#utilityDialog').close();toast('Demonstração restaurada.')}};
 document.addEventListener('keydown',e=>{if($('#detailDialog').open&&!$('#utilityDialog').open&&!$('#tourDialog').open){if(e.key==='ArrowRight')$('#nextPhoto').click();if(e.key==='ArrowLeft')$('#prevPhoto').click()}});
 render();const hashMatch=location.hash.match(/^#imovel-(\d+)$/);if(hashMatch)openDetail(Number(hashMatch[1]));
+
+// Keep the video easy to find alongside the virtual visit.
+const featuredVideo=document.createElement('button');
+featuredVideo.className='button outline';
+featuredVideo.id='featuredVideo';
+featuredVideo.textContent='▶ Assistir ao vídeo da casa';
+featuredVideo.style.marginTop='12px';
+featuredVideo.onclick=()=>{openDetail(101);showVideo(false)};
+$('#exploreTour').after(featuredVideo);
+$('#tourDialog').addEventListener('close',()=>$('#tourCanvas').blur());
+const pausePropertyVideos=()=>document.querySelectorAll('#detailDialog video').forEach(video=>video.pause());
+$('#tourDialog').addEventListener('focusin',pausePropertyVideos);
+window.addEventListener('hashchange',()=>{
+ const match=location.hash.match(/^#imovel-(\d+)$/);
+ if(match)openDetail(Number(match[1]));
+ else if($('#detailDialog').open)$('#detailDialog').close();
+});
