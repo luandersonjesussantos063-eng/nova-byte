@@ -93,6 +93,21 @@ counts();
 
 const ritualFilm=document.querySelector('#chronologisteVideo');
 if(ritualFilm){
- document.addEventListener('visibilitychange',()=>{if(document.hidden)ritualFilm.pause()});
- document.querySelectorAll('dialog').forEach(dialog=>new MutationObserver(()=>{if(dialog.open)ritualFilm.pause()}).observe(dialog,{attributes:true,attributeFilter:['open']}));
+ const soundButton=document.querySelector('#ritualSound');
+ let inView=false,autoPause=false,userPaused=false;
+ ritualFilm.muted=true;
+ const syncSound=()=>{soundButton.textContent=ritualFilm.muted?'Ativar som':'Desativar som';soundButton.setAttribute('aria-pressed',String(!ritualFilm.muted))};
+ soundButton.addEventListener('click',()=>{ritualFilm.muted=!ritualFilm.muted;syncSound()});
+ ritualFilm.addEventListener('volumechange',syncSound);
+ ritualFilm.addEventListener('pause',()=>{if(!autoPause&&inView&&!document.hidden)userPaused=true;autoPause=false});
+ ritualFilm.addEventListener('play',()=>{userPaused=false});
+ const updateRitualPlayback=()=>{
+  const blocked=document.hidden||!!document.querySelector('dialog[open]');
+  if(inView&&!blocked&&!userPaused){ritualFilm.play().catch(()=>{/* Native controls remain available when autoplay is restricted. */})}
+  else if(!ritualFilm.paused){autoPause=true;ritualFilm.pause()}
+ };
+ if('IntersectionObserver' in window)new IntersectionObserver(entries=>{const entry=entries[0];inView=entry.isIntersecting&&entry.intersectionRatio>=.2;updateRitualPlayback()},{threshold:[0,.2]}).observe(ritualFilm);
+ document.addEventListener('visibilitychange',updateRitualPlayback);
+ document.querySelectorAll('dialog').forEach(dialog=>new MutationObserver(updateRitualPlayback).observe(dialog,{attributes:true,attributeFilter:['open']}));
+ syncSound();
 }
