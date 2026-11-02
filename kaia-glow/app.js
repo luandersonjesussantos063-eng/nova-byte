@@ -162,12 +162,21 @@ couponsDialog.addEventListener('click',async event=>{
 renderCoupons();
 if(location.hash==='#cupons')openCoupons();
 
-// Keep the same search field available as a compact fixed bar while browsing.
+// Scroll-linked collapse: the same search field moves continuously into its compact position.
 (()=>{
  const header=document.querySelector('.retail-header'),stage=document.querySelector('.campaign-stage');
  if(!header||!stage)return;
  let scheduled=false;
- function update(){scheduled=false;const origin=stage.getBoundingClientRect().top+window.scrollY;header.classList.toggle('is-stuck',window.scrollY>origin+70)}
+ function update(){
+  scheduled=false;
+  const origin=stage.getBoundingClientRect().top+window.scrollY;
+  const progress=Math.max(0,Math.min(1,(window.scrollY-origin)/150));
+  header.style.setProperty('--scroll-progress',progress.toFixed(4));
+  header.style.setProperty('--header-top',Math.max(0,origin-window.scrollY)+'px');
+  header.style.setProperty('--header-ink',`rgb(${Math.round(255-156*progress)},${Math.round(255-204*progress)},${Math.round(255-179*progress)})`);
+  header.classList.toggle('is-compact',progress>=.999);
+  header.dataset.scrollProgress=progress.toFixed(3);
+ }
  function schedule(){if(!scheduled){scheduled=true;requestAnimationFrame(update)}}
  window.addEventListener('scroll',schedule,{passive:true});
  window.addEventListener('resize',schedule,{passive:true});
