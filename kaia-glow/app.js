@@ -183,3 +183,31 @@ if(location.hash==='#cupons')openCoupons();
  window.addEventListener('pageshow',schedule);
  update();
 })();
+
+// A visitor sees the invitation once per tab session and can reopen it from the menu.
+(()=>{
+ const dialog=document.querySelector('#referralDialog'),share=document.querySelector('#shareReferral'),status=document.querySelector('#referralStatus');
+ const sessionKey='kaia-referral-seen-v1';
+ let shown=false,returnFocus=null;
+ try{shown=sessionStorage.getItem(sessionKey)==='1'}catch{}
+ function openReferral(){
+  document.querySelectorAll('dialog[open]').forEach(d=>d.close());
+  returnFocus=document.activeElement;
+  status.textContent='';dialog.showModal();shown=true;
+  try{sessionStorage.setItem(sessionKey,'1')}catch{}
+ }
+ document.querySelectorAll('[data-open-referral]').forEach(b=>b.addEventListener('click',openReferral));
+ dialog.addEventListener('close',()=>{if(returnFocus&&returnFocus.isConnected)returnFocus.focus()});
+ function invite(){if(shown)return;if(document.hidden||document.querySelector('dialog[open]')){setTimeout(invite,2000);return}openReferral()}
+ if(!shown)setTimeout(invite,8000);
+ share.addEventListener('click',async()=>{
+  const url='https://novabytesolucoes.com.br/kaia-glow/';
+  const text='Conheça a Kaia Glow! Uma seleção especial de beleza e autocuidado para você.';
+  if(navigator.share){try{await navigator.share({title:'Conheça a Kaia Glow',text,url});status.textContent='Convite compartilhado! Fale com a Kaia para validar sua indicação e combinar o brinde.';return}catch(error){if(error.name==='AbortError')return}}
+  let copied=false;
+  try{await navigator.clipboard.writeText(text+' '+url);copied=true}catch{
+   const field=document.createElement('textarea');field.value=text+' '+url;field.setAttribute('readonly','');dialog.append(field);field.select();try{copied=document.execCommand('copy')}catch{}field.remove();share.focus();
+  }
+  status.textContent=copied?'Convite copiado! Envie para sua amiga e fale com a Kaia para validar a indicação.':'Copie e envie este link para sua amiga: '+url;
+ });
+})();
