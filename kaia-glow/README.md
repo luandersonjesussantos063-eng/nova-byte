@@ -52,3 +52,11 @@ A confirmação no Supabase permanece obrigatória (`mailer_autoconfirm=false`).
 Contas já confirmadas no projeto compartilhado podem entrar sem nova confirmação. Um cadastro duplicado não envia outro e-mail; a interface agora diferencia essa situação sem consultar publicamente a existência de endereços. O modelo de recuperação identifica o fluxo Kaia também pela URL de retorno, incluindo contas antigas sem metadata kaia_name. Nenhum cadastro existente foi desconfirmado.
 
 Verificação em 02/11/2026: domínio de envio auth.novabytesolucoes.com.br verificado no Resend; SPF, DKIM e DMARC publicados. Um teste de recuperação foi aceito como Delivered e o responsável confirmou recebimento na caixa de entrada. Isso verifica esse envio, sem garantir a classificação de mensagens futuras em todos os provedores. SMTP e identidade dos demais projetos foram preservados.
+
+## Cadastro completo v28
+
+Cadastro em duas etapas: acesso por e-mail/senha e confirmação; em seguida dados pessoais e de entrega na conta autenticada. Nome completo, CPF com verificação de dígitos, nascimento, telefone com DDD, CEP, rua, número/SN, bairro, cidade e UF obrigatórios; complemento opcional. País Brasil. Contas antigas também completam os dados ao acessar a área. Outras abas são liberadas após salvar o cadastro completo.
+
+Dados em `kaia_customer_details`, separados de metadata/JWT e de indicação. RLS exige dono, e-mail confirmado, conta ativa e ausência de anonimato. A gravação de nome e detalhes é transacional pela RPC invoker `kaia_save_customer_details`. CPF valida formato/dígitos, não comprova identidade. CEP valida formato, sem consulta externa. Não coleta cartão, Pix ou forma de pagamento. A integração com checkout real permanece pendente; o cadastro apenas prepara os dados para essa futura etapa.
+
+DDL: backend/customer-details.sql; testes transacionais: backend/test-customer-details.sql. Os dados de teste são revertidos e não representam clientes reais. CPF/endereço não são enviados em URLs, logs da aplicação ou armazenamento local; ficam acessíveis ao titular autenticado e à operação autorizada do banco.
