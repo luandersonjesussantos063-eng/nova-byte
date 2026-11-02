@@ -111,3 +111,9 @@ if(ritualFilm){
  document.querySelectorAll('dialog').forEach(dialog=>new MutationObserver(updateRitualPlayback).observe(dialog,{attributes:true,attributeFilter:['open']}));
  syncSound();
 }
+
+// Keep secondary services inside the header menu, leaving the product showcase clear.
+const kaiaMenuButton=document.querySelector('#kaiaMenuButton');
+const kaiaMenuDialog=document.querySelector('#kaiaMenuDialog');
+kaiaMenuButton.addEventListener('click',()=>kaiaMenuDialog.showModal());
+if(location.hash==='#exclusivos'){kaiaMenuDialog.showModal();history.replaceState(null,'',location.pathname+location.search)}
