@@ -161,3 +161,16 @@ couponsDialog.addEventListener('click',async event=>{
 });
 renderCoupons();
 if(location.hash==='#cupons')openCoupons();
+
+// Keep the same search field available as a compact fixed bar while browsing.
+(()=>{
+ const header=document.querySelector('.retail-header'),stage=document.querySelector('.campaign-stage');
+ if(!header||!stage)return;
+ let scheduled=false;
+ function update(){scheduled=false;const origin=stage.getBoundingClientRect().top+window.scrollY;header.classList.toggle('is-stuck',window.scrollY>origin+70)}
+ function schedule(){if(!scheduled){scheduled=true;requestAnimationFrame(update)}}
+ window.addEventListener('scroll',schedule,{passive:true});
+ window.addEventListener('resize',schedule,{passive:true});
+ window.addEventListener('pageshow',schedule);
+ update();
+})();
