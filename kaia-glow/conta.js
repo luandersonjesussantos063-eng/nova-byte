@@ -16,12 +16,13 @@ const supa = window.supabase?.createClient(KAIA_AUTH.url,KAIA_AUTH.publishableKe
 let mode=params.get('modo')==='cadastro'?'signup':'login', user=null, customer=null, sequence=0, recovery=params.get('redefinir')==='1',authBusy=false,initializing=true;
 function friendly(error){
  const code=error?.code||'';
+ if(code==='unexpected_failure'||error?.status>=500)return 'Não conseguimos enviar ou concluir sua solicitação agora. Tente novamente em alguns minutos ou fale com a Kaia.';
  if(code==='invalid_credentials')return 'E-mail ou senha incorretos. Confira os dados e tente novamente.';
  if(code==='email_not_confirmed'){$('#resendConfirmation').hidden=false;return 'Confirme seu e-mail antes de entrar. Verifique também a caixa de spam.';}
  if(code.includes('rate_limit')||error?.status===429)return 'Aguarde alguns minutos antes de tentar novamente.';
  if(code==='user_already_exists')return 'Este e-mail já tem cadastro. Entre ou recupere sua senha.';
  if(code==='weak_password')return 'Escolha uma senha mais forte, com pelo menos 10 caracteres, letras e números.';
- if(code==='email_address_not_authorized')return 'O envio de e-mails da loja ainda precisa ser configurado. Fale com a Kaia para concluir o acesso.';
+ if(code==='email_address_not_authorized')return 'O serviço de e-mail não autorizou o envio para este endereço. Fale com a Kaia para concluir o acesso.';
  if(code==='signup_disabled')return 'Novos cadastros estão temporariamente indisponíveis. Fale com a Kaia.';
  if(error?.message?.includes('fetch')||error?.name==='TypeError')return 'Não foi possível conectar. Confira sua internet e tente novamente.';
  return 'Não foi possível concluir agora. Tente novamente ou fale com a Kaia.';
@@ -66,6 +67,10 @@ async function loadAccount(){
  const {data:auth,error:authError}=await supa.auth.getUser();
  if(seq!==sequence)return;
  if(authError||!auth.user||auth.user.is_anonymous){user=null;setMode('login',false);status(authError&&authError.name!=='AuthSessionMissingError'?'Sua sessão expirou. Entre novamente.':'');return;}
+ if(!auth.user.email_confirmed_at){
+  const email=auth.user.email||'';await supa.auth.signOut({scope:'local'});
+  if(seq!==sequence&&user)return;user=null;setMode('login',false);$('#accountEmail').value=email;$('#resendConfirmation').hidden=false;status('Confirme seu e-mail para liberar sua conta. Use Reenviar confirmação se precisar de outro link.',true);return;
+ }
  user=auth.user;
  if(recovery){setMode('newpassword');return;}
  let {data:profile,error}=await supa.from('kaia_customers').select('*').eq('user_id',user.id).maybeSingle();
@@ -121,7 +126,7 @@ $('#authForm').addEventListener('submit',async event=>{
    const {data,error}=await supa.auth.signUp({email,password,options:{emailRedirectTo:KAIA_AUTH.accountUrl,data:{kaia_name:name,...(pendingCode?{kaia_ref:pendingCode}:{})}}});
    if(error)throw error;
    $('#accountPassword').value='';
-   if(data.session){await loadAccount();}else{setMode('login',false);status('Confira seu e-mail para confirmar o cadastro. Depois, volte aqui e entre com sua senha. Se você já possui uma conta, use Entrar ou Esqueci minha senha.');$('#resendConfirmation').hidden=false;}
+   if(data.session){await loadAccount();}else{setMode('login',false);status('Se este for um novo cadastro, enviaremos o link de confirmação ao seu e-mail. O acesso só será liberado após confirmar. Se você já possui uma conta confirmada, entre com sua senha ou use Esqueci minha senha; um novo cadastro não envia outra confirmação.');$('#resendConfirmation').hidden=false;}
   }else if(mode==='login'){
    const {error}=await supa.auth.signInWithPassword({email,password});if(error)throw error;$('#accountPassword').value='';await loadAccount();
   }else if(mode==='reset'){
