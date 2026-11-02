@@ -25,3 +25,11 @@ Ajuste de identidade v6: fundo do logotipo removido para aplicação transparent
 ## Vídeo Chronologiste
 
 Seção própria para o vídeo vertical de 16,77 segundos fornecido pelo responsável em 02/11/2026, com áudio, controles, reprodução mediante ação do visitante e pré-carregamento só de metadados. Fotos extraídas do mesmo vídeo; sem uso de imagens geradas para representar os produtos. A consulta de disponibilidade e valores abre o WhatsApp da Kaia Glow. Não foi associado ao anúncio Gloss Absolu, pois são linhas diferentes, nem foram inventados preço ou estoque de Chronologiste.
+
+## Vídeo imersivo v9
+
+Vídeo fora da grade, ocupando toda a largura da tela no celular. Reprodução automática silenciosa ao atingir 20% de visibilidade, loop, controles nativos e botão para ativar áudio. Pausa ao sair de vista, ocultar a aba ou abrir diálogo; respeita pausa manual. Informações de benefícios, indicação, ritual profissional e origem da marca baseadas nas páginas oficiais Kérastase (consultadas em 02/11/2026):
+- https://www.kerastase.com.br/descubra/regeneracao-capilar-chronologiste.html?geo=false
+- https://www.kerastase.com.br/descubra/nossa-historia.html?geo=false
+
+Sem atribuir país de fabricação de um lote não verificado. Reprodução automática pode ser restringida pelas configurações de economia de energia/dados do navegador; controles mantidos como alternativa.
