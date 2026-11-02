@@ -50,7 +50,7 @@ $('#forgotPassword').addEventListener('click',()=>setMode('reset'));
 $('#backToLogin').addEventListener('click',()=>setMode('login'));
 $('#togglePassword').addEventListener('click',()=>{const show=$('#accountPassword').type==='password';$('#accountPassword').type=show?'text':'password';$('#togglePassword').textContent=show?'Ocultar':'Mostrar';$('#togglePassword').setAttribute('aria-label',show?'Ocultar senha':'Mostrar senha');$('#togglePassword').setAttribute('aria-pressed',String(show));});
 function activateTab(tab){
- const target=['indicacoes','pedidos','dados'].includes(tab)?tab:'indicacoes';
+ const target=['indicacoes','pedidos','dados'].includes(tab)?tab:'dados';
  $('#referralsPanel').hidden=target!=='indicacoes';$('#ordersPanel').hidden=target!=='pedidos';$('#detailsPanel').hidden=target!=='dados';
  all('[data-account-tab]').forEach(b=>{if(b.dataset.accountTab===target)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current');});
  const url=new URL(location.href);url.searchParams.set('aba',target);history.replaceState(null,'',url.pathname+url.search);
@@ -114,7 +114,7 @@ async function loadAccount(){
   $('#ordersList').innerHTML=orders.data.length?orders.data.map(o=>`<article class="account-record"><h3>Pedido ${esc(o.order_number)} · ${money(o.total_cents)}</h3><time datetime="${esc(o.created_at)}">${date(o.created_at)}</time><span class="account-badge">${esc(orderLabels[o.status]||o.status)}</span><ul>${(Array.isArray(o.items)?o.items:[]).filter(i=>i&&typeof i==='object').map(i=>`<li>${esc(i.quantity||1)} × ${esc(i.name||'Produto')}</li>`).join('')}</ul></article>`).join(''):'<div class="account-empty"><h3>Você ainda não tem pedidos por aqui.</h3><p>Quando a equipe vincular um pedido à sua conta, você poderá acompanhar a situação nesta área.</p><a href="./" class="account-text-button">Explorar a coleção ↗</a></div>';
  }
  $('#authPanel').hidden=true;$('#memberPanel').hidden=false;
- activateTab(new URLSearchParams(location.search).get('aba')||'indicacoes');status(claimMessage||((referrals.error||orders.error)?'Algumas informações não carregaram. Tente atualizar.':''));
+ activateTab(new URLSearchParams(location.search).get('aba')||'dados');status(claimMessage||((referrals.error||orders.error)?'Algumas informações não carregaram. Tente atualizar.':''));
 }
 $('#authForm').addEventListener('submit',async event=>{
  event.preventDefault();if(!supa)return;const button=$('#authSubmit');button.disabled=true;authBusy=true;status('Aguarde…');
