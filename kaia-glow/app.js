@@ -90,3 +90,9 @@ counts();
  if('IntersectionObserver' in window)new IntersectionObserver(entries=>{visible=entries[0].isIntersecting;updatePlayback()},{threshold:.15}).observe(section);
  show(0);updatePlayback();
 })();
+
+const ritualFilm=document.querySelector('#chronologisteVideo');
+if(ritualFilm){
+ document.addEventListener('visibilitychange',()=>{if(document.hidden)ritualFilm.pause()});
+ document.querySelectorAll('dialog').forEach(dialog=>new MutationObserver(()=>{if(dialog.open)ritualFilm.pause()}).observe(dialog,{attributes:true,attributeFilter:['open']}));
+}

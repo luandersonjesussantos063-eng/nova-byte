@@ -21,3 +21,7 @@ Atendimento conectado ao número comercial fornecido pelo responsável: +55 11 9
 Logotipo original fornecido pela cliente aplicado com maior destaque no centro do cabeçalho e no rodapé. O PNG foi preservado; apenas seu enquadramento usa CSS para reduzir as margens da arte. O crédito Nova Byte permanece no rodapé, e a faixa superior identifica a Kaia Glow e o caráter demonstrativo.
 
 Ajuste de identidade v6: fundo do logotipo removido para aplicação transparente; cabeçalho claro mais compacto, sem a segunda faixa de anúncio. Símbolo e nome mantidos em dourado.
+
+## Vídeo Chronologiste
+
+Seção própria para o vídeo vertical de 16,77 segundos fornecido pelo responsável em 02/11/2026, com áudio, controles, reprodução mediante ação do visitante e pré-carregamento só de metadados. Fotos extraídas do mesmo vídeo; sem uso de imagens geradas para representar os produtos. A consulta de disponibilidade e valores abre o WhatsApp da Kaia Glow. Não foi associado ao anúncio Gloss Absolu, pois são linhas diferentes, nem foram inventados preço ou estoque de Chronologiste.
