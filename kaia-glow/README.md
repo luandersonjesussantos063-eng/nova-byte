@@ -4,7 +4,7 @@ Protótipo independente em `/kaia-glow/`. Não altera a loja original ou a pági
 
 Catálogo: 54 anúncios públicos encontrados no sitemap da usekaiaglow.com.br em 01/11/2026. Nomes, descrições, variantes, imagens, preços e disponibilidade extraídos das páginas públicas. Imagens servidas pelo CDN original. Sem sincronização automática. Um anúncio de Fino Premium Touch Barbie não tem título na origem e recebe identificação descritiva explícita. A categoria Maquiagem consta na navegação original, mas nenhum dos 54 anúncios consultados estava classificado nela; a prévia mantém estado vazio ao selecioná-la.
 
-Funcionalidades: busca sem distinção de acentos, categoria/marca/preço/disponibilidade/ofertas, ordenação, paginação, favoritos locais, galeria de produto e variantes, quantidade, sacola em memória, cupom demonstrativo e finalização sem pedido. Não coleta dados pessoais, solicita pagamento, envia mensagens nem reserva estoque. Sem analytics. Não indexável.
+Funcionalidades: busca sem distinção de acentos, categoria/marca/preço/disponibilidade/ofertas, ordenação, paginação, favoritos locais, galeria de produto e variantes, quantidade, sacola em memória, cupom demonstrativo e finalização sem pedido. A vitrine não solicita pagamento, envia pedidos nem reserva estoque. A área Minha conta armazena dados de cadastro e registros individuais de indicações e pedidos no Supabase, conforme seção abaixo. Sem analytics. Não indexável.
 
 Publicação pelo GitHub Pages existente, raiz de main. Arquivos independentes; fontes Google Fonts e fotos originais como dependências externas. Validar sintaxe JavaScript e conferir no navegador catálogo, busca, filtros, galeria, variantes, sacola e layout em tela estreita.
 
@@ -33,3 +33,14 @@ Vídeo fora da grade, ocupando toda a largura da tela no celular. Reprodução a
 - https://www.kerastase.com.br/descubra/nossa-historia.html?geo=false
 
 Sem atribuir país de fabricação de um lote não verificado. Reprodução automática pode ser restringida pelas configurações de economia de energia/dados do navegador; controles mantidos como alternativa.
+
+
+## Minha conta v21
+
+`conta.html` oferece cadastro por e-mail/senha, confirmação por e-mail, login, recuperação de senha, perfil, Minhas indicações e Meus pedidos. SDK Supabase JS 2.118.0 fixado por versão, carregado do jsDelivr com integridade SHA-384; `auth-config.js` contém somente URL e chave publicável, nunca service_role. Sessão isolada com storageKey `kaia-glow-auth-v1`. O SMTP existente do projeto foi preservado; modelos de confirmação e recuperação exibem Kaia para usuários com metadata `kaia_name`, mantendo os modelos anteriores para os demais. URLs de retorno exatas da conta e de recuperação adicionadas à allowlist.
+
+Banco compartilhado autorizado: `vajlhodqxskozuxxlujv`. Tabelas específicas `kaia_customers`, `kaia_referrals`, `kaia_orders`, todas com RLS por usuário e bloqueio de usuários anônimos. Clientes só alteram o próprio nome; códigos são gerados no banco. Indicação é registrada após cadastro confirmado e código válido, uma por pessoa, sem autoindicação. RPC pública invoker delega somente a operação de atribuição a uma função privada com auth.uid(), confirmação de e-mail e validação de código. Não libera brindes automaticamente. Visitantes guardam somente o código público de indicação por no máximo 30 dias. Compartilhar sozinho não gera registros.
+
+A sacola continua demonstrativa: não cria pedidos. A área Meus pedidos lê apenas pedidos vinculados pela equipe por operação administrativa do banco (service_role/SQL autorizado). Não existe painel administrativo neste escopo; aprovação de indicação e estados de brinde são geridos pela equipe, não pelo cliente. Pedido: order_number, user_id, total_cents, status e items JSON no formato [{"name":"Produto","quantity":1}]. Estados de indicação: registered → validated → reward_ready → reward_sent. Estados de pedido: received/confirmed/preparing/shipped/delivered/cancelled.
+
+DDL aplicado: `backend/schema.sql`. Teste transacional `backend/test-isolation.sql` valida isolamento entre duas contas, bloqueio de mudanças em pedido/brinde/código, duplicidade, autoindicação e usuários anônimos. Todos os dados de teste são revertidos. Não modificar dados de outros projetos para operar a Kaia.

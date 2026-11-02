@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="pt-BR">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><meta name="referrer" content="strict-origin-when-cross-origin"><meta name="theme-color" content="#54233d"><title>Minha conta · Kaia Glow</title><link rel="stylesheet" href="style.css?v=21"><link rel="stylesheet" href="conta.css?v=21"></head>
+<body class="account-page">
+<header class="account-header"><a href="./" class="account-wordmark">KAIA GLOW</a><a href="./">← Voltar à loja</a></header>
+<main class="account-wrap">
+ <div class="account-heading"><span class="eyebrow">SEU ESPAÇO KAIA GLOW</span><h1>Um cuidado só seu.</h1><p>Suas indicações, seus pedidos e suas próximas descobertas.</p></div>
+ <p id="accountStatus" class="account-status" role="status" aria-live="polite">Carregando sua conta…</p>
+ <section id="authPanel" class="auth-card" hidden aria-labelledby="authTitle">
+  <div class="auth-switch" aria-label="Acesso à conta"><button type="button" data-auth-mode="login" class="selected">Entrar</button><button type="button" data-auth-mode="signup">Criar conta</button></div>
+  <h2 id="authTitle">Que bom ter você aqui.</h2><p id="authDescription">Entre com seu e-mail e sua senha.</p>
+  <form id="authForm">
+   <label id="nameField" hidden>Seu nome<input id="accountName" name="name" autocomplete="name" minlength="2" maxlength="100"></label>
+   <label id="emailField">E-mail<input id="accountEmail" name="email" type="email" autocomplete="email" required maxlength="254"></label>
+   <label id="passwordField">Senha<div class="password-input"><input id="accountPassword" name="password" type="password" autocomplete="current-password" required><button id="togglePassword" type="button" aria-label="Mostrar senha" aria-pressed="false">Mostrar</button></div><small id="passwordHint" hidden>Use pelo menos 10 caracteres, incluindo letras e números.</small></label>
+   <button id="authSubmit" class="button" type="submit">Entrar na minha conta</button>
+  </form>
+  <button id="forgotPassword" class="account-text-button" type="button">Esqueci minha senha</button>
+  <button id="resendConfirmation" class="account-text-button" type="button" hidden>Reenviar confirmação de e-mail</button>
+  <p class="account-privacy">Seu acesso é individual. As informações desta área ficam vinculadas à sua conta.</p>
+ </section>
+ <section id="memberPanel" hidden aria-label="Área do cliente">
+  <div class="member-top"><div><span class="eyebrow">BEM-VINDA À KAIA</span><h2 id="memberName"></h2><p id="memberEmail"></p></div><button id="signOut" type="button" class="account-text-button">Sair da conta ↗</button></div>
+  <nav class="account-tabs" aria-label="Minha conta"><button type="button" data-account-tab="indicacoes">Minhas indicações</button><button type="button" data-account-tab="pedidos">Meus pedidos</button><button type="button" data-account-tab="dados">Meus dados</button></nav>
+  <section id="referralsPanel" aria-labelledby="referralsTitle">
+   <div class="referral-account-banner"><span class="eyebrow">BELEZA É AINDA MELHOR QUANDO COMPARTILHADA</span><h2 id="referralsTitle">Indique. Compartilhe.<br><em>Receba um carinho.</em></h2><p>Convide alguém especial com o seu link. Quando essa pessoa criar e confirmar uma conta por ele, a indicação aparecerá aqui.</p><label>Seu link de indicação<input id="personalReferralLink" type="url" readonly></label><div class="account-buttons"><button type="button" id="sharePersonalReferral" class="button">Compartilhar meu convite ↗</button><button type="button" id="copyPersonalReferral" class="button outline">Copiar link</button></div><p class="account-small">O brinde exclusivo e a entrega grátis no seu endereço são combinados com a equipe após a validação da indicação.</p></div>
+   <div class="account-stats"><div><strong id="referralTotal">0</strong><span>Cadastros indicados</span></div><div><strong id="referralValidated">0</strong><span>Indicações validadas</span></div><div><strong id="referralGifts">0</strong><span>Brindes liberados</span></div></div>
+   <div class="account-section-heading"><h3>Suas indicações</h3><button type="button" class="account-text-button" id="refreshAccount">Atualizar</button></div><div id="referralsList" class="account-list"></div>
+   <p class="account-small">Os nomes e contatos das pessoas indicadas permanecem privados. A equipe confirma a participação e atualiza a situação do brinde.</p>
+  </section>
+  <section id="ordersPanel" hidden aria-labelledby="ordersTitle"><div class="account-section-heading"><h2 id="ordersTitle">Meus pedidos</h2></div><div id="ordersList" class="account-list"></div><p class="account-small">Aqui aparecem os pedidos vinculados à sua conta pela equipe. A sacola demonstrativa da vitrine ainda não gera pedidos nem cobranças.</p></section>
+  <section id="detailsPanel" hidden aria-labelledby="detailsTitle"><h2 id="detailsTitle">Meus dados</h2><form id="profileForm" class="profile-form"><label>Seu nome<input id="profileName" minlength="2" maxlength="100" autocomplete="name" required></label><label>E-mail<input id="profileEmail" type="email" readonly></label><button type="submit" class="button">Salvar meus dados</button></form><button type="button" id="requestNewPassword" class="account-text-button">Receber e-mail para alterar a senha</button></section>
+ </section>
+ <details class="account-small"><summary>Como tratamos seus dados</summary><p>Nome, e-mail, indicações e pedidos vinculados à sua conta são armazenados para oferecer esta área. A autenticação utiliza Supabase; sua sessão fica salva neste navegador até você sair. Um código de convite pode ser lembrado por até 30 dias para concluir a indicação. Os dados pessoais de outras clientes não são exibidos. Para solicitar exclusão da conta ou tirar dúvidas, fale com a equipe Kaia Glow pelo WhatsApp.</p></details><footer class="account-footer"><a href="https://wa.me/5511965677152" target="_blank" rel="noopener noreferrer">Precisa de ajuda? Fale com a Kaia ↗</a><a href="https://www.instagram.com/usekaiaglow/" target="_blank" rel="noopener noreferrer">@usekaiaglow</a></footer>
+</main><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js" integrity="sha384-TcHRA3zBbn+Lexh5n+Oil4guNPOS3rjNDpGRAN46u/s/mB2IZ50ceC6TYDU2yvgK" crossorigin="anonymous"></script><script type="module" src="conta.js?v=21"></script>
+</body></html>
