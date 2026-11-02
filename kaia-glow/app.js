@@ -210,3 +210,8 @@ if(location.hash==='#cupons')openCoupons();
  try{localStorage.setItem('kaia-pending-referral-v1',JSON.stringify({code,at:Date.now()}))}catch{}
  document.querySelectorAll('a[href^="conta.html"]').forEach(link=>{const url=new URL(link.getAttribute('href'),location.href);url.searchParams.set('indicacao',code);url.searchParams.set('modo','cadastro');link.href=url.pathname+url.search});
 })();
+
+// Keep one top-level menu group open at a time, including on older browsers.
+document.querySelectorAll('#kaiaMenuDialog .menu-group').forEach(group=>group.addEventListener('toggle',()=>{
+ if(group.open)document.querySelectorAll('#kaiaMenuDialog .menu-group').forEach(other=>{if(other!==group)other.open=false});
+}));
