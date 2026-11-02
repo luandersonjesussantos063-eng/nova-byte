@@ -37,7 +37,7 @@ function setMode(next,clear=true){
  $('#accountPassword').autocomplete=next==='login'?'current-password':'new-password';$('#accountPassword').minLength=next==='login'?1:10;
  $('#passwordHint').hidden=!['signup','newpassword'].includes(next);
  $('#accountPassword').value='';$('#accountPassword').type='password';$('#togglePassword').textContent='Mostrar';$('#togglePassword').setAttribute('aria-pressed','false');
- $('#forgotPassword').hidden=next!=='login';$('#resendConfirmation').hidden=true;
+ $('#backToLogin').hidden=next!=='reset';$('#forgotPassword').hidden=next!=='login';$('#resendConfirmation').hidden=true;
  const titles={login:'Que bom ter você aqui.',signup:'Seu primeiro cuidado começa aqui.',reset:'Vamos recuperar seu acesso.',newpassword:'Escolha uma nova senha.',complete:'Como podemos chamar você?'};
  const descriptions={login:'Entre com seu e-mail e sua senha.',signup:'Crie sua conta para acompanhar indicações e pedidos.',reset:'Enviaremos um link para você redefinir sua senha.',newpassword:'Use uma senha que você ainda não utiliza em outros sites.',complete:'Complete seu nome para criar seu espaço na Kaia Glow.'};
  const labels={login:'Entrar na minha conta',signup:'Criar minha conta',reset:'Enviar link de recuperação',newpassword:'Salvar nova senha',complete:'Salvar e continuar'};
@@ -46,6 +46,7 @@ function setMode(next,clear=true){
 }
 all('[data-auth-mode]').forEach(b=>b.addEventListener('click',()=>setMode(b.dataset.authMode)));
 $('#forgotPassword').addEventListener('click',()=>setMode('reset'));
+$('#backToLogin').addEventListener('click',()=>setMode('login'));
 $('#togglePassword').addEventListener('click',()=>{const show=$('#accountPassword').type==='password';$('#accountPassword').type=show?'text':'password';$('#togglePassword').textContent=show?'Ocultar':'Mostrar';$('#togglePassword').setAttribute('aria-label',show?'Ocultar senha':'Mostrar senha');$('#togglePassword').setAttribute('aria-pressed',String(show));});
 function activateTab(tab){
  const target=['indicacoes','pedidos','dados'].includes(tab)?tab:'indicacoes';
@@ -120,7 +121,7 @@ $('#authForm').addEventListener('submit',async event=>{
    const {data,error}=await supa.auth.signUp({email,password,options:{emailRedirectTo:KAIA_AUTH.accountUrl,data:{kaia_name:name,...(pendingCode?{kaia_ref:pendingCode}:{})}}});
    if(error)throw error;
    $('#accountPassword').value='';
-   if(data.session){await loadAccount();}else{setMode('login',false);status('Confira seu e-mail para confirmar o cadastro. Depois, volte aqui e entre com sua senha.');$('#resendConfirmation').hidden=false;}
+   if(data.session){await loadAccount();}else{setMode('login',false);status('Confira seu e-mail para confirmar o cadastro. Depois, volte aqui e entre com sua senha. Se você já possui uma conta, use Entrar ou Esqueci minha senha.');$('#resendConfirmation').hidden=false;}
   }else if(mode==='login'){
    const {error}=await supa.auth.signInWithPassword({email,password});if(error)throw error;$('#accountPassword').value='';await loadAccount();
   }else if(mode==='reset'){
