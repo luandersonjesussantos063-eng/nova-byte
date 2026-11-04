@@ -97,3 +97,30 @@ html{scroll-padding-top:88px}.campaign-stage{z-index:20}.campaign-stage>.retail-
 .campaign-stage .retail-header .head .brand-logo img{position:static;inset:auto;left:auto;top:auto;width:100%;height:100%;max-width:100%;object-fit:contain;filter:none;mix-blend-mode:normal;opacity:.91}
 .campaign-stage .retail-header .head .brand-logo:hover img,.campaign-stage .retail-header .head .brand-logo:focus-visible img{opacity:1}
 @media(max-width:650px){.campaign-stage .retail-header .head .brand-logo img{width:100%;height:100%;left:auto;top:auto;object-fit:contain;opacity:.94}}
+
+/* Kaia Glow moving benefits ribbon v36: top strip in place of the old static preview message. */
+.demo.kaia-benefits-topbar{display:flex;justify-content:stretch;align-items:stretch;gap:0;height:43px;min-height:43px;overflow:hidden;padding:0 0 0 10px;background:#f3e6ec;color:#573345;border-bottom:1px solid #ead9e1;font-size:12px;letter-spacing:.4px}
+.kaia-benefits-topbar .kaia-ticker{flex:1 1 auto;min-width:0;overflow:hidden;display:flex;align-items:center;mask-image:linear-gradient(90deg,transparent 0,#000 16px,#000 calc(100% - 22px),transparent 100%);-webkit-mask-image:linear-gradient(90deg,transparent 0,#000 16px,#000 calc(100% - 22px),transparent 100%)}
+.kaia-ticker-track{display:flex;flex:0 0 auto;width:max-content;min-width:max-content;align-items:center;animation:kaiaBenefitsSlide 24s linear infinite;will-change:transform}
+.kaia-ticker-group{display:flex;flex:0 0 auto;align-items:center;min-width:max-content}
+.kaia-ticker-item{display:inline-flex;flex:0 0 auto;align-items:center;gap:9px;padding:0 34px 0 20px;min-height:43px;line-height:1.2;white-space:nowrap;font-size:12px;font-weight:600;letter-spacing:.45px;color:#633a4b}
+.kaia-ticker-item svg{width:18px;height:18px;flex:none;color:#a47a45}
+.kaia-benefits-topbar .kaia-preview-info{position:relative;z-index:1;display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;min-width:153px;padding:0 15px;border:0;border-left:1px solid #e7d0da;background:#f3e6ec;color:#794a61;font-size:11px;font-weight:600;white-space:nowrap;letter-spacing:0;cursor:pointer}
+.kaia-benefits-topbar .kaia-preview-info:hover{background:#ead8e1;color:#4e273b}
+.kaia-benefits-topbar .kaia-preview-info:focus-visible{outline:2px solid #a47a45;outline-offset:-3px}
+.kaia-preview-short{display:none}
+@keyframes kaiaBenefitsSlide{to{transform:translateX(-50%)}}
+.kaia-benefits-topbar .kaia-ticker:hover .kaia-ticker-track,.kaia-benefits-topbar .kaia-ticker:focus-within .kaia-ticker-track{animation-play-state:paused}
+@media(max-width:650px){
+.demo.kaia-benefits-topbar{height:38px;min-height:38px;padding-left:0}
+.kaia-ticker-item{min-height:38px;font-size:11px;gap:7px;padding:0 23px 0 13px;letter-spacing:.15px}
+.kaia-ticker-item svg{width:16px;height:16px}
+.kaia-benefits-topbar .kaia-preview-info{min-width:78px;padding:0 8px;font-size:10px}
+.kaia-preview-full{display:none}
+.kaia-preview-short{display:inline}
+.kaia-ticker-track{animation-duration:21s}
+}
+@media(prefers-reduced-motion:reduce){
+.kaia-ticker-track{animation:none;will-change:auto}
+.kaia-benefits-topbar .kaia-ticker{overflow-x:auto;mask-image:none;-webkit-mask-image:none;scrollbar-width:thin}
+}
