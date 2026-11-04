@@ -86,3 +86,8 @@ html{scroll-padding-top:88px}.campaign-stage{z-index:20}.campaign-stage>.retail-
 .kaia-brand-banner{width:100%;overflow:hidden;background:#31000f;position:relative;isolation:isolate}
 .kaia-brand-banner img{display:block;width:100%;height:auto;aspect-ratio:1536/462;object-fit:cover;object-position:center;max-width:none}
 @media(max-width:650px){.kaia-brand-banner img{aspect-ratio:auto;height:clamp(180px,53vw,275px);object-fit:cover;object-position:51% center}}
+
+/* Kaia Glow header emblem: original wheat branch and Chinese 光 preserved. */
+.campaign-stage .retail-header .head .brand-logo img{filter:url(#kaia-logo-ink);opacity:.86;transition:opacity .18s ease}
+.campaign-stage .retail-header .head .brand-logo:hover img,.campaign-stage .retail-header .head .brand-logo:focus-visible img{opacity:1}
+@media(max-width:650px){.campaign-stage .retail-header .head .brand-logo img{opacity:.9}}
