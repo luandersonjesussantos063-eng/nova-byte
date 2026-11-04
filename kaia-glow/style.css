@@ -124,3 +124,15 @@ html{scroll-padding-top:88px}.campaign-stage{z-index:20}.campaign-stage>.retail-
 .kaia-ticker-track{animation:none;will-change:auto}
 .kaia-benefits-topbar .kaia-ticker{overflow-x:auto;mask-image:none;-webkit-mask-image:none;scrollbar-width:thin}
 }
+
+/* Override legacy .demo span styles so benefit labels and mobile disclosure stay visible. */
+.demo.kaia-benefits-topbar .kaia-ticker-item{display:inline-flex;color:#633a4b;font-size:12px;letter-spacing:.45px}
+.demo.kaia-benefits-topbar .kaia-ticker-item>span{display:inline;color:inherit;font:inherit;letter-spacing:inherit}
+.demo.kaia-benefits-topbar .kaia-preview-full{display:inline}
+.demo.kaia-benefits-topbar .kaia-preview-short{display:none}
+@media(max-width:650px){
+.demo.kaia-benefits-topbar .kaia-ticker-item{display:inline-flex;font-size:11px;letter-spacing:.15px}
+.demo.kaia-benefits-topbar .kaia-ticker-item>span{display:inline}
+.demo.kaia-benefits-topbar .kaia-preview-full{display:none}
+.demo.kaia-benefits-topbar .kaia-preview-short{display:inline;color:inherit}
+}
