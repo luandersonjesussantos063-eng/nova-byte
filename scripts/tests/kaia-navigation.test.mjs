@@ -2,9 +2,9 @@ import test from 'node:test';import assert from 'node:assert/strict';import {rea
 const root=resolve('kaia-glow');const files=['index.html','conta.html','privacidade.html','termos-de-uso.html','atendimento.html'];const read=f=>readFileSync(join(root,f),'utf8');
 test('all Kaia pages connect to privacy, terms and support and have real local destinations',()=>{
  for(const file of files){const html=read(file);for(const target of ['privacidade.html','termos-de-uso.html','atendimento.html'])assert(html.includes('href="'+target+'"'),file+': '+target);
-  assert.match(html,/KAIA GLOW COMERCIO DE COSMETICOS LTDA/);assert.match(html,/67\.706\.063\/0001-39/);assert.match(html,/usekaiaglow@gmail\.com/);assert(!/href="[^"]*(?:CONTRATO|CNPJ)[^"]*\.pdf/i.test(html));
+  if(file==='conta.html'){assert(!html.includes('class="kaia-business-details"'));assert(html.includes('href="./#informacoes"'));assert(html.indexOf('class="kaia-account-site-footer"')>html.indexOf('</main>'));}else{assert.match(html,/KAIA GLOW COMERCIO DE COSMETICOS LTDA/);assert.match(html,/67\.706\.063\/0001-39/);assert.match(html,/usekaiaglow@gmail\.com/);}assert(!/href="[^"]*(?:CONTRATO|CNPJ)[^"]*\.pdf/i.test(html));
   for(const block of html.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)){const schema=JSON.parse(block[1]);assert.equal(schema.legalName,'KAIA GLOW COMERCIO DE COSMETICOS LTDA');}
-  assert.match(html,/© 2026 Kaia Glow/);assert.match(html,/terceiros pertencem aos respectivos titulares/);assert.match(html,/<main[^>]*id="conteudo"/);
+  if(file!=='conta.html'){assert.match(html,/© 2026 Kaia Glow/);assert.match(html,/terceiros pertencem aos respectivos titulares/);}assert.match(html,/<main[^>]*id="conteudo"/);
   const ids=[...html.matchAll(/\bid="([^"]+)"/g)].map(m=>m[1]);assert.equal(ids.length,new Set(ids).size,file+': repeated id');
   for(const m of html.matchAll(/(?:href|src)="([^"]+)"/g)){const url=new URL(m[1],'https://novabytesolucoes.com.br/kaia-glow/'+file);if(url.origin!=='https://novabytesolucoes.com.br')continue;
    let target=resolve('.'+decodeURIComponent(url.pathname));if(url.pathname.endsWith('/'))target=join(target,'index.html');assert(existsSync(target),file+': '+m[1]);
