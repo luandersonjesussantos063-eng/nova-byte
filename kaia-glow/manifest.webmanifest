@@ -1,0 +1,20 @@
+{
+  "id": "/",
+  "name": "Kaia Glow · Sua loja de beleza",
+  "short_name": "Kaia Glow",
+  "description": "Uma seleção de autocuidado e beleza",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#fff8fa",
+  "theme_color": "#57263f",
+  "lang": "pt-BR",
+  "icons": [
+    {
+      "src": "/kaia-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
