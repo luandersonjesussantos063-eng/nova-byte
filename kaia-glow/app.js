@@ -1,23 +1,32 @@
+Promise.resolve(window.kaiaCatalogReady).then(()=>{
 'use strict';
 const $=s=>document.querySelector(s),all=s=>[...document.querySelectorAll(s)],catalog=window.KAIA_CATALOG;
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const whatsappUrl=message=>'https://wa.me/5511965677152?text='+encodeURIComponent(message);
 const money=n=>n.toLocaleString('pt-BR',{style:'currency',currency:'BRL'}),normalize=s=>s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
 function read(k,f){try{return JSON.parse(localStorage.getItem(k))??f}catch{return f}}function save(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch{}}
-// Publish only merchant-approved offers; demonstration codes are not valid offers.
-const KAIA_COUPONS=[];
+// Only merchant-activated coupons retrieved from Supabase; no demo codes.
+const KAIA_COUPONS=(window.KAIA_ACTIVE_COUPONS||[]).map(c=>{
+ const percent=c.discount_type==='percent',label=percent?c.discount_value+'% OFF':money(c.discount_value/100)+' OFF';
+ return {code:c.code,type:'discount',percent:percent?c.discount_value:0,fixedCents:percent?0:c.discount_value,
+  expires:c.ends_at||'9999-12-31',starts:c.starts_at||'0000-01-01',min:c.min_order_cents/100,
+  title:'Um carinho de '+label,discountLabel:label,
+  condition:c.min_order_cents?'Para pedidos a partir de '+money(c.min_order_cents/100)+'.':'Válido para produtos da coleção Kaia Glow.'};
+});
 function couponToday(){const parts=new Intl.DateTimeFormat('en-CA',{timeZone:'America/Campo_Grande',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());return ['year','month','day'].map(key=>parts.find(p=>p.type===key).value).join('-')}
 function calculateCoupon(code,items,today=couponToday()){
  const c=KAIA_COUPONS.find(c=>c.code===code);
  const result={valid:false,discount:0,gift:false,message:''};
  if(!c)return {...result,message:'Cupom não reconhecido. Consulte a aba Cupons.'};
  if(c.expires&&today>c.expires)return {...result,message:'Este cupom expirou.'};
+ if(c.starts&&today<c.starts)return {...result,message:'Este cupom ainda não está válido.'};
  const subtotal=items.reduce((sum,item)=>sum+item.price*item.qty,0);
- if(c.min&&subtotal<=c.min)return {...result,message:'Este cupom exige subtotal acima de R$ 149.'};
+ if(c.min&&subtotal<c.min)return {...result,message:'O pedido mínimo deste cupom é '+money(c.min)+'.'};
  if(c.minItems&&items.reduce((sum,item)=>sum+item.qty,0)<c.minItems)return {...result,message:'Consulte os critérios de participação no atendimento.'};
  const eligible=items.filter(item=>!c.category||item.category===c.category).reduce((sum,item)=>sum+item.price*item.qty,0);
  if(eligible<=0)return {...result,message:c.category?'Adicione produtos de '+c.category+' para usar este cupom.':'Adicione produtos à sacola para usar este cupom.'};
- return {valid:true,discount:c.type==='discount'?Math.round(eligible*10)/100:0,gift:c.type==='gift',message:c.type==='gift'?'Confira as condições do brinde antes de concluir a compra.':'Desconto aplicado aos produtos elegíveis.'};
+ const discount=c.percent>0?Math.round(eligible*c.percent)/100:Math.min(eligible,c.fixedCents/100);
+ return {valid:true,discount,gift:false,message:'Prévia do desconto aplicada. A compra continua indisponível.'};
 }
 function couponItems(){return cart.map(r=>{const p=catalog.find(p=>p.id===r.id);return {category:p.category,price:variantFor(p,r.variantId).price,qty:r.qty}})}
 
@@ -176,7 +185,7 @@ counts();
 // Coupon catalogue stays behind its tab so the main product flow remains compact.
 const couponsDialog=$('#couponsDialog');
 function openCoupons(){if(kaiaMenuDialog.open)kaiaMenuDialog.close();if(!couponsDialog.open)couponsDialog.showModal()}
-function renderCoupons(){if(!KAIA_COUPONS.length){$('#couponGrid').innerHTML='<p class="coupon-empty">Não há cupons disponíveis no momento. Consulte a equipe para conhecer as condições vigentes.</p>';return;}const type=$('#couponType').value,today=couponToday();$('#couponGrid').innerHTML=KAIA_COUPONS.filter(c=>type==='all'||c.type===type).map(c=>{const expired=today>c.expires;return `<article class="coupon-ticket"><span class="coupon-ticket-tag">${c.type==='gift'?'MIMO':'10% OFF'}</span><h3>${esc(c.title)}</h3><p class="coupon-expiry">${expired?'Expirado em':'Válido até'} ${c.expires.split('-').reverse().join('/')}</p><details class="coupon-conditions"><summary>Condições</summary><p>${esc(c.condition)} Válido até a data indicada, no horário de Mato Grosso. Consulte os critérios de uso desta oferta antes de concluir a compra.</p></details><div class="coupon-ticket-bottom"><button class="coupon-products" data-coupon-products="${c.code}">Ver produtos ↗</button><button class="coupon-copy" data-copy-coupon="${c.code}" aria-label="Copiar cupom ${c.code}" ${expired?'disabled':''}><span>${c.code}</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="3" stroke="currentColor" stroke-width="1.5"/><path d="M15 5V4a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h1" stroke="currentColor" stroke-width="1.5"/></svg></button></div></article>`}).join('')}
+function renderCoupons(){if(!KAIA_COUPONS.length){$('#couponGrid').innerHTML='<p class="coupon-empty">Não há cupons disponíveis no momento. Consulte a equipe para conhecer as condições vigentes.</p>';return;}const type=$('#couponType').value,today=couponToday();$('#couponGrid').innerHTML=KAIA_COUPONS.filter(c=>type==='all'||c.type===type).map(c=>{const expired=today>c.expires;return `<article class="coupon-ticket"><span class="coupon-ticket-tag">${esc(c.discountLabel)}</span><h3>${esc(c.title)}</h3><p class="coupon-expiry">${expired?'Expirado em':'Válido até'} ${c.expires.split('-').reverse().join('/')}</p><details class="coupon-conditions"><summary>Condições</summary><p>${esc(c.condition)} Válido até a data indicada, no horário de Mato Grosso. Consulte os critérios de uso desta oferta antes de concluir a compra.</p></details><div class="coupon-ticket-bottom"><button class="coupon-products" data-coupon-products="${c.code}">Ver produtos ↗</button><button class="coupon-copy" data-copy-coupon="${c.code}" aria-label="Copiar cupom ${c.code}" ${expired?'disabled':''}><span>${c.code}</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="3" stroke="currentColor" stroke-width="1.5"/><path d="M15 5V4a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h1" stroke="currentColor" stroke-width="1.5"/></svg></button></div></article>`}).join('')}
 all('[data-open-coupons]').forEach(button=>button.addEventListener('click',openCoupons));
 $('#couponType').onchange=renderCoupons;
 couponsDialog.addEventListener('click',async event=>{
@@ -251,3 +260,5 @@ document.querySelectorAll('#kaiaMenuDialog .menu-group').forEach(group=>group.ad
 all('[data-open-about]').forEach(button=>button.addEventListener('click',()=>{
  kaiaMenuDialog.showModal();const about=$('#sobre-kaia');about.open=true;about.querySelector('summary').focus();
 }));
+
+}).catch(error=>console.error('Kaia Glow: erro de inicialização do catálogo',error));
