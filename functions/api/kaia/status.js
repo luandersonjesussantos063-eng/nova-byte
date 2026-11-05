@@ -25,7 +25,11 @@ export function onRequestGet({env}) {
       integracaoDisponivel:['superfrete','melhor_envio'],
       credenciaisConfiguradas:env.KAIA_SHIPPING_PROVIDER==='superfrete'?!!env.KAIA_SF_ACCESS_TOKEN:env.KAIA_SHIPPING_PROVIDER==='melhor_envio'?!!env.KAIA_ME_ACCESS_TOKEN:false,
       cepOrigemConfigurado:/^\d{8}$/.test(String(env.KAIA_SHIP_FROM_CEP||'')),
-      catalogoPronto:false
+      catalogoPronto:false,
+      consultaDeFreteAtiva:env.KAIA_SHIPPING_PROVIDER==='superfrete'&&env.KAIA_SF_MODE==='production'&&!!env.KAIA_SF_ACCESS_TOKEN,
+      consultaSemPagamento:true,
+      itensComPesoEDimensoes:43,
+      itensComMedidasPendentes:8
     },
     aviso:'Checkout desativado. Sem cobrança nem envio contratado.'
   });
