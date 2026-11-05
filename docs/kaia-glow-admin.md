@@ -46,3 +46,47 @@ Em 05/11/2026 foi identificada uma condição de corrida: a última implantaçã
 - `public.kaia_admin_save_product_v2` permite editar marca, categoria, nome, preço, fotos e dimensões de um produto novo depois da criação; para produtos existentes respeita a política já aprovada de preço/estoque e não reescreve medidas antigas.
 - Testes realizados sem produto fictício no banco: formulário completo testado em 390 e 1280 px com retorno de API simulado, incluindo criação, edição e upload; vitrine recebeu um novo produto simulado com busca, ficha e inclusão na sacola em ambas as resoluções; páginas dinâmicas e sitemap responderam no domínio oficial. Requisição anônima à função de criação recebeu HTTP 401, conforme esperado.
 - Estado do banco após os testes: 0 novos produtos, 51 SKUs preexistentes, 409 unidades originais. A proprietária ainda deverá adicionar seus produtos reais.
+
+
+## Central de estoque e marketplaces — preparada para conexão
+
+**Data:** 05/11/2026. **Interface:** https://usekaiaglow.com.br/admin.html → **Estoque e marketplaces**.
+
+### Escopo entregue e estado inicial
+
+- Saldo central permanece no banco existente `public.kaia_sale_inventory`, com **51 SKUs e 409 unidades**; nenhum produto, quantidade, preço ou anúncio da Shopee/TikTok foi modificado pela implantação.
+- Conexões `shopee` e `tiktok` cadastradas em `public.kaia_marketplace_connections`, ambas em estado **disconnected**. Não há tokens ou IDs de lojas cadastrados.
+- `public.kaia_marketplace_links`: relaciona o SKU interno ao ID do produto e modelo/variação de cada plataforma. Vínculos manuais ficam **pending_verification**; não significam que uma integração foi concluída.
+- `public.kaia_stock_movements`: histórico auditável de mudanças, incluindo **51 saldos iniciais** apenas como referência. Trigger em `public.kaia_sale_inventory` registra as alterações dos formulários existentes e do novo painel.
+- `public.kaia_marketplace_sync_queue`: fila com último saldo desejado por SKU/canal, controle de versão, status, tentativas e erros. Atualizar o banco NÃO envia automaticamente nada aos marketplaces desconectados.
+- `public.kaia_marketplace_orders`, `public.kaia_marketplace_order_items`, `public.kaia_marketplace_reservations`: estruturas preparadas para receber pedidos, reservar unidades e tratar cancelamentos quando as credenciais, o webhook assinado e o processamento idempotente forem implementados.
+- `public.kaia_marketplace_sync_runs`: estrutura de registro de execuções futuras, sucessos e falhas.
+- Admin pode consultar saldo, estoque baixo, movimentações, pedidos importados, reservas, fila e estado de conexão; cadastrar vínculos pendentes, desvincular anúncios, alterar o saldo absoluto ou registrar entradas/saídas com motivo. Todos os comandos de escrita passam por funções administrativas protegidas, com RLS. Sem gravação direta por clientes.
+- A vitrine consulta `public.kaia_public_product_availability` para os indicadores **disponível/indisponível** de todos os SKUs. Não expõe quantidades, credenciais ou custo.
+- **Checkout Mercado Pago, notificações promocionais e sincronização externa permanecem desligados**. O sistema não confirma nem promete saldo idêntico nas plataformas antes da ativação real.
+
+### Endereços reservados — ainda respondem 503, de propósito
+
+- Shopee OAuth callback: `https://usekaiaglow.com.br/api/kaia/shopee-callback`
+- Shopee webhook: `https://usekaiaglow.com.br/api/kaia/shopee-webhook`
+- TikTok Shop OAuth callback: `https://usekaiaglow.com.br/api/kaia/tiktok-callback`
+- TikTok Shop webhook: `https://usekaiaglow.com.br/api/kaia/tiktok-webhook`
+
+Os callbacks e webhooks NÃO processam autorizações nem pedidos nesta fase: são rotas **fail-closed** para evitar aceite de tokens e eventos sem validação de assinatura, mapeamento e testes. Não configurar estes endpoints como webhooks de produção até concluir seu código, pois atualmente a plataforma receberia HTTP 503.
+
+### Pendências objetivas para conexão amanhã
+
+1. **Shopee**: acesso da vendedora ao Seller Center, app autorizado no Shopee Open Platform (Partner ID/Partner Key aprovados em modo live), Shop ID, escopos de produtos/estoque/pedidos, autorização oficial da loja, configuração de callback e pushes assinados. Conferir requisitos por país.
+2. **TikTok Shop**: acesso Seller/Partner Center, aprovação do app com App Key/App Secret e escopos adequados, autorização da loja, Shop ID/shop cipher, callback OAuth e eventos de pedidos/inventário assinados. O webhook *Inventory Changed By Shop (tipo 71)* inclui snapshots e alterações: deduplicar pelos IDs oficiais e NÃO aplicar o snapshot e o delta como duas alterações.
+3. **Credenciais**: trocar códigos de autorização em servidor, guardar tokens de acesso/renovação somente em segredo criptografado, nunca em JavaScript, chat, log ou repositório. Implementar e testar verificação HMAC das notificações antes de alterar estoque.
+4. **Conciliação**: importar catálogo/anúncios reais e confirmar correspondência de cada SKU/variação. Determinar a fonte inicial da quantidade em cada plataforma; divergências devem ir para revisão manual, não sobrescrever automaticamente.
+5. **Sincronização**: implementar job de fila com retry seguro, prevenção de concorrência, refresh de tokens, status de envio, idempotência por pedido/evento, reservas e liberações por cancelamento/devolução. Homologar em sandbox/testes antes de ligar em contas reais.
+6. **Ativação**: só mudar as conexões para `connected` quando as permissões, operações de leitura/escrita e webhooks estiverem comprovados. Começar com lote restrito, validar estoque e expandir.
+
+**Não é uma integração Shopify:** a vitrine atual é a Kaia Glow em Cloudflare Pages/Supabase. A arquitetura foi preparada para a loja própria, Shopee e TikTok Shop, como solicitado. Uma integração Shopify adicional exigiria uma quarta conexão separada.
+
+### Controles de segurança
+
+Todas as tabelas de marketplaces têm RLS habilitado e somente administradores previamente autorizados podem lê-las. As tabelas não concedem INSERT/UPDATE/DELETE a navegadores; alterações manuais usam `kaia_admin_adjust_stock`, `kaia_admin_map_listing` e `kaia_admin_unmap_listing`, que revalidam `kaia_is_store_admin()`. Sem permissões administrativas, o site não pode alterar estoque. Eventos de sincronização e pedidos são apenas estruturas de dados; não há ingestão externa ativa.
+
+**Fontes das especificações para ativação:** Shopee Open Platform `https://open.shopee.com/` e documentação TikTok Shop Partner Center `https://partner.tiktokshop.com/docv2/api-document`. Detalhes exatos de OAuth, app review e escopos precisam ser revisados com as contas de produção no momento da conexão.
