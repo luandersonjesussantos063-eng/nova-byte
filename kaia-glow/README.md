@@ -77,3 +77,6 @@ A consulta ao domínio público e à API de implantação do GitHub recebeu bloq
 
 ## Ajuste do rodapé após conferência visual — 05/11/2026
 Os dados completos da empresa foram retirados do rodapé interno de Minha conta. O rodapé da loja reúne identificação empresarial, direitos autorais e desenvolvimento; a âncora #informacoes leva diretamente a ele. A conta termina antes de um rodapé geral compacto, com links institucionais e acesso às informações da empresa. Dados, formulários e autenticação permanecem iguais. A privacidade descreve essa organização, sem afirmar que o endereço completo aparece dentro da conta.
+
+## Rodapé compacto — 05/11/2026
+Removidas as colunas redundantes Explore a Kaia e Minha Kaia do rodapé público. Conta, pedidos e indicações continuam no cabeçalho/menu e funcionam sem depender do antigo rótulo de conta no rodapé. O bloco concentra WhatsApp/Instagram, três links institucionais, identificação empresarial e direitos/crédito, sem grandes convites ou espaçamentos. Botão flutuante de WhatsApp oculto enquanto o rodapé está visível, para não cobrir informações. Verificação em Chromium a 320, 390 e 1280 px, sem erro JavaScript ou rolagem horizontal; alturas respectivas 355, 319 e 296 px. Conferidos o menu de conta e os links legais.

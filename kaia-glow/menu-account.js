@@ -11,7 +11,7 @@ let revision=0;
 function render(user,name=''){
  const connected=!!user?.email_confirmed_at&&!user.is_anonymous;
  label.textContent=connected?'Acessar minha conta':'Entrar ou criar conta';
- footer.textContent=connected?'Acessar minha conta':'Minha conta · Entrar / Criar conta';
+ if(footer)footer.textContent=connected?'Acessar minha conta':'Minha conta · Entrar / Criar conta';
  greeting.textContent=connected?(name?'Olá, '+name.split(/\s+/)[0]+'. Sua conta está conectada.':'Sua conta está conectada.'):'Pedidos, perfil e indicações';
  exit.hidden=!connected;
 }
@@ -29,7 +29,7 @@ async function refresh(){
   const {data:profile}=await client.from('kaia_customers').select('full_name').eq('user_id',user.id).maybeSingle();
   if(request===revision)render(user,profile?.full_name?.trim()||'');
  }catch{
-  if(request===revision){label.textContent='Minha conta';footer.textContent='Minha conta';greeting.textContent='Acesse seus pedidos, perfil e indicações';exit.hidden=true;}
+  if(request===revision){label.textContent='Minha conta';if(footer)footer.textContent='Minha conta';greeting.textContent='Acesse seus pedidos, perfil e indicações';exit.hidden=true;}
  }
 }
 if(client){

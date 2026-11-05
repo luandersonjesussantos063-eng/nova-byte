@@ -218,3 +218,10 @@ if(location.hash==='#cupons')openCoupons();
 document.querySelectorAll('#kaiaMenuDialog .menu-group').forEach(group=>group.addEventListener('toggle',()=>{
  if(group.open)document.querySelectorAll('#kaiaMenuDialog .menu-group').forEach(other=>{if(other!==group)other.open=false});
 }));
+
+// The footer already provides a WhatsApp link; keep its legal text unobstructed.
+(()=>{
+ const footer=document.querySelector('#informacoes'),contact=document.querySelector('.whatsapp-floating');
+ if(!footer||!contact||!('IntersectionObserver' in window))return;
+ new IntersectionObserver(entries=>{contact.hidden=entries[0].isIntersecting;}).observe(footer);
+})();
