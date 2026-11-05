@@ -1,0 +1,44 @@
+name: Kaia Glow | arquivar fotos públicas do catálogo
+
+on:
+  push:
+    branches:
+      - feat/kaia-loja-real
+    paths:
+      - .github/workflows/kaia-image-migration.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: kaia-images-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  migrate:
+    if: github.ref == 'refs/heads/feat/kaia-loja-real'
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate source code
+        run: node --check scripts/kaia-migrate-images.mjs
+      - name: Archive public product images and rewrite URLs
+        run: node scripts/kaia-migrate-images.mjs
+      - name: Verify Kaia build (no payments enabled)
+        run: node scripts/build-kaia-site.mjs
+      - name: Commit images on feature branch only
+        run: |
+          git add kaia-glow/assets/catalog kaia-glow/catalog.js docs/kaia-glow-image-manifest.json
+          if git diff --cached --quiet; then
+            echo "No catalog image changes."
+            exit 0
+          fi
+          git -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' commit -m "assets(kaia): preserve 184 public product photos independently of Nuvemshop"
+          git push origin HEAD:feat/kaia-loja-real
