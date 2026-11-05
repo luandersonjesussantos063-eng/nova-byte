@@ -1,6 +1,7 @@
 import {KAIA_AUTH} from './auth-config.js';
 import {setupKaiaCoupons} from './admin-coupons.js';
 import {initKaiaAnalytics,loadKaiaAnalytics} from './admin-analytics.js';
+import {initKaiaMarketplaces,loadKaiaMarketplaces} from './admin-marketplaces.js';
 const $=s=>document.querySelector(s),all=s=>Array.from(document.querySelectorAll(s));
 const sb=window.supabase?.createClient(KAIA_AUTH.url,KAIA_AUTH.publishableKey,{auth:{storageKey:'kaia-glow-auth-v1',persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
 const catalog=window.KAIA_CATALOG||[];let edits=new Map(),inventory=new Map(),selected=null,images=[],signedIn=false;
@@ -54,6 +55,7 @@ async function loadAdmin(){
     price:edit.price_cents/100,available:!!edit.available,sku:row.sku}],isNew:true});
  }
  initKaiaAnalytics(sb);
+ initKaiaMarketplaces(sb,{onStockChanged:()=>loadAdmin()});
  $('#productCount').textContent=catalog.length;
  renderProductList();await setupKaiaCoupons(sb);
 }
@@ -215,6 +217,7 @@ all('[data-tab]').forEach(button=>button.onclick=()=>{
  all('[data-tab]').forEach(b=>b.setAttribute('aria-selected',String(b.dataset.tab===current)));
  $('#productsTab').hidden=current!=='products';$('#couponsTab').hidden=current!=='coupons';
  $('#analyticsTab').hidden=current!=='analytics';if(current==='analytics')loadKaiaAnalytics();
+ $('#marketplacesTab').hidden=current!=='marketplaces';if(current==='marketplaces')loadKaiaMarketplaces();
 });
 $('#logoutButton').onclick=async()=>{await sb?.auth.signOut();setSignedIn(false);$('#adminPassword').value='';status('#loginStatus','Sessão encerrada.');};
 $('#loginForm').onsubmit=async e=>{
