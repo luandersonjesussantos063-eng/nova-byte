@@ -2,8 +2,8 @@ import {readFile,writeFile,mkdir,rm,readdir,lstat,copyFile,access} from 'node:fs
 import {fileURLToPath} from 'node:url';import path from 'node:path';
 const root=fileURLToPath(new URL('../',import.meta.url)),source=path.join(root,'kaia-glow'),output=path.join(root,'dist','kaia-glow');
 const pages=['index.html','admin.html','conta.html','sobre.html','atendimento.html','privacidade.html','termos-de-uso.html'];
-const scripts=['app.js','shipping-popup.js','catalog-overrides.js','catalog.js','admin.js','admin-coupons.js','auth-config.js','conta.js','customer-validation.js','menu-account.js','institucional.js'];
-const styles=['style.css','shipping-popup.css','admin.css','conta.css','institucional.css'];
+const scripts=['app.js','marketing-insights.js','shipping-popup.js','catalog-overrides.js','catalog.js','admin.js','admin-analytics.js','admin-coupons.js','auth-config.js','conta.js','customer-validation.js','menu-account.js','institucional.js'];
+const styles=['style.css','shipping-popup.css','marketing-insights.css','admin.css','admin-analytics.css','conta.css','institucional.css'];
 const marker=path.join(root,'dist','.kaia-glow-generated');
 try{await access(output);await access(marker);await rm(output,{recursive:true});}catch(e){if(e.code!=='ENOENT')throw e;try{await access(output);throw Error('A pasta de destino existe sem identificação de build. Preserve seu conteúdo antes de continuar.');}catch(check){if(check.code!=='ENOENT')throw check;}}
 await mkdir(output,{recursive:true});await writeFile(marker,'Kaia Glow generated static deployment\n');let count=0;
