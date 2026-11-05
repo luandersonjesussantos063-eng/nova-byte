@@ -90,3 +90,17 @@ Os callbacks e webhooks NÃO processam autorizações nem pedidos nesta fase: s�
 Todas as tabelas de marketplaces têm RLS habilitado e somente administradores previamente autorizados podem lê-las. As tabelas não concedem INSERT/UPDATE/DELETE a navegadores; alterações manuais usam `kaia_admin_adjust_stock`, `kaia_admin_map_listing` e `kaia_admin_unmap_listing`, que revalidam `kaia_is_store_admin()`. Sem permissões administrativas, o site não pode alterar estoque. Eventos de sincronização e pedidos são apenas estruturas de dados; não há ingestão externa ativa.
 
 **Fontes das especificações para ativação:** Shopee Open Platform `https://open.shopee.com/` e documentação TikTok Shop Partner Center `https://partner.tiktokshop.com/docv2/api-document`. Detalhes exatos de OAuth, app review e escopos precisam ser revisados com as contas de produção no momento da conexão.
+
+
+### Rotina de reserva idempotente preparada
+
+A função `public.kaia_integrator_order_event(channel,order_id,event_key,action,items)` foi criada e disponibilizada **somente para service_role**. Não deve ser chamada por navegadores nem webhooks sem validação oficial. A tabela `public.kaia_marketplace_order_events` deduplica eventos por canal e ID do evento.
+
+- `reserve`: após autenticação do canal e vínculo conferido, valida todos os SKUs, trava os saldos na ordem estável dos produtos e reserva/desconta uma única vez a quantidade disponível. Estoque insuficiente ou vínculo não conferido gera `needs_review`, sem desconto parcial.
+- `ship`: transforma a reserva em venda efetivada, **sem novo desconto** no estoque.
+- `cancel`: libera a reserva somente enquanto não foi enviada; cancelamento após envio exige revisão/retorno físico, sem recomposição automática de estoque.
+- O histórico registra as reservas/liberações, e o gatilho atualiza a fila de estoque dos outros canais vinculados. A futura fila precisa ser processada por um conector autorizado, com validação de versão, confirmação remota e retry.
+- Teste transacional executado usando IDs fictícios **dentro de subtransação revertida**: reserva, duplicação do evento, envio sem novo desconto, segunda reserva, cancelamento com reposição. Após rollback, 51 SKUs/409 unidades, sem pedido fictício ou mapeamento salvo.
+- Essa função é apenas a **lógica central**. A conexão real ainda exige escrever/homologar os adaptadores OAuth, validação de assinatura e conversão dos payloads oficiais da Shopee/TikTok, renovar tokens e executar os envios de estoque. As rotas reservadas respondem HTTP 503 até essa etapa e NÃO podem receber webhooks de produção.
+
+**Teste final de infraestrutura:** domínio principal respondeu HTTP 200 para loja, painel e assets; endpoints de callback/webhook Shopee e TikTok retornaram HTTP 503 de forma segura; checkout permaneceu 503; função anônima para alterar estoque retornou 401; consulta pública de disponibilidade retornou apenas o booleano, sem revelar quantidades; interface testada a 390 e 1280 px sem transbordamento horizontal.
