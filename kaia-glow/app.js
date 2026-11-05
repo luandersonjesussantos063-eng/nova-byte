@@ -56,9 +56,15 @@ all('[data-step]').forEach(b=>b.onclick=()=>{const r=cart.find(x=>x.key===b.data
      +(missing.length?' Produtos pendentes: '+missing.join(', ')+'.':'');
    return;
   }
-  const rates=(info.opcoes||[]).map(o=>o.transportadora+' '+o.servico+': '+money(o.freteCentavos/100)+' · prazo de '+o.previsaoDias+' dia(s)').join(' | ');
-  status.textContent=rates+(info.referenciasExternas?' · Algumas medidas são referências de fornecedores.':'')
-    +' · Valor sujeito à conferência na compra. Compra e pagamento ainda bloqueados.';
+  const choices=Array.isArray(info.opcoes)?info.opcoes:[];
+  if(!choices.length){status.textContent='Nenhuma opção de envio retornada para esta sacola.';return;}
+  status.textContent=choices.length+' '+(choices.length===1?'opção de frete encontrada':'opções de frete encontradas')+'. ';
+  const button=document.createElement('button');
+  button.type='button';button.className='shipping-show-options';
+  button.textContent='Ver preços e prazos do frete ↗';
+  button.onclick=()=>window.kaiaShowShippingOptions(info,cep);
+  status.appendChild(button);
+  window.kaiaShowShippingOptions(info,cep);
  }catch{status.textContent='Não foi possível consultar o frete agora. Confira sua conexão e tente novamente.';}
 };$('#checkout').onclick=()=>info('checkout')}
 $('#bagButton').onclick=()=>{renderBag();$('#bagDialog').showModal()};
