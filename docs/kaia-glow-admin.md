@@ -34,3 +34,15 @@
 ## Publicação do painel na versão principal
 
 Em 05/11/2026 foi identificada uma condição de corrida: a última implantação de produção de um commit mais antigo passou a servir uma versão sem `admin.html` (404), apesar de uma implantação anterior possuir os arquivos corretamente. Esta revisão dispara uma nova implantação a partir da **ponta atual da branch**. Validar o `admin.html`, `admin.js` e `admin.css` no domínio principal e a assinatura de build antes de confirmar a correção.
+
+
+## Cadastro de novos produtos — 05/11/2026
+
+- A tela `https://usekaiaglow.com.br/admin.html`, aba **Produtos e fotos**, agora possui o botão **+ Novo produto**. O formulário pede nome, marca, categoria, descrição, preço atual e anterior, estoque, visibilidade, até 10 fotos e medidas de embalagem opcionais.
+- O cadastro cria um SKU `KG-NEW-<id>` e um ID numérico durável. As tabelas `public.kaia_new_products`, `public.kaia_catalog_overrides` e `public.kaia_sale_inventory` são gravadas atomicamente pela função `kaia_admin_create_product`, restrita aos administradores confirmados. O estoque existente não é alterado.
+- O modo **rascunho** é o padrão. Para publicar, marque **Exibir na vitrine** e forneça pelo menos uma imagem real em `storage/kaia-product-media` (JPG, PNG ou WebP, máximo de 5 MB por arquivo). Dados de rascunho dos produtos novos são protegidos por políticas RLS; o público só recebe produtos publicados.
+- Novos produtos aparecem automaticamente no catálogo público após o carregamento do Supabase. O usuário pode abrir a ficha do produto, adicionar à sacola e consultar frete quando peso e três dimensões estiverem preenchidos. O checkout continua intencionalmente desabilitado.
+- Cada produto novo publicado possui URL dinâmica SEO `/produtos/novo/<id>`, com título, descrição, foto e dados estruturados. O sitemap adicional `https://usekaiaglow.com.br/sitemap-novos.xml` reúne as novas URLs publicadas e está informado em `robots.txt`. As páginas antigas e o sitemap original permanecem.
+- `public.kaia_admin_save_product_v2` permite editar marca, categoria, nome, preço, fotos e dimensões de um produto novo depois da criação; para produtos existentes respeita a política já aprovada de preço/estoque e não reescreve medidas antigas.
+- Testes realizados sem produto fictício no banco: formulário completo testado em 390 e 1280 px com retorno de API simulado, incluindo criação, edição e upload; vitrine recebeu um novo produto simulado com busca, ficha e inclusão na sacola em ambas as resoluções; páginas dinâmicas e sitemap responderam no domínio oficial. Requisição anônima à função de criação recebeu HTTP 401, conforme esperado.
+- Estado do banco após os testes: 0 novos produtos, 51 SKUs preexistentes, 409 unidades originais. A proprietária ainda deverá adicionar seus produtos reais.
