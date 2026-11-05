@@ -24,3 +24,7 @@ A configuração é para homologação: conta do Mercado Pago, frete, estoque/pe
 Para usar o domínio raiz em Cloudflare Pages, a zona precisa ser configurada na conta Cloudflare, com os servidores DNS atribuídos por ela. O domínio continua registrado no Registro.br; trocar delegação DNS não é transferir o registro. Antes dessa mudança, ler e preservar a zona completa, inclusive e-mail e verificações, e registrar os valores exatos fornecidos pela Cloudflare. Não fornecer servidores ou IPs de exemplo como se fossem o destino da cliente.
 
 Os registros atuais informados pelo proprietário são os dois A da Nuvemshop e o CNAME de www. Eles continuam necessários enquanto a loja antiga for o destino. Não alterados por este trabalho. Apontamento final depende de projeto real criado, SSL, checkout e validação da migração.
+
+## Cloudflare Pages — homologação
+
+Projeto Pages: `kaia-glow` (plano gratuito). Branch de produção: `feat/kaia-loja-real`. Build: `node scripts/build-kaia-site.mjs`; saída: `dist/kaia-glow`; Node.js 22. Domínio temporário reservado: `kaia-glow.pages.dev`. Publicação e verificação devem ser confirmadas separadamente. Não alterar DNS do cliente nem a hospedagem NovaByte. Mercado Pago, frete, estoque e migração de imagens ainda pendentes.
