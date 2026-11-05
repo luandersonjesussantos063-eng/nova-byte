@@ -28,3 +28,12 @@ Os registros atuais informados pelo proprietário são os dois A da Nuvemshop e 
 ## Cloudflare Pages — homologação
 
 Projeto Pages: `kaia-glow` (plano gratuito). Branch de produção: `feat/kaia-loja-real`. Build: `node scripts/build-kaia-site.mjs`; saída: `dist/kaia-glow`; Node.js 22. Domínio temporário reservado: `kaia-glow.pages.dev`. Publicação e verificação devem ser confirmadas separadamente. Não alterar DNS do cliente nem a hospedagem NovaByte. Mercado Pago, frete, estoque e migração de imagens ainda pendentes.
+
+
+## Zona Cloudflare ativa e domínio de homologação separado — 05/11/2026
+
+- Registro.br: DNS alterado para `dale.ns.cloudflare.com` e `maria.ns.cloudflare.com`. Zona Cloudflare `usekaiaglow.com.br` confirmada `active` em 05/11/2026, plano gratuito. Registro permanece no Registro.br.
+- Preservados os destinos da Nuvemshop: registros A do domínio raiz `185.133.35.21`, `185.133.35.22`, e CNAME de `www` para `kaiaglow.lojavirtualnuvem.com.br`. Não substituir esses destinos enquanto a nova loja não tiver pagamento e frete testados e autorização de migração.
+- A configuração isolada de teste da loja no Cloudflare Pages existente `kaia-glow` usa `teste.usekaiaglow.com.br` (CNAME com proxy para `kaia-glow.pages.dev`), sem alterar o DNS raiz nem o `www`. A vinculação Pages foi criada e o DNS verificado; aguardar validação SSL antes de afirmar que o HTTPS está ativo. Este endereço continua com `X-Robots-Tag: noindex` e checkout desativado.
+- O arquivo `kaia-glow/auth-config.js` reconhece `teste.usekaiaglow.com.br` como homologação, usa URLs da conta nesse mesmo host e impede cadastro e recuperação por e-mail enquanto a allowlist Supabase não estiver validada. Não alterar URLs compartilhadas de outros projetos.
+- O projeto final ainda **não** foi vinculado ao domínio raiz `usekaiaglow.com.br`; lançamento depende de fluxo transacional Mercado Pago, SuperFrete e estoque atual correto. Não desativar Nuvemshop.
