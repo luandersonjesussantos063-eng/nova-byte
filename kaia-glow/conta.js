@@ -14,6 +14,8 @@ try {
 if(!validCode(pendingCode))pendingCode=null;
 const status = (text='',error=false) => {$('#accountStatus').textContent=text;$('#accountStatus').classList.toggle('error',error);};
 const supa = window.supabase?.createClient(KAIA_AUTH.url,KAIA_AUTH.publishableKey,{auth:{storageKey:'kaia-glow-auth-v1',persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
+const stagingEmailBlocked = KAIA_AUTH.isStaging && !KAIA_AUTH.stagingEmailRedirectReady;
+if(stagingEmailBlocked){const note=document.createElement('p');note.setAttribute('role','note');note.textContent='Homologação: novos cadastros e e-mails de recuperação ficam pausados até validar os retornos no Supabase. O login de contas existentes permanece disponível.';note.style.cssText='padding:12px 16px;border:1px solid #ddbdcb;border-radius:10px;background:#f8eef2;color:#6b354e;line-height:1.5';document.querySelector('.account-heading')?.appendChild(note);}
 let mode=params.get('modo')==='cadastro'?'signup':'login', user=null, customer=null, sequence=0, recovery=params.get('redefinir')==='1',authBusy=false,initializing=true,profileRequired=false;
 function friendly(error){
  const code=error?.code||'';
@@ -128,6 +130,7 @@ $('#authForm').addEventListener('submit',async event=>{
  event.preventDefault();if(!supa)return;const button=$('#authSubmit');button.disabled=true;authBusy=true;status('Aguarde…');
  const email=$('#accountEmail').value.trim(),password=$('#accountPassword').value,name=$('#accountName').value.trim();
  try{
+  if(stagingEmailBlocked&&['signup','reset'].includes(mode)){status('Os e-mails de confirmação e recuperação precisam ser liberados para o endereço temporário no Supabase antes de testar cadastros.',true);return;}
   if(['signup','complete'].includes(mode)&&!/^\S+\s+\S+/.test(name)){status('Informe seu nome completo, com sobrenome.',true);return;}
   if(['signup','newpassword'].includes(mode)&&(!/[a-zA-Z]/.test(password)||!/[0-9]/.test(password))){status('Use uma senha com letras e números e pelo menos 10 caracteres.',true);return;}
   if(mode==='signup'){
@@ -148,6 +151,7 @@ $('#authForm').addEventListener('submit',async event=>{
  }catch(error){status(friendly(error),true);}finally{button.disabled=false;authBusy=false;}
 });
 $('#resendConfirmation').addEventListener('click',async()=>{
+ if(stagingEmailBlocked){status('O retorno de confirmação da homologação ainda não foi autorizado no Supabase.',true);return;}
  const email=$('#accountEmail').value.trim();if(!email||!$('#accountEmail').reportValidity())return;
  const b=$('#resendConfirmation');b.disabled=true;const {error}=await supa.auth.resend({type:'signup',email,options:{emailRedirectTo:KAIA_AUTH.accountUrl}});status(error?friendly(error):'Se houver uma confirmação pendente, enviaremos um novo e-mail.',!!error);b.disabled=false;
 });
@@ -172,6 +176,7 @@ $('#profileForm').addEventListener('submit',async event=>{
  finally{b.disabled=false;}
 });
 $('#requestNewPassword').addEventListener('click',async()=>{
+ if(stagingEmailBlocked){status('A recuperação por e-mail na homologação depende de liberar o endereço temporário no Supabase.',true);return;}
  const b=$('#requestNewPassword');b.disabled=true;const {error}=await supa.auth.resetPasswordForEmail(user.email,{redirectTo:KAIA_AUTH.accountUrl+'?redefinir=1'});status(error?friendly(error):'Enviamos as instruções de alteração de senha para o seu e-mail.',!!error);b.disabled=false;
 });
 $('#signOut').addEventListener('click',async()=>{
