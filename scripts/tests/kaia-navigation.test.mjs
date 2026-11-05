@@ -1,5 +1,5 @@
 import test from 'node:test';import assert from 'node:assert/strict';import {readFileSync,existsSync} from 'node:fs';import {resolve,dirname,join} from 'node:path';import vm from 'node:vm';import {execFileSync} from 'node:child_process';
-const root=resolve('kaia-glow');const files=['index.html','conta.html','privacidade.html','termos-de-uso.html','atendimento.html'];const read=f=>readFileSync(join(root,f),'utf8');
+const root=resolve('kaia-glow');const files=['index.html','conta.html','privacidade.html','termos-de-uso.html','atendimento.html','sobre.html'];const read=f=>readFileSync(join(root,f),'utf8');
 test('all Kaia pages connect to privacy, terms and support and have real local destinations',()=>{
  for(const file of files){const html=read(file);for(const target of ['privacidade.html','termos-de-uso.html','atendimento.html'])assert(html.includes('href="'+target+'"'),file+': '+target);
   if(file==='conta.html'){assert(!html.includes('class="kaia-business-details"'));assert(html.includes('href="./#informacoes"'));assert(html.indexOf('class="kaia-account-site-footer"')>html.indexOf('</main>'));}else{assert.match(html,/KAIA GLOW COMERCIO DE COSMETICOS LTDA/);assert.match(html,/67\.706\.063\/0001-39/);assert.match(html,/usekaiaglow@gmail\.com/);}assert(!/href="[^"]*(?:CONTRATO|CNPJ)[^"]*\.pdf/i.test(html));

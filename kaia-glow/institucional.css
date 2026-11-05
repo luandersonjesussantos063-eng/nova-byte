@@ -11,3 +11,5 @@
 @media(max-width:600px){.kaia-footer.kaia-footer-compact .compact-footer-inner{width:calc(100% - 32px);padding-block:16px 22px;gap:8px}.compact-footer-top{gap:8px}.compact-footer-top nav{gap:0 12px}.compact-footer-top a,.compact-footer-legal a{font-size:11px}.compact-footer-top .compact-footer-brand{font-size:17px;letter-spacing:1px}.compact-footer-legal{gap:0 20px}}
 .whatsapp-floating[hidden]{display:none!important}
 .kaia-about-copy h3{font:400 25px/1.3 Georgia,serif;margin:0 0 16px;color:#54233d}.kaia-about-copy p{font-size:13px;line-height:1.85;color:#785764;margin:0 0 14px}.kaia-about-copy>a{display:inline-flex;align-items:center;min-height:44px;font-size:13px;color:#68334f;text-decoration:underline;text-underline-offset:4px;gap:8px}
+
+.kaia-story-copy h2{margin:34px 0 18px}.kaia-story-copy p{margin:0 0 20px}.kaia-story-copy .kaia-story-signature{font:italic 24px/1.6 Georgia,serif;color:#54233d;margin-top:32px}.kaia-story>.kaia-info-button{margin-top:14px}
