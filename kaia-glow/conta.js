@@ -110,7 +110,7 @@ async function loadAccount(){
  if(seq!==sequence)return;
  $('#memberName').textContent=profile.full_name;$('#memberEmail').textContent=user.email;
  $('#profileName').value=profile.full_name;$('#profileEmail').value=user.email;
- $('#personalReferralLink').value='https://usekaiaglow.com.br/?indicacao='+encodeURIComponent(profile.referral_code);
+ $('#personalReferralLink').value=new URL('/?indicacao='+encodeURIComponent(profile.referral_code),KAIA_AUTH.accountUrl).toString();
  if(referrals.error){$('#referralsList').textContent='Não foi possível carregar suas indicações. Use Atualizar para tentar novamente.';all('.account-stats strong').forEach(s=>s.textContent='—');}
  else{
   const rows=referrals.data||[];
