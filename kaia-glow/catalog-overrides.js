@@ -56,6 +56,27 @@
     }
    }
    if(results[1].status==='fulfilled')window.KAIA_ACTIVE_COUPONS=(results[1].value||[]).filter(c=>c.active);
+   // Central inventory is the single authority for the available/unavailable flag.
+   // This exposes only a boolean to the public storefront, never private quantities.
+   const availableSkus=[...new Set(list.map(p=>p.sku).filter(Boolean))];
+   if(availableSkus.length){
+    try{
+     const availability=await fetch(projectUrl+'/rest/v1/rpc/kaia_public_product_availability',{
+      method:'POST',headers:{apikey:publicKey,Authorization:'Bearer '+publicKey,
+       'Content-Type':'application/json',Accept:'application/json'},
+      body:JSON.stringify({p_skus:availableSkus}),cache:'no-store',signal:controller.signal
+     });
+     if(availability.ok){
+      const current=new Map((await availability.json()).map(r=>[r.sku,!!r.available]));
+      for(const p of list){
+       if(p.sku&&current.has(p.sku)){
+        p.available=current.get(p.sku);
+        if(Array.isArray(p.variants))for(const v of p.variants)v.available=p.available;
+       }
+      }
+     }
+    }catch{ /* Never claim stock is synchronized if the source is unreachable. */ }
+   }
   }catch(e){console.warn('Kaia: não foi possível atualizar catálogo ao vivo.',e?.name);}
   finally{clearTimeout(timer);}
  })();
