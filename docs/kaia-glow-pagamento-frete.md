@@ -54,3 +54,12 @@ A proprietária enviou captura da conta logada no aplicativo **SuperFrete**. Iss
 - A disponibilidade de saldo na carteira e a emissão de etiquetas não significam que a API esteja integrada. Nenhuma etiqueta foi criada ou cobrada. Mercado Pago não está conectado.
 
 **Regra de lançamento:** checkout e indexação permanecem bloqueados até conta Mercado Pago comercial, pedido transacional idempotente, estoque atual confirmado, pesos e dimensões, frete real validado e end-to-end em sandbox. Não substituir a Nuvemshop no domínio antes disso.
+
+
+## Credencial SuperFrete — configuração Cloudflare (05/11/2026)
+
+- Variável de produção `KAIA_SHIPPING_PROVIDER=superfrete` configurada no projeto Pages existente `kaia-glow`.
+- `KAIA_SF_ACCESS_TOKEN` gravado como **`secret_text`**, nunca no repositório ou no frontend. A conexão API ainda não foi testada com uma cotação real.
+- CEP de postagem confirmado pelo responsável: `01550000`, igual ao endereço cadastral exibido na Kaia Glow. A variável já está configurada nas implantações de produção e prévia.
+- A credencial foi compartilhada em uma conversa e precisa ser **revogada/rotacionada antes da ativação comercial**. Colocar a credencial substituta diretamente no painel da Cloudflare, sem publicá-la em chat, GitHub, arquivos ou prints.
+- Permanecem ausentes serviço(s) SuperFrete validado(s), contato técnico autorizado, credencial de backend Supabase, estoque/preço atual, dimensões de postagem e os testes de cálculo. Consequentemente, cotação e checkout seguem bloqueados por segurança.
