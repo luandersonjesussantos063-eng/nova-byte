@@ -14,7 +14,7 @@
 <section id="adminPanel" hidden>
 <div class="page-intro"><div><span class="eyebrow">PAINEL KAIA</span><h1>Controle da sua vitrine.</h1><p>Atualizações salvas aqui passam a aparecer no site. As compras continuam bloqueadas até o Mercado Pago estar pronto.</p></div><div class="account-chip" id="adminIdentity"></div></div>
 <div class="dashboard-metrics"><div class="metric"><small>Produtos da vitrine</small><strong id="productCount">—</strong></div><div class="metric"><small>Cupons cadastrados</small><strong id="couponCount">—</strong></div><div class="metric"><small>Pagamento</small><strong class="pending">Em preparação</strong></div></div>
-<div class="admin-tabs" role="tablist" aria-label="Áreas de gestão"><button type="button" data-tab="products" aria-selected="true">Produtos e fotos</button><button type="button" data-tab="coupons" aria-selected="false">Cupons</button></div>
+<div class="admin-tabs" role="tablist" aria-label="Áreas de gestão"><button type="button" data-tab="products" aria-selected="true">Produtos e fotos</button><button type="button" data-tab="coupons" aria-selected="false">Cupons</button><button type="button" data-tab="analytics" aria-selected="false">Visitas e interesse</button></div>
 <section id="productsTab" class="admin-section">
 <div class="section-header"><div><h2>Produtos, preços e fotos</h2><p>Escolha um produto e salve as alterações para atualizar a loja.</p></div><button id="reloadButton" type="button" class="ghost-button">Atualizar lista</button></div>
 <div class="product-layout"><div class="product-picker"><label for="productSearch">Buscar produto ou SKU</label><input id="productSearch" type="search" autocomplete="off" placeholder="Nome, marca ou código"><div id="productList" class="product-list" aria-label="Produtos cadastrados"></div></div>
@@ -41,9 +41,31 @@
 <label class="check-label"><input id="couponActive" type="checkbox" checked> Cupom ativo</label></div>
 <div class="editor-actions"><button type="submit" class="primary-button" id="saveCouponButton">Salvar cupom</button><button type="reset" class="ghost-button">Limpar</button></div><p id="couponStatus" role="status" aria-live="polite"></p></form>
 <div class="coupon-admin-list"><h3>Cupons cadastrados</h3><div id="couponList" class="coupons-list"></div></div></div></section>
+
+<section id="analyticsTab" class="admin-section" hidden>
+ <div class="section-header"><div><span class="eyebrow">COMPORTAMENTO DE VISITANTES</span>
+ <h2>O que desperta interesse?</h2>
+ <p>Visitas e tempo de visualização de quem autorizou as métricas. Os dados são anônimos e não representam todos os visitantes.</p>
+ </div><div class="analytics-filter"><label for="analyticsDays">Período</label>
+ <select id="analyticsDays"><option value="7">Últimos 7 dias</option><option value="14">Últimos 14 dias</option><option value="30">Últimos 30 dias</option></select>
+ <button type="button" id="refreshAnalytics" class="ghost-button">Atualizar dados</button></div></div>
+ <div class="analytics-kpis">
+  <div class="metric"><small>Visitantes únicos (opt-in)</small><strong id="analyticsVisitors">—</strong></div>
+  <div class="metric"><small>Sessões de visita</small><strong id="analyticsSessions">—</strong></div>
+  <div class="metric"><small>Visualizações de produto</small><strong id="analyticsProductViews">—</strong></div>
+  <div class="metric"><small>Tempo médio por visualização</small><strong id="analyticsAvgTime">—</strong></div>
+  <div class="metric"><small>Adições à sacola</small><strong id="analyticsCartAdds">—</strong></div>
+  <div class="metric"><small>Variação de visitantes</small><strong id="analyticsDelta">—</strong></div>
+ </div>
+ <div class="analytics-panels"><div class="editor"><h3>Visitas ao longo dos dias</h3><div id="analyticsBars" class="analytics-bars" aria-label="Visitas diárias"></div></div>
+ <div class="editor"><h3>Produtos mais observados</h3><p>Tempo somado enquanto o produto estava aberto e visível na tela.</p>
+ <div class="analytics-scroll"><table class="analytics-table"><thead><tr><th>Produto</th><th>Visitas</th><th>Tempo médio</th><th>Na sacola</th></tr></thead><tbody id="analyticsProducts"></tbody></table></div></div></div>
+ <p id="analyticsStatus" class="analytics-disclaimer" role="status">Os números serão exibidos quando houver visitantes que aceitarem as métricas. Não identifica nome, celular ou e-mail.</p>
+ <div class="editor analytics-campaign"><h3>Recuperação de interesse</h3><p>Planejamento: oferecer cupom de 10% a visitantes que permitirem notificações e demonstrarem interesse, após o checkout estar funcional.</p><strong>Envio automático de notificações: desligado até o sistema de pagamentos e a autorização de push estarem completos.</strong></div>
+</section>
 </section></main>
 <footer class="admin-footer">Kaia Glow · Painel restrito de gestão. O acesso é controlado pelo Supabase Auth.</footer>
 <script src="catalog.js?v=1"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js" integrity="sha384-TcHRA3zBbn+Lexh5n+Oil4guNPOS3rjNDpGRAN46u/s/mB2IZ50ceC6TYDU2yvgK" crossorigin="anonymous"></script>
-<script type="module" src="admin.js?v=1"></script>
+<script type="module" src="admin.js?v=2"></script>
 </body></html>
