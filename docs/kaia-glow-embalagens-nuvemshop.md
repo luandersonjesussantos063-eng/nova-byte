@@ -79,3 +79,51 @@ Estes produtos são do inventário atualizado, mas a planilha antiga não conté
 6. **Mercado Pago:** conta, credenciais, webhook durável, pedido transacional e testes fim a fim ainda pendentes. Checkout intencionalmente desativado.
 
 **Nunca** ativar pagamento, estoque multicanal ou prometer frete de todos os SKUs usando dimensões imputadas de produtos distintos.
+
+
+## Pesquisa individual dos 15 SKUs sem correspondência — 05/11/2026
+
+Fontes públicas consultadas individualmente. **As dimensões a seguir são do produto ou pacote anunciado por terceiros; não constituem medição da caixa final de despacho da Kaia Glow.** L= comprimento, A = largura, H=altura (centímetros). Os 15 SKUs foram pesquisados; sete têm peso e dimensões publicados para a mesma apresentação, dois têm somente peso, dois têm fontes de variantes semelhantes não equivalentes e quatro não têm ficha de medidas confiável.
+
+| SKU | Peso (g) | Dimensões L × A × H (cm) | Resultado | Fonte |
+|---|---:|---:|---|---|
+| `KG-ELI-CER100-OIL-100ML` | 140 | 13 × 6 × 5,5 | Completa | [Consultar](https://www.luxybeautyimports.com.br/produto/elizavecca-cer-100-oleo-de-tratamento-fortalecedor-capilar-100ml/) |
+| `KG-CFC-GLASSTONE-50ML` | 120 | — | Só peso | [Consultar](https://global.gmarket.co.kr/item?goodsCode=4373131832) |
+| `KG-DAL-FIRSTSPRAY-100ML` | 185 | 15,88 × 4,95 × 4,95 | Completa | [Consultar](https://www.iherb.com/pr/d-alba-first-spray-serum-3-38-fl-oz-100-ml/116015) |
+| `KG-DRA-345RC-50ML` | 83 | 15,2 × 7,7 × 3,2 | Completa | [Consultar](https://www.megaeletronicos.com/producto/1611908/creme-facial-hidratante-dr-althea-345-relief-cream-50-ml) |
+| `KG-MIS-PERFSER-ORI-80ML` | 118 | 15 × 4,5 × 3 | Completa | [Consultar](https://myasianmarketsudbury.com/products/mise-en-scene-perfect-serum-original-80ml) |
+| `KG-VT-PDRN-BRUSH-100ML` | 155 | 15,8 × 9,2 × 3,9 | Completa | [Consultar](https://www.galaxus.ch/en/s6/product/vt-cosmetics-pdrn-reedle-shot-brush-hair-serum-100-ml-hair-oils-68517797) |
+| `KG-ONG-SBGM-50ML` | — | — | Edição diferente | [Consultar](https://www.stylekorean.com/product/ongredients-skin-barrier-glow-mist-heart-edition-50ml/1787798430) |
+| `KG-BOJ-RS-RICENIA-50ML` | 69 | 14,2 × 3,8 × 3,2 | Completa | [Consultar](https://skinelle.co.uk/products/beauty-of-joseon-relief-sun-50ml-1-69fl-oz) |
+| `KG-SHA-REPAIRMILKY-110ML` | 191 | — | Só peso | [Consultar](https://www.stylekorean.com/product/shaishaishai-repair-milky-urea-glow-bubble-serum-110ml/1770367349) |
+| `KG-CEL-RETDUAL-50ML` | 90 | 15,1 × 4,5 × 3,8 | Completa (divergência) | [Consultar](https://cloverlight.net/en/asin-lookup/uk/B0GS97T2MV) |
+| `KG-BAO-SLEEPWRINKLE-16P` | — | — | Sem dados exatos | [Consultar](https://shopee.com.br/kaiaglow) |
+| `KG-HUN-GOATMILK-NECK-15ML` | — | — | Só conteúdo 15 ml | [Consultar](https://www.yami.com/us/en/p/goat-milk-peptide-yeast-neck-mask-say-goodbye-to-dark-neck-15ml-hydrates-moisturizes-lifts-tightens-fades-neck-lines/5191056311) |
+| `KG-TJS-JEWELSEAL-MIX` | — | — | Variante diferente | [Consultar](https://www.naharstationery.com/products/twinkle-jewel-seal-mix-colour-sticker) |
+| `KG-TJS-CELLPHONE-PINK` | — | — | Sem dados exatos | [Consultar](https://www.crazystore.co.za/products/stationery-arts-and-crafts/stationery/stickers-scrapbooking/cell-phone-decal-stickers/566-001118/) |
+| `KG-CRY-STICKERS-BOWBUTTER` | — | — | Sem dados exatos | [Consultar](https://www.saadhyamart.com/products/crystal-bow-butterfly-stickers) |
+
+### Observações de rastreabilidade
+
+- **`KG-ELI-CER100-OIL-100ML`**: Peso e dimensões comerciais publicados por lojista.
+- **`KG-CFC-GLASSTONE-50ML`**: Não encontrei medida de caixa confiável.
+- **`KG-DAL-FIRSTSPRAY-100ML`**: Peso/medidas de envio do fornecedor, convertidos de libras e polegadas; caixa de transporte do fornecedor pode diferir.
+- **`KG-DRA-345RC-50ML`**: Vendedor indica peso bruto e dimensões da embalagem.
+- **`KG-MIS-PERFSER-ORI-80ML`**: Peso/tamanho de produto de vendedor; consulta atual da URL pode ter mudado.
+- **`KG-VT-PDRN-BRUSH-100ML`**: Peso/dimensões do pacote, podendo variar entre lojas.
+- **`KG-ONG-SBGM-50ML`**: Encontrei **Heart Edition** 50 ml (86 g), não identifiquei com segurança **Healthion Edition**; não reutilizei.
+- **`KG-BOJ-RS-RICENIA-50ML`**: Nome Rice + Probiotics atualizado oficialmente para Rice + Niacinamide; mesmas medidas de produto.
+- **`KG-SHA-REPAIRMILKY-110ML`**: Peso bruto de varejista; outro varejista informa 221 g; dimensões ausentes.
+- **`KG-CEL-RETDUAL-50ML`**: Medidas de envio no catálogo Amazon indexado; [outra fonte](https://www.ebay.co.uk/itm/128131832335) informa 15,2 × 4,7 × 1,7 cm. Revisar antes de usar.
+- **`KG-BAO-SLEEPWRINKLE-16P`**: Produto da Kaia encontrado; medidas de outra marca com 16 patches NÃO foram copiadas.
+- **`KG-HUN-GOATMILK-NECK-15ML`**: Fonte anuncia caixa com 10 unidades; não usar peso da caixa para uma máscara.
+- **`KG-TJS-JEWELSEAL-MIX`**: Existe modelo Mix Colour sem medidas; outro anúncio de cartela violeta tem 22 × 10 cm e não confirma o mix.
+- **`KG-TJS-CELLPHONE-PINK`**: Achei adesivos Twinkle Jewel para celular inclusive rosa, sem ficha de peso e dimensões da apresentação específica.
+- **`KG-CRY-STICKERS-BOWBUTTER`**: Produto Bow & Butterfly identificado, mas sem peso/dimensões; outras cartelas parecidas não são equivalentes.
+
+### Alterações efetivas no banco
+
+- Nova tabela privada `kaia_private.shipping_measurement_research_20261105`: uma linha de fonte, medidas e justificativa para cada um dos **15 SKUs**.
+- Atualizada `public.kaia_sale_inventory` para os **9 SKUs** com peso da mesma apresentação: **7** receberam peso e três dimensões; **2** receberam somente peso. Os seis restantes mantêm peso/dimensões nulos no inventário de vendas.
+- `package_verified_at` **não foi preenchido** para as dimensões obtidas na internet, porque o peso/tamanho da caixa efetivamente preparada para despacho no estabelecimento não foi conferido. Nenhum valor foi extrapolado de uma marca ou cartela para outra.
+- Estoque confirmado (51 SKUs / 409 unidades) e preços existentes **não foram modificados**. Mercado Pago e cotação comercial no checkout continuam bloqueados até revisão das medidas faltantes, preços de venda atuais no servidor e fechamento da integração de pagamentos.
