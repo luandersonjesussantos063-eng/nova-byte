@@ -31,7 +31,8 @@ const pageLayout=({title,description,pathname,body,data,photo})=>{
  +'<a href="/#colecao">Loja</a><a href="/skincare-coreano/">Skincare coreano</a><a href="/categoria/cabelos/">Cabelos</a><a href="/cosmeticos-em-sao-paulo/">São Paulo</a></nav></div></header>'
  +'<main class="shell" id="conteudo">'+body+'</main>'
  +'<footer class="bottom"><div class="shell"><strong>KAIA GLOW</strong><p>Seleção de skincare, cuidados capilares e autocuidado. Loja online com atendimento por canais digitais.</p><nav><a href="/sobre.html">Sobre</a><a href="/atendimento.html">Atendimento</a><a href="/privacidade.html">Privacidade</a><a href="/">Voltar à loja</a></nav>'
- +'<p class="fine">Endereço cadastral: Rua Eng. Prudente, 35, apto. 154, Vila Monumento, São Paulo, SP. Atendimento e condições de entrega pelo site.</p></div></footer></body></html>';
+ +'<p class="fine">Endereço cadastral: Rua Eng. Prudente, 35, apto. 154, Vila Monumento, São Paulo, SP. Atendimento e condições de entrega pelo site.</p></div></footer>'
+ +(pathname.startsWith('/produtos/')?'<script type="module" src="/seo-product-live.js"></script>':'')+'</body></html>';
 };
 const crumbs=(parts)=>'<nav class="crumbs" aria-label="Navegação estrutural">'+parts.map((p,i)=>i===parts.length-1?'<span aria-current="page">'+html(p.title)+'</span>':'<a href="'+html(p.path)+'">'+html(p.title)+'</a>').join('<span aria-hidden="true">›</span>')+'</nav>';
 const breadcrumbsData=(parts)=>({'@context':'https://schema.org','@type':'BreadcrumbList',itemListElement:parts.map((p,i)=>({'@type':'ListItem',position:i+1,name:p.title,item:SITE+p.path}))});
@@ -75,7 +76,7 @@ export async function generateKaiaSeoPages(source,output){
   ];
   const related=products.filter(p=>p.id!==product.id&&(p.brand===product.brand||p.category===product.category)).slice(0,4);
   const paragraphs=description.length>1600?description.slice(0,1600).replace(/\s+\S*$/,'')+'…':description;
-  const body=crumbs(crumbsList)+'<article class="product-detail"><div class="visual">'
+  const body=crumbs(crumbsList)+'<article class="product-detail" data-product-key="'+html(product.sku||'legacy:'+product.id)+'"><div class="visual">'
    +(img(product)?'<img src="'+html('/'+img(product))+'" alt="'+html(product.name)+'" fetchpriority="high">':'<div class="photo-none large">Imagem do produto em atualização</div>')
    +'</div><div class="details"><span class="eyebrow">'+html(product.brand)+' · '+html(product.category)+'</span><h1>'+html(product.name)+'</h1>'
    +'<p class="intro">'+html(shorten(description,240))+'</p>'
