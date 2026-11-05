@@ -1,0 +1,27 @@
+/* Kaia Glow: freight quotes, clearly visible within a modal. */
+.shipping-dialog{position:fixed;inset:0;margin:auto;border:0;border-radius:20px;width:min(480px,calc(100vw - 28px));max-width:calc(100vw - 28px);max-height:min(90dvh,740px);overflow-y:auto;background:#fffaf9;color:#4b2b3a;box-shadow:0 25px 85px rgba(40,18,30,.3);padding:0}
+.shipping-dialog::backdrop{background:rgba(34,13,29,.67);backdrop-filter:blur(5px)}
+.shipping-dialog-inner{padding:28px 28px 25px}
+.shipping-dialog-heading{display:flex;align-items:center;justify-content:space-between;gap:16px}
+.shipping-eyebrow{font-size:10px;letter-spacing:2px;color:#956276;font-weight:700}
+.shipping-close{display:grid;place-items:center;flex:none;width:42px;height:42px;border:1px solid #e8d4dd;border-radius:50%;background:#fff;color:#6d4056;font:26px/1 Arial,sans-serif;cursor:pointer}
+.shipping-close:hover,.shipping-close:focus-visible{background:#f5e5ed;outline-offset:3px}
+.shipping-dialog h2{font:400 36px/1.05 'Cormorant Garamond',Georgia,serif;color:#4b2337;margin:19px 0 8px;letter-spacing:-.6px}
+.shipping-postal-summary{font-size:13px;line-height:1.65;color:#7f6472;margin:0 0 19px}
+.shipping-options{display:grid;gap:12px}
+.shipping-option-card{background:#fff;border:1px solid #e8d8df;border-radius:15px;padding:18px 18px 17px;box-shadow:0 4px 15px #60253e08}
+.shipping-option-card.is-cheapest{border:2px solid #8c3d63;background:#fff5f9;padding:17px}
+.shipping-option-title{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.shipping-option-title strong{font-size:15px;color:#482639;line-height:1.35}
+.shipping-option-badges{display:flex;gap:5px;flex-wrap:wrap}
+.shipping-option-badge{font-size:9px;font-weight:700;letter-spacing:.2px;padding:6px 9px;border-radius:99px;background:#823c60;color:#fff;white-space:nowrap}
+.shipping-option-badge.is-fastest{background:#f2e4c9;color:#684522}
+.shipping-option-price{display:block;font:700 31px/1.25 'DM Sans',Arial,sans-serif;color:#5b203d;margin:12px 0 3px;letter-spacing:-1px}
+.shipping-option-time{font-size:13px;line-height:1.6;color:#755c6a;margin:0}
+.shipping-dialog-note{font-size:11px;line-height:1.75;color:#806b75;margin:18px 0 16px}
+.shipping-done{width:100%;padding:16px 13px;border-radius:8px;background:#53223e;color:#fff;font-size:13px;font-weight:650;cursor:pointer;min-height:48px}
+.shipping-done:hover,.shipping-done:focus-visible{background:#743750}
+#shippingQuoteResult{font-size:12px;line-height:1.65;color:#704c60}
+.shipping-show-options{display:block;width:100%;min-height:46px;border:1px solid #8e4768;border-radius:8px;margin:12px 0 2px;padding:10px 14px;background:#fff3f8;color:#59243d;font:700 12px/1.45 'DM Sans',Arial,sans-serif;cursor:pointer}
+.shipping-show-options:hover,.shipping-show-options:focus-visible{background:#f5e1eb;outline-offset:2px}
+@media(max-width:480px){.shipping-dialog{width:calc(100vw - 22px);max-width:calc(100vw - 22px);border-radius:15px}.shipping-dialog-inner{padding:22px 19px 19px}.shipping-dialog h2{font-size:31px}.shipping-option-price{font-size:28px}.shipping-option-card{padding:16px}.shipping-option-card.is-cheapest{padding:15px}}
