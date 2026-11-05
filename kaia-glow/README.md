@@ -80,3 +80,6 @@ Os dados completos da empresa foram retirados do rodapé interno de Minha conta.
 
 ## Rodapé compacto — 05/11/2026
 Removidas as colunas redundantes Explore a Kaia e Minha Kaia do rodapé público. Conta, pedidos e indicações continuam no cabeçalho/menu e funcionam sem depender do antigo rótulo de conta no rodapé. O bloco concentra WhatsApp/Instagram, três links institucionais, identificação empresarial e direitos/crédito, sem grandes convites ou espaçamentos. Botão flutuante de WhatsApp oculto enquanto o rodapé está visível, para não cobrir informações. Verificação em Chromium a 320, 390 e 1280 px, sem erro JavaScript ou rolagem horizontal; alturas respectivas 355, 319 e 296 px. Conferidos o menu de conta e os links legais.
+
+## Sobre a Kaia Glow — estrutura no menu
+Seção Sobre a Kaia Glow no mesmo acordeão do menu lateral, com apresentação da marca baseada na seleção e atendimento já existentes e link para atendimento. Não foram inventadas data de início da marca, fundadora ou história de origem; esses detalhes foram solicitados ao responsável e permanecem pendentes para complementar o texto. A data de abertura do CNPJ não foi apresentada como data de criação da marca. Conferidos abrir/fechar seção e link de atendimento em Chromium a 390 e 1280 px, sem exceções JavaScript; quatro testes de navegação passaram.
