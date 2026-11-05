@@ -1,5 +1,6 @@
 import {KAIA_AUTH} from './auth-config.js';
 import {setupKaiaCoupons} from './admin-coupons.js';
+import {initKaiaAnalytics,loadKaiaAnalytics} from './admin-analytics.js';
 const $=s=>document.querySelector(s),all=s=>Array.from(document.querySelectorAll(s));
 const sb=window.supabase?.createClient(KAIA_AUTH.url,KAIA_AUTH.publishableKey,{auth:{storageKey:'kaia-glow-auth-v1',persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
 const catalog=window.KAIA_CATALOG||[];let edits=new Map(),inventory=new Map(),selected=null,images=[],signedIn=false;
@@ -37,6 +38,7 @@ async function loadAdmin(){
  if(products.error||stock.error){status('#productStatus','Não foi possível ler o catálogo autorizado. Confira a conexão.',true);return;}
  edits=new Map((products.data||[]).map(x=>[x.product_key,x]));
  inventory=new Map((stock.data||[]).map(x=>[x.sku,x]));
+ initKaiaAnalytics(sb);
  $('#productCount').textContent=catalog.length;
  renderProductList();await setupKaiaCoupons(sb);
 }
@@ -122,6 +124,7 @@ all('[data-tab]').forEach(button=>button.onclick=()=>{
  const current=button.dataset.tab;
  all('[data-tab]').forEach(b=>b.setAttribute('aria-selected',String(b.dataset.tab===current)));
  $('#productsTab').hidden=current!=='products';$('#couponsTab').hidden=current!=='coupons';
+ $('#analyticsTab').hidden=current!=='analytics';if(current==='analytics')loadKaiaAnalytics();
 });
 $('#logoutButton').onclick=async()=>{await sb?.auth.signOut();setSignedIn(false);$('#adminPassword').value='';status('#loginStatus','Sessão encerrada.');};
 $('#loginForm').onsubmit=async e=>{
