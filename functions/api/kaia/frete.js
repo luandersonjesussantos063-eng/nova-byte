@@ -42,12 +42,35 @@ export async function onRequestPost({request,env}){
   if(!/^\d{8}$/.test(cep))throw Error('Informe um CEP de destino com 8 dígitos.');
   items=parseItems(data?.items);
  }catch(e){return fail('DADOS_INVALIDOS',e.message,422);}
- const missing=items.filter(({sku})=>!PARCELS[sku]).map(({sku})=>sku);
+ const parcels={...PARCELS};
+ const requestedNew=items.filter(({sku})=>!parcels[sku]&&/^KG-NEW-9[0-9]{8,14}$/.test(sku)).map(({sku})=>sku);
+ if(requestedNew.length){
+  try{
+   const response=await fetch('https://vajlhodqxskozuxxlujv.supabase.co/rest/v1/rpc/kaia_public_new_product_dimensions',{
+    method:'POST',headers:{apikey:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZhamxob2RxeHNrb3p1eHhsdWp2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk5MDQ0ODIsImV4cCI6MjEwNTQ4MDQ4Mn0.2HfSpUNZZZAJ8xQWK6yuwAkxNa_-dtuFTfkYJzSPybk",Authorization:'Bearer '+"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZhamxob2RxeHNrb3p1eHhsdWp2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk5MDQ0ODIsImV4cCI6MjEwNTQ4MDQ4Mn0.2HfSpUNZZZAJ8xQWK6yuwAkxNa_-dtuFTfkYJzSPybk",
+     Accept:'application/json','Content-Type':'application/json'},
+    body:JSON.stringify({p_skus:requestedNew}),
+    signal:AbortSignal.timeout(7000)
+   });
+   if(response.ok){
+    const rows=await response.json();
+    if(Array.isArray(rows))for(const p of rows){
+     const weight=Number(p.weight_grams),length=Number(p.length_cm),
+      width=Number(p.width_cm),height=Number(p.height_cm);
+     if(requestedNew.includes(p.sku)&&[weight,length,width,height].every(n=>Number.isFinite(n)&&n>0)
+       &&weight<=100000&&length<=150&&width<=150&&height<=150){
+      parcels[p.sku]=[weight,length,width,height,'cadastro_cliente'];
+     }
+    }
+   }
+  }catch{}
+ }
+ const missing=items.filter(({sku})=>!parcels[sku]).map(({sku})=>sku);
  if(missing.length)return fail('MEDIDAS_PENDENTES',
   'Um ou mais produtos ainda não possuem peso e dimensões completos para cotação.',409,
   {skusPendentes:missing});
  const products=items.map(({sku,quantity})=>{
-  const [grams,length,width,height,origem]=PARCELS[sku];
+  const [grams,length,width,height,origem]=parcels[sku];
   // Respect carrier minimum parcel sides when source lists a smaller product box.
   return {sku,quantity,length:Math.max(13,length),width:Math.max(8,width),
    height:Math.max(1,height),weight:Math.max(0.01,grams/1000),origem};
