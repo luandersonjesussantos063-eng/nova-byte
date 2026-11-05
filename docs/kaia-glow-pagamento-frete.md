@@ -71,3 +71,10 @@ A proprietária enviou captura da conta logada no aplicativo **SuperFrete**. Iss
 - A Cloudflare confirma **presença** de uma credencial criptografada, não se ela é nova, válida ou se foi efetivamente revogada na SuperFrete. Validar a autenticação apenas quando houver disponibilidade de integração para teste, sem emitir etiqueta.
 - Persistem pendentes `KAIA_SUPABASE_SERVICE_ROLE_KEY` no backend, valores, saldos e embalagens atuais validados. Logo, o cálculo de frete ainda é indisponível por design; nenhum pagamento foi desbloqueado.
 - Alterações de variáveis de ambiente podem exigir nova implantação Pages. Este commit serve apenas para registrar a configuração pública sem segredos e atualizar a publicação.
+
+
+## Diagnóstico de cotação SuperFrete 05/11/2026
+
+- Estoque de setembro/2026 confirmado novamente pelo responsável em 05/11/2026; `public.kaia_sale_inventory` agora contém 51 saldos confirmados, total 409 unidades, com `stock_verified_at` preenchido. Os preços e medidas de embalagem permanecem pendentes de validação independente; não foram inventados ou alterados.
+- Rota temporária `/api/kaia/diagnostico-superfrete`, protegida por segredo independente, para testar exclusivamente cotação de **pacote ilustrativo**, sem SKU, etiqueta ou pagamento, de `01550000` para `01001000`, 0,3 kg / 17 × 11 × 4 cm, usando API SuperFrete produção em modo somente cotação. Deve ser REMOVIDA junto ao segredo temporário após o diagnóstico.
+- Não habilitar o checkout enquanto não houver medidas e preços validados, autenticação dos pedidos e Mercado Pago transacional.
