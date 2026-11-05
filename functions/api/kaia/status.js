@@ -21,8 +21,9 @@ export function onRequestGet({env}) {
       pedidosTransacionaisProntos:false
     },
     frete:{
-      provedorEscolhido:env.KAIA_SHIPPING_PROVIDER==='melhor_envio'?'Melhor Envio':'pendente',
-      credenciaisConfiguradas:!!env.KAIA_ME_ACCESS_TOKEN,
+      provedorEscolhido:env.KAIA_SHIPPING_PROVIDER==='superfrete'?'SuperFrete':env.KAIA_SHIPPING_PROVIDER==='melhor_envio'?'Melhor Envio':'pendente',
+      integracaoDisponivel:['superfrete','melhor_envio'],
+      credenciaisConfiguradas:env.KAIA_SHIPPING_PROVIDER==='superfrete'?!!env.KAIA_SF_ACCESS_TOKEN:env.KAIA_SHIPPING_PROVIDER==='melhor_envio'?!!env.KAIA_ME_ACCESS_TOKEN:false,
       cepOrigemConfigurado:/^\d{8}$/.test(String(env.KAIA_SHIP_FROM_CEP||'')),
       catalogoPronto:false
     },
