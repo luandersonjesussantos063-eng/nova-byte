@@ -37,3 +37,14 @@ Projeto Pages: `kaia-glow` (plano gratuito). Branch de produção: `feat/kaia-lo
 - A configuração isolada de teste da loja no Cloudflare Pages existente `kaia-glow` usa `teste.usekaiaglow.com.br` (CNAME com proxy para `kaia-glow.pages.dev`), sem alterar o DNS raiz nem o `www`. A vinculação Pages foi criada e o DNS verificado; aguardar validação SSL antes de afirmar que o HTTPS está ativo. Este endereço continua com `X-Robots-Tag: noindex` e checkout desativado.
 - O arquivo `kaia-glow/auth-config.js` reconhece `teste.usekaiaglow.com.br` como homologação, usa URLs da conta nesse mesmo host e impede cadastro e recuperação por e-mail enquanto a allowlist Supabase não estiver validada. Não alterar URLs compartilhadas de outros projetos.
 - O projeto final ainda **não** foi vinculado ao domínio raiz `usekaiaglow.com.br`; lançamento depende de fluxo transacional Mercado Pago, SuperFrete e estoque atual correto. Não desativar Nuvemshop.
+
+
+## Migração autorizada ao domínio principal — 05/11/2026
+
+- O proprietário autorizou explicitamente **retirar a Nuvemshop do apontamento DNS**, mesmo com pagamento ainda bloqueado, e usar a nossa loja como site principal.
+- A zona Cloudflare ativa `usekaiaglow.com.br` tem CNAME proxied `usekaiaglow.com.br` → `kaia-glow.pages.dev`; dois antigos registros A (`185.133.35.21` e `185.133.35.22`) foram removidos.
+- `www.usekaiaglow.com.br` agora é CNAME proxied → `kaia-glow.pages.dev`; a antiga entrada CNAME da Nuvemshop foi substituída.
+- A Cloudflare confirmou os dois domínios como **active**, com verificação de DNS e certificado TLS/HTTPS **active**. `teste.usekaiaglow.com.br` permanece ligado ao mesmo projeto Pages.
+- Testes HTTPS diretos no domínio raiz e `www`: GET da página inicial retornou 200 e conteúdo Kaia Glow. Não foi alterado nenhum domínio, projeto ou serviço Nova Byte.
+- **A mudança de DNS não cancela a conta nem assinaturas cobradas pela Nuvemshop.** O proprietário precisa verificar eventual cancelamento diretamente com a plataforma.
+- O build do site mantém temporariamente `X-Robots-Tag: noindex,nofollow` e `robots.txt` proibindo rastreamento em todos os hosts enquanto o checkout estiver desativado; **não afirmar que o site principal já está indexável no Google**.
