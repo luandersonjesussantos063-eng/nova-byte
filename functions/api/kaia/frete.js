@@ -53,11 +53,19 @@ export async function onRequestPost({request,env}){
    return fail('ORIGEM_INVALIDA','Origem não autorizada.',403);
  if(!request.headers.get('content-type')?.toLowerCase().startsWith('application/json'))
    return fail('TIPO_INVALIDO','Envie JSON.');
- if(env.KAIA_SHIPPING_PROVIDER!=='melhor_envio')
+ const provider=env.KAIA_SHIPPING_PROVIDER;
+ if(!['melhor_envio','superfrete'].includes(provider))
    return fail('FRETE_EM_CONFIGURACAO','A transportadora ainda não foi definida. Nenhuma tarifa foi calculada.',503);
  const from=digits(env.KAIA_SHIP_FROM_CEP);
- if(!/^\d{8}$/.test(from)||!env.KAIA_ME_ACCESS_TOKEN||!env.KAIA_SUPABASE_SERVICE_ROLE_KEY)
+ const accessToken=provider==='superfrete'?env.KAIA_SF_ACCESS_TOKEN:env.KAIA_ME_ACCESS_TOKEN;
+ if(!/^\d{8}$/.test(from)||!accessToken||!env.KAIA_SUPABASE_SERVICE_ROLE_KEY)
    return fail('CONFIGURACAO_PENDENTE','Faltam CEP de postagem e credenciais de frete/banco no servidor.',503);
+ const sfServices=String(env.KAIA_SF_SERVICES||'');
+ // Never infer selected shipping services or use an unverified API contact identity.
+ if(provider==='superfrete'&&(
+   !/^(1|2|3|17|33)(,(1|2|3|17|33))*$/.test(sfServices)||
+   !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(env.KAIA_SHIPPING_TECH_CONTACT||''))))
+   return fail('CONFIGURACAO_PENDENTE','Configure os serviços SuperFrete e o contato técnico autorizado.',503);
  const raw=await request.text();
  if(raw.length>12000)return fail('PEDIDO_GRANDE','Quantidade de dados excessiva.',413);
  let dest,items;
@@ -75,26 +83,40 @@ export async function onRequestPost({request,env}){
  }
  const subtotal=products.reduce((sum,p)=>sum+p.price_cents*p.quantity,0);
  if(!Number.isSafeInteger(subtotal)||subtotal>100000000)return fail('TOTAL_INVALIDO','O total precisa de revisão.',422);
- const sandbox=env.KAIA_ME_MODE!=='production';
- const endpoint=sandbox?'https://sandbox.melhorenvio.com.br/api/v2/me/shipment/calculate':'https://melhorenvio.com.br/api/v2/me/shipment/calculate';
- let resp;
- try{
-  resp=await fetch(endpoint,{method:'POST',headers:{
-   Authorization:'Bearer '+env.KAIA_ME_ACCESS_TOKEN,Accept:'application/json',
-   'Content-Type':'application/json',
-   'User-Agent':'KaiaGlow/1.0 (frete ecommerce)'
-  },body:JSON.stringify({
+ // The SuperFrete adapter is staged: API shape must be verified with a test token
+ // and the selected shipping services before any production quote is exposed.
+ const sandbox=provider==='superfrete'?env.KAIA_SF_MODE!=='production':env.KAIA_ME_MODE!=='production';
+ const endpoint=provider==='superfrete'
+   ?(sandbox?'https://sandbox.superfrete.com':'https://api.superfrete.com')+'/api/v0/calculator'
+   :(sandbox?'https://sandbox.melhorenvio.com.br':'https://melhorenvio.com.br')+'/api/v2/me/shipment/calculate';
+ const payload=provider==='superfrete'?{
+   from:{postal_code:from},to:{postal_code:dest},
+   services:sfServices,
+   products:products.map(p=>({width:p.width,height:p.height,length:p.length,weight:p.weight,quantity:p.quantity})),
+   options:{receipt:false,own_hand:false,insurance_value:subtotal/100,use_insurance_value:true}
+ }:{
    from:{postal_code:from},to:{postal_code:dest},
    products:products.map(p=>({id:p.sku,width:p.width,height:p.height,length:p.length,
      weight:p.weight,insurance_value:p.price_cents/100,quantity:p.quantity})),
    options:{receipt:false,own_hand:false}
-  }),signal:AbortSignal.timeout(16000)});
+ };
+ const agent=provider==='superfrete'
+  ?'KaiaGlow/1.0 ('+env.KAIA_SHIPPING_TECH_CONTACT+')'
+  :'KaiaGlow/1.0 (frete ecommerce)';
+ let resp;
+ try{
+  resp=await fetch(endpoint,{method:'POST',headers:{
+   Authorization:'Bearer '+accessToken,Accept:'application/json',
+   'Content-Type':'application/json','User-Agent':agent
+  },body:JSON.stringify(payload),signal:AbortSignal.timeout(16000)});
  }catch{return fail('COTACAO_INDISPONIVEL','Não foi possível consultar as transportadoras.',503)}
  if(!resp.ok)return fail('COTACAO_INDISPONIVEL','Transportadoras não retornaram uma cotação válida.',503);
  let data;
  try{data=await resp.json();}catch{return fail('RESPOSTA_INVALIDA','Erro na resposta da transportadora.',503)}
  const options=(Array.isArray(data)?data:[]).flatMap(q=>{
-  const value=Number(q.custom_price),days=Number(q.custom_delivery_time);
+  if(q.has_error===true)return [];
+  const value=Number(provider==='superfrete'?q.price:q.custom_price);
+  const days=Number(provider==='superfrete'?q.delivery_time:q.custom_delivery_time);
   if(!Number.isFinite(value)||value<0||!Number.isSafeInteger(days)||days<0||!q.id||!q.company?.name)return [];
   const cents=Math.round(value*100);
   return [{id:String(q.id),servico:String(q.name||''),transportadora:String(q.company.name),
