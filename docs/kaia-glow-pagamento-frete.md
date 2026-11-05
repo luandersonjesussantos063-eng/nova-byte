@@ -87,3 +87,13 @@ A proprietária enviou captura da conta logada no aplicativo **SuperFrete**. Iss
 - A rota temporária autenticada usada para diagnóstico foi deletada de `functions/api/kaia` após o teste; o segredo temporário foi removido da configuração de produção Cloudflare. O token principal SuperFrete permanece criptografado. Nenhuma chave aparece em logs/documentos.
 - Integração de rede e token SuperFrete **testados**; cotação comercial na sacola **permanece não ativada**, porque a tabela `kaia_sale_inventory` ainda exige `sale_price_cents` / `price_verified_at`, `weight_grams` e dimensões da **embalagem pronta** / `package_verified_at` e acesso servidor ao Supabase. A referência de medidas da antiga Nuvemshop não foi presumida como embalagem física.
 - A variável de homologação `KAIA_SF_MODE=sandbox` foi mantida no endpoint de frete comercial. Diagnóstico real chamou o endpoint de produção somente para **cotação**, sem criar etiqueta. Não mudar a loja para produção até a validação do checkout Mercado Pago, conferência de preços e embalagens e testes ponta a ponta.
+
+
+## Cotação SuperFrete pública sem checkout — 05/11/2026
+
+- Após autorização do proprietário, o endpoint `POST /api/kaia/frete` consulta a API **de produção somente para cotação** da SuperFrete. `KAIA_SF_MODE=production` define o ambiente de consulta, não habilita compra de etiqueta.
+- O código usa uma tabela estática reconciliada no servidor com 43 SKUs contendo peso + comprimento/largura/altura, a partir de 36 produtos da Nuvemshop e 7 referências do comércio pesquisadas na internet. A quantidade de SKU e o CEP são validados em cada requisição; o provedor e token nunca são enviados ao navegador.
+- Não exige `KAIA_SUPABASE_SERVICE_ROLE_KEY`, estoque online ou `sale_price_cents` **somente para orçamento de envio**. Sem valor declarado/seguro, e com medidas de catálogo/referências comerciais. **Estes valores não devem ser usados como cobrança definitiva nem para emitir etiqueta antes da validação comercial do pedido.**
+- Os 8 SKUs sem dimensões completas geram HTTP 409 com lista de itens, em vez de inventar valor de entrega. Sem preços de venda validados não se indica seguro ou total final.
+- Teste live `https://usekaiaglow.com.br/api/kaia/frete` com `KG-MED-ZEROPAD2-70P`, CEP destino `01001000`: HTTP 200, PAC R$ 17,77 / 5 dias, SEDEX R$ 11,43 / 1 dia. Carrinho em celular confirmou opções em texto e estado finalização em breve.
+- `POST /api/kaia/checkout` continua HTTP 503 `CHECKOUT_NAO_HABILITADO`; nenhuma cobrança, pedido, etiqueta ou pagamento criado. Mercado Pago, ordens transacionais e conferência final de medidas/preços continuam pendentes.
