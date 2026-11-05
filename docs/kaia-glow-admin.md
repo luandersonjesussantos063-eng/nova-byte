@@ -29,3 +29,8 @@
 - O checkout, Mercado Pago, emissão de etiquetas e reservas de estoque continuam desativados. Ao ativar pagamentos, **o servidor deve validar novamente preços, estoque, cupom, frete, prazo e pedido**, independentemente da apresentação do navegador. Não confiar em valores calculados no cliente.
 - A inclusão de SKUs novos e edição de todo o conteúdo institucional/banners não fazem parte desta primeira versão do painel; exigir nova implementação segura com categorias, fotos e validação de estoque.
 - Todo o trabalho foi realizado no projeto Kaia Glow e nas tabelas `kaia_*`; não mudar as contas/sites da Nova Byte nem dados dos outros projetos no mesmo Supabase.
+
+
+## Publicação do painel na versão principal
+
+Em 05/11/2026 foi identificada uma condição de corrida: a última implantação de produção de um commit mais antigo passou a servir uma versão sem `admin.html` (404), apesar de uma implantação anterior possuir os arquivos corretamente. Esta revisão dispara uma nova implantação a partir da **ponta atual da branch**. Validar o `admin.html`, `admin.js` e `admin.css` no domínio principal e a assinatura de build antes de confirmar a correção.
