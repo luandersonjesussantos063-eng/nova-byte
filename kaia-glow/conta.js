@@ -29,7 +29,7 @@ function friendly(error){
  return 'Não foi possível concluir agora. Tente novamente ou fale com a Kaia.';
 }
 function setMode(next,clear=true){
- mode=next;$('#authPanel').hidden=false;$('#memberPanel').hidden=true;
+ mode=next;$('#termsField').hidden=next!=='signup';$('#termsAccepted').required=next==='signup';$('#termsAccepted').checked=false;$('#authPanel').hidden=false;$('#memberPanel').hidden=true;
  $('#authPanel .auth-switch').hidden=!['login','signup'].includes(next);
  all('[data-auth-mode]').forEach(b=>{b.classList.toggle('selected',b.dataset.authMode===next);b.setAttribute('aria-pressed',String(b.dataset.authMode===next));});
  const withName=['signup','complete'].includes(next),withPassword=['login','signup','newpassword'].includes(next);
@@ -92,7 +92,7 @@ async function loadAccount(){
  const details=detailResult.data;profileRequired=!details;
  fillCustomerDetails(details);
  all('[data-account-tab]').forEach(b=>b.disabled=profileRequired&&b.dataset.accountTab!=='dados');
- $('#profileSetupNote').textContent=profileRequired?'Etapa 2 de 2: complete seus dados pessoais e de entrega para concluir o cadastro. A forma de pagamento fica para a finalização do carrinho.':'Seu cadastro está completo. Confira ou atualize seus dados antes das próximas compras.';
+ $('#profileSetupNote').textContent=profileRequired?'Etapa 2 de 2: complete seus dados pessoais e de entrega para concluir o cadastro. A vitrine ainda não processa pagamentos; combine compras com a equipe.':'Seu cadastro está completo. Confira ou atualize seus dados antes das próximas compras.';
  let claimMessage='';
  const code=pendingCode||(validCode(user.user_metadata?.kaia_ref)?user.user_metadata.kaia_ref:null);
  if(code){
@@ -131,7 +131,8 @@ $('#authForm').addEventListener('submit',async event=>{
   if(['signup','complete'].includes(mode)&&!/^\S+\s+\S+/.test(name)){status('Informe seu nome completo, com sobrenome.',true);return;}
   if(['signup','newpassword'].includes(mode)&&(!/[a-zA-Z]/.test(password)||!/[0-9]/.test(password))){status('Use uma senha com letras e números e pelo menos 10 caracteres.',true);return;}
   if(mode==='signup'){
-   const {data,error}=await supa.auth.signUp({email,password,options:{emailRedirectTo:KAIA_AUTH.accountUrl,data:{kaia_name:name,...(pendingCode?{kaia_ref:pendingCode}:{})}}});
+   if(!$('#termsAccepted').checked){status('Leia os Termos de uso e confirme o aceite antes de criar a conta.',true);return;}
+   const {data,error}=await supa.auth.signUp({email,password,options:{emailRedirectTo:KAIA_AUTH.accountUrl,data:{kaia_name:name,kaia_terms_version:'2026-11-05',kaia_terms_accepted_at:new Date().toISOString(),...(pendingCode?{kaia_ref:pendingCode}:{})}}});
    if(error)throw error;
    $('#accountPassword').value='';
    if(data.session){await loadAccount();}else{setMode('login',false);status('Se este for um novo cadastro, enviaremos o link de confirmação ao seu e-mail. O acesso só será liberado após confirmar. Se você já possui uma conta confirmada, entre com sua senha ou use Esqueci minha senha; um novo cadastro não envia outra confirmação.');$('#resendConfirmation').hidden=false;}
