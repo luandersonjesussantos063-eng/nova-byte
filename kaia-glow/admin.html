@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow"><meta name="referrer" content="strict-origin-when-cross-origin">
-<title>Painel administrativo · Kaia Glow</title><link rel="stylesheet" href="admin.css?v=2"><link rel="stylesheet" href="admin-analytics.css?v=1"></head>
+<title>Painel administrativo · Kaia Glow</title><link rel="stylesheet" href="admin.css?v=2"><link rel="stylesheet" href="admin-analytics.css?v=1"><link rel="stylesheet" href="admin-marketplaces.css?v=1"></head>
 <body>
 <header class="admin-top"><div class="admin-brand"><span class="brand-mark">K</span><div><strong>KAIA GLOW</strong><small>GESTÃO DA LOJA</small></div></div><div class="admin-top-actions"><a href="/" target="_blank" rel="noopener noreferrer">Ver a loja ↗</a><button type="button" id="logoutButton" hidden>Sair</button></div></header>
 <main class="admin-shell">
@@ -14,7 +14,7 @@
 <section id="adminPanel" hidden>
 <div class="page-intro"><div><span class="eyebrow">PAINEL KAIA</span><h1>Controle da sua vitrine.</h1><p>Atualizações salvas aqui passam a aparecer no site. As compras continuam bloqueadas até o Mercado Pago estar pronto.</p></div><div class="account-chip" id="adminIdentity"></div></div>
 <div class="dashboard-metrics"><div class="metric"><small>Produtos da vitrine</small><strong id="productCount">—</strong></div><div class="metric"><small>Cupons cadastrados</small><strong id="couponCount">—</strong></div><div class="metric"><small>Pagamento</small><strong class="pending">Em preparação</strong></div></div>
-<div class="admin-tabs" role="tablist" aria-label="Áreas de gestão"><button type="button" data-tab="products" aria-selected="true">Produtos e fotos</button><button type="button" data-tab="coupons" aria-selected="false">Cupons</button><button type="button" data-tab="analytics" aria-selected="false">Visitas e interesse</button></div>
+<div class="admin-tabs" role="tablist" aria-label="Áreas de gestão"><button type="button" data-tab="products" aria-selected="true">Produtos e fotos</button><button type="button" data-tab="coupons" aria-selected="false">Cupons</button><button type="button" data-tab="analytics" aria-selected="false">Visitas e interesse</button><button type="button" data-tab="marketplaces" aria-selected="false">Estoque e marketplaces</button></div>
 <section id="productsTab" class="admin-section">
 <div class="section-header"><div><h2>Produtos, preços e fotos</h2><p>Edite os produtos existentes ou cadastre um novo com fotos, preço, categoria e estoque.</p></div><div class="editor-header-actions"><button id="reloadButton" type="button" class="ghost-button">Atualizar lista</button><button id="addProductButton" type="button" class="primary-button">+ Novo produto</button></div></div>
 <div class="product-layout"><div class="product-picker"><label for="productSearch">Buscar produto ou SKU</label><input id="productSearch" type="search" autocomplete="off" placeholder="Nome, marca ou código"><div id="productList" class="product-list" aria-label="Produtos cadastrados"></div></div>
@@ -72,9 +72,76 @@
  <p id="analyticsStatus" class="analytics-disclaimer" role="status">Os números serão exibidos quando houver visitantes que aceitarem as métricas. Não identifica nome, celular ou e-mail.</p>
  <div class="editor analytics-campaign"><h3>Recuperação de interesse</h3><p>Planejamento: oferecer cupom de 10% a visitantes que permitirem notificações e demonstrarem interesse, após o checkout estar funcional.</p><strong>Envio automático de notificações: desligado até o sistema de pagamentos e a autorização de push estarem completos.</strong></div>
 </section>
+
+<section id="marketplacesTab" class="admin-section" hidden>
+ <div class="section-header"><div>
+  <span class="eyebrow">CENTRAL KAIA GLOW · MULTICANAL</span>
+  <h2>Estoque e marketplaces</h2>
+  <p>Um saldo central para os produtos da loja. Organize os vínculos dos anúncios agora; a integração automática só começa depois de autorizar a Shopee e o TikTok Shop.</p>
+ </div><button type="button" id="mpRefresh" class="ghost-button">Atualizar painel</button></div>
+ <div class="mp-warning" role="note"><strong>Sincronização externa desativada por enquanto.</strong> Alterar o estoque aqui atualiza o banco central, mas <strong>não atualiza Shopee ou TikTok Shop</strong> até conectar e validar cada conta.</div>
+ <div class="mp-kpis">
+   <div class="metric"><small>Produtos com SKU</small><strong id="mpSkuCount">—</strong></div>
+   <div class="metric"><small>Unidades disponíveis</small><strong id="mpUnits">—</strong></div>
+   <div class="metric"><small>Estoque baixo (até 3)</small><strong id="mpLowCount">—</strong></div>
+   <div class="metric"><small>SKUs vinculados</small><strong id="mpMappedCount">—</strong></div>
+   <div class="metric"><small>Pedidos importados</small><strong id="mpOrdersCount">—</strong></div>
+   <div class="metric"><small>Envios pendentes</small><strong id="mpQueueCount">—</strong></div>
+ </div>
+ <div class="mp-channel-grid" id="mpChannelCards">
+   <div class="mp-channel-card"><strong>Shopee</strong><p>Aguardando dados da integração.</p></div>
+   <div class="mp-channel-card"><strong>TikTok Shop</strong><p>Aguardando dados da integração.</p></div>
+ </div>
+ <div class="mp-columns">
+   <div class="editor"><span class="eyebrow">ALTERAÇÃO CENTRAL</span><h3>Atualizar quantidade</h3>
+    <p>Registre uma entrada, uma saída ou informe a quantidade total real. A movimentação fica registrada no histórico e será preparada para sincronização.</p>
+    <form id="mpStockForm" class="mp-stack">
+     <label>Produto no estoque central<select id="mpStockSku" required><option value="">Selecione o produto</option></select></label>
+     <p class="mp-selected" id="mpSelectedStock">Selecione um produto para ver seu saldo.</p>
+     <label>Tipo de movimentação<select id="mpStockMode" required>
+      <option value="set">Definir saldo total</option><option value="add">Entrada de mercadoria (+)</option><option value="subtract">Saída ou ajuste (-)</option>
+     </select></label>
+     <label>Quantidade<input id="mpStockQty" type="number" min="0" max="100000" step="1" required placeholder="Ex.: 10"></label>
+     <label>Motivo da alteração<textarea id="mpStockReason" required maxlength="500" rows="2" minlength="4" placeholder="Ex.: Contagem física do estoque"></textarea></label>
+     <button id="mpSaveStock" type="submit" class="primary-button">Salvar movimentação</button>
+     <p id="mpStockStatus" role="status" aria-live="polite"></p>
+    </form>
+   </div>
+   <div class="editor"><span class="eyebrow">VÍNCULO DE ANÚNCIOS</span><h3>Relacionar produto ao marketplace</h3>
+    <p>Depois de obter os identificadores do anúncio e de sua variação, associe ao SKU central. <strong>O vínculo fica pendente de verificação</strong> até a conexão oficial.</p>
+    <form id="mpMappingForm" class="mp-stack">
+     <label>Canal<select id="mpMapChannel" required><option value="shopee">Shopee</option><option value="tiktok">TikTok Shop</option></select></label>
+     <label>Produto central<select id="mpMapSku" required><option value="">Selecione o SKU</option></select></label>
+     <label>ID do anúncio / produto na plataforma<input id="mpRemoteProductId" required maxlength="100" pattern="[A-Za-z0-9_-]{1,100}" placeholder="ID oficial do anúncio"></label>
+     <label>ID da variação / modelo<input id="mpRemoteVariantId" required maxlength="100" pattern="[A-Za-z0-9_-]{1,100}" placeholder="ID da variação (ou 0 sem variações)"></label>
+     <label>SKU no marketplace (opcional)<input id="mpRemoteSku" maxlength="150" placeholder="Código utilizado no anúncio"></label>
+     <button id="mpSaveMapping" type="submit" class="primary-button">Salvar vínculo pendente</button>
+     <p id="mpMapStatus" role="status" aria-live="polite"></p>
+    </form>
+    <p class="mp-tip">Na conexão oficial, vamos buscar e conferir os anúncios para evitar vincular produtos ou variações incorretamente.</p>
+   </div>
+ </div>
+ <div class="editor mp-wide"><div class="mp-header-line"><div><h3>Mapa de anúncios vinculados</h3><p>Os vínculos manuais não habilitam envios automáticos antes da verificação.</p></div><span id="mpLinksCount" class="mp-count">0 vínculos</span></div>
+  <div class="mp-table-wrap"><table class="mp-table"><thead><tr><th>Canal</th><th>Produto central</th><th>Anúncio / variação</th><th>Status</th><th>Ação</th></tr></thead><tbody id="mpLinksBody"><tr><td colspan="5">Aguardando vínculos.</td></tr></tbody></table></div>
+ </div>
+ <div class="mp-columns">
+  <div class="editor"><h3>Histórico de movimentações</h3><p>Inclui o saldo inicial de referência e os ajustes registrados a partir de agora.</p>
+   <div class="mp-table-wrap"><table class="mp-table"><thead><tr><th>Quando</th><th>Produto</th><th>Antes → Depois</th><th>Origem</th></tr></thead><tbody id="mpMovementBody"><tr><td colspan="4">Carregando...</td></tr></tbody></table></div></div>
+  <div class="editor"><h3>Pedidos e reservas</h3><p>Os pedidos de Shopee e TikTok aparecerão após conectar e testar a captura oficial. Reservas evitam vender duas vezes a mesma unidade.</p>
+   <p class="mp-selected" id="mpReservationCount">Reservas ativas: 0</p>
+   <div class="mp-table-wrap"><table class="mp-table"><thead><tr><th>Canal</th><th>Pedido</th><th>Status</th></tr></thead><tbody id="mpOrdersBody"><tr><td colspan="3">Nenhum pedido importado ainda.</td></tr></tbody></table></div></div>
+ </div>
+ <div class="editor mp-wide">
+  <h3>Fila e saúde da sincronização</h3>
+  <p>Quando as contas estiverem conectadas, esta área mostrará os saldos enviados, confirmações, falhas e o horário da última sincronização.</p>
+  <div class="mp-table-wrap"><table class="mp-table"><thead><tr><th>Canal</th><th>SKU</th><th>Saldo desejado</th><th>Situação</th><th>Última tentativa</th></tr></thead><tbody id="mpQueueBody"><tr><td colspan="5">Nenhuma atualização pendente.</td></tr></tbody></table></div>
+  <p class="mp-tip">Importante: quando os canais forem autorizados, será preciso fazer a conferência inicial dos estoques e validar as regras de pedido, cancelamento, devolução e reserva antes da primeira sincronização.</p>
+ </div>
+ <p class="mp-footnote" id="mpDashboardStatus" role="status" aria-live="polite">As credenciais de Shopee e TikTok Shop não são colocadas no navegador, no GitHub ou no banco público.</p>
+</section>
 </section></main>
 <footer class="admin-footer">Kaia Glow · Painel restrito de gestão. O acesso é controlado pelo Supabase Auth.</footer>
 <script src="catalog.js?v=1"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js" integrity="sha384-TcHRA3zBbn+Lexh5n+Oil4guNPOS3rjNDpGRAN46u/s/mB2IZ50ceC6TYDU2yvgK" crossorigin="anonymous"></script>
-<script type="module" src="admin.js?v=3"></script>
+<script type="module" src="admin.js?v=4"></script>
 </body></html>
