@@ -6,6 +6,7 @@
   if(!response.ok)throw Error('Não foi possível sincronizar '+table);
   return response.json();
  };
+ window.KAIA_PUBLIC_API={projectUrl,publicKey};
  window.KAIA_ACTIVE_COUPONS=[];
  window.kaiaCatalogReady=(async()=>{
   const controller=new AbortController();
