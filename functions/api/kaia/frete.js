@@ -1,128 +1,89 @@
-// Kaia Glow: server-authoritative freight quote. Provider credentials and
-// service_role are Cloudflare Pages encrypted secrets, never included in frontend.
-// No fallback rate, no guessed stock/parcel size, no payment initiation.
-const json = (body,status=200) => new Response(JSON.stringify(body),{status,headers:{
- 'content-type':'application/json; charset=utf-8',
- 'cache-control':'no-store',
- 'x-content-type-options':'nosniff',
- 'referrer-policy':'no-referrer'
+// Kaia Glow: live SuperFrete quote-only endpoint. Never creates labels, orders or payments.
+// Source of parcel reference: owner-confirmed Nuvemshop export + researched listings,
+// reconciled with Supabase 2026-11-05; this is NOT a transactional inventory or checkout.
+// Shipping estimates exclude insurance pending merchant-approved sale prices.
+const PARCELS={"KG-ANU-PDRNGLOW-60P":[180,8,8,10,"nuvemshop"],"KG-APR-TXA99-WRAP-80ML":[120,10,5,16,"nuvemshop"],"KG-ARE-PDRNBOOST-30ML":[20,5,5,18,"nuvemshop"],"KG-ARO-SUPCOLL-43G":[180,22,15,7,"nuvemshop"],"KG-ARO-SUPCOLL-WRAP-80ML":[10,1,14,20,"nuvemshop_revisar"],"KG-AUS-PIMPLESTAR-150P":[200,15,15,8,"nuvemshop"],"KG-BIO-BCOLL-DEEP-34G":[80,8,15,15,"nuvemshop"],"KG-BIO-CPDRN-EYE30":[20,7,10,10,"nuvemshop_revisar"],"KG-BOJ-GPRC-100ML":[180,22,15,7,"nuvemshop"],"KG-BOJ-RS-RICENIA-50ML":[69,14.2,3.8,3.2,"web"],"KG-BOJ-RSAF-50ML":[100,22,15,7,"nuvemshop"],"KG-CEL-RETBOOST-15ML":[20,15,15,15,"nuvemshop"],"KG-CEL-RETDUAL-50ML":[90,15.1,4.5,3.8,"web"],"KG-CEN-360PDRN-50ML":[150,5,5,14,"nuvemshop"],"KG-CHO-NNLIPS":[20,5,5,15,"nuvemshop"],"KG-CKD-RETICOLL-MASK-31G":[50,22,15,7,"nuvemshop"],"KG-DAL-FIRSTSPRAY-100ML":[185,15.88,4.95,4.95,"web"],"KG-DHC-BULGROSE-40CAP":[10,10,1,10,"nuvemshop"],"KG-DRA-345RC-50ML":[83,15.2,7.7,3.2,"web"],"KG-ELI-CER100-OIL-100ML":[140,13,6,5.5,"web"],"KG-FIN-GENLUXE-MASK-200G":[230,22,15,7,"nuvemshop"],"KG-FIN-OIL-AIRY-70ML":[20,22,15,7,"nuvemshop_revisar"],"KG-FIN-OIL-CLASSIC-70ML":[170,22,15,7,"nuvemshop"],"KG-FUL-GTCP-120ML":[30,22,15,7,"nuvemshop_revisar"],"KG-FUL-RTJMC-120ML":[20,22,15,7,"nuvemshop_revisar"],"KG-MAR-WRPATCH-36P":[20,10,1,10,"nuvemshop"],"KG-MED-EGFNAD-30ML":[30,8,8,8,"nuvemshop"],"KG-MED-EXO7500-30ML":[150,22,15,7,"nuvemshop"],"KG-MED-PDRNPINK-MASK-28G":[30,8,8,8,"nuvemshop"],"KG-MED-TXANI15-30ML":[20,5,5,18,"nuvemshop_revisar"],"KG-MED-ZEROPAD2-70P":[300,22,15,7,"nuvemshop"],"KG-MIS-PERFSER-ORI-80ML":[118,15,4.5,3,"web"],"KG-NUM-N9-EYE-10ML":[10,22,15,7,"nuvemshop"],"KG-PUR-TXA6NI10RET-30ML":[150,22,15,7,"nuvemshop"],"KG-RET-EAR-CRYSTAL-10P":[20,22,15,7,"nuvemshop"],"KG-SK1-LCOIL-200ML":[370,22,15,7,"nuvemshop"],"KG-SK1-TBBTONER-210ML":[380,22,15,7,"nuvemshop"],"KG-SK1-TBCA-100ML":[310,22,15,7,"nuvemshop"],"KG-TIR-CMA-40ML":[180,22,15,7,"nuvemshop"],"KG-VIV-REVIVE-15ML":[20,3,3,15,"nuvemshop"],"KG-VT-PDRN-BRUSH-100ML":[155,15.8,9.2,3.9,"web"],"KG-VT-RS300-50ML":[20,22,15,7,"nuvemshop_revisar"],"KG-VT-RSLIFT-30ML":[150,20,15,7,"nuvemshop"]};
+const json=(body,status=200)=>new Response(JSON.stringify(body),{status,headers:{
+ 'content-type':'application/json; charset=utf-8','cache-control':'no-store',
+ 'x-content-type-options':'nosniff','referrer-policy':'no-referrer'
 }});
-const digits = x => String(x||'').replace(/\D/g,'');
-const validSku = s => /^KG-[A-Z0-9-]{4,90}$/.test(s);
-const inRange = (n,lo,hi) => Number.isFinite(n)&&n>=lo&&n<=hi;
-const isMoney = n=>Number.isSafeInteger(n)&&n>0&&n<100000000;
-const fail=(code,message,status=422)=>json({code,message,freteDisponivel:false},status);
-
+const fail=(code,message,status=422,extra={})=>json({code,message,freteDisponivel:false,...extra},status);
+const digits=s=>String(s??'').replace(/\D/g,'');
+const validSku=s=>/^KG-[A-Z0-9-]{4,90}$/.test(s);
 function parseItems(raw){
- if(!Array.isArray(raw)||raw.length===0||raw.length>12)throw new Error('Inclua de 1 a 12 produtos.');
- const combined=new Map();
- for(const item of raw){
-  const sku=String(item?.sku||'');
-  const qty=item?.quantity;
-  if(!validSku(sku)||!Number.isSafeInteger(qty)||qty<1||qty>10)throw new Error('Confira SKU e quantidade (1 a 10).');
-  combined.set(sku,(combined.get(sku)||0)+qty);
-  if(combined.get(sku)>10)throw new Error('Quantidade máxima por SKU excedida.');
+ if(!Array.isArray(raw)||!raw.length||raw.length>12)throw Error('Inclua de 1 a 12 produtos.');
+ const merged=new Map();
+ for(const row of raw){
+  const sku=String(row?.sku||'');const qty=row?.quantity;
+  if(!validSku(sku)||!Number.isSafeInteger(qty)||qty<1||qty>10)throw Error('Confira produto e quantidade (1 a 10).');
+  merged.set(sku,(merged.get(sku)||0)+qty);
+  if(merged.get(sku)>10)throw Error('Quantidade máxima por produto excedida.');
  }
- return [...combined].map(([sku,quantity])=>({sku,quantity}));
-}
-async function authoritativeItems(env,items){
- const key=env.KAIA_SUPABASE_SERVICE_ROLE_KEY,base='https://vajlhodqxskozuxxlujv.supabase.co';
- if(!key)throw new Error('SUPABASE_NOT_CONFIGURED');
- const inParam=items.map(x=>x.sku).join(',');
- const path='/rest/v1/kaia_sale_inventory?select=sku,display_name,sale_price_cents,available_units,weight_grams,length_cm,width_cm,height_cm,price_verified_at,stock_verified_at,package_verified_at&sku=in.('+encodeURIComponent(inParam)+')';
- const resp=await fetch(base+path,{headers:{apikey:key,Authorization:'Bearer '+key,Accept:'application/json'},signal:AbortSignal.timeout(10000)});
- if(!resp.ok)throw new Error('CATALOG_UNAVAILABLE');
- const rows=await resp.json();
- if(!Array.isArray(rows))throw new Error('CATALOG_UNAVAILABLE');
- const map=new Map(rows.map(x=>[x.sku,x]));
- const products=[];
- for(const {sku,quantity} of items){
-  const p=map.get(sku);
-  if(!p||!p.price_verified_at||!p.stock_verified_at||!p.package_verified_at
-     ||!isMoney(p.sale_price_cents)||!Number.isInteger(p.available_units)||p.available_units<quantity
-     ||!inRange(p.weight_grams,1,30000)
-     ||!inRange(Number(p.width_cm),1,200)||!inRange(Number(p.length_cm),1,200)||!inRange(Number(p.height_cm),1,200)
-  )throw new Error('PRODUCT_NOT_VERIFIED');
-  products.push({sku,quantity,price_cents:p.sale_price_cents,name:p.display_name,
-    width:Number(p.width_cm),height:Number(p.height_cm),length:Number(p.length_cm),weight:p.weight_grams/1000});
- }
- return products;
+ return [...merged].map(([sku,quantity])=>({sku,quantity}));
 }
 export async function onRequestPost({request,env}){
- if(request.headers.get('origin') && request.headers.get('origin')!==new URL(request.url).origin)
-   return fail('ORIGEM_INVALIDA','Origem não autorizada.',403);
+ const origin=request.headers.get('origin');
+ const url=new URL(request.url);
+ if(origin && origin!==url.origin) return fail('ORIGEM_INVALIDA','Origem não autorizada.',403);
+ if(request.headers.get('sec-fetch-site')==='cross-site')return fail('ORIGEM_INVALIDA','Origem não autorizada.',403);
  if(!request.headers.get('content-type')?.toLowerCase().startsWith('application/json'))
-   return fail('TIPO_INVALIDO','Envie JSON.');
- const provider=env.KAIA_SHIPPING_PROVIDER;
- if(!['melhor_envio','superfrete'].includes(provider))
-   return fail('FRETE_EM_CONFIGURACAO','A transportadora ainda não foi definida. Nenhuma tarifa foi calculada.',503);
- const from=digits(env.KAIA_SHIP_FROM_CEP);
- const accessToken=provider==='superfrete'?env.KAIA_SF_ACCESS_TOKEN:env.KAIA_ME_ACCESS_TOKEN;
- if(!/^\d{8}$/.test(from)||!accessToken||!env.KAIA_SUPABASE_SERVICE_ROLE_KEY)
-   return fail('CONFIGURACAO_PENDENTE','Faltam CEP de postagem e credenciais de frete/banco no servidor.',503);
- const sfServices=String(env.KAIA_SF_SERVICES||'');
- // Never infer selected shipping services or use an unverified API contact identity.
- if(provider==='superfrete'&&(
-   !/^(1|2|3|17|33)(,(1|2|3|17|33))*$/.test(sfServices)||
-   !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(env.KAIA_SHIPPING_TECH_CONTACT||''))))
-   return fail('CONFIGURACAO_PENDENTE','Configure os serviços SuperFrete e o contato técnico autorizado.',503);
- const raw=await request.text();
- if(raw.length>12000)return fail('PEDIDO_GRANDE','Quantidade de dados excessiva.',413);
- let dest,items;
- try{
-  const payload=JSON.parse(raw);
-  dest=digits(payload.destinoCep);
-  if(!/^\d{8}$/.test(dest))throw new Error('Informe um CEP de destino com 8 dígitos.');
-  items=parseItems(payload.items);
- }catch(e){return fail('VALIDACAO',e.message);}
- let products;
- try{products=await authoritativeItems(env,items);}
- catch(e){
-  if(e.message==='PRODUCT_NOT_VERIFIED')return fail('DADOS_NAO_CONFERIDOS','Produto sem preço, estoque atual ou medidas confirmados. Consulte a loja antes do pagamento.',409);
-  return fail('CATALOGO_INDISPONIVEL','Não foi possível validar o catálogo com o servidor.',503);
- }
- const subtotal=products.reduce((sum,p)=>sum+p.price_cents*p.quantity,0);
- if(!Number.isSafeInteger(subtotal)||subtotal>100000000)return fail('TOTAL_INVALIDO','O total precisa de revisão.',422);
- // The SuperFrete adapter is staged: API shape must be verified with a test token
- // and the selected shipping services before any production quote is exposed.
- const sandbox=provider==='superfrete'?env.KAIA_SF_MODE!=='production':env.KAIA_ME_MODE!=='production';
- const endpoint=provider==='superfrete'
-   ?(sandbox?'https://sandbox.superfrete.com':'https://api.superfrete.com')+'/api/v0/calculator'
-   :(sandbox?'https://sandbox.melhorenvio.com.br':'https://melhorenvio.com.br')+'/api/v2/me/shipment/calculate';
- const payload=provider==='superfrete'?{
-   from:{postal_code:from},to:{postal_code:dest},
-   services:sfServices,
-   products:products.map(p=>({width:p.width,height:p.height,length:p.length,weight:p.weight,quantity:p.quantity})),
-   options:{receipt:false,own_hand:false,insurance_value:subtotal/100,use_insurance_value:true}
- }:{
-   from:{postal_code:from},to:{postal_code:dest},
-   products:products.map(p=>({id:p.sku,width:p.width,height:p.height,length:p.length,
-     weight:p.weight,insurance_value:p.price_cents/100,quantity:p.quantity})),
-   options:{receipt:false,own_hand:false}
+  return fail('TIPO_INVALIDO','Envie JSON.');
+ if(env.KAIA_SHIPPING_PROVIDER!=='superfrete'||!env.KAIA_SF_ACCESS_TOKEN||
+    env.KAIA_SF_MODE!=='production'||
+    !/^\d{8}$/.test(digits(env.KAIA_SHIP_FROM_CEP))||
+    !/^(1|2|3|17|33)(,(1|2|3|17|33))*$/.test(String(env.KAIA_SF_SERVICES||''))||
+    !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(env.KAIA_SHIPPING_TECH_CONTACT||'')))
+  return fail('FRETE_EM_CONFIGURACAO','Consulta de frete temporariamente indisponível.',503);
+ let raw;
+ try{raw=await request.text()}catch{return fail('REQUISICAO_INVALIDA','Não foi possível ler os dados.');}
+ if(raw.length>12000)return fail('PEDIDO_GRANDE','Dados excessivos.',413);
+ let cep,items;
+ try{const data=JSON.parse(raw);cep=digits(data?.destinoCep);
+  if(!/^\d{8}$/.test(cep))throw Error('Informe um CEP de destino com 8 dígitos.');
+  items=parseItems(data?.items);
+ }catch(e){return fail('DADOS_INVALIDOS',e.message,422);}
+ const missing=items.filter(({sku})=>!PARCELS[sku]).map(({sku})=>sku);
+ if(missing.length)return fail('MEDIDAS_PENDENTES',
+  'Um ou mais produtos ainda não possuem peso e dimensões completos para cotação.',409,
+  {skusPendentes:missing});
+ const products=items.map(({sku,quantity})=>{
+  const [grams,length,width,height,origem]=PARCELS[sku];
+  // Respect carrier minimum parcel sides when source lists a smaller product box.
+  return {sku,quantity,length:Math.max(13,length),width:Math.max(8,width),
+   height:Math.max(1,height),weight:Math.max(0.01,grams/1000),origem};
+ });
+ const itemCount=items.reduce((a,x)=>a+x.quantity,0);
+ if(itemCount>24)return fail('QUANTIDADE_INVALIDA','Limite de itens por cotação excedido.');
+ const payload={
+  from:{postal_code:digits(env.KAIA_SHIP_FROM_CEP)},to:{postal_code:cep},
+  services:String(env.KAIA_SF_SERVICES),
+  products:products.map(p=>({width:p.width,height:p.height,length:p.length,weight:p.weight,quantity:p.quantity})),
+  options:{receipt:false,own_hand:false,insurance_value:0,use_insurance_value:false}
  };
- const agent=provider==='superfrete'
-  ?'KaiaGlow/1.0 ('+env.KAIA_SHIPPING_TECH_CONTACT+')'
-  :'KaiaGlow/1.0 (frete ecommerce)';
  let resp;
- try{
-  resp=await fetch(endpoint,{method:'POST',headers:{
-   Authorization:'Bearer '+accessToken,Accept:'application/json',
-   'Content-Type':'application/json','User-Agent':agent
-  },body:JSON.stringify(payload),signal:AbortSignal.timeout(16000)});
- }catch{return fail('COTACAO_INDISPONIVEL','Não foi possível consultar as transportadoras.',503)}
- if(!resp.ok)return fail('COTACAO_INDISPONIVEL','Transportadoras não retornaram uma cotação válida.',503);
+ try{resp=await fetch('https://api.superfrete.com/api/v0/calculator',{
+  method:'POST',headers:{Authorization:'Bearer '+env.KAIA_SF_ACCESS_TOKEN,
+   Accept:'application/json','Content-Type':'application/json',
+   'User-Agent':'KaiaGlow/1.0 ('+env.KAIA_SHIPPING_TECH_CONTACT+')'},
+  body:JSON.stringify(payload),signal:AbortSignal.timeout(15000)
+ })}catch{return fail('COTACAO_INDISPONIVEL','A transportadora não respondeu. Tente novamente.',503)}
+ if(!resp.ok)return fail('COTACAO_INDISPONIVEL','Não foi possível consultar as transportadoras agora.',503);
  let data;
- try{data=await resp.json();}catch{return fail('RESPOSTA_INVALIDA','Erro na resposta da transportadora.',503)}
+ try{data=await resp.json()}catch{return fail('RESPOSTA_INVALIDA','A transportadora enviou uma resposta inválida.',503)}
  const options=(Array.isArray(data)?data:[]).flatMap(q=>{
   if(q.has_error===true)return [];
-  const value=Number(provider==='superfrete'?q.price:q.custom_price);
-  const days=Number(provider==='superfrete'?q.delivery_time:q.custom_delivery_time);
-  if(!Number.isFinite(value)||value<0||!Number.isSafeInteger(days)||days<0||!q.id||!q.company?.name)return [];
-  const cents=Math.round(value*100);
-  return [{id:String(q.id),servico:String(q.name||''),transportadora:String(q.company.name),
-    freteCentavos:cents,previsaoDias:days,totalCentavos:subtotal+cents}];
+  const price=Number(q.price),days=Number(q.delivery_time);
+  if(!q.id||!Number.isFinite(price)||price<=0||!Number.isSafeInteger(days)||days<0)return [];
+  return [{id:String(q.id),servico:String(q.name||''),transportadora:String(q.company?.name||''),
+   freteCentavos:Math.round(price*100),previsaoDias:days}];
  });
- if(!options.length)return fail('SEM_COTACAO','Nenhuma modalidade está disponível para este CEP e pacote.',422);
- return json({freteDisponivel:true,homologacao:sandbox,subtotalCentavos:subtotal,opcoes:options,
-   aviso:'Cotação de referência sujeita a recálculo no checkout. Nenhum pagamento foi iniciado.'});
+ if(!options.length)return fail('SEM_COTACAO',
+  'Nenhuma modalidade disponível para este CEP e as medidas cadastradas.',422);
+ const hasUnreviewed=products.some(p=>p.origem!=='nuvemshop');
+ return json({freteDisponivel:true,consultaPrevia:true,checkoutAtivo:false,
+  cepOrigem:digits(env.KAIA_SHIP_FROM_CEP),cepDestino:cep,
+  referenciasExternas:hasUnreviewed,
+  opcoes:options,
+  aviso:'Estimativa da SuperFrete com as medidas cadastradas; valor final, seguro e embalagem serão conferidos antes da compra. Compras ainda indisponíveis.'
+ });
 }
