@@ -42,3 +42,15 @@ Atualização de 05/11/2026. **NÃO há pagamentos ou fretes prontos para uso co
 - Cloudflare secrets: https://developers.cloudflare.com/pages/functions/bindings/
 
 **Jamais declarar loja pronta para vender antes de teste real integral no ambiente de homologação.**
+
+## SuperFrete — conta identificada em 05/11/2026
+
+A proprietária enviou captura da conta logada no aplicativo **SuperFrete**. Isso comprova acesso ao aplicativo, **não** que o token de API do site independente tenha sido emitido ou conectado. A empresa não precisa abrir outra conta Melhor Envio se optar pela SuperFrete.
+
+- Adaptador preparado em `functions/api/kaia/frete.js`, com duas alternativas aceitas: `KAIA_SHIPPING_PROVIDER=superfrete` ou `melhor_envio`. O servidor exige preço e estoque atuais, peso/dimensões conferidos, CEP de origem e credenciais; não envia valores falsos nem inicia pagamentos.
+- Para SuperFrete, após aceite da proprietária e emissão de token no portal oficial `https://web.superfrete.com/`, configure na **Cloudflare Pages > kaia-glow > Settings > Variables and Secrets**: `KAIA_SHIPPING_PROVIDER=superfrete`, `KAIA_SHIP_FROM_CEP` (CEP completo de postagem), `KAIA_SF_ACCESS_TOKEN` **encrypted secret**, `KAIA_SF_MODE=sandbox` para homologação, `KAIA_SF_SERVICES` (IDs das modalidades habilitadas na conta; por exemplo, `1,2,17` quando confirmadas), `KAIA_SHIPPING_TECH_CONTACT` (e-mail técnico autorizado, usado somente no `User-Agent`) e `KAIA_SUPABASE_SERVICE_ROLE_KEY` como **encrypted secret**. Nenhum desses dados foi fornecido ainda.
+- Endpoint preparado: `POST /api/v0/calculator`, domínio `sandbox.superfrete.com` para homologação e `api.superfrete.com` apenas depois da validação, autenticação Bearer do lado servidor. Na cotação por produtos, pesos são convertidos de gramas para quilogramas, dimensões em centímetros, e serviços inválidos `has_error` são ignorados. Valores/previsões são extraídos de `price` e `delivery_time`, nunca inventados. Os detalhes devem ser confrontados com a documentação e resposta da conta SuperFrete antes de usar produção.
+- Material público de referência: `https://superfrete.com/integracao-frete` (suporte a site próprio por API), `https://ajuda.superfrete.com/artigo/quais-as-integracoes-disponiveis-da-superfrete-com-plataformas-de-e-commerce/` e `https://ajuda.superfrete.com/artigo/como-calcular-fretes/`.
+- A disponibilidade de saldo na carteira e a emissão de etiquetas não significam que a API esteja integrada. Nenhuma etiqueta foi criada ou cobrada. Mercado Pago não está conectado.
+
+**Regra de lançamento:** checkout e indexação permanecem bloqueados até conta Mercado Pago comercial, pedido transacional idempotente, estoque atual confirmado, pesos e dimensões, frete real validado e end-to-end em sandbox. Não substituir a Nuvemshop no domínio antes disso.
