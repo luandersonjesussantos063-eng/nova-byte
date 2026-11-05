@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow"><meta name="referrer" content="strict-origin-when-cross-origin">
+<title>Painel administrativo · Kaia Glow</title><link rel="stylesheet" href="admin.css?v=1"></head>
+<body>
+<header class="admin-top"><div class="admin-brand"><span class="brand-mark">K</span><div><strong>KAIA GLOW</strong><small>GESTÃO DA LOJA</small></div></div><div class="admin-top-actions"><a href="/" target="_blank" rel="noopener noreferrer">Ver a loja ↗</a><button type="button" id="logoutButton" hidden>Sair</button></div></header>
+<main class="admin-shell">
+<section id="loginPanel" class="login-card"><span class="eyebrow">ÁREA RESTRITA</span><h1>Seu espaço de gestão.</h1><p>Edite a vitrine, acompanhe os produtos e organize suas campanhas com uma única conta autorizada.</p>
+<form id="loginForm"><label for="adminEmail">E-mail cadastrado</label><input type="email" id="adminEmail" autocomplete="username" required placeholder="seu@email.com">
+<label for="adminPassword">Senha</label><input type="password" id="adminPassword" autocomplete="current-password" required placeholder="Sua senha">
+<button type="submit" class="primary-button">Entrar no painel</button></form>
+<p class="login-hint">Somente contas autorizadas com e-mail confirmado podem fazer alterações. Para criar ou recuperar a senha, use <a href="/conta.html">Minha conta</a>.</p>
+<p id="loginStatus" role="status" aria-live="polite"></p></section>
+<section id="adminPanel" hidden>
+<div class="page-intro"><div><span class="eyebrow">PAINEL KAIA</span><h1>Controle da sua vitrine.</h1><p>Atualizações salvas aqui passam a aparecer no site. As compras continuam bloqueadas até o Mercado Pago estar pronto.</p></div><div class="account-chip" id="adminIdentity"></div></div>
+<div class="dashboard-metrics"><div class="metric"><small>Produtos da vitrine</small><strong id="productCount">—</strong></div><div class="metric"><small>Cupons cadastrados</small><strong id="couponCount">—</strong></div><div class="metric"><small>Pagamento</small><strong class="pending">Em preparação</strong></div></div>
+<div class="admin-tabs" role="tablist" aria-label="Áreas de gestão"><button type="button" data-tab="products" aria-selected="true">Produtos e fotos</button><button type="button" data-tab="coupons" aria-selected="false">Cupons</button></div>
+<section id="productsTab" class="admin-section">
+<div class="section-header"><div><h2>Produtos, preços e fotos</h2><p>Escolha um produto e salve as alterações para atualizar a loja.</p></div><button id="reloadButton" type="button" class="ghost-button">Atualizar lista</button></div>
+<div class="product-layout"><div class="product-picker"><label for="productSearch">Buscar produto ou SKU</label><input id="productSearch" type="search" autocomplete="off" placeholder="Nome, marca ou código"><div id="productList" class="product-list" aria-label="Produtos cadastrados"></div></div>
+<form id="productForm" class="editor" hidden><span class="eyebrow">EDIÇÃO DE PRODUTO</span><h3 id="editingProductTitle">Selecione um produto</h3><p id="editingProductSku" class="muted"></p>
+<div class="form-grid"><label class="full">Nome do produto<input id="editName" type="text" maxlength="200" required></label>
+<label>Preço de venda (R$)<input id="editPrice" type="number" min="1" max="1000000" step="0.01" required></label>
+<label>Preço anterior (R$)<input id="editOldPrice" type="number" min="0" max="1000000" step="0.01"></label>
+<label id="stockEditLabel">Estoque em unidades<input id="editStock" type="number" min="0" max="100000" step="1" required></label>
+<label class="check-label"><input type="checkbox" id="editVisible" checked> Exibir na vitrine</label>
+<label class="full">Descrição<textarea id="editDescription" rows="8" maxlength="12000"></textarea></label></div>
+<div class="photos-heading"><strong>Fotos do produto</strong><span>Até 10 fotos · primeira é a capa</span></div>
+<div id="photoList" class="photo-list" aria-label="Fotos cadastradas"></div>
+<label class="upload-label" for="editUpload">Adicionar fotos (JPG, PNG ou WebP — até 5 MB por foto)</label><input type="file" id="editUpload" multiple accept="image/jpeg,image/png,image/webp">
+<p class="muted" id="uploadStatus" role="status"></p>
+<div class="editor-actions"><button type="submit" class="primary-button" id="saveProductButton">Salvar alterações</button></div><p id="productStatus" role="status" aria-live="polite"></p></form></div></section>
+<section id="couponsTab" class="admin-section" hidden><div class="section-header"><div><h2>Cupons de desconto</h2><p>Crie códigos que poderão ser usados na sacola. O pagamento continua desativado.</p></div></div>
+<div class="coupon-layout"><form id="couponForm" class="editor"><span class="eyebrow">CAMPANHA</span><h3>Criar ou editar cupom</h3>
+<div class="form-grid"><label class="full">Código do cupom<input id="couponCode" type="text" maxlength="24" pattern="[A-Za-z0-9_-]{3,24}" required placeholder="EX: BEMVINDA10" autocapitalize="characters"></label>
+<label>Tipo<select id="couponType"><option value="percent">Porcentagem (%)</option><option value="fixed">Valor fixo (R$)</option></select></label>
+<label>Valor do desconto<input id="couponValue" type="number" min="1" max="90" step="1" required></label>
+<label>Pedido mínimo (R$)<input id="couponMinimum" type="number" min="0" step="0.01" value="0"></label>
+<label>Início (opcional)<input id="couponStart" type="date"></label>
+<label>Vencimento (opcional)<input id="couponEnd" type="date"></label>
+<label class="check-label"><input id="couponActive" type="checkbox" checked> Cupom ativo</label></div>
+<div class="editor-actions"><button type="submit" class="primary-button" id="saveCouponButton">Salvar cupom</button><button type="reset" class="ghost-button">Limpar</button></div><p id="couponStatus" role="status" aria-live="polite"></p></form>
+<div class="coupon-admin-list"><h3>Cupons cadastrados</h3><div id="couponList" class="coupons-list"></div></div></div></section>
+</section></main>
+<footer class="admin-footer">Kaia Glow · Painel restrito de gestão. O acesso é controlado pelo Supabase Auth.</footer>
+<script src="catalog.js?v=1"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js" integrity="sha384-TcHRA3zBbn+Lexh5n+Oil4guNPOS3rjNDpGRAN46u/s/mB2IZ50ceC6TYDU2yvgK" crossorigin="anonymous"></script>
+<script type="module" src="admin.js?v=1"></script>
+</body></html>
