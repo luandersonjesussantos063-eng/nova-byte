@@ -63,3 +63,11 @@ A proprietária enviou captura da conta logada no aplicativo **SuperFrete**. Iss
 - CEP de postagem confirmado pelo responsável: `01550000`, igual ao endereço cadastral exibido na Kaia Glow. A variável já está configurada nas implantações de produção e prévia.
 - A credencial foi compartilhada em uma conversa e precisa ser **revogada/rotacionada antes da ativação comercial**. Colocar a credencial substituta diretamente no painel da Cloudflare, sem publicá-la em chat, GitHub, arquivos ou prints.
 - Permanecem ausentes serviço(s) SuperFrete validado(s), contato técnico autorizado, credencial de backend Supabase, estoque/preço atual, dimensões de postagem e os testes de cálculo. Consequentemente, cotação e checkout seguem bloqueados por segurança.
+
+
+## Homologação SuperFrete — variáveis sem segredos
+
+- Em 05/11/2026 foram confirmados via API no projeto Cloudflare Pages `kaia-glow`: `KAIA_SHIPPING_PROVIDER=superfrete`, `KAIA_SHIP_FROM_CEP=01550000`, `KAIA_SF_MODE=sandbox`, `KAIA_SF_SERVICES=1,2,17` (PAC, SEDEX e Mini Envios para teste), `KAIA_SHIPPING_TECH_CONTACT` com e-mail de contato publicado pela loja. O token permanece `secret_text` e seu valor não foi consultado nem registrado.
+- A Cloudflare confirma **presença** de uma credencial criptografada, não se ela é nova, válida ou se foi efetivamente revogada na SuperFrete. Validar a autenticação apenas quando houver disponibilidade de integração para teste, sem emitir etiqueta.
+- Persistem pendentes `KAIA_SUPABASE_SERVICE_ROLE_KEY` no backend, valores, saldos e embalagens atuais validados. Logo, o cálculo de frete ainda é indisponível por design; nenhum pagamento foi desbloqueado.
+- Alterações de variáveis de ambiente podem exigir nova implantação Pages. Este commit serve apenas para registrar a configuração pública sem segredos e atualizar a publicação.
