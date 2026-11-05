@@ -21,9 +21,10 @@
     fetchWithTimeout('kaia_admin_coupons'),
     fetchWithTimeout('kaia_new_products')
    ]);
+   const list=window.KAIA_CATALOG||[];
+   const rows=results[0].status==='fulfilled'?(results[0].value||[]):[];
+   const byKey=new Map(rows.map(r=>[r.product_key,r]));
    if(results[0].status==='fulfilled'){
-    const rows=results[0].value||[],byKey=new Map(rows.map(r=>[r.product_key,r]));
-    const list=window.KAIA_CATALOG||[];
     for(let i=list.length-1;i>=0;i--){
      const product=list[i],row=byKey.get(product.sku||'legacy:'+product.id);
      if(!row)continue;
