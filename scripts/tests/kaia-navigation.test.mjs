@@ -6,15 +6,15 @@ test('all Kaia pages connect to privacy, terms and support and have real local d
   for(const block of html.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)){const schema=JSON.parse(block[1]);assert.equal(schema.legalName,'KAIA GLOW COMERCIO DE COSMETICOS LTDA');}
   if(file!=='conta.html'){assert.match(html,/© 2026 Kaia Glow/);assert.match(html,/terceiros pertencem aos respectivos titulares/);}assert.match(html,/<main[^>]*id="conteudo"/);
   const ids=[...html.matchAll(/\bid="([^"]+)"/g)].map(m=>m[1]);assert.equal(ids.length,new Set(ids).size,file+': repeated id');
-  for(const m of html.matchAll(/(?:href|src)="([^"]+)"/g)){const url=new URL(m[1],'https://novabytesolucoes.com.br/kaia-glow/'+file);if(url.origin!=='https://novabytesolucoes.com.br')continue;
-   let target=resolve('.'+decodeURIComponent(url.pathname));if(url.pathname.endsWith('/'))target=join(target,'index.html');assert(existsSync(target),file+': '+m[1]);
+  for(const m of html.matchAll(/(?:href|src)="([^"]+)"/g)){const url=new URL(m[1],'https://usekaiaglow.com.br/'+file);if(url.origin!=='https://usekaiaglow.com.br')continue;
+   let target=resolve(root,'.'+decodeURIComponent(url.pathname));if(url.pathname.endsWith('/'))target=join(target,'index.html');assert(existsSync(target),file+': '+m[1]);
    if(url.hash&&!/^#(?:produto-\d+|cupons|exclusivos)$/.test(url.hash)){const targetHtml=readFileSync(target,'utf8');assert(targetHtml.includes('id="'+decodeURIComponent(url.hash.slice(1))+'"'),file+': '+m[1]);}
   }
  }
 });
-test('published privacy copy covers actual personal data and providers; preview status stays clear',()=>{
+test('published privacy copy covers actual personal data and providers; commercial copy is consistent',()=>{
  const privacy=read('privacidade.html'),terms=read('termos-de-uso.html');for(const text of ['CPF','nascimento','telefone','endereço','Supabase','GitHub Pages','30 dias','WhatsApp','correção','exclusão'])assert(privacy.includes(text),text);
- assert(terms.includes('não processa pagamentos'));assert(terms.includes('Direitos autorais'));assert(terms.includes('sete dias'));assert(read('index.html').includes('sem vendas reais'));assert(read('conta.html').includes('termsAccepted'));assert(read('conta.js').includes("kaia_terms_version:'2026-11-05'"));
+ assert(terms.includes('Adicionar itens à sacola não conclui a compra'));assert(terms.includes('Direitos autorais'));assert(terms.includes('sete dias'));assert(!read('index.html').includes('sem vendas reais'));assert(read('conta.html').includes('termsAccepted'));assert(read('conta.js').includes("kaia_terms_version:'2026-11-05'"));
 });
 test('clearing public preferences preserves authentication and other projects',()=>{
  let handler;const local=new Map([['kaia-demo-favorites','[1]'],['kaia-pending-referral-v1','x'],['kaia-glow-auth-v1','session'],['other-project','preserve']]);const session=new Map([['kaia-referral-seen-v1','1'],['other-session','preserve']]);const status={textContent:''};

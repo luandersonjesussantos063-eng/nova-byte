@@ -92,7 +92,7 @@ async function loadAccount(){
  const details=detailResult.data;profileRequired=!details;
  fillCustomerDetails(details);
  all('[data-account-tab]').forEach(b=>b.disabled=profileRequired&&b.dataset.accountTab!=='dados');
- $('#profileSetupNote').textContent=profileRequired?'Etapa 2 de 2: complete seus dados pessoais e de entrega para concluir o cadastro. A vitrine ainda não processa pagamentos; combine compras com a equipe.':'Seu cadastro está completo. Confira ou atualize seus dados antes das próximas compras.';
+ $('#profileSetupNote').textContent=profileRequired?'Etapa 2 de 2: complete seus dados pessoais e de entrega para concluir o cadastro. Confira seus dados antes de concluir uma compra.':'Seu cadastro está completo. Confira ou atualize seus dados antes das próximas compras.';
  let claimMessage='';
  const code=pendingCode||(validCode(user.user_metadata?.kaia_ref)?user.user_metadata.kaia_ref:null);
  if(code){
@@ -108,7 +108,7 @@ async function loadAccount(){
  if(seq!==sequence)return;
  $('#memberName').textContent=profile.full_name;$('#memberEmail').textContent=user.email;
  $('#profileName').value=profile.full_name;$('#profileEmail').value=user.email;
- $('#personalReferralLink').value='https://novabytesolucoes.com.br/kaia-glow/?indicacao='+encodeURIComponent(profile.referral_code);
+ $('#personalReferralLink').value='https://usekaiaglow.com.br/?indicacao='+encodeURIComponent(profile.referral_code);
  if(referrals.error){$('#referralsList').textContent='Não foi possível carregar suas indicações. Use Atualizar para tentar novamente.';all('.account-stats strong').forEach(s=>s.textContent='—');}
  else{
   const rows=referrals.data||[];
@@ -166,7 +166,7 @@ $('#profileForm').addEventListener('submit',async event=>{
   profileRequired=false;all('[data-account-tab]').forEach(button=>button.disabled=false);
   $('#memberName').textContent=details.full_name;
   $('#profileSetupNote').textContent='Seu cadastro está completo. Você pode atualizar seus dados aqui quando precisar.';
-  feedback.textContent='Cadastro completo salvo! Seus dados estão prontos para a futura finalização de compras.';
+  feedback.textContent='Cadastro completo salvo! Você pode conferir ou atualizar seus dados antes de comprar.';
   status('Seu cadastro foi concluído.');
  }catch{feedback.textContent='Não foi possível salvar. Confira os dados e sua conexão e tente novamente.';}
  finally{b.disabled=false;}
