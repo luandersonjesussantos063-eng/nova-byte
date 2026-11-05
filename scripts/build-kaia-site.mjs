@@ -1,7 +1,7 @@
 import {readFile,writeFile,mkdir,rm,readdir,lstat,copyFile,access} from 'node:fs/promises';
 import {fileURLToPath} from 'node:url';import path from 'node:path';
 const root=fileURLToPath(new URL('../',import.meta.url)),source=path.join(root,'kaia-glow'),output=path.join(root,'dist','kaia-glow');
-const pages=['index.html','admin.html','conta.html','sobre.html','atendimento.html','privacidade.html','termos-de-uso.html'];
+const pages=['index.html','admin.html','conta.html','sobre.html','atendimento.html','privacidade.html','como-funciona-privacidade.html','termos-de-uso.html'];
 const scripts=['app.js','marketing-insights.js','shipping-popup.js','catalog-overrides.js','catalog.js','admin.js','admin-analytics.js','admin-coupons.js','auth-config.js','conta.js','customer-validation.js','menu-account.js','institucional.js'];
 const styles=['style.css','shipping-popup.css','marketing-insights.css','admin.css','admin-analytics.css','conta.css','institucional.css'];
 const marker=path.join(root,'dist','.kaia-glow-generated');
