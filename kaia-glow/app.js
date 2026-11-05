@@ -52,12 +52,14 @@ document.addEventListener('click',e=>{const c=e.target.closest('[data-cat]');if(
 render();const deepLink=location.hash.match(/^#produto-(\d+)$/);if(deepLink)openProduct(deepLink[1]);
 
 // Editorial selection uses the same real catalog and shopping actions.
-const desirePicks=[
- catalog.find(p=>p.available&&p.name.includes('PDRN Pink Collagen Gel Mask')),
- catalog.find(p=>p.available&&p.name.includes('Biodance Bio Collagen')),
- catalog.find(p=>p.available&&p.name.includes('Celimax Retinal Shot Tightening Booster')),
- catalog.find(p=>p.available&&p.brand==='SKIN1004')
-].filter(Boolean);
+const featuredSkus=[
+ 'KG-MED-PDRNPINK-MASK-28G',
+ 'KG-BIO-BCOLL-DEEP-34G',
+ 'KG-CEL-RETBOOST-15ML',
+ 'KG-SK1-TBBTONER-210ML'
+];
+const desirePicks=featuredSkus.map(sku=>catalog.find(p=>p.sku===sku)).filter(Boolean);
+if(desirePicks.length!==4)console.warn('Kaia Glow: seleção editorial incompleta; conferir SKUs de destaque.');
 $('#desireGrid').innerHTML=desirePicks.map((p,i)=>`<article class="product desire-product"><div class="desire-number">0${i+1} / THE KAIA EDIT</div><div class="product-photo"><a href="#produto-${p.id}" data-product="${p.id}" aria-label="Descobrir ${esc(p.name)}"><img src="${esc(p.id==='351521227'?p.images[8]:p.images[0])}" alt="${esc(p.name)}" loading="eager"></a><button class="wish" data-wish="${p.id}" aria-label="Favoritar ${esc(p.name)}">♡</button></div><span class="product-brand">${esc(p.brand.toUpperCase())}</span><h3><a href="#produto-${p.id}" data-product="${p.id}">${esc(p.name)}</a></h3><div class="desire-purchase"><span>${money(p.price)}</span><button data-quick="${p.id}" aria-label="Adicionar ${esc(p.name)} à sacola">Eu quero <span>↗</span></button></div></article>`).join('');
 counts();
 
