@@ -1,6 +1,7 @@
 // Keep the Supabase publishable key public; never place any service-role key here.
 export function resolveKaiaAccountUrl(hostname) {
-  return hostname === 'kaia-glow.pages.dev'
+  const host = String(hostname || '').toLowerCase();
+  return host === 'kaia-glow.pages.dev' || host.endsWith('.kaia-glow.pages.dev')
     ? 'https://kaia-glow.pages.dev/conta.html'
     : 'https://usekaiaglow.com.br/conta.html';
 }
@@ -11,5 +12,5 @@ export const KAIA_AUTH = {
   accountUrl: resolveKaiaAccountUrl(currentHost),
   // A staging redirect must be explicitly allowed in Supabase Auth before email flows are tested.
   stagingEmailRedirectReady: false,
-  isStaging: currentHost === 'kaia-glow.pages.dev'
+  isStaging: currentHost === 'kaia-glow.pages.dev' || currentHost.endsWith('.kaia-glow.pages.dev')
 };
