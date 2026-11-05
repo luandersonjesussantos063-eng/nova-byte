@@ -1,0 +1,45 @@
+
+/* Estoque & Marketplaces: restrained Kaia Glow backoffice presentation. */
+.mp-warning{padding:15px 18px;border:1px solid #e8cbb6;border-radius:11px;background:#fff7ed;color:#795136;font-size:12px;line-height:1.65;margin:4px 0 22px}
+.mp-warning strong{color:#724532}
+.mp-kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:0 0 20px}
+.mp-kpis .metric{padding:19px 20px}
+.mp-kpis .metric strong{font-size:24px}
+.mp-channel-grid,.mp-columns{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:17px;align-items:start}
+.mp-channel-grid{margin:0 0 21px}
+.mp-channel-card{background:#fff;border:1px solid #e5d3dc;border-radius:14px;padding:21px 23px;min-width:0}
+.mp-channel-top{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center}
+.mp-channel-top strong{font-size:19px;color:#53263c}
+.mp-connection-status{font-size:11px;border-radius:99px;padding:6px 11px;font-weight:bold;background:#f6e8df;color:#875636}
+.mp-connected{background:#e8f2e9;color:#346748}
+.mp-note,.mp-hint{font-size:12px;line-height:1.7;color:#775d6a;margin:12px 0 0}
+.mp-hint{margin-top:10px}
+.mp-link-count{font-weight:700;color:#68384e;font-size:12px;margin:11px 0 0}
+.mp-error{color:#a93f4a;font-size:11px}
+.mp-partner-link{display:inline-block;font-size:12px;color:#633149;text-underline-offset:4px;margin-top:14px;font-weight:700}
+.mp-columns{margin:19px 0}
+.mp-columns .editor{min-width:0}
+.mp-columns .editor h3{font-size:24px}
+.mp-stack{display:grid;gap:14px;margin-top:18px}
+.mp-stack label{display:grid;gap:7px;font-size:12px;font-weight:700;color:#5f4152}
+.mp-stack input,.mp-stack select,.mp-stack textarea{font-size:13px;padding:12px 13px;border-radius:8px;border:1px solid #ddcbd4;width:100%;min-width:0;background:#fff;color:#442a38;min-height:43px}
+.mp-stack textarea{resize:vertical}
+.mp-stack .primary-button{min-height:46px;margin-top:4px}
+.mp-stack [role=status]{font-size:12px;color:#72425a;overflow-wrap:anywhere;min-height:14px;margin:0}
+.mp-selected{font-size:12px;background:#faf1f5;border-left:3px solid #97647e;padding:10px 12px;color:#603c50!important}
+.mp-tip,.mp-footnote{font-size:12px;color:#79636d;line-height:1.65;margin-top:18px}
+.mp-footnote{margin:22px 0}
+.mp-wide{margin:20px 0}
+.mp-header-line{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;flex-wrap:wrap}
+.mp-count{font-size:11px;color:#72445b;background:#f5e9ef;padding:7px 12px;border-radius:20px}
+.mp-table-wrap{width:100%;max-width:100%;overflow-x:auto;max-height:480px;overflow-y:auto}
+.mp-table{border-collapse:collapse;width:100%;min-width:530px;font-size:11px}
+.mp-table thead th{position:sticky;top:0;background:#f7ebf1;white-space:nowrap;color:#693e52;text-align:left;padding:12px 11px;font-weight:700;z-index:2}
+.mp-table tbody td{vertical-align:top;padding:12px 11px;border-bottom:1px solid #efe4e9;overflow-wrap:anywhere;max-width:220px}
+.mp-table .mp-sku{display:block;font-size:10px;line-height:1.5;color:#947783;margin-top:5px}
+.mp-remove-link{padding:6px 7px;background:#fff;color:#844b61;border:1px solid #e2c4d1;border-radius:6px;font-size:11px;cursor:pointer}
+.mp-remove-link:hover{background:#fbeef3}
+#marketplacesTab .editor>p{margin:0 0 12px}
+#marketplacesTab .editor>h3{margin-top:2px}
+@media(max-width:940px){.mp-kpis{grid-template-columns:repeat(3,minmax(0,1fr))}.mp-channel-grid,.mp-columns{grid-template-columns:1fr}}
+@media(max-width:600px){.mp-kpis{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.mp-kpis .metric{padding:13px 12px}.mp-kpis .metric strong{font-size:20px}.mp-channel-card{padding:18px}.mp-table{min-width:510px}.mp-wide{margin:16px 0}.mp-columns{gap:14px}.mp-warning{padding:13px}}
