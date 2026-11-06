@@ -62,11 +62,49 @@ async function fetchEligible(){
   commerceAllowed=new Map();checkoutEligibility();render();
  }
 }
+function postalDigits(v){return String(v||'').replace(/\D/g,'');}
+function checkoutNotice(message,isError=false){
+ const note=$('#commerceEligibility');if(!note)return;
+ note.textContent=message;note.style.color=isError?'#a02d33':'';note.style.fontWeight=isError?'700':'';
+ if(isError)note.scrollIntoView({block:'nearest',behavior:'smooth'});
+}
+function renderPendingOrder(pending,token){
+ const prior=$('#commercePendingOrder');if(prior)prior.remove();
+ const box=document.createElement('section');box.id='commercePendingOrder';
+ box.style.cssText='border:2px solid #8c5362;background:#fdf5f7;border-radius:12px;padding:16px;margin:12px 0;display:grid;gap:12px';
+ const title=document.createElement('strong');title.textContent='Existe uma compra anterior aguardando pagamento';
+ const detail=document.createElement('p');
+ const names=(pending.items||[]).map(i=>i.name).join(', ');
+ detail.textContent=names+' · Total '+money(pending.totalCents/100)+'. Este pedido está reservando estoque e precisa ser concluído ou cancelado antes de iniciar outra compra.';
+ box.append(title,detail);
+ if(pending.checkoutUrl){
+  const resume=document.createElement('button');resume.type='button';resume.className='button';
+  resume.textContent='Retomar pagamento anterior';
+  resume.onclick=()=>{
+   const url=new URL(pending.checkoutUrl);
+   if(url.protocol==='https:'&&url.hostname==='www.mercadopago.com.br'&&url.pathname.startsWith('/checkout/'))location.assign(url.href);
+  };box.append(resume);
+ }
+ const cancel=document.createElement('button');cancel.type='button';cancel.className='button';
+ cancel.textContent='Cancelar pedido anterior não pago';
+ cancel.onclick=async()=>{
+  if(!confirm('Deseja cancelar o pedido anterior de '+money(pending.totalCents/100)+'? O Mercado Pago deve confirmar o cancelamento antes de liberar o estoque.'))return;
+  cancel.disabled=true;cancel.textContent='Conferindo cancelamento no Mercado Pago…';
+  try{
+   const r=await fetch('/api/kaia/comercial/pendente',{method:'POST',headers:{Authorization:'Bearer '+token,'content-type':'application/json'}});
+   const info=await r.json();
+   if(!r.ok||!info.cancelled)throw Error(info.code||'O cancelamento ainda não foi confirmado.');
+   box.remove();checkoutEligibility();
+   checkoutNotice('Pedido anterior cancelado e estoque liberado. Confira se o CEP da sacola é o mesmo da sua conta antes de iniciar uma nova compra.');
+  }catch(e){cancel.disabled=false;cancel.textContent='Tentar cancelar novamente';checkoutNotice('Não foi possível cancelar com segurança: '+e.message,true);}
+ };box.append(cancel);
+ const note=$('#commerceEligibility');note?.insertAdjacentElement('afterend',box);
+ checkoutNotice('Você já tem um pedido pendente. Escolha retomar ou cancelar antes de iniciar outro pedido.',true);
+}
 async function commercialCheckout(){
  const btn=$('#checkout');
  if(!btn||btn.disabled||!chosenShipping||chosenShipping.signature!==cartSignature())return;
- btn.disabled=true;btn.textContent='Preparando pedido…';
- const note=$('#commerceEligibility');
+ btn.disabled=true;btn.textContent='Verificando pedidos pendentes…';
  try{
   const {KAIA_AUTH}=await import('./auth-config.js');
   if(!window.supabase)throw Error('Autenticação temporariamente indisponível.');
@@ -74,29 +112,44 @@ async function commercialCheckout(){
    {auth:{storageKey:'kaia-glow-auth-v1',persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});
   const {data}=await sb.auth.getSession();
   if(!data.session)throw Error('Entre na sua conta da Kaia Glow e complete o endereço antes de finalizar. Abra Minha conta em outra aba para preservar a sacola.');
-  const fingerprint=cartSignature()+'|'+chosenShipping.serviceId;
+  const token=data.session.access_token;
+  const currentPostal=postalDigits($('#shippingPostalCode').value);
+  const pendingResponse=await fetch('/api/kaia/comercial/pendente',{headers:{Authorization:'Bearer '+token},cache:'no-store'});
+  const pending=await pendingResponse.json();
+  if(!pendingResponse.ok)throw Error(pending.code||'Não foi possível conferir seus pedidos anteriores.');
+  if(pending.hasPending){
+   checkoutEligibility();renderPendingOrder(pending,token);return;
+  }
+  if(!/^[0-9]{8}$/.test(currentPostal)||pending.registeredPostalCode!==currentPostal)
+   throw Error('O CEP usado no frete é diferente do CEP salvo na sua conta ('+(pending.registeredPostalCode||'não cadastrado')+'). Atualize seu endereço em Minha conta e calcule o frete novamente antes de pagar.');
+  const fingerprint=cartSignature()+'|'+chosenShipping.serviceId+'|'+currentPostal;
   let savedRequest;try{savedRequest=JSON.parse(sessionStorage.getItem('kaia_order_request_v1')||'null');}catch{}
   if(!savedRequest||savedRequest.fingerprint!==fingerprint){
    savedRequest={fingerprint,key:crypto.randomUUID()};
    sessionStorage.setItem('kaia_order_request_v1',JSON.stringify(savedRequest));
   }
+  btn.textContent='Preparando pedido…';
   const r=await fetch('/api/kaia/comercial/pedido',{method:'POST',headers:{
-   Authorization:'Bearer '+data.session.access_token,'content-type':'application/json',Accept:'application/json'},
-   body:JSON.stringify({items:cartItems(),serviceId:chosenShipping.serviceId,requestKey:savedRequest.key})});
+   Authorization:'Bearer '+token,'content-type':'application/json',Accept:'application/json'},
+   body:JSON.stringify({items:cartItems(),serviceId:chosenShipping.serviceId,postalCode:currentPostal,requestKey:savedRequest.key})});
   const result=await r.json();
-  if(!r.ok)throw Error(result.code||'Não foi possível iniciar seu pedido.');
+  if(!r.ok)throw Error(({
+   CEP_DIFERENTE_DO_CADASTRO:'O CEP da sacola está diferente do endereço cadastrado. Atualize Minha conta e consulte o frete novamente.',
+   BANCO_NAO_CONCLUIU_OPERACAO:'Não foi possível reservar o estoque. Confira se já existe um pedido pendente.',
+   ENTRE_NA_CONTA:'É necessário entrar na sua conta para pagar.',
+   PRODUTO_SEM_LIBERACAO_OU_ESTOQUE:'Produto indisponível ou estoque insuficiente.'
+  })[result.code]||result.code||'Não foi possível iniciar seu pedido.');
   const u=new URL(result.checkoutUrl);
   if(u.protocol!=='https:'||u.hostname!=='www.mercadopago.com.br'||!u.pathname.startsWith('/checkout/'))
    throw Error('Endereço de pagamento inválido.');
-  const total=(result.totalCents/100).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+  const total=money(result.totalCents/100);
   if(!confirm('O total de produtos e frete, recalculado no servidor, é '+total+'. Deseja abrir o Mercado Pago?')){
-   if(note)note.textContent='Seu pedido ficou reservado. Clique novamente para retomar o pagamento.';
-   checkoutEligibility();return;
+   checkoutEligibility();checkoutNotice('Seu pedido está reservado. Clique novamente e escolha retomar ou cancelar a compra.');return;
   }
   location.assign(u.href);
  }catch(e){
-  if(note)note.textContent='Não foi possível finalizar: '+e.message;
   checkoutEligibility();
+  checkoutNotice('Não foi possível finalizar: '+e.message,true);
  }
 }
 let toastTimer;function toast(msg){$('#toast').textContent=msg;$('#toast').classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('#toast').classList.remove('show'),3000)}
@@ -147,7 +200,7 @@ all('[data-step]').forEach(b=>b.onclick=()=>{const r=cart.find(x=>x.key===b.data
    const label=option.servico||option.transportadora||('Opção '+option.id);
    shippingButton.textContent='Selecionar '+label+' — '+money(option.freteCentavos/100)+' · '+option.previsaoDias+' dias';
    shippingButton.onclick=()=>{
-    chosenShipping={serviceId:String(option.id),signature:cartSignature(),amountCents:option.freteCentavos};
+    chosenShipping={serviceId:String(option.id),signature:cartSignature(),amountCents:option.freteCentavos,postalCode:postalDigits(cep)};
     status.textContent='Frete selecionado: '+label+' — '+money(option.freteCentavos/100)+'. Total estimado: '+money(subtotal-discount+option.freteCentavos/100)+'. O valor final será conferido novamente antes do pagamento.';
     checkoutEligibility();
    };
