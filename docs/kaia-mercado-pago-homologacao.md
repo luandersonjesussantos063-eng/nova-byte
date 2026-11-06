@@ -1,110 +1,230 @@
-# Kaia Glow — homologação Mercado Pago em ambiente isolado
+# Kaia Glow — homologação isolada (06/11/2026)
 
-Status conferido em **06/11/2026**. Todo o trabalho desta pasta pertence à branch de testes `test/kaia-mercadopago-homologacao` e **não está publicado em produção**.
+Branch: `test/kaia-mercadopago-homologacao`, retomada do commit `4fb37e4`.
+Origem comercial: `feat/kaia-loja-real`, commit `38e47ca`. Não mesclar esta branch
+na produção: ela constrói somente um laboratório privado de pagamentos.
 
-## Diagnóstico confiável da produção (somente leitura)
+## O que já existia
 
-- Projeto real: Supabase `vajlhodqxskozuxxlujv`. Não aplicar as migrations desta pasta nele.
-- **51 SKUs**, **409 unidades**, **0 preços com `price_verified_at`**, **29 embalagens com `package_verified_at`** (22 aguardando conferência formal); **43 SKUs** têm todos os campos de medidas preenchidos. O fato de uma dimensão estar preenchida não substitui sua verificação comercial.
-- Cloudflare Pages: projeto `kaia-glow`, produção branch `feat/kaia-loja-real`, domínio `usekaiaglow.com.br`.
-- `POST /api/kaia/checkout` permanece **503** sem cobrança, `/api/kaia/mercado-pago-webhook` permanece sem processamento real.
-- Nenhuma credencial de teste do Mercado Pago foi configurada nos segredos Cloudflare disponíveis nesta sessão. Não houve pagamento, order nem Webhook de teste real criado.
+- Middleware fechado por padrão, verificação RS256 de JWT Cloudflare Access,
+  audience e allowlist; nenhuma publicação de preview.
+- `supabase/kaia-mp-test/001...003`: catálogo sintético, reservas com bloqueios
+  ordenados, pedidos, eventos e auditoria, fixtures explicitamente artificiais e
+  asserções que revertem dados de teste.
+- Script Python de concorrência, preparado mas ainda não executado.
+- Checkout e webhook comerciais bloqueados. Nenhuma order criada no Mercado Pago.
 
-## 1. Plugin oficial do Mercado Pago no Codex
+## O que foi executado nesta retomada
 
-O plugin é uma extensão do **Codex**, não um conector deste chat. Instale **na sessão de Codex do desenvolvedor** (não na loja):
+### Cloudflare — confirmado via API
 
-```bash
-codex plugin marketplace add mercadopago/mercadopago-codex-marketplace
-codex plugin add mercadopago@mercadopago-codex-marketplace
-```
+- Access habilitado na conta existente: issuer
+  `https://super-voice-4134.cloudflareaccess.com`.
+- Aplicação **Kaia Glow Previews Privados**, domínio `*.kaia-glow.pages.dev`,
+  identidade por PIN e política reutilizável restrita ao e-mail informado pelo
+  responsável. Nenhuma aplicação Access no domínio comercial foi criada.
+- Exceção de Access exclusiva para `/api/kaia/mp-test/webhook` nos previews.
+  Ela não remove a autenticação HMAC: middleware e handler exigem assinatura;
+  faltando secrets/flag/host, a rota devolve 503. Métodos diferentes de POST não processam.
+- As variáveis não secretas de Access foram configuradas **somente em preview**.
+- Preview autorizado apenas para `test/kaia-mercadopago-homologacao`.
+  `KAIA_MP_PREVIEW_BUILD=true`, **`KAIA_MP_TEST_ENABLED=false`**, `KAIA_SF_MODE=mock`.
+- Comparação via API confirmou configuração de produção inalterada e branch de
+  produção ainda `feat/kaia-loja-real`. Não houve mudança de DNS nem de credenciais reais.
+- Login autorizado de uma pessoa ainda precisa ser confirmado no navegador.
+  Os testes locais de JWT usam chave sintética; não comprovam login humano na Cloudflare.
 
-No Codex use `/mp-connect` e autorize no navegador **a aplicação existente Kaia Glow Loja Online** sob a conta recebedora da cliente. Não crie outra aplicação. Execute `/mp-test-setup` e `/mp-test-cards`, se esses comandos estiverem disponíveis na versão instalada.
+### Supabase — bloqueio confirmado
 
-Docs oficiais:
-- https://www.mercadopago.com.br/developers/pt/docs/mp-plugin/install
-- https://www.mercadopago.com.br/developers/pt/docs/checkout-pro-orders/integration-test-introduction
-- https://www.mercadopago.com.br/developers/pt/docs/checkout-pro-orders/notifications
+O responsável selecionou a organização **lucas-agora**. A tentativa de criar
+`kaia-glow-homologacao` em `sa-east-1` foi recusada pelo limite de **dois projetos
+gratuitos ativos**. A consulta de custo respondeu US$ 0/mês para projeto gratuito,
+mas isso não libera uma terceira vaga. Nenhum upgrade foi contratado, projeto
+existente pausado ou banco de produção alterado.
 
-## 2. Credenciais e serviços de teste (ainda PENDENTES)
+É preciso disponibilizar uma vaga/plano que comporte um **novo projeto separado**.
+Não utilizar Kaia produção nem PP-MT. Não importar clientes, usuários ou dados
+comerciais para o banco novo.
 
-Usar somente um **novo Supabase test project** e os segredos de **preview/teste** da Cloudflare.
+Consulta somente leitura confirmou os números comerciais: **51 SKUs, 409 unidades,
+0 preços verificados e 29 embalagens verificadas**; 22 seguem pendentes. Esses
+produtos permanecem bloqueados. A API do laboratório aceita exclusivamente
+`TEST-KAIA-*`, portanto não usa nenhum dos 51 SKUs reais.
 
-| Segredo / variável | Onde | Regras |
-| --- | --- | --- |
-| `KAIA_MP_TEST_ACCESS_TOKEN` | Cloudflare preview secret | Emitido no ambiente **Teste** da aplicação Kaia Glow. Nunca colocar no chat, commit ou frontend |
-| `KAIA_MP_WEBHOOK_SECRET` | Cloudflare preview secret | Assinatura gerada para Webhooks em **Teste**. Não é o Access Token |
-| `KAIA_TEST_SUPABASE_URL` | Cloudflare preview | URL do projeto Supabase de teste, **nunca** `vajlhodqxskozuxxlujv` |
-| `KAIA_TEST_SUPABASE_SERVICE_KEY` | Cloudflare preview secret | Chave de backend apenas, jamais publicar no JS/HTML |
-| `KAIA_TEST_SUPABASE_ANON_KEY` | Cloudflare preview | Chave pública do projeto de testes, separada da produção |
-| `KAIA_SF_SANDBOX_TOKEN` | Cloudflare preview secret | Somente após confirmar oficialmente o ambiente de homologação com a SuperFrete |
-| `KAIA_SF_MODE` | Cloudflare preview | Manter `mock` até confirmar token e endpoint de testes |
-| `KAIA_TEST_ACCESS_ISSUER` | Cloudflare preview | URL `https://<team>.cloudflareaccess.com` habilitada no Zero Trust |
-| `KAIA_TEST_ACCESS_AUD` | Cloudflare preview | Audience ID da aplicação Access exclusiva do preview |
-| `KAIA_TEST_EMAIL_ALLOWLIST` | Cloudflare preview | Endereços autorizados a abrir o preview (separados por vírgula) |
-| `KAIA_MP_PREVIEW_BUILD` | build de homologação | `true` para permitir build da branch protegida |
+### Plugin oficial — instalado; conexão bloqueada
 
-**Nunca adicionar segredos ausentes como valores fictícios ou copiar credenciais de produção para o preview.**
+`mercadopago@mercadopago-plugins-marketplace` **1.0.1** instalado e habilitado.
+O MCP global foi registrado no endpoint oficial `https://mcp.mercadopago.com/mcp`.
+`codex mcp login mercadopago` falhou na etapa de registro dinâmico com HTTP 403.
+A conexão direta pelo cliente MCP oficial também não completou inicialização.
+Nenhuma URL de autorização válida nem ferramenta autenticada foi obtida.
 
-SuperFrete: existe cotação de frete de produção no site, mas a existência de um sandbox de API compatível com a conta ainda não foi validada em fonte oficial. Até essa validação, usar cotações simuladas apenas no projeto de teste; não chamar emissão de etiquetas.
+Foram utilizadas as skills locais oficiais **mp-connect**, **mp-test-setup**,
+**mp-webhooks** e **mp-review** para orientação/revisão estática. Nenhum usuário
+Mercado Pago foi criado; nenhuma credencial foi importada ou exposta.
 
-## 3. Banco de testes separado e seguro
+Correções importantes da orientação anterior:
 
-**Não usar os outros projetos existentes**, inclusive PP-MT. Criar um novo projeto Supabase na organização selecionada pelo usuário, após confirmar eventual custo adicional.
+- Checkout Pro Orders pode usar credenciais de teste **APP_USR-**. Prefixo sozinho
+  não comprova teste. A implementação verifica `/users/me`: ID configurado e tag
+  `test_user`, antes de criar Orders, além de exigir recursos `ORDTST`.
+- A skill `mp-webhooks` 1.0.1 informa que `simulate_webhook` não existe mais no MCP.
+  `/mp-webhooks simulate` não foi alegado como executado. A validação externa
+  precisa de pagamento com usuário/cartão de teste e histórico de notificações.
+- A referência `products.md` desta instalação não contém a tabela de cartões
+  indicada pela skill. Não foram inventados números. Usar a documentação oficial
+  de compra com cartões linkada abaixo.
+- Partes de `mp-review` 1.0.1 descrevem Checkout Pro apenas com Preferences; isso
+  diverge da documentação atual e do escopo solicitado. Foi preservada **Orders API**.
 
-Os arquivos `supabase/kaia-mp-test/` foram separados de `supabase/migrations` para evitar aplicação automática ao banco real:
+## Código preparado, sem habilitar cobranças
 
-1. `001_isolated_test_database.sql` — tabelas somente de testes, RLS, reserva atômica, idempotência, movimentação e Webhooks.
-2. `002_synthetic_test_fixtures.sql` — três SKUs **fictícios com prefixo TEST-KAIA**, preços e dimensões artificiais **somente para QA**. Nenhum dado desses deve ser copiado para produtos reais.
-3. `003_assertions_rollback.sql` — testes SQL de reserva, ordem duplicada, aprovação, pendência, recusa e liberação, todos revertidos.
+- `/api/kaia/mp-test/orders`: identidade do Access validada pelo middleware,
+  host de preview explícito, banco isolado confirmado por UUID/purpose,
+  preços/medidas e cupons sintéticos no servidor, cotação sandbox e reserva atômica.
+  O navegador não define preço, desconto, frete nem e-mail do comprador.
+- `POST /v1/orders`: `type=online`, `processing_mode=manual`, `external_reference`
+  local e chave UUID persistida em `X-Idempotency-Key`. Payload e total ficam
+  congelados para recuperar timeout sem duplicar a tentativa. Depois de uma hora,
+  tentativa ambígua sem ID remoto exige reconciliação operacional.
+- Webhook: HMAC sobre identificação e headers; corpo precisa indicar teste e
+  tópico Order; estado/total/referência são obtidos por **GET autenticado**.
+  Aprovação exige `processed/accredited` e pagamento integral. Não há aprovação
+  por retorno do navegador. Reembolsos e estados desconhecidos exigem revisão.
+- Banco: reforço da idempotência contra alteração de carrinho, vínculo da order
+  remota já no estado pendente, deduplicação vinculada ao recurso/estado,
+  baixa e auditoria na mesma transação. Aprovação depois de liberação exige
+  reconciliação, em vez de confirmar silenciosamente.
+- Funções existentes passaram a `SECURITY INVOKER`; grants ficam restritos ao
+  serviço. Wrappers públicos `kaia_qa_*` não concedem EXECUTE a `anon`/`authenticated`.
+- Build privado em **Pages advanced mode**: `_worker.js` contém somente as rotas
+  de QA e chama explicitamente o middleware. As funções e adaptadores comerciais
+  originais não entram no bundle. Não copia catálogo, chaves públicas de produção,
+  páginas de conta/admin, scripts comerciais nem acessa Supabase de produção.
+- Frete: adaptador exclusivo sandbox, sem fallback para token/endpoint de produção,
+  sem etiquetas. Requer confirmação explícita do contrato sandbox e token próprio;
+  esse ambiente ainda não foi confirmado com a conta SuperFrete. Até lá, bloqueado.
 
-Para o teste de **concorrência real do PostgreSQL**, após rodar os dois primeiros SQL e testar asserções, usar:
+## Evidências executadas
 
-```bash
-python3 -m pip install "psycopg[binary]"
-KAIA_TEST_PROJECT_REF=<ref-do-projeto-novo> \
-KAIA_TEST_DATABASE_URL=<dsn-protegido-do-projeto-novo> \
-python3 scripts/test-kaia-mp-concurrency.py
-```
-
-O script se recusa a usar os refs de produção. Executa 10 reservas simultâneas disputando 5 unidades fictícias, valida 5 sucessos/5 faltas, idempotência, aprovações, recusas, cancelamento e notificação repetida. **Esse teste ainda não foi executado em banco**; a criação do projeto isolado e as credenciais são pré-requisitos. Não publicar DSN nem resultados contendo credenciais.
-
-## 4. Preview privado: bloqueado até Cloudflare Access
-
-O Cloudflare da conta atual respondeu **HTTP 403: Access não habilitado**. A configuração do projeto Pages mostra `preview_deployment_setting = none`. Portanto nenhum preview privado foi publicado nesta etapa.
-
-A branch inclui `functions/_middleware.js`, que recusa todas as requisições (inclusive assets) enquanto não conseguir verificar um JWT **assinado** pelo Cloudflare Access, com Audience e e-mail em lista permitida. `_routes.json` inclui todas as rotas no build dessa branch. A construção precisa de `KAIA_MP_PREVIEW_BUILD=true`.
-
-Antes de publicar:
-- Habilitar **Cloudflare Zero Trust / Access** na conta.
-- Criar uma aplicação Access para o subdomínio de homologação, com política permitir apenas e-mails explicitamente escolhidos.
-- Configurar os três valores de Access na Cloudflare preview, sem desabilitar middleware.
-- Criar o Supabase de teste e **substituir/remover todas as referências de front e backend ao Supabase de produção**. Existem referências estáticas no catálogo e em funções do projeto original. Nunca publicar um preview que consulte ou modifique a base de produção.
-- Verificar retorno 403/503 sem JWT e HTTP 200 somente após validação de um JWT real de e-mail autorizado.
-- Configurar *noindex* e impedir geração de pedidos reais.
-
-## 5. Testar Mercado Pago sem cobranças reais
-
-Depois de configurar credenciais de teste seguras e uma aplicação de testes isolada:
-- Criar Order via `POST /v1/orders` com `X-Idempotency-Key` única por tentativa e `checkout_url` de teste.
-- Não gerar Order a partir de total e frete informados pelo navegador. Recalcular no servidor a partir do catálogo fictício de teste e dados verificados.
-- No painel Mercado Pago, escolher **Teste** → Webhooks; cadastrar **somente a URL de homologação com endpoint já seguro e funcional**; selecionar tópico **Order (Mercado Pago)** (`orders`).
-- Verificar `x-signature`, `x-request-id`, timestamps e, obrigatoriamente, consultar a Order na API autenticada antes de alterar estado/estoque.
-- Executar os cenários aprovado, recusado, pendente, cancelado, notificações duplicadas, reenvio e concorrência.
-- Não transformar a resposta HTTP do Webhook nem o retorno do navegador em confirmação de venda sem persistência, idempotência e conciliação.
-- O pagamento real só pode ser ativado após aprovação formal dos preços e embalagens e autorização explícita do responsável.
-
-## Status de entrega
-
-| Item | Estado |
+| Verificação | Resultado e limite |
 | --- | --- |
-| Código isolado em branch própria | Preparado |
-| Banco de testes — SQL e asserções | Preparado, **não aplicado** |
-| Script de concorrência real | Preparado, **não executado** |
-| Cloudflare Access | Indisponível até habilitação |
-| Preview privado | **Não publicado** |
-| Plugin na sessão Codex | **Pendente de instalação/autorização no Codex do usuário** |
-| Segredos de teste | **Não configurados** |
-| Webhook registrado no Mercado Pago Teste | **Não registrado** |
-| Pagamentos reais ou simulados via API | **Nenhum executado** |
-| Produção e estoque real | **Sem alterações** |
+| PostgreSQL 17 real em Docker local, banco `kaia_mp_qa` | Executado; não é Supabase hospedado |
+| Asserções SQL de reserva/estados/rollback | Passaram, sem deixar alterações dessas asserções |
+| 10 conexões disputando 5 unidades sintéticas | 5 reservas, 5 recusas por estoque; sem venda duplicada |
+| 10 retries concorrentes com a mesma chave | Todos deduplicados |
+| 10 webhooks concorrentes para a mesma aprovação | 1 aprovação, 9 duplicados; uma única baixa |
+| Aprovado, pendente, recusado, cancelado | Passaram no banco local e/ou mapeamento HTTP simulado |
+| Saldo final do cenário de concorrência | 3 unidades sintéticas, zero reservas, após 2 aprovações |
+| 8 testes Node com PostgreSQL local real | 8 passaram, zero skips |
+| JWT Access assinado/forjado, audience, expiração e allowlist | Passaram com chaves sintéticas locais |
+| HMAC, evento sem assinatura e live_mode=true | Rejeitados conforme esperado |
+| Timeout após criação remota, total adulterado e cupom | Passaram com API Mercado Pago/SuperFrete simulada |
+| Webhook com corpo falso e GET autenticado pendente | Manteve pedido pendente; não confiou no corpo |
+| Build privado, flag obrigatória, ausência de integração comercial nos assets/bundle | Passaram |
+| Compilação das Pages Functions e sintaxe do bundle | Passaram |
+| Suíte comercial anterior `kaia-navigation.test.mjs` | 3 passaram; falha preexistente na expectativa textual “GitHub Pages”, fora do laboratório |
+| Pagamento efetivamente processado no Mercado Pago | **Não executado** |
+| Cotação efetiva da SuperFrete sandbox | **Não executada** |
+| Concorrência em Supabase hospedado | **Não executada** |
+
+Logs sanitizados em `docs/evidence/kaia-homologacao-concurrency.json` e
+`docs/evidence/kaia-homologacao-node-tests.txt`. O workflow
+`.github/workflows/kaia-homologacao.yml` reproduz os testes em PostgreSQL descartável,
+sem secrets de Mercado Pago, Supabase ou SuperFrete.
+
+## Como retomar o ambiente protegido
+
+1. Liberar capacidade para novo Supabase e criá-lo na organização escolhida;
+   verificar o ref contra os dois refs proibidos antes de aplicar qualquer SQL.
+2. Instalar `001`, `002`, executar `003` e aplicar a migração
+   `migrations/20261106171915_kaia_homologacao_checkout.sql` **somente no banco novo**.
+   O UUID de `kaia_mp_test.environment` identifica a instância isolada.
+3. Guardar **apenas em secrets de preview protegidos**:
+   `KAIA_TEST_SUPABASE_SERVICE_KEY`, `KAIA_MP_TEST_ACCESS_TOKEN`,
+   `KAIA_MP_WEBHOOK_SECRET`, `KAIA_SF_SANDBOX_TOKEN`.
+4. Configurar metadados não secretos de teste:
+   `KAIA_TEST_SUPABASE_URL`, `KAIA_MP_TEST_DATABASE_ID`, `KAIA_MP_TEST_SELLER_ID`,
+   `KAIA_MP_TEST_BUYER_EMAIL` (comprador `@testuser.com`),
+   `KAIA_MP_TEST_SF_SERVICES`, `KAIA_SHIPPING_TECH_CONTACT`, origem verificada.
+   `KAIA_TEST_SUPABASE_ANON_KEY` não é necessária: o laboratório usa Access e não
+   inclui cliente Supabase no navegador.
+5. Resolver autenticação do plugin na sessão com acesso ao endpoint oficial;
+   selecionar **Kaia Glow Loja Online**, ambiente Teste. Não criar nova aplicação.
+6. Confirmar oficialmente sandbox/credencial SuperFrete antes de definir
+   `KAIA_SF_SANDBOX_CONFIRMED=true` e `KAIA_SF_MODE=sandbox`.
+7. Só após conferir banco, conta test_user, comprador e frete, definir
+   `KAIA_MP_TEST_ENABLED=true` **exclusivamente no preview** e redeploy do preview.
+8. Registrar webhook **Teste**, evento **Order (Mercado Pago)**, em
+   `https://test-kaia-mercadopago-homologacao.kaia-glow.pages.dev/api/kaia/mp-test/webhook`.
+   Confirmar o tópico efetivo da conta (`order`/`orders_v2`) no payload/documentação.
+9. Executar compra com cartões oficiais: APRO para aprovado, OTHE/FUND para recusado,
+   CONT para pendente; cancelamento antes do pagamento conforme API oficial.
+   Guardar IDs e histórico sanitizado das entregas; conferir estoque antes/depois.
+10. Repetir concorrência no Supabase novo, testar retorno/recuperação operacional,
+    revisar qualidade com o MCP e obter autorização separada antes de planejar produção.
+
+Nenhum segredo foi solicitado pelo chat, gravado em arquivo versionado ou copiado
+de produção. Nenhum dado real de cliente, preço, estoque ou pedido foi alterado.
+
+## Revisão local do plugin oficial — mp-review v1.0.1
+
+**Scope:** security. **API detected:** Orders API. **Products:** Checkout Pro.
+**Files analyzed:** middleware, `mp-test-core.js`, `qa-worker.js`, rotas `mp-test`,
+SQL isolado, builder, testes e `.gitignore`.
+
+### Security checklist
+
+| # | Verificação | Estado | Evidência |
+| --- | --- | --- | --- |
+| 1 | Token só em ambiente protegido | Passou no código; secrets ainda ausentes | `mp-test-core.js`, `mpCall` |
+| 2 | .env ignorado e .env.example permitido | Passou | `.gitignore` |
+| 3 | HMAC-SHA256 no webhook | Passou localmente | `verifyMpWebhook`, testes Node |
+| 4 | URLs de retorno e notificação HTTPS | Parcial: redirecionamento validado; callback ainda não registrado | `orders.js`, `testConfig` |
+| 5 | Confirmação autenticada após retorno | Parcial: GET no webhook; retorno/polling dedicado ainda não implementado | `webhook.js` |
+| 6 | Idempotência de criação | Passou localmente | chave persistida, testes de timeout e concorrência |
+| 7 | Referência externa | Passou | UUID local em `external_reference` |
+| 8 | Credenciais separadas da produção | Passou na configuração atual; nenhuma credencial de teste instalada | API Cloudflare preview |
+| 9 | Ausência de sandbox_init_point | Passou | Orders usa `checkout_url` |
+
+Official quality: **não verificada**; quality_checklist indisponível pelo MCP.
+quality_evaluation: não aplicável à integração exclusivamente Orders.
+Formulário de homologação/ativação de produção: **não enviado**.
+
+## Implementation Report
+
+### Verified
+- [x] Código existente reaproveitado; ambiente de homologação em branch própria.
+- [x] Access habilitado, políticas reutilizáveis restritas e preview sem secrets reais.
+- [x] PostgreSQL real local: reserva concorrente e eventos duplicados sem baixa repetida.
+- [x] 8 testes locais passaram, incluindo integração HTTP simulada com banco real.
+- [x] Os 51 SKUs reais e os 22 produtos com embalagem pendente continuam bloqueados.
+
+### Needs attention
+- [ ] Resolver limite gratuito do Supabase e provisionar projeto isolado.
+- [ ] Resolver HTTP 403 no MCP e executar setup/qualidade autenticados.
+- [ ] Configurar secrets exclusivamente de teste, registrar e testar callback.
+- [ ] Confirmar login humano Access, sandbox SuperFrete e concorrência no Supabase.
+- [ ] Implementar e homologar retorno/polling e reconciliação operacional antes de produção.
+
+### Blockers (must fix before production)
+- [ ] Credenciais, banco remoto e pagamentos externos de teste ainda não homologados.
+- [ ] Zero preços de venda reais verificados e 22 embalagens pendentes.
+- [ ] Produção permanece fora do escopo e depende de autorização explícita.
+
+### Next steps
+1. Disponibilizar o novo projeto Supabase sem pausar outros projetos.
+2. Completar autenticação do plugin e configuração protegida das credenciais de teste.
+3. Reexecutar `mp-review` após homologação externa completa.
+
+### Resources used
+- Local: código, PostgreSQL 17 em Docker, Node test runner, Web Crypto e mocks HTTP.
+- Skill oficial: mp-connect, mp-test-setup, mp-webhooks e mp-review v1.0.1.
+- Docs oficiais: [Orders criação](https://www.mercadopago.com.br/developers/pt/docs/checkout-pro-orders/create-order),
+  [credenciais](https://www.mercadopago.com.br/developers/en/docs/checkout-pro-orders/resources/credentials),
+  [cartões/cenários](https://www.mercadopago.com.br/developers/pt/docs/checkout-pro-orders/integration-test/test-purchase-with-card),
+  [notificações](https://www.mercadopago.com.br/developers/pt/docs/checkout-pro-orders/notifications),
+  [Pages advanced mode](https://developers.cloudflare.com/pages/functions/advanced-mode/).
+
+**Scores:** official quality: N/A; 7/9 verificações locais passaram, 2 parciais.
+**Verdict:** Bloqueado para homologação externa completa e produção.

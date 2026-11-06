@@ -1,6 +1,7 @@
 // PREVIEW-ONLY guard: DO NOT merge into the production Kaia Glow branch.
 // Requires Cloudflare Access + verified JWT + allowlisted test email.
 // Fails CLOSED if Zero Trust/Access is not configured, including for static assets.
+import {verifyMpWebhook} from './api/kaia/mercado-pago-webhook.js';
 function reject(status,message){
  return new Response(JSON.stringify({code:'KAIA_PREVIEW_RESTRITO',message}),{
   status,headers:{'content-type':'application/json; charset=utf-8',
@@ -16,7 +17,18 @@ function decodeB64Url(value){
 function jsonB64(value){
  return JSON.parse(new TextDecoder().decode(decodeB64Url(value)));
 }
-export async function onRequest({request,env,next}){
+export async function onRequest({request,env,next,data}){
+ const url=new URL(request.url);
+ if(['usekaiaglow.com.br','www.usekaiaglow.com.br','kaia-glow.pages.dev'].includes(url.hostname))
+  return reject(503,'Este build pertence somente à homologação.');
+ if(url.pathname==='/api/kaia/mp-test/webhook'){
+  if(request.method!=='POST'||env.KAIA_MP_TEST_ENABLED!=='true'||url.hostname!==env.KAIA_MP_TEST_HOST||
+    !env.KAIA_MP_WEBHOOK_SECRET)return reject(503,'Webhook de teste ainda não habilitado.');
+  if(!await verifyMpWebhook(request,env.KAIA_MP_WEBHOOK_SECRET))return reject(401,'Assinatura inválida.');
+  return next();
+ }
+ if(!['/','/index.html','/lab.js','/robots.txt','/api/kaia/mp-test/orders','/api/kaia/mp-test/status'].includes(url.pathname))
+  return reject(404,'Rota fora do laboratório de homologação.');
  const issuer=String(env.KAIA_TEST_ACCESS_ISSUER||'').replace(/\/$/,'');
  const audience=String(env.KAIA_TEST_ACCESS_AUD||'');
  const approved=String(env.KAIA_TEST_EMAIL_ALLOWLIST||'')
@@ -36,7 +48,7 @@ export async function onRequest({request,env,next}){
    ||!Array.isArray(payload.aud)||!payload.aud.includes(audience)
    ||typeof payload.exp!=='number'||payload.exp<=now
    ||typeof payload.nbf==='number'&&payload.nbf>now
-   ||typeof payload.email!=='string'
+   ||typeof payload.sub!=='string'||!payload.sub||typeof payload.email!=='string'
    ||!approved.includes(payload.email.toLowerCase())){
    return reject(403,'Conta não autorizada para homologação.');
   }
@@ -52,6 +64,7 @@ export async function onRequest({request,env,next}){
   const good=await crypto.subtle.verify('RSASSA-PKCS1-v1_5',key,
    decodeB64Url(parts[2]),new TextEncoder().encode(parts[0]+'.'+parts[1]));
   if(!good)return reject(403,'Assinatura de acesso inválida.');
+  data.kaiaTestIdentity={sub:payload.sub,email:payload.email};
   const response=await next();
   const secured=new Response(response.body,response);
   secured.headers.set('X-Robots-Tag','noindex, nofollow');

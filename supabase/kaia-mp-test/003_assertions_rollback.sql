@@ -20,6 +20,10 @@ begin
   x:=kaia_mp_test.reserve_test_order(
    k,'[{"sku":"TEST-KAIA-SINGLE","qty":2}]'::jsonb);
   if x->>'result'<>'duplicate' then raise exception 'Duplicate checkout did not dedupe';end if;
+  begin
+   perform kaia_mp_test.reserve_test_order(k,'[{"sku":"TEST-KAIA-SINGLE","qty":1}]'::jsonb);
+   raise exception 'Changed idempotent cart was accepted';
+  exception when sqlstate '22023' then null;end;
   x:=kaia_mp_test.apply_verified_order(
    'TEST-MP-PROVIDER-001',o,'approved','TEST-EVENT-APPROVED-001');
   if x->>'result'<>'approved' then raise exception 'Approval failed: %',x;end if;
@@ -53,9 +57,17 @@ begin
    x:=kaia_mp_test.apply_verified_order(
     'TEST-MP-PROVIDER-002',o,'pending','TEST-EVENT-PENDING-002');
    if x->>'result'<>'pending' then raise exception 'Pending flow broken';end if;
+   begin
+    perform kaia_mp_test.apply_verified_order('TEST-OTHER-PROVIDER',o,'pending','TEST-EVENT-WRONG-PROVIDER');
+    raise exception 'Pending provider binding was not enforced';
+   exception when sqlstate '22023' then null;end;
    x:=kaia_mp_test.apply_verified_order(
     'TEST-MP-PROVIDER-002',o,'rejected','TEST-EVENT-REJECTED-002');
    if x->>'result'<>'rejected' then raise exception 'Rejected flow broken';end if;
+   begin
+    perform kaia_mp_test.apply_verified_order('TEST-MP-PROVIDER-002',o,'approved','TEST-EVENT-LATE-APPROVAL');
+    raise exception 'Approval after release was silently accepted';
+   exception when sqlstate '22023' then null;end;
    if not exists(select 1 from kaia_mp_test.test_catalog
     where sku='TEST-KAIA-SINGLE' and reserved_units=original_reserved)
    then raise exception 'Rejected order did not release inventory';end if;

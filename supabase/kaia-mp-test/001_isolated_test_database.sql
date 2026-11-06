@@ -67,7 +67,8 @@ alter table kaia_mp_test.webhook_events enable row level security;
 alter table kaia_mp_test.stock_audit enable row level security;
 revoke all on all tables in schema kaia_mp_test from public,anon,authenticated;
 grant usage on schema kaia_mp_test to service_role;
-grant all on all tables in schema kaia_mp_test to service_role;
+grant select,insert,update on kaia_mp_test.test_catalog,kaia_mp_test.checkout_orders,
+ kaia_mp_test.checkout_items,kaia_mp_test.webhook_events,kaia_mp_test.stock_audit to service_role;
 grant usage,select on all sequences in schema kaia_mp_test to service_role;
 
 -- Atomic reservation. Entire test cart must be valid. Uses ordered row locking.
@@ -75,7 +76,7 @@ create or replace function kaia_mp_test.reserve_test_order(
  p_key uuid,
  p_items jsonb
 ) returns jsonb
-language plpgsql security definer set search_path=''
+language plpgsql security invoker set search_path=''
 as $function$
 declare
  old_order kaia_mp_test.checkout_orders%rowtype;
@@ -93,7 +94,14 @@ begin
  -- prevents the same checkout from racing before order insertion.
  perform pg_advisory_xact_lock(hashtextextended(p_key::text,0));
  select * into old_order from kaia_mp_test.checkout_orders where idempotency_key=p_key;
- if found then return jsonb_build_object('result','duplicate',
+ if found then
+  if (select jsonb_agg(jsonb_build_object('sku',sku,'qty',qty) order by sku)
+      from kaia_mp_test.checkout_items where order_id=old_order.id)
+    is distinct from
+     (select jsonb_agg(jsonb_build_object('sku',sku,'qty',qty) order by sku)
+      from jsonb_to_recordset(p_items) as x(sku text,qty integer))
+  then raise exception 'Idempotency payload conflict' using errcode='22023';end if;
+  return jsonb_build_object('result','duplicate',
    'order_id',old_order.id,'total_cents',old_order.total_cents);end if;
 
  if exists(select 1 from jsonb_to_recordset(p_items) as l(sku text, qty integer)
@@ -143,7 +151,7 @@ create or replace function kaia_mp_test.apply_verified_order(
  p_provider_order_id text,p_local_order_id uuid,
  p_status text,p_event_id text
 ) returns jsonb
-language plpgsql security definer set search_path=''
+language plpgsql security invoker set search_path=''
 as $function$
 declare
  rec kaia_mp_test.checkout_orders%rowtype;
@@ -163,11 +171,21 @@ begin
  insert into kaia_mp_test.webhook_events(provider_event_id,provider_order_id,event_type)
  values(p_event_id,p_provider_order_id,p_status)
  on conflict(provider_event_id) do nothing;
- if not found then return jsonb_build_object('result','duplicate_event','stock_changed',false);end if;
+ if not found then
+  if not exists(select 1 from kaia_mp_test.webhook_events where provider_event_id=p_event_id
+    and provider_order_id=p_provider_order_id and event_type=p_status)
+  then raise exception 'Event identity conflict' using errcode='22023';end if;
+  return jsonb_build_object('result','duplicate_event','stock_changed',false);end if;
  if rec.stock_status<>'reserved' then
+  if rec.stock_status='released' and p_status='approved' then
+   raise exception 'Approval after release requires reconciliation' using errcode='22023';
+  end if;
+  update kaia_mp_test.webhook_events set status='ignored' where provider_event_id=p_event_id;
   return jsonb_build_object('result','already_finalized','stock_changed',false);
  end if;
  if p_status='pending' then
+  update kaia_mp_test.checkout_orders set provider_order_id=p_provider_order_id,updated_at=now() where id=rec.id;
+  update kaia_mp_test.webhook_events set status='verified' where provider_event_id=p_event_id;
   return jsonb_build_object('result','pending','stock_changed',false);
  end if;
  if p_status='approved' then
@@ -187,6 +205,7 @@ begin
    set payment_status='approved',stock_status='committed',
     provider_order_id=p_provider_order_id,updated_at=now()
     where id=rec.id;
+  update kaia_mp_test.webhook_events set status='processed' where provider_event_id=p_event_id;
   return jsonb_build_object('result','approved','stock_changed',true);
  end if;
  for line in select sku,qty from kaia_mp_test.checkout_items
@@ -203,6 +222,7 @@ begin
  update kaia_mp_test.checkout_orders
   set payment_status=p_status,stock_status='released',
       provider_order_id=p_provider_order_id,updated_at=now() where id=rec.id;
+ update kaia_mp_test.webhook_events set status='processed' where provider_event_id=p_event_id;
  return jsonb_build_object('result',p_status,'stock_changed',true);
 end;
 $function$;
