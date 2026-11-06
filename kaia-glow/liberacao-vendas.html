@@ -1,10 +1,10 @@
 <!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>Kaia Glow · Liberação de vendas</title><style>
 :root{font-family:system-ui,-apple-system,sans-serif;color:#2d2a28;background:#f7f3ee}body{max-width:1100px;margin:28px auto;padding:0 16px}h1{font-size:clamp(25px,4vw,36px);margin-bottom:8px}.lead{color:#655d58}.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:24px 0}.stat{background:#fff;border:1px solid #e6ddd3;border-radius:12px;padding:16px}.stat strong{display:block;font-size:28px}.stat small{color:#655d58}.table{overflow:auto;background:#fff;border-radius:12px;border:1px solid #e6ddd3}table{border-collapse:collapse;width:100%;min-width:720px}td,th{padding:12px 14px;text-align:left;border-bottom:1px solid #eee6dd}th{font-size:13px;background:#f9f6f2}tr:last-child td{border-bottom:0}.ok{color:#17653e;font-weight:700}.miss{color:#9c4914;font-weight:700}a{color:#6e3e45}input{padding:11px 14px;border:1px solid #c6b8a9;border-radius:9px;max-width:360px;width:100%}.actions{display:flex;gap:18px;align-items:center;flex-wrap:wrap;margin:20px 0}#status{min-height:22px}</style></head><body>
 <a href="/admin.html">← Painel administrativo</a><h1>Liberação de vendas · Kaia Glow</h1>
-<p class="lead">Somente produtos com preço de venda confirmado, estoque positivo verificado e embalagem validada podem ser considerados para o checkout. Esta página não ativa pagamentos.</p>
+<p class="lead">Somente produtos com preço de venda confirmado, estoque positivo verificado e embalagem validada podem ser considerados para o checkout. Primeira etapa: 29 itens com embalagem validada. Os outros 22 ficam para depois. Esta página não ativa pagamentos.</p>
 <p id="status" role="status">Verificando seu acesso…</p>
 <section class="stats" id="stats" aria-label="Indicadores"></section>
-<div class="actions"><label>Filtrar produtos <input id="search" placeholder="Nome ou SKU" aria-label="Buscar produtos"></label><a href="/admin.html">Atualizar valores no painel</a><button id="refresh">Atualizar relatório</button></div>
+<div class="actions"><label><input type="checkbox" id="onlyWave" checked style="width:auto"> Mostrar somente os 29 da primeira etapa</label><label>Filtrar produtos <input id="search" placeholder="Nome ou SKU" aria-label="Buscar produtos"></label><a href="/admin.html">Atualizar valores no painel</a><button id="refresh">Atualizar relatório</button></div>
 <div class="table"><table><thead><tr><th>Produto</th><th>Preço</th><th>Estoque</th><th>Embalagem</th><th>Pronto</th></tr></thead><tbody id="rows"><tr><td colspan="5">Aguardando consulta autenticada…</td></tr></tbody></table></div>
 <p>Os preços históricos exibidos na vitrine não substituem o preço comercial confirmado no banco. A aprovação do pagamento piloto de R$ 5,00 não habilita automaticamente produtos físicos.</p>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js" integrity="sha384-TcHRA3zBbn+Lexh5n+Oil4guNPOS3rjNDpGRAN46u/s/mB2IZ50ceC6TYDU2yvgK" crossorigin="anonymous"></script>
@@ -15,7 +15,7 @@ let list=[];
 const flag=(ok,yes,no)=>{const s=document.createElement('span');s.className=ok?'ok':'miss';s.textContent=ok?yes:no;return s};
 function render(){
  const needle=$('search').value.trim().toLocaleLowerCase('pt-BR');
- const rows=list.filter(p=>(p.name+' '+p.sku).toLocaleLowerCase('pt-BR').includes(needle));const tbody=$('rows');tbody.replaceChildren();
+ const rows=list.filter(p=>(!$('onlyWave').checked||p.inFirstWave)&&(p.name+' '+p.sku).toLocaleLowerCase('pt-BR').includes(needle));const tbody=$('rows');tbody.replaceChildren();
  for(const p of rows){
   const tr=document.createElement('tr'),name=document.createElement('td');name.textContent=p.name+' ('+p.sku+')';
   const price=document.createElement('td');price.append(flag(p.priceReady,'Confirmado','Pendente'));
@@ -34,12 +34,12 @@ async function load(){
   const r=await fetch('/api/kaia/sales-readiness',{headers:{Authorization:'Bearer '+data.session.access_token},cache:'no-store'});
   const value=await r.json();if(!r.ok)throw Error(value.code||'Não foi possível consultar a liberação');
   list=value.products||[];$('stats').replaceChildren();
-  for(const [title,n] of [['Produtos cadastrados',value.total],['Preços confirmados',value.priceReady],['Estoque confirmado',value.stockReady],['Embalagens validadas',value.packageReady],['Aptos para próxima etapa',value.ready]]){
+  for(const [title,n] of [['Primeira etapa (selecionados)',value.firstWave],['Produtos cadastrados',value.total],['Preços confirmados',value.priceReady],['Estoque confirmado',value.stockReady],['Embalagens validadas',value.packageReady],['Aptos para próxima etapa',value.ready]]){
     const card=document.createElement('div'),strong=document.createElement('strong'),small=document.createElement('small');
     card.className='stat';strong.textContent=String(n);small.textContent=title;card.append(strong,small);$('stats').append(card);
   }
   $('status').textContent='Situação atual do catálogo (dados confirmados no banco).';render();
  }catch(e){$('status').textContent=e.message;$('rows').textContent='Nenhum dado exibido sem autenticação administrativa.';}
 }
-$('search').oninput=render;$('refresh').onclick=load;load();
+$('search').oninput=render;$('onlyWave').onchange=render;$('refresh').onclick=load;load();
 </script></body></html>
