@@ -1,0 +1,10 @@
+-- DOCUMENTATION ONLY: ledger migration already applied to Supabase project vajlhodqxskozuxxlujv.
+-- Migration: kaia_mp_live_r5_single_checkout_ledger
+-- Follow-up migration: kaia_mp_live_r5_service_only_grants
+-- One immutable slot in public.kaia_mp_live_pilot_orders, R$ 5.00, uuid idempotency.
+-- RLS enabled; anon and authenticated have NO table permissions.
+-- Service role grants SELECT/INSERT/UPDATE to this ledger.
+-- Events ledger exists for follow-up audit hardening; webhook currently re-reads
+-- Mercado Pago and reconciles transaction state against the one slot.
+-- No checkout or provider payment was created by these migrations.
+-- Do not replay an alternate CREATE TABLE definition over the live ledger.
