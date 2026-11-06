@@ -1,3 +1,4 @@
+import {onRequestPost as commercialWebhook} from '../comercial/webhook.js';
 import {verifyMpWebhook} from '../mercado-pago-webhook.js';
 import {response,PaymentError,fail,assertConfig,row,mp,requireOrder,reconcile,db} from './_core.js';
 
@@ -30,6 +31,7 @@ export async function onRequestPost({request,env}){
     throw new PaymentError('ASSINATURA_INVALIDA',401);
   if(Number(request.headers.get('content-length')||0)>16000)
     throw new PaymentError('EVENTO_EXCESSIVO',413);
+  const commercialRequest=request.clone();
   const raw=await request.text();
   if(raw.length>16000)throw new PaymentError('EVENTO_EXCESSIVO',413);
   let event;
