@@ -17,14 +17,16 @@ async function authenticatedOrder(env,order){
 export async function onRequestGet({request,env,data}){
  try{
   const {order}=await owned(request,env,data);
-  let providerStatus=null,canCancel=false;
+  let providerStatus=null,providerDetail=null,canCancel=false;
   if(order.provider_order_id){
    const remote=await authenticatedOrder(env,order);providerStatus=paymentState(remote);
+   // Expose only a sanitized provider status code, never payer or payment details.
+   if(typeof remote.status_detail==='string'&&/^[a-z0-9_:-]{1,100}$/i.test(remote.status_detail))providerDetail=remote.status_detail;
    canCancel=order.stock_status==='reserved'&&['created','action_required'].includes(remote.status);
   }
   // A redirect, URL status or poll never commits stock: wait for the signed webhook.
   return reply({test:true,id:order.id,status:order.payment_status,stock:order.stock_status,
-   providerStatus,canCancel,awaitingWebhook:providerStatus!==null&&providerStatus!==order.payment_status});
+   providerStatus,providerDetail,canCancel,awaitingWebhook:providerStatus!==null&&providerStatus!==order.payment_status});
  }catch(e){return fail(e);}
 }
 export async function onRequestPost({request,env,data}){
