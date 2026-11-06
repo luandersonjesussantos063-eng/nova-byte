@@ -1,0 +1,48 @@
+{
+  "project": "kaia-glow-homologacao",
+  "project_ref": "ikeqodwmxzigksvvymdw",
+  "production_touched": false,
+  "remote_database": true,
+  "requests": 10,
+  "reserved": 5,
+  "refused_insufficient_stock": 5,
+  "transaction_intervals_overlap": false,
+  "concurrency_proven": false,
+  "limitation": "The connector serialized observed database transactions; this does not prove hosted concurrent execution.",
+  "states": {
+    "approved": 2,
+    "rejected": 2,
+    "cancelled": 1
+  },
+  "final_single_stock": 3,
+  "final_reserved": 0,
+  "duplicate_events": "ignored",
+  "browser_rpc_access": false,
+  "transactions": [
+    {
+      "backend": 9198,
+      "entered_at": "2026-11-06 17:40:18.946839+00",
+      "completed_at": "2026-11-06 17:40:19.449945+00"
+    },
+    {
+      "backend": 9199,
+      "entered_at": "2026-11-06 17:40:21.269945+00",
+      "completed_at": "2026-11-06 17:40:21.773039+00"
+    },
+    {
+      "backend": 9201,
+      "entered_at": "2026-11-06 17:40:24.941682+00",
+      "completed_at": "2026-11-06 17:40:25.444719+00"
+    },
+    {
+      "backend": 9200,
+      "entered_at": "2026-11-06 17:40:23.035481+00",
+      "completed_at": "2026-11-06 17:40:23.538595+00"
+    },
+    {
+      "backend": 9202,
+      "entered_at": "2026-11-06 17:40:26.742619+00",
+      "completed_at": "2026-11-06 17:40:27.245792+00"
+    }
+  ]
+}

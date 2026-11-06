@@ -4,6 +4,44 @@ Branch: `test/kaia-mercadopago-homologacao`, retomada do commit `4fb37e4`.
 Origem comercial: `feat/kaia-loja-real`, commit `38e47ca`. Não mesclar esta branch
 na produção: ela constrói somente um laboratório privado de pagamentos.
 
+## Atualização: Supabase remoto criado após liberação de vaga
+
+O usuário autorizou retirar o projeto PP-MT. O conector não possui exclusão de
+projetos e o CLI não estava autenticado; foi executada **pausa**, não exclusão.
+PP-MT (`fermfbmhwlafwopwndoj`) está `INACTIVE`; seus dados não foram apagados.
+Isso liberou a vaga gratuita necessária. A exclusão permanente solicitada **não
+foi executada**; não é necessária para manter o novo ambiente em funcionamento.
+
+Novo projeto: **kaia-glow-homologacao**, ref `ikeqodwmxzigksvvymdw`, organização
+`lucas-agora`, região `sa-east-1`, estado `ACTIVE_HEALTHY`.
+https://supabase.com/dashboard/project/ikeqodwmxzigksvvymdw
+
+Foram aplicados, exclusivamente no projeto novo, o esquema isolado, as três
+fixtures sintéticas e a migração de checkout. As asserções SQL com rollback
+passaram no Supabase hospedado, deixando zero pedidos/reservas antes do ensaio.
+
+O ensaio remoto enviou 10 requisições de reserva e obteve 5 reservas e 5 recusas
+por estoque. Entretanto, os timestamps registrados demonstram execução
+**sequencial** pelo conector; isso não comprova concorrência hospedada. A prova
+concorrente continua sendo a de PostgreSQL local/CI registrada abaixo.
+
+No banco novo foram verificados estados sintéticos (2 aprovados, 2 recusados e
+1 cancelado, com passagem por pendente), retries de chave e eventos duplicados.
+Resultado: 5 auditorias de reserva, 2 baixas, 3 liberações, saldo final de 3 unidades
+sintéticas e zero reservas. Não houve chamada de pagamento ao Mercado Pago.
+`anon` e `authenticated` não podem executar os RPCs administrativos verificados.
+
+O advisor de segurança retornou apenas sete avisos INFO de RLS sem policies:
+nessas tabelas privadas isso é intencional, pois browser/anon não têm acesso e o
+backend usa service_role. [Referência do advisor](https://supabase.com/docs/guides/database/database-linter?lint=0008_rls_enabled_no_policy).
+
+URL e UUID do banco de QA foram configurados somente no preview da Cloudflare.
+Nenhuma chave de serviço ou credencial de produção foi copiada; a chave de serviço
+**do projeto novo** ainda precisa ser instalada como segredo protegido, junto às
+credenciais de teste de Mercado Pago/SuperFrete. Pagamentos permanecem desabilitados.
+
+Evidência sanitizada: `docs/evidence/kaia-homologacao-supabase.json`.
+
 ## O que já existia
 
 - Middleware fechado por padrão, verificação RS256 de JWT Cloudflare Access,
@@ -53,7 +91,7 @@ o teste HTTP fim a fim e o login humano no preview continuam pendentes.
 O estado de publicação é confirmado pela API Cloudflare; o bloqueio do checkout
 comercial é preservado no código da branch de produção, que não foi modificada.
 
-### Supabase — bloqueio confirmado
+### Supabase — histórico do limite (resolvido na atualização acima)
 
 O responsável selecionou a organização **lucas-agora**. A tentativa de criar
 `kaia-glow-homologacao` em `sa-east-1` foi recusada pelo limite de **dois projetos
@@ -220,19 +258,19 @@ Formulário de homologação/ativação de produção: **não enviado**.
 - [x] Os 51 SKUs reais e os 22 produtos com embalagem pendente continuam bloqueados.
 
 ### Needs attention
-- [ ] Resolver limite gratuito do Supabase e provisionar projeto isolado.
+- [x] Liberar vaga por pausa do PP-MT, criar Supabase isolado e aplicar SQL somente nele.
 - [ ] Resolver HTTP 403 no MCP e executar setup/qualidade autenticados.
 - [ ] Configurar secrets exclusivamente de teste, registrar e testar callback.
 - [ ] Confirmar login humano Access, sandbox SuperFrete e concorrência no Supabase.
 - [ ] Implementar e homologar retorno/polling e reconciliação operacional antes de produção.
 
 ### Blockers (must fix before production)
-- [ ] Credenciais, banco remoto e pagamentos externos de teste ainda não homologados.
+- [ ] Credenciais e pagamentos externos de teste ainda não homologados; banco remoto já criado e ensaiado sequencialmente.
 - [ ] Zero preços de venda reais verificados e 22 embalagens pendentes.
 - [ ] Produção permanece fora do escopo e depende de autorização explícita.
 
 ### Next steps
-1. Disponibilizar o novo projeto Supabase sem pausar outros projetos.
+1. Instalar a chave de serviço do novo Supabase somente em segredo protegido do preview.
 2. Completar autenticação do plugin e configuração protegida das credenciais de teste.
 3. Reexecutar `mp-review` após homologação externa completa.
 
@@ -247,3 +285,4 @@ Formulário de homologação/ativação de produção: **não enviado**.
 
 **Scores:** official quality: N/A; 7/9 verificações locais passaram, 2 parciais.
 **Verdict:** Bloqueado para homologação externa completa e produção.
+
