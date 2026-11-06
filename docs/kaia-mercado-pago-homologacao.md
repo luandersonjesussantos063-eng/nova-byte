@@ -42,6 +42,45 @@ credenciais de teste de Mercado Pago/SuperFrete. Pagamentos permanecem desabilit
 
 Evidência sanitizada: `docs/evidence/kaia-homologacao-supabase.json`.
 
+## Retomada: consulta de retorno e cancelamento preparados
+
+- URLs de retorno HTTPS configuradas em `config.online` (success/failure/pending),
+  apontando para o preview privado e o ID local. A query string não confirma pagamento.
+- `GET /api/kaia/mp-test/order?id=<uuid>` exige o mesmo proprietário autenticado
+  pelo Access, consulta a order por API autenticada e compara total/referência/moeda.
+  Mostra eventual divergência entre provedor e webhook; **não baixa estoque**.
+- `POST` na mesma rota solicita cancelamento somente de order de teste ainda
+  cancelável (`created`/`action_required`). Usa chave persistida própria, diferente
+  da criação. Após POST, confirma por GET autenticado antes de liberar reserva.
+- Timeout no cancelamento não libera estoque. Repetir a solicitação recupera a
+  confirmação e a reserva é liberada uma única vez.
+- O payload de criação agora é congelado no banco antes do POST ao Mercado Pago;
+  um deploy ou ajuste de URL não muda o corpo de uma tentativa idempotente existente.
+- O laboratório acompanha o pedido após o retorno, oferece consulta/cancelamento
+  e informa quais configurações faltam, mostrando **somente nomes**, nunca valores.
+- Migração `20261106174850_kaia_qa_owned_order.sql` aplicada somente ao novo Supabase.
+  Asserções de proprietário, payload congelado, chave de cancelamento e permissões
+  passaram no banco remoto com rollback; os cinco pedidos sintéticos anteriores
+  permaneceram intactos.
+- Oito testes locais passaram novamente, com PostgreSQL real e HTTP simulado,
+  incluindo retorno adulterado, acesso de outro usuário, timeout e repetição de
+  cancelamento. Evidência: `docs/evidence/kaia-homologacao-node-tests-return-cancel.txt`.
+
+Isso não é evidência de uma compra efetiva no Mercado Pago: a autenticação MCP
+continua recebendo HTTP 403 e os segredos de Preview ainda estavam ausentes na
+última verificação. O responsável informou que fará a autorização no navegador e
+configurará os segredos no painel. Essas declarações são intenções, não confirmação
+de conclusão. `KAIA_MP_TEST_ENABLED` permanece `false`.
+
+Depois dos segredos, também conferir os metadados de teste `KAIA_MP_TEST_SELLER_ID`,
+`KAIA_MP_TEST_BUYER_EMAIL`, `KAIA_MP_TEST_SF_SERVICES` e
+`KAIA_SHIPPING_TECH_CONTACT`; a ausência deles deve continuar bloqueando o teste.
+Nunca derivar modo de teste apenas do prefixo APP_USR: o backend exige conta test_user.
+
+Referências oficiais desta retomada:
+- https://www.mercadopago.com.br/developers/pt/docs/checkout-pro-orders/web-integration/configure-back-urls
+- https://www.mercadopago.com.br/developers/pt/reference/online-payments/checkout-pro/cancel-order/post
+
 ## O que já existia
 
 - Middleware fechado por padrão, verificação RS256 de JWT Cloudflare Access,
@@ -238,7 +277,7 @@ SQL isolado, builder, testes e `.gitignore`.
 | 2 | .env ignorado e .env.example permitido | Passou | `.gitignore` |
 | 3 | HMAC-SHA256 no webhook | Passou localmente | `verifyMpWebhook`, testes Node |
 | 4 | URLs de retorno e notificação HTTPS | Parcial: redirecionamento validado; callback ainda não registrado | `orders.js`, `testConfig` |
-| 5 | Confirmação autenticada após retorno | Parcial: GET no webhook; retorno/polling dedicado ainda não implementado | `webhook.js` |
+| 5 | Confirmação autenticada após retorno | Passou no código e teste local; consulta própria autenticada sem confiar no redirect | `order.js`, testes Node |
 | 6 | Idempotência de criação | Passou localmente | chave persistida, testes de timeout e concorrência |
 | 7 | Referência externa | Passou | UUID local em `external_reference` |
 | 8 | Credenciais separadas da produção | Passou na configuração atual; nenhuma credencial de teste instalada | API Cloudflare preview |
@@ -262,7 +301,7 @@ Formulário de homologação/ativação de produção: **não enviado**.
 - [ ] Resolver HTTP 403 no MCP e executar setup/qualidade autenticados.
 - [ ] Configurar secrets exclusivamente de teste, registrar e testar callback.
 - [ ] Confirmar login humano Access, sandbox SuperFrete e concorrência no Supabase.
-- [ ] Implementar e homologar retorno/polling e reconciliação operacional antes de produção.
+- [x] Implementar retorno/polling e cancelamento idempotente; validação externa ainda pendente.
 
 ### Blockers (must fix before production)
 - [ ] Credenciais e pagamentos externos de teste ainda não homologados; banco remoto já criado e ensaiado sequencialmente.
@@ -283,6 +322,6 @@ Formulário de homologação/ativação de produção: **não enviado**.
   [notificações](https://www.mercadopago.com.br/developers/pt/docs/checkout-pro-orders/notifications),
   [Pages advanced mode](https://developers.cloudflare.com/pages/functions/advanced-mode/).
 
-**Scores:** official quality: N/A; 7/9 verificações locais passaram, 2 parciais.
+**Scores:** official quality: N/A; 8/9 verificações locais passaram, 1 parcial (callback externo ainda não cadastrado).
 **Verdict:** Bloqueado para homologação externa completa e produção.
 

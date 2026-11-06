@@ -24,8 +24,12 @@ export async function onRequestPost({request,env,data}){
   const items=[{title:'Kaia Glow — produtos do pedido de teste',quantity:1,unit_price:money(order.subtotal_cents-order.discount_cents)}];
   items.push({title:'Frete SuperFrete — homologação',quantity:1,unit_price:money(order.shipping_cents)});
   await verifyTestSeller(env);
-  const remote=validateOrder(await mpCall(env,'',{type:'online',processing_mode:'manual',
-   total_amount:money(order.total_cents),external_reference:order.id,payer:{email:order.payer_email},items},order.idempotency_key));
+  const back='https://'+env.KAIA_MP_TEST_HOST+'/?local_order='+encodeURIComponent(order.id);
+  const payload=await dbCall(env,'kaia_qa_freeze_payload',{p_id:order.id,p_owner:user.id,
+   p_payload:{type:'online',processing_mode:'manual',total_amount:money(order.total_cents),
+    external_reference:order.id,payer:{email:order.payer_email},items,
+    config:{online:{success_url:back,failure_url:back,pending_url:back,auto_return:'all'}}}});
+  const remote=validateOrder(await mpCall(env,'',payload,order.idempotency_key));
   if(remote.external_reference!==order.id||remote.total_amount!==money(order.total_cents))throw new CheckoutError('ORDER_DIVERGENTE');
   const checkout=new URL(remote.checkout_url);
   if(checkout.origin!=='https://www.mercadopago.com.br'||checkout.pathname!=='/checkout/v1/redirect'||

@@ -6,6 +6,7 @@ import pg from 'pg';
 import {onRequest as middleware} from '../../functions/_middleware.js';
 import {onRequestPost as orders} from '../../functions/api/kaia/mp-test/orders.js';
 import {onRequestPost as webhook} from '../../functions/api/kaia/mp-test/webhook.js';
+import {onRequestGet as orderStatus,onRequestPost as cancelOrder} from '../../functions/api/kaia/mp-test/order.js';
 import {parseIntent,testConfig,verifiedRows,verifyTestSeller,paymentState,boundedJson,quote} from '../../kaia-glow/backend/mp-test-core.js';
 const env={KAIA_MP_TEST_ENABLED:'true',KAIA_MP_TEST_HOST:'qa.example.com',KAIA_TEST_SUPABASE_URL:'https://isolatedqa.supabase.co',
  KAIA_TEST_SUPABASE_SERVICE_KEY:'fixture-not-a-secret',KAIA_MP_TEST_DATABASE_ID:'fixture-database',KAIA_MP_TEST_ACCESS_TOKEN:'APP_USR-fixture',
@@ -97,10 +98,12 @@ test('HTTP flow + real local PostgreSQL: timeout recovery, server totals, coupon
   await client.query(await readFile(new URL('../../supabase/kaia-mp-test/002_synthetic_test_fixtures.sql',import.meta.url),'utf8'));
   if(!(await client.query("select to_regclass('kaia_mp_test.environment') as t")).rows[0].t)
    await client.query(await readFile(new URL('../../supabase/kaia-mp-test/migrations/20261106171915_kaia_homologacao_checkout.sql',import.meta.url),'utf8'));
+  if(!(await client.query("select to_regprocedure('public.kaia_qa_owned(uuid,text)') as t")).rows[0].t)
+   await client.query(await readFile(new URL('../../supabase/kaia-mp-test/migrations/20261106174850_kaia_qa_owned_order.sql',import.meta.url),'utf8'));
   const marker=(await client.query('select database_id from kaia_mp_test.environment')).rows[0].database_id;
   const e={...env,KAIA_MP_TEST_DATABASE_ID:marker},key=crypto.randomUUID();
   const starting=(await client.query("select total_units from kaia_mp_test.test_catalog where sku='TEST-KAIA-BUNDLE'")).rows[0].total_units;
-  let lostResponse=true,remote=null,status='created',detail='created',gets=0;const posts=[];
+  let lostResponse=true,remote=null,status='created',detail='created',gets=0;const posts=[],cancelKeys=[];
   globalThis.fetch=async(url,options={})=>{
    const u=new URL(url),body=options.body?JSON.parse(options.body):{};
    if(u.pathname.startsWith('/rest/v1/rpc/')){
@@ -115,6 +118,10 @@ test('HTTP flow + real local PostgreSQL: timeout recovery, server totals, coupon
    }
    if(u.pathname==='/users/me')return Response.json({id:123,tags:['test_user']});
    if(u.hostname==='sandbox.superfrete.com')return Response.json([{id:1,price:'10.00'}]);
+   if(u.hostname==='api.mercadopago.com'&&u.pathname.endsWith('/cancel')){
+    cancelKeys.push(options.headers['X-Idempotency-Key']);status='canceled';detail='canceled';
+    throw Error('lost cancel response after provider cancellation');
+   }
    if(u.hostname==='api.mercadopago.com'&&options.method==='POST'){
     posts.push({key:options.headers['X-Idempotency-Key'],body});
     remote={id:remote?.id||'ORDTST'+crypto.randomUUID().replaceAll('-','').toUpperCase(),external_reference:body.external_reference,
@@ -133,14 +140,35 @@ test('HTTP flow + real local PostgreSQL: timeout recovery, server totals, coupon
   assert.equal((await orders({request:checkout(),env:e,data:identity})).status,503);
   const retried=await orders({request:checkout(),env:e,data:identity});assert.equal(retried.status,201);
   assert.deepEqual(posts[0],posts[1]);assert.equal(posts[0].body.total_amount,'32.50');
+  assert.match(posts[0].body.config.online.success_url,/^https:\/\/qa.example.com\/\?local_order=/);
+  assert.equal(posts[0].body.config.online.auto_return,'all');
+  const ownRequest=()=>new Request('https://qa.example.com/api/kaia/mp-test/order?id='+remote.external_reference+'&status=approved');
+  assert.equal((await orderStatus({request:ownRequest(),env:e,data:{kaiaTestIdentity:{sub:'other',email:'tester@example.com'}}})).status,404);
+  const browserReturn=await orderStatus({request:ownRequest(),env:e,data:identity});
+  assert.equal((await browserReturn.json()).status,'pending');
   const event=()=>signedWebhook({type:'order',live_mode:false,data:{id:remote.id,status:'processed',total_amount:'0.01'}});
   assert.equal((await webhook({request:await event(),env:e})).status,200);
   assert.equal((await client.query('select payment_status from kaia_mp_test.checkout_orders where idempotency_key=$1',[key])).rows[0].payment_status,'pending');
   status='processed';detail='accredited';
+  const approvedReturn=await orderStatus({request:ownRequest(),env:e,data:identity});
+  const returnState=await approvedReturn.json();assert.equal(returnState.status,'pending');assert.equal(returnState.providerStatus,'approved');assert.equal(returnState.awaitingWebhook,true);
+  assert.equal((await client.query("select total_units from kaia_mp_test.test_catalog where sku='TEST-KAIA-BUNDLE'")).rows[0].total_units,starting);
   assert.equal((await webhook({request:await event(),env:e})).status,200);
   assert.equal((await webhook({request:await event(),env:e})).status,200);
-  assert.equal(gets,3);
+  assert.equal(gets,5);
   assert.equal((await client.query("select total_units from kaia_mp_test.test_catalog where sku='TEST-KAIA-BUNDLE'")).rows[0].total_units,starting-1);
+  // A paid order cannot be canceled through the unpaid-order API.
+  assert.equal((await cancelOrder({request:new Request(ownRequest(),{method:'POST'}),env:e,data:identity})).status,409);
+  const cancelKey=crypto.randomUUID();remote=null;status='created';detail='created';
+  const cancellable=await orders({request:new Request('https://qa.example.com/api/kaia/mp-test/orders',{method:'POST',headers:{'content-type':'application/json','x-idempotency-key':cancelKey},body:JSON.stringify(intent)}),env:e,data:identity});
+  assert.equal(cancellable.status,201);
+  const cancelRequest=()=>new Request('https://qa.example.com/api/kaia/mp-test/order?id='+remote.external_reference,{method:'POST'});
+  assert.equal((await cancelOrder({request:cancelRequest(),env:e,data:identity})).status,503);
+  const cancelled=await cancelOrder({request:cancelRequest(),env:e,data:identity});assert.equal(cancelled.status,200);assert.equal((await cancelled.json()).status,'cancelled');
+  assert.equal((await cancelOrder({request:cancelRequest(),env:e,data:identity})).status,200);
+  assert.equal(cancelKeys.length,1);assert.notEqual(cancelKeys[0],cancelKey);
+  const finalStock=(await client.query("select total_units,reserved_units from kaia_mp_test.test_catalog where sku='TEST-KAIA-BUNDLE'")).rows[0];
+  assert.equal(finalStock.total_units,starting-1);assert.equal(finalStock.reserved_units,0);
   await client.query('set role anon');await assert.rejects(client.query('select public.kaia_qa_environment()'),/permission denied/);
   await client.query('reset role');
  }finally{globalThis.fetch=original;await client.end();}

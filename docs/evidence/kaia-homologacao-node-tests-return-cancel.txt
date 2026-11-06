@@ -1,0 +1,16 @@
+✔ preview denies missing/forged JWT, production hosts and original production API routes (23.492722ms)
+✔ Access signature, expiry, audience and allowlist are validated with Web Crypto (75.872362ms)
+✔ real SKUs, browser amounts, missing verified prices and production DB are blocked (2.051288ms)
+✔ APP_USR prefix alone cannot authorize a production seller (2.458411ms)
+✔ body limits and HMAC reject malformed or unsigned webhooks before database access (2.955288ms)
+✔ states require full accredited payment and shipping never falls back to production (0.893735ms)
+✔ build requires explicit QA flag and generated assets contain no production integrations (96.583535ms)
+✔ HTTP flow + real local PostgreSQL: timeout recovery, server totals, coupon, authentic GET and duplicate webhook (105.023771ms)
+ℹ tests 8
+ℹ suites 0
+ℹ pass 8
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 393.967979

@@ -27,7 +27,7 @@ export async function onRequest({request,env,next,data}){
   if(!await verifyMpWebhook(request,env.KAIA_MP_WEBHOOK_SECRET))return reject(401,'Assinatura inválida.');
   return next();
  }
- if(!['/','/index.html','/lab.js','/robots.txt','/api/kaia/mp-test/orders','/api/kaia/mp-test/status'].includes(url.pathname))
+ if(!['/','/index.html','/lab.js','/robots.txt','/api/kaia/mp-test/orders','/api/kaia/mp-test/order','/api/kaia/mp-test/status'].includes(url.pathname))
   return reject(404,'Rota fora do laboratório de homologação.');
  const issuer=String(env.KAIA_TEST_ACCESS_ISSUER||'').replace(/\/$/,'');
  const audience=String(env.KAIA_TEST_ACCESS_AUD||'');
