@@ -88,9 +88,8 @@ function paymentBrowserOptions(raw,total,{previous=false}={}){
  const box=document.createElement('section');
  box.id='commercePaymentOptions';box.className='kc-payment-ready';
  const info=document.createElement('div');info.className='kc-ready-head';
- const label=document.createElement('span');label.textContent=previous?'Pedido em aberto':'Pagamento';
- const amount=document.createElement('strong');amount.textContent=money(total/100);
- info.append(label,amount);
+ const label=document.createElement('span');label.textContent=previous?'Pedido em aberto':'Pedido pronto para pagamento';
+ info.append(label);
  const link=document.createElement('a');link.href=url;link.target='_blank';
  link.rel='noopener noreferrer';link.className='button kc-pay-action';
  link.textContent='Pagar com Mercado Pago ↗';
