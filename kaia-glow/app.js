@@ -68,6 +68,42 @@ function checkoutNotice(message,isError=false){
  note.textContent=message;note.style.color=isError?'#a02d33':'';note.style.fontWeight=isError?'700':'';
  if(isError)note.scrollIntoView({block:'nearest',behavior:'smooth'});
 }
+function validatedMercadoPagoLink(raw){
+ const u=new URL(raw);
+ if(u.protocol!=='https:'||u.hostname!=='www.mercadopago.com.br'||!u.pathname.startsWith('/checkout/'))
+  throw Error('Endereço de pagamento inválido.');
+ return u.href;
+}
+function paymentBrowserOptions(raw,total,{previous=false}={}){
+ const url=validatedMercadoPagoLink(raw);
+ const earlier=$('#commercePaymentOptions');if(earlier)earlier.remove();
+ const box=document.createElement('section');box.id='commercePaymentOptions';
+ box.style.cssText='border:2px solid #775061;background:#fffafc;border-radius:12px;padding:16px;margin:12px 0;display:grid;gap:12px';
+ const title=document.createElement('strong');
+ title.textContent=previous?'Retomar pagamento pendente':'Pagamento preparado com segurança';
+ const info=document.createElement('p');
+ info.textContent=(total?'Total: '+money(total/100)+'. ':'')+'Para evitar erros ao abrir o aplicativo do Mercado Pago, prefira pagar pelo Chrome, com uma conta de comprador independente da conta vendedora.';
+ const link=document.createElement('a');link.href=url;link.target='_blank';link.rel='noopener noreferrer';link.className='button';
+ link.style.cssText='display:block;text-align:center;text-decoration:none';
+ link.textContent='Abrir Mercado Pago no navegador ↗';
+ const copy=document.createElement('button');copy.type='button';copy.className='button';
+ copy.textContent='Copiar link para abrir no Chrome';
+ copy.onclick=async()=>{
+  try{await navigator.clipboard.writeText(url);copy.textContent='Link copiado! Cole na barra de endereço do Chrome.';}
+  catch{
+   const input=document.createElement('input');input.type='text';input.readOnly=true;input.value=url;
+   input.setAttribute('aria-label','Link do Mercado Pago para copiar');
+   box.append(input);input.focus();input.select();copy.textContent='Selecione e copie o link abaixo';
+  }
+ };
+ const help=document.createElement('p');help.style.cssText='font-size:13px;opacity:.85';
+ help.textContent='Se o aplicativo do Mercado Pago mostrar um erro, volte à sacola e use Copiar link para abrir diretamente no Chrome. Não pague duas vezes pelo mesmo pedido.';
+ box.append(title,info,link,copy,help);
+ const existing=$('#commercePendingOrder');
+ if(existing)existing.insertAdjacentElement('afterend',box);
+ else ($('#commerceEligibility')||$('#checkout')).insertAdjacentElement('afterend',box);
+ box.scrollIntoView({block:'nearest',behavior:'smooth'});
+}
 function renderPendingOrder(pending,token){
  const prior=$('#commercePendingOrder');if(prior)prior.remove();
  const box=document.createElement('section');box.id='commercePendingOrder';
@@ -79,11 +115,12 @@ function renderPendingOrder(pending,token){
  box.append(title,detail);
  if(pending.checkoutUrl){
   const resume=document.createElement('button');resume.type='button';resume.className='button';
-  resume.textContent='Retomar pagamento anterior';
-  resume.onclick=()=>{
-   const url=new URL(pending.checkoutUrl);
-   if(url.protocol==='https:'&&url.hostname==='www.mercadopago.com.br'&&url.pathname.startsWith('/checkout/'))location.assign(url.href);
-  };box.append(resume);
+  resume.textContent='Abrir opções do pagamento anterior';
+  resume.onclick=()=>paymentBrowserOptions(pending.checkoutUrl,pending.totalCents,{previous:true});
+  box.append(resume);
+  const tip=document.createElement('small');
+  tip.textContent='Esse pedido anterior foi criado antes do ajuste do checkout. Se o Mercado Pago continuar recusando, cancele o pedido não pago para gerar um novo sem vincular o e-mail de colaborador.';
+  box.append(tip);
  }
  const cancel=document.createElement('button');cancel.type='button';cancel.className='button';
  cancel.textContent='Cancelar pedido anterior não pago';
@@ -146,7 +183,9 @@ async function commercialCheckout(){
   if(!confirm('O total de produtos e frete, recalculado no servidor, é '+total+'. Deseja abrir o Mercado Pago?')){
    checkoutEligibility();checkoutNotice('Seu pedido está reservado. Clique novamente e escolha retomar ou cancelar a compra.');return;
   }
-  location.assign(u.href);
+  checkoutEligibility();
+  checkoutNotice('Pedido reservado. Escolha como abrir o pagamento. Nenhuma cobrança foi concluída ainda.');
+  paymentBrowserOptions(u.href,result.totalCents);
  }catch(e){
   checkoutEligibility();
   checkoutNotice('Não foi possível finalizar: '+e.message,true);
