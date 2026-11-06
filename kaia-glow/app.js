@@ -40,13 +40,21 @@ function checkoutEligibility(){
  const skus=cartItems(),eligible=commerceAllowed instanceof Map&&skus.length>0&&
  skus.every(x=>x.sku&&commerceAllowed.has(x.sku)&&
   Math.round(catalog.find(p=>p.sku===x.sku).price*100)===commerceAllowed.get(x.sku));
- const valid=eligible&&chosenShipping&&chosenShipping.signature===cartSignature()&&!coupon;
- btn.disabled=!valid;
- btn.textContent=valid?'Finalizar compra com Mercado Pago':!eligible?'Confira a disponibilidade dos produtos':!chosenShipping?'Informe o CEP e escolha o frete':chosenShipping.signature!==cartSignature()?'Consulte novamente o frete':'Confira as condições da compra';
- if(!eligible&&commerceAllowed instanceof Map){const note=$('#commerceEligibility');if(note)note.textContent='A compra está disponível somente para os 29 produtos da primeira etapa, com estoque confirmado.';}
- if(eligible&&!chosenShipping){const note=$('#commerceEligibility');if(note)note.textContent='Produtos liberados. Consulte e escolha uma modalidade de frete antes de pagar.';}
- if(eligible&&chosenShipping&&!coupon){const note=$('#commerceEligibility');if(note)note.textContent='Sacola conferida. O valor final será recalculado antes de abrir o Mercado Pago.';}
- if(coupon){const note=$('#commerceEligibility');if(note)note.textContent='Cupons ainda não estão disponíveis no checkout comercial. Remova o cupom para prosseguir.';}
+ const shippingValid=!!(chosenShipping&&chosenShipping.signature===cartSignature()&&
+  chosenShipping.postalCode===postalDigits($('#shippingPostalCode')?.value));
+ const subtotal=cart.reduce((sum,r)=>sum+variantFor(catalog.find(p=>p.id===r.id),r.variantId).price*r.qty,0);
+ const shipping=shippingValid?chosenShipping.amountCents/100:0;
+ if($('#kcShippingAmount'))$('#kcShippingAmount').textContent=shippingValid?money(shipping):'A calcular';
+ if($('#kcTotal'))$('#kcTotal').textContent=money(subtotal+shipping);
+ const prepared=!!($('#commercePaymentOptions')||$('#commercePendingOrder'));
+ btn.hidden=prepared;btn.disabled=!eligible||!shippingValid||!!coupon||prepared;
+ btn.textContent=!eligible?'Produto indisponível':!shippingValid?'Escolha o frete':'Continuar para pagamento';
+ const note=$('#commerceEligibility');if(!note||prepared)return;
+ note.hidden=false;note.style.color='';note.style.fontWeight='';
+ note.textContent=!eligible?'Um ou mais itens ainda não estão liberados para compra.':
+  !shippingValid?'Selecione o frete para continuar.':
+  coupon?'Cupons não estão disponíveis neste checkout.':'';
+ note.hidden=!!(eligible&&shippingValid&&!coupon);
 }
 async function fetchEligible(){
  const version=++commerceFetchVersion;
@@ -76,67 +84,71 @@ function validatedMercadoPagoLink(raw){
 }
 function paymentBrowserOptions(raw,total,{previous=false}={}){
  const url=validatedMercadoPagoLink(raw);
- const earlier=$('#commercePaymentOptions');if(earlier)earlier.remove();
- const box=document.createElement('section');box.id='commercePaymentOptions';
- box.style.cssText='border:2px solid #775061;background:#fffafc;border-radius:12px;padding:16px;margin:12px 0;display:grid;gap:12px';
- const title=document.createElement('strong');
- title.textContent=previous?'Retomar pagamento pendente':'Pagamento preparado com segurança';
- const info=document.createElement('p');
- info.textContent=(total?'Total: '+money(total/100)+'. ':'')+'Para evitar erros ao abrir o aplicativo do Mercado Pago, prefira pagar pelo Chrome, com uma conta de comprador independente da conta vendedora.';
- const link=document.createElement('a');link.href=url;link.target='_blank';link.rel='noopener noreferrer';link.className='button';
- link.style.cssText='display:block;text-align:center;text-decoration:none';
- link.textContent='Abrir Mercado Pago no navegador ↗';
- const copy=document.createElement('button');copy.type='button';copy.className='button';
+ $('#commercePaymentOptions')?.remove();
+ const box=document.createElement('section');
+ box.id='commercePaymentOptions';box.className='kc-payment-ready';
+ const info=document.createElement('div');info.className='kc-ready-head';
+ const label=document.createElement('span');label.textContent=previous?'Pedido em aberto':'Pedido pronto para pagamento';
+ info.append(label);
+ const link=document.createElement('a');link.href=url;link.target='_blank';
+ link.rel='noopener noreferrer';link.className='button kc-pay-action';
+ link.textContent='Pagar com Mercado Pago ↗';
+ const help=document.createElement('details');help.className='kc-payment-help';
+ const summary=document.createElement('summary');summary.textContent='Problemas para abrir?';
+ const copy=document.createElement('button');copy.type='button';copy.className='kc-text-action';
  copy.textContent='Copiar link para abrir no Chrome';
+ const fallback=document.createElement('div');fallback.className='kc-link-fallback';
  copy.onclick=async()=>{
-  try{await navigator.clipboard.writeText(url);copy.textContent='Link copiado! Cole na barra de endereço do Chrome.';}
+  try{await navigator.clipboard.writeText(url);copy.textContent='Link copiado. Abra no Chrome.';}
   catch{
+   fallback.replaceChildren();
    const input=document.createElement('input');input.type='text';input.readOnly=true;input.value=url;
-   input.setAttribute('aria-label','Link do Mercado Pago para copiar');
-   box.append(input);input.focus();input.select();copy.textContent='Selecione e copie o link abaixo';
+   input.setAttribute('aria-label','Link para copiar');
+   fallback.append(input);input.focus();input.select();
+   copy.textContent='Copie o endereço selecionado';
   }
  };
- const help=document.createElement('p');help.style.cssText='font-size:13px;opacity:.85';
- help.textContent='Se o aplicativo do Mercado Pago mostrar um erro, volte à sacola e use Copiar link para abrir diretamente no Chrome. Não pague duas vezes pelo mesmo pedido.';
- box.append(title,info,link,copy,help);
- const existing=$('#commercePendingOrder');
- if(existing)existing.insertAdjacentElement('afterend',box);
- else ($('#commerceEligibility')||$('#checkout')).insertAdjacentElement('afterend',box);
+ const tip=document.createElement('p');tip.textContent='Se o aplicativo apresentar erro, use o link copiado no Chrome. Evite pagar duas vezes pelo mesmo pedido.';
+ help.append(summary,copy,fallback,tip);
+ box.append(info,link,help);
+ ($('#kcPaymentArea')||$('#checkout')).append(box);
+ const btn=$('#checkout');if(btn)btn.hidden=true;
+ const note=$('#commerceEligibility');if(note)note.hidden=true;
  box.scrollIntoView({block:'nearest',behavior:'smooth'});
 }
 function renderPendingOrder(pending,token){
- const prior=$('#commercePendingOrder');if(prior)prior.remove();
- const box=document.createElement('section');box.id='commercePendingOrder';
- box.style.cssText='border:2px solid #8c5362;background:#fdf5f7;border-radius:12px;padding:16px;margin:12px 0;display:grid;gap:12px';
- const title=document.createElement('strong');title.textContent='Existe uma compra anterior aguardando pagamento';
+ $('#commercePendingOrder')?.remove();$('#commercePaymentOptions')?.remove();
+ const box=document.createElement('section');box.id='commercePendingOrder';box.className='kc-pending-order';
+ const title=document.createElement('strong');title.textContent='Você tem um pedido em aberto';
  const detail=document.createElement('p');
- const names=(pending.items||[]).map(i=>i.name).join(', ');
- detail.textContent=names+' · Total '+money(pending.totalCents/100)+'. Este pedido está reservando estoque e precisa ser concluído ou cancelado antes de iniciar outra compra.';
+ detail.textContent=(pending.items||[]).map(i=>i.name).join(', ')+' · '+money(pending.totalCents/100);
  box.append(title,detail);
  if(pending.checkoutUrl){
-  const resume=document.createElement('button');resume.type='button';resume.className='button';
-  resume.textContent='Abrir opções do pagamento anterior';
-  resume.onclick=()=>paymentBrowserOptions(pending.checkoutUrl,pending.totalCents,{previous:true});
+  const resume=document.createElement('a');resume.className='button kc-pay-action';
+  resume.href=validatedMercadoPagoLink(pending.checkoutUrl);resume.target='_blank';
+  resume.rel='noopener noreferrer';resume.textContent='Retomar pagamento ↗';
   box.append(resume);
-  const tip=document.createElement('small');
-  tip.textContent='Esse pedido anterior foi criado antes do ajuste do checkout. Se o Mercado Pago continuar recusando, cancele o pedido não pago para gerar um novo sem vincular o e-mail de colaborador.';
-  box.append(tip);
  }
- const cancel=document.createElement('button');cancel.type='button';cancel.className='button';
- cancel.textContent='Cancelar pedido anterior não pago';
+ const details=document.createElement('details');details.className='kc-payment-help';
+ const summary=document.createElement('summary');summary.textContent='Precisa cancelar este pedido?';
+ const cancel=document.createElement('button');cancel.type='button';cancel.className='kc-text-action';
+ cancel.textContent='Cancelar pedido não pago';
  cancel.onclick=async()=>{
-  if(!confirm('Deseja cancelar o pedido anterior de '+money(pending.totalCents/100)+'? O Mercado Pago deve confirmar o cancelamento antes de liberar o estoque.'))return;
-  cancel.disabled=true;cancel.textContent='Conferindo cancelamento no Mercado Pago…';
+  if(!confirm('Cancelar este pedido de '+money(pending.totalCents/100)+'? O estoque só será liberado após confirmação do Mercado Pago.'))return;
+  cancel.disabled=true;cancel.textContent='Verificando no Mercado Pago…';
   try{
    const r=await fetch('/api/kaia/comercial/pendente',{method:'POST',headers:{Authorization:'Bearer '+token,'content-type':'application/json'}});
    const info=await r.json();
-   if(!r.ok||!info.cancelled)throw Error(info.code||'O cancelamento ainda não foi confirmado.');
-   box.remove();checkoutEligibility();
-   checkoutNotice('Pedido anterior cancelado e estoque liberado. Confira se o CEP da sacola é o mesmo da sua conta antes de iniciar uma nova compra.');
-  }catch(e){cancel.disabled=false;cancel.textContent='Tentar cancelar novamente';checkoutNotice('Não foi possível cancelar com segurança: '+e.message,true);}
- };box.append(cancel);
- const note=$('#commerceEligibility');note?.insertAdjacentElement('afterend',box);
- checkoutNotice('Você já tem um pedido pendente. Escolha retomar ou cancelar antes de iniciar outro pedido.',true);
+   if(!r.ok||!info.cancelled)throw Error(info.code||'Cancelamento não confirmado.');
+   box.remove();const btn=$('#checkout');if(btn)btn.hidden=false;
+   checkoutEligibility();checkoutNotice('Pedido anterior cancelado. Você já pode conferir o frete da nova compra.');
+  }catch(e){cancel.disabled=false;cancel.textContent='Tentar cancelar novamente';checkoutNotice('Não foi possível cancelar: '+e.message,true);}
+ };
+ details.append(summary,cancel);box.append(details);
+ ($('#kcPaymentArea')||$('#commerceEligibility')).append(box);
+ const btn=$('#checkout');if(btn)btn.hidden=true;
+ const note=$('#commerceEligibility');if(note)note.hidden=true;
+ box.scrollIntoView({block:'nearest',behavior:'smooth'});
 }
 async function commercialCheckout(){
  const btn=$('#checkout');
@@ -155,7 +167,7 @@ async function commercialCheckout(){
   const pending=await pendingResponse.json();
   if(!pendingResponse.ok)throw Error(pending.code||'Não foi possível conferir seus pedidos anteriores.');
   if(pending.hasPending){
-   checkoutEligibility();renderPendingOrder(pending,token);return;
+   renderPendingOrder(pending,token);return;
   }
   if(!/^[0-9]{8}$/.test(currentPostal)||pending.registeredPostalCode!==currentPostal)
    throw Error('O CEP usado no frete é diferente do CEP salvo na sua conta ('+(pending.registeredPostalCode||'não cadastrado')+'). Atualize seu endereço em Minha conta e calcule o frete novamente antes de pagar.');
@@ -179,12 +191,8 @@ async function commercialCheckout(){
   const u=new URL(result.checkoutUrl);
   if(u.protocol!=='https:'||u.hostname!=='www.mercadopago.com.br'||!u.pathname.startsWith('/checkout/'))
    throw Error('Endereço de pagamento inválido.');
-  const total=money(result.totalCents/100);
-  if(!confirm('O total de produtos e frete, recalculado no servidor, é '+total+'. Deseja abrir o Mercado Pago?')){
-   checkoutEligibility();checkoutNotice('Seu pedido está reservado. Clique novamente e escolha retomar ou cancelar a compra.');return;
-  }
-  checkoutEligibility();
-  checkoutNotice('Pedido reservado. Escolha como abrir o pagamento. Nenhuma cobrança foi concluída ainda.');
+  // One primary payment action. The provider URL is shown only after
+  // the authenticated order and freight total have been saved by the server.
   paymentBrowserOptions(u.href,result.totalCents);
  }catch(e){
   checkoutEligibility();
@@ -204,14 +212,17 @@ $('#brand').innerHTML+=[...new Set(catalog.map(p=>p.brand))].sort().map(b=>`<opt
 const hero=catalog.find(p=>p.available&&p.name.includes('PDRN Pink Collagen Gel Mask'))||catalog.find(p=>p.available);$('#heroImage').src=hero.images[0];$('#heroName').textContent=hero.name;$('#heroProduct').onclick=()=>openProduct(hero.id);
 const tileNames=['Todos','Skincare','Cabelos','Corpo e spa'];$('#categoryGrid').innerHTML=tileNames.map(cat=>{const p=cat==='Todos'?hero:(catalog.find(x=>x.category===cat&&x.available)||catalog.find(x=>x.category===cat));return `<button class="category-tile" data-cat="${cat}"><div class="category-img"><img src="${esc(p.images[0])}" alt="${cat==='Todos'?'Seleção Kaia Glow':'Seleção de '+cat}" loading="lazy"></div><span>${cat==='Todos'?'Todos os produtos':cat==='Corpo e spa'?'Corpo & spa':cat}<small>↗</small></span></button>`}).join('');
 function variantFor(p,id){return p.variants.find(v=>String(v.id)===String(id))||p.variants.find(v=>v.available)||p.variants[0]}
-function openProduct(id){const p=catalog.find(x=>x.id===id);if(!p)return;current=p;currentVariant=variantFor(p);qty=1;$('#productContent').innerHTML=`<div class="product-detail"><div class="detail-images"><img id="detailImage" class="main-photo" src="${esc(p.images[0])}" alt="${esc(p.name)}"><div class="thumbs">${p.images.map((im,i)=>`<button data-photo="${i}" aria-label="Ver foto ${i+1}"><img src="${esc(im)}" alt="Foto ${i+1}" loading="lazy"></button>`).join('')}</div></div><div class="detail-info"><span class="eyebrow">${esc(p.brand)} · ${esc(p.category)}</span><h2>${esc(p.name)}</h2><div class="product-price" id="detailPrice">${money(currentVariant.price)}</div><p class="detail-note">${p.available?'Consulte a disponibilidade.':'Produto indisponível.'}</p>${p.variants.length>1?`<label>Opção<select id="variant">${p.variants.map(v=>`<option value="${v.id}" ${v.id===currentVariant.id?'selected':''}>${esc(v.label)}${v.available?'':' · esgotado'}</option>`).join('')}</select></label>`:''}<div class="quantity"><button id="qtyDown" aria-label="Diminuir quantidade">−</button><output id="detailQty">1</output><button id="qtyUp" aria-label="Aumentar quantidade">+</button></div><button class="button" id="addDetail" ${currentVariant.available?'':'disabled'}>${currentVariant.available?'Adicionar à sacola':'Produto esgotado'}</button><a class="button outline product-whatsapp" href="${esc(whatsappUrl('Olá! Vim pelo site da Kaia Glow e gostaria de saber mais sobre o produto: '+p.name+'.\n'+'https://usekaiaglow.com.br/#produto-'+p.id))}" target="_blank" rel="noopener noreferrer">Tirar dúvida no WhatsApp ↗</a><p class="detail-note">Tire dúvidas sobre este produto diretamente com a equipe Kaia Glow pelo WhatsApp.</p><div class="description">${esc(p.description||'Confira as informações deste produto no catálogo original da Kaia Glow. Para saber mais, fale com a equipe Kaia Glow.')}</div><p class="detail-note">Informações e fotos reproduzidas do catálogo público. Siga as instruções da embalagem.</p></div></div>`;all('[data-photo]').forEach(b=>b.onclick=()=>{$('#detailImage').src=p.images[+b.dataset.photo]});$('#qtyDown').onclick=()=>{$('#detailQty').textContent=qty=Math.max(1,qty-1)};$('#qtyUp').onclick=()=>{$('#detailQty').textContent=qty=Math.min(10,qty+1)};$('#addDetail').onclick=()=>addCart(p.id,currentVariant.id,qty);if($('#variant'))$('#variant').onchange=e=>{currentVariant=variantFor(p,e.target.value);$('#detailPrice').textContent=money(currentVariant.price);$('#addDetail').disabled=!currentVariant.available;$('#addDetail').textContent=currentVariant.available?'Adicionar à sacola':'Produto esgotado'};if(!$('#productDialog').open)$('#productDialog').showModal();$('#productDialog').scrollTop=0;window.kaiaMarketing?.productOpened(p);history.replaceState(null,'','#produto-'+id)}
+function openProduct(id){const p=catalog.find(x=>x.id===id);if(!p)return;current=p;currentVariant=variantFor(p);qty=1;$('#productContent').innerHTML=`<div class="product-detail"><div class="detail-images"><img id="detailImage" class="main-photo" src="${esc(p.images[0])}" alt="${esc(p.name)}"><div class="thumbs">${p.images.map((im,i)=>`<button data-photo="${i}" aria-label="Ver foto ${i+1}"><img src="${esc(im)}" alt="Foto ${i+1}" loading="lazy"></button>`).join('')}</div></div><div class="detail-info"><span class="eyebrow">${esc(p.brand)} · ${esc(p.category)}</span><h2>${esc(p.name)}</h2><div class="product-price" id="detailPrice">${money(currentVariant.price)}</div><p class="detail-note">${p.available?'Consulte a disponibilidade.':'Produto indisponível.'}</p>${p.variants.length>1?`<label>Opção<select id="variant">${p.variants.map(v=>`<option value="${v.id}" ${v.id===currentVariant.id?'selected':''}>${esc(v.label)}${v.available?'':' · esgotado'}</option>`).join('')}</select></label>`:''}<div class="quantity"><button id="qtyDown" aria-label="Diminuir quantidade">−</button><output id="detailQty">1</output><button id="qtyUp" aria-label="Aumentar quantidade">+</button></div><button class="button" id="addDetail" ${currentVariant.available&&(commerceAllowed instanceof Map)&&commerceAllowed.has(p.sku)?'':'disabled'}>${currentVariant.available&&(commerceAllowed instanceof Map)&&commerceAllowed.has(p.sku)?'Adicionar à sacola':'Compra em breve'}</button><a class="button outline product-whatsapp" href="${esc(whatsappUrl('Olá! Vim pelo site da Kaia Glow e gostaria de saber mais sobre o produto: '+p.name+'.\n'+'https://usekaiaglow.com.br/#produto-'+p.id))}" target="_blank" rel="noopener noreferrer">Tirar dúvida no WhatsApp ↗</a><details class="kc-product-details"><summary>Detalhes e modo de uso</summary><div class="description">${esc(p.description||'Confira as informações deste produto no catálogo original da Kaia Glow. Para saber mais, fale com a equipe Kaia Glow.')}</div></details><p class="detail-note">Consulte as informações e recomendações da embalagem.</p></div></div>`;all('[data-photo]').forEach(b=>b.onclick=()=>{$('#detailImage').src=p.images[+b.dataset.photo]});$('#qtyDown').onclick=()=>{$('#detailQty').textContent=qty=Math.max(1,qty-1)};$('#qtyUp').onclick=()=>{$('#detailQty').textContent=qty=Math.min(10,qty+1)};$('#addDetail').onclick=()=>addCart(p.id,currentVariant.id,qty);if($('#variant'))$('#variant').onchange=e=>{currentVariant=variantFor(p,e.target.value);$('#detailPrice').textContent=money(currentVariant.price);$('#addDetail').disabled=!(currentVariant.available&&(commerceAllowed instanceof Map)&&commerceAllowed.has(p.sku));$('#addDetail').textContent=$('#addDetail').disabled?'Compra em breve':'Adicionar à sacola'};if(!$('#productDialog').open)$('#productDialog').showModal();$('#productDialog').scrollTop=0;window.kaiaMarketing?.productOpened(p);history.replaceState(null,'','#produto-'+id)}
 function addCart(id,variantId,quantity=1){const p=catalog.find(x=>x.id===id),v=variantFor(p,variantId);if(!v.available)return;if(!(commerceAllowed instanceof Map)||!commerceAllowed.has(p.sku)){toast('Este produto ficará disponível em outra etapa de vendas.');return;}window.kaiaMarketing?.cartAdded(p);const key=id+'-'+v.id,row=cart.find(x=>x.key===key);if(row)row.qty=Math.min(10,row.qty+quantity);else cart.push({key,id,variantId:v.id,qty:Math.min(10,quantity)});shippingReset();counts();toast('Adicionado à sua sacola.');if($('#bagDialog').open)renderBag()}
 function renderBag(){counts();if(!cart.length){$('#bagContent').innerHTML='<div class="bag-body empty"><h2>Sua próxima descoberta<br>está te esperando.</h2><p>Explore a coleção e monte sua sacola.</p><button class="button" id="backShopping">Continuar explorando ↗</button></div>';$('#backShopping').onclick=()=>$('#bagDialog').close();return}
-const subtotal=cart.reduce((a,r)=>a+variantFor(catalog.find(p=>p.id===r.id),r.variantId).price*r.qty,0),benefit=coupon?calculateCoupon(coupon,couponItems()):null,discount=benefit?.valid?benefit.discount:0;
-$('#bagContent').innerHTML=`<div class="bag-body">${cart.map(r=>{const p=catalog.find(p=>p.id===r.id),v=variantFor(p,r.variantId);return `<div class="bag-item"><img src="${esc(p.images[0])}" alt="${esc(p.name)}"><div><h3>${esc(p.name)}</h3>${p.variants.length>1?`<small>${esc(v.label)}</small>`:''}<small>${money(v.price)}</small><div class="quantity"><button data-step="-1" data-key="${r.key}" aria-label="Diminuir ${esc(p.name)}">−</button><output>${r.qty}</output><button data-step="1" data-key="${r.key}" aria-label="Aumentar ${esc(p.name)}">+</button></div><button class="remove" data-remove="${r.key}">Remover</button></div></div>`}).join('')}<form class="coupon" id="couponForm"><input id="couponCode" aria-label="Cupom de desconto" placeholder="Digite seu cupom" value="${esc(coupon)}"><button>Aplicar</button></form><p class="detail-note" id="couponNote">${coupon?esc(benefit.message):'Consulte os códigos na aba Cupons · condições das ofertas disponíveis.'}</p><div class="bag-total"><span>Subtotal</span><span>${money(subtotal)}</span></div>${discount>0?`<div class="bag-total"><span>Desconto (${esc(coupon)})</span><span>− ${money(discount)}</span></div>`:''}${benefit?.valid&&benefit.gift?'<p class="coupon-gift-note">Consulte as condições do benefício com a equipe.</p>':''}<div class="bag-total"><b>Subtotal dos produtos</b><b>${money(subtotal-discount)}</b></div><p class="detail-note">O frete será somado aos produtos e confirmado novamente no servidor antes do pagamento.</p><form id="shippingQuoteForm" class="coupon" aria-label="Consultar frete"><label for="shippingPostalCode" style="font-size:.88em">CEP de destino</label><input id="shippingPostalCode" name="cep" inputmode="numeric" autocomplete="postal-code" maxlength="9" placeholder="00000-000" aria-label="CEP para calcular o frete" required><button type="submit">Consultar frete</button></form><p class="detail-note" id="shippingQuoteResult" role="status" aria-live="polite">Informe seu CEP para calcular o frete. Selecione uma das modalidades antes de finalizar a compra.</p><p class="detail-note" id="commerceEligibility" role="status">Conferindo os produtos elegíveis para compra...</p><button class="button" id="checkout" disabled>Verificando liberação...</button><p class="detail-note">Para finalizar é necessário estar conectado à sua conta Kaia Glow com endereço completo. O valor final será confirmado antes do pagamento.</p></div>`;
-all('[data-step]').forEach(b=>b.onclick=()=>{const r=cart.find(x=>x.key===b.dataset.key);r.qty=Math.max(1,Math.min(10,r.qty+Number(b.dataset.step)));shippingReset();renderBag()});all('[data-remove]').forEach(b=>b.onclick=()=>{cart=cart.filter(r=>r.key!==b.dataset.remove);shippingReset();renderBag()});$('#couponForm').onsubmit=e=>{e.preventDefault();const code=$('#couponCode').value.trim().toUpperCase(),result=calculateCoupon(code,couponItems());coupon=result.valid?code:'';shippingReset();renderBag();$('#couponCode').value=code;$('#couponNote').textContent=result.message};$('#shippingQuoteForm').onsubmit=async e=>{
+const subtotal=cart.reduce((a,r)=>a+variantFor(catalog.find(p=>p.id===r.id),r.variantId).price*r.qty,0),discount=0;coupon='';
+$('#bagContent').innerHTML=`<div class="bag-body kc-checkout"><section class="kc-cart-section"><div class="kc-section-title"><h3>Seu pedido</h3><span>${cart.length} ${cart.length===1?'item':'itens'}</span></div>${cart.map(r=>{const p=catalog.find(p=>p.id===r.id),v=variantFor(p,r.variantId);return `<div class="bag-item"><img src="${esc(p.images[0])}" alt="${esc(p.name)}"><div><h3>${esc(p.name)}</h3>${p.variants.length>1?`<small>${esc(v.label)}</small>`:''}<small>${money(v.price)}</small><div class="quantity"><button data-step="-1" data-key="${r.key}" aria-label="Diminuir ${esc(p.name)}">−</button><output>${r.qty}</output><button data-step="1" data-key="${r.key}" aria-label="Aumentar ${esc(p.name)}">+</button></div><button class="remove" data-remove="${r.key}">Remover</button></div></div>`}).join('')}</section><section class="kc-delivery-section"><div class="kc-section-title"><h3>Entrega</h3><a class="kc-account-link" href="/conta.html?aba=dados" target="_blank" rel="noopener noreferrer">Meu endereço ↗</a></div><form id="shippingQuoteForm" class="kc-cep-form" aria-label="Calcular frete"><label for="shippingPostalCode">CEP</label><input id="shippingPostalCode" name="cep" inputmode="numeric" autocomplete="postal-code" maxlength="9" placeholder="00000-000" aria-label="CEP de entrega" required><button type="submit">Calcular</button></form><p class="kc-inline-hint" id="shippingQuoteResult" role="status" aria-live="polite">Informe seu CEP para ver as opções de entrega.</p><div id="kcShippingChoices" class="kc-shipping-choices" aria-label="Modalidades de entrega"></div></section><section class="kc-payment-section"><div class="kc-section-title"><h3>Pagamento</h3><span>Mercado Pago</span></div><div class="kc-amount-line"><span>Produtos</span><strong>${money(subtotal)}</strong></div><div class="kc-amount-line"><span>Entrega</span><strong id="kcShippingAmount">A calcular</strong></div><div class="kc-total-line"><span>Total</span><strong id="kcTotal">${money(subtotal)}</strong></div><p class="kc-inline-hint" id="commerceEligibility" role="status">Escolha o frete para continuar.</p><div id="kcPaymentArea"><button class="button" id="checkout" disabled>Escolher frete</button></div><p class="kc-secure-note">Pagamento protegido pelo Mercado Pago.</p></section></div>`;
+all('[data-step]').forEach(b=>b.onclick=()=>{const r=cart.find(x=>x.key===b.dataset.key);r.qty=Math.max(1,Math.min(10,r.qty+Number(b.dataset.step)));shippingReset();renderBag()});all('[data-remove]').forEach(b=>b.onclick=()=>{cart=cart.filter(r=>r.key!==b.dataset.remove);shippingReset();renderBag()});$('#shippingQuoteForm').onsubmit=async e=>{
  e.preventDefault();
- const status=$('#shippingQuoteResult'),cep=$('#shippingPostalCode').value.trim();
+ const status=$('#shippingQuoteResult'),cep=postalDigits($('#shippingPostalCode').value);
+ if(!/^[0-9]{8}$/.test(cep)){status.textContent='Informe um CEP válido de 8 números.';return;}
+ $('#shippingPostalCode').value=cep.slice(0,5)+'-'+cep.slice(5);
+ const requestedCart=cartSignature();
  const items=cart.map(r=>({sku:catalog.find(p=>p.id===r.id)?.sku,quantity:r.qty}));
  if(items.some(x=>!x.sku)){status.textContent='Há itens antigos sem SKU conferido. O frete não pode ser calculado para essa sacola.';return;}
  chosenShipping=null;checkoutEligibility();status.textContent='Consultando os dados de envio…';
@@ -219,6 +230,7 @@ all('[data-step]').forEach(b=>b.onclick=()=>{const r=cart.find(x=>x.key===b.data
   const r=await fetch('/api/kaia/frete',{method:'POST',headers:{'content-type':'application/json'},
    body:JSON.stringify({destinoCep:cep,items})});
   const info=await r.json();
+  if(cep!==postalDigits($('#shippingPostalCode').value)||requestedCart!==cartSignature())return;
   if(!r.ok){
    const missing=(info.skusPendentes||[]).map(sku=>catalog.find(p=>p.sku===sku)?.name||sku);
    status.textContent=(info.message||'O frete ainda não está disponível para esta sacola.')
@@ -227,26 +239,32 @@ all('[data-step]').forEach(b=>b.onclick=()=>{const r=cart.find(x=>x.key===b.data
   }
   const choices=Array.isArray(info.opcoes)?info.opcoes:[];
   if(!choices.length){status.textContent='Nenhuma opção de envio retornada para esta sacola.';return;}
-  status.textContent=choices.length+' '+(choices.length===1?'opção de frete encontrada':'opções de frete encontradas')+'. ';
-  const button=document.createElement('button');
-  button.type='button';button.className='shipping-show-options';
-  button.textContent='Ver preços e prazos do frete ↗';
-  button.onclick=()=>window.kaiaShowShippingOptions(info,cep);
-  status.appendChild(button);
+  const list=$('#kcShippingChoices');list.replaceChildren();
+  status.textContent='Selecione uma modalidade de entrega:';
   for(const option of choices){
-   const shippingButton=document.createElement('button');shippingButton.type='button';
-   shippingButton.className='shipping-show-options';
-   const label=option.servico||option.transportadora||('Opção '+option.id);
-   shippingButton.textContent='Selecionar '+label+' — '+money(option.freteCentavos/100)+' · '+option.previsaoDias+' dias';
-   shippingButton.onclick=()=>{
-    chosenShipping={serviceId:String(option.id),signature:cartSignature(),amountCents:option.freteCentavos,postalCode:postalDigits(cep)};
-    status.textContent='Frete selecionado: '+label+' — '+money(option.freteCentavos/100)+'. Total estimado: '+money(subtotal-discount+option.freteCentavos/100)+'. O valor final será conferido novamente antes do pagamento.';
+   const cents=Number(option.freteCentavos);
+   if(!Number.isSafeInteger(cents)||cents<=0)continue;
+   const serviceId=String(option.id),label=String(option.servico||option.transportadora||('Entrega '+serviceId));
+   const button=document.createElement('button');button.type='button';
+   button.className='kc-shipping-option';button.setAttribute('aria-pressed','false');
+   const name=document.createElement('strong');name.textContent=label;
+   const eta=document.createElement('span');eta.className='kc-shipping-eta';
+   const days=Number(option.previsaoDias);
+   eta.textContent=Number.isFinite(days)&&days>0?'Estimativa: '+days+' dias':'Prazo informado na transportadora';
+   const price=document.createElement('b');price.textContent=money(cents/100);
+   button.append(name,eta,price);
+   button.onclick=()=>{
+    chosenShipping={serviceId,signature:cartSignature(),amountCents:cents,postalCode:postalDigits(cep)};
+    list.querySelectorAll('button').forEach(b=>{b.classList.remove('is-selected');b.setAttribute('aria-pressed','false')});
+    button.classList.add('is-selected');button.setAttribute('aria-pressed','true');
+    status.textContent='Entrega selecionada: '+label+'.';
     checkoutEligibility();
    };
-   status.appendChild(shippingButton);
+   list.append(button);
   }
+  if(!list.children.length)status.textContent='Nenhuma modalidade disponível para este CEP.';
  }catch{status.textContent='Não foi possível consultar o frete agora. Confira sua conexão e tente novamente.';}
-};$('#shippingPostalCode').oninput=()=>{chosenShipping=null;checkoutEligibility();};$('#checkout').onclick=commercialCheckout;fetchEligible();checkoutEligibility();}
+};$('#shippingPostalCode').oninput=()=>{chosenShipping=null;$('#kcShippingChoices')?.replaceChildren();if($('#shippingQuoteResult'))$('#shippingQuoteResult').textContent='Calcule o frete para este CEP.';checkoutEligibility();};$('#checkout').onclick=commercialCheckout;fetchEligible();checkoutEligibility();}
 $('#bagButton').onclick=()=>{renderBag();$('#bagDialog').showModal()};
 function info(type){let html='';if(type==='checkout')html='<h2>Finalização indisponível no momento</h2><p>Não foi possível iniciar a finalização online. Fale com a Kaia Glow para receber atendimento. Nenhum pagamento foi iniciado.</p><a class="button" href="'+esc(whatsappUrl('Olá! Preciso de ajuda para finalizar uma compra na Kaia Glow.'))+'" target="_blank" rel="noopener noreferrer">Falar com a equipe</a>';
 if(type==='privacy')html='<h2>Sua privacidade na Kaia Glow</h2><p>A conta utiliza dados reais: nome, e-mail, CPF, nascimento, telefone e endereço. Saiba como tratamos seus dados de navegação, cadastro e atendimento. Consulte as finalidades, os provedores, os dados locais e seus direitos na política completa.</p><a class="button" href="privacidade.html">Ler Política de privacidade ↗</a>';
