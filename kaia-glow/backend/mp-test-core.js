@@ -15,16 +15,18 @@ export async function boundedJson(source,max=16000){
  const bytes=new Uint8Array(size);let offset=0;for(const c of chunks){bytes.set(c,offset);offset+=c.length;}
  try{return JSON.parse(new TextDecoder().decode(bytes));}catch{throw new CheckoutError('JSON_INVALIDO',400);}
 }
-export function testConfig(request,env){
+export function testConfig(request,env,{requireEnabled=true}={}){
  const url=new URL(request.url);
- if(env.KAIA_MP_TEST_ENABLED!=='true'||url.protocol!=='https:'||
+ if((requireEnabled&&env.KAIA_MP_TEST_ENABLED!=='true')||url.protocol!=='https:'||
  !env.KAIA_MP_TEST_HOST||url.hostname!==env.KAIA_MP_TEST_HOST||
  ['usekaiaglow.com.br','www.usekaiaglow.com.br'].includes(url.hostname))throw new CheckoutError('TESTE_DESABILITADO',503);
  const db=new URL(env.KAIA_TEST_SUPABASE_URL||'https://invalid');
  if(db.protocol!=='https:'||!/^([a-z0-9]+)\.supabase\.co$/.test(db.hostname)||
  ['vajlhodqxskozuxxlujv.supabase.co','fermfbmhwlafwopwndoj.supabase.co'].includes(db.hostname)||db.pathname!=='/'||db.search||db.username||db.password||
  !env.KAIA_TEST_SUPABASE_SERVICE_KEY||!env.KAIA_MP_TEST_DATABASE_ID||
- !env.KAIA_MP_TEST_ACCESS_TOKEN||!/^\d+$/.test(env.KAIA_MP_TEST_SELLER_ID||'')||!/@testuser\.com$/.test(env.KAIA_MP_TEST_BUYER_EMAIL||''))throw new CheckoutError('SEGREDOS_TESTE_PENDENTES',503);
+ !env.KAIA_MP_TEST_ACCESS_TOKEN||
+ (env.KAIA_MP_TEST_SELLER_ID&&!/^\d+$/.test(env.KAIA_MP_TEST_SELLER_ID))||
+ (env.KAIA_MP_TEST_BUYER_EMAIL&&!/@testuser\.com$/.test(env.KAIA_MP_TEST_BUYER_EMAIL)))throw new CheckoutError('SEGREDOS_TESTE_PENDENTES',503);
  return db.origin;
 }
 export async function dbCall(env,path,body,fetcher=fetch){
@@ -50,8 +52,11 @@ export async function verifyTestSeller(env,fetcher=fetch){
  const r=await fetcher('https://api.mercadopago.com/users/me',{headers:{Authorization:'Bearer '+env.KAIA_MP_TEST_ACCESS_TOKEN},signal:AbortSignal.timeout(5000)});
  if(!r.ok)throw new CheckoutError('CONTA_TESTE_NAO_CONFIRMADA',503);
  const seller=await boundedJson(r);
- if(String(seller.id)!==env.KAIA_MP_TEST_SELLER_ID||!Array.isArray(seller.tags)||!seller.tags.includes('test_user'))
+ if(!/^\d+$/.test(String(seller.id))||
+ (env.KAIA_MP_TEST_SELLER_ID&&String(seller.id)!==env.KAIA_MP_TEST_SELLER_ID)||
+ !Array.isArray(seller.tags)||!seller.tags.includes('test_user'))
  throw new CheckoutError('CONTA_TESTE_NAO_CONFIRMADA',503);
+ return {id:String(seller.id),testAccount:true};
 }
 export function parseIntent(data){
  if(!data||!Array.isArray(data.items)||!data.items.length||data.items.length>24||

@@ -1,0 +1,16 @@
+{
+  "local_tests": 10,
+  "passed": 10,
+  "failed": 0,
+  "skipped": 0,
+  "database": "local PostgreSQL 17",
+  "provider_http": "mocked",
+  "guest_buyer_required": false,
+  "payer_omitted_when_email_absent": true,
+  "production_seller_rejected": true,
+  "read_only_readiness_without_shipping": true,
+  "hosted_assertion_rolled_back": true,
+  "hosted_orders_preserved": 5,
+  "anon_rpc_execute": false,
+  "external_payment_performed": false
+}

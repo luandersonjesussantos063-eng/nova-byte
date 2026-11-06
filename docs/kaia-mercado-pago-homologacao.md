@@ -4,6 +4,36 @@ Branch: `test/kaia-mercadopago-homologacao`, retomada do commit `4fb37e4`.
 Origem comercial: `feat/kaia-loja-real`, commit `38e47ca`. Não mesclar esta branch
 na produção: ela constrói somente um laboratório privado de pagamentos.
 
+## Correção: Checkout Pro Orders não exige comprador de teste
+
+A orientação anterior para procurar/criar uma conta de comprador de teste estava
+errada para este fluxo. A documentação atual de Checkout Pro com Orders orienta
+usar as credenciais **Teste da aplicação** e realizar a compra sem login no Mercado
+Pago, em janela anônima. Não é necessário obter e-mail de comprador de teste.
+
+Fonte oficial verificada:
+https://www.mercadopago.com.br/developers/pt/docs/checkout-pro-orders/integration-test-introduction
+
+A implementação foi corrigida:
+- `KAIA_MP_TEST_BUYER_EMAIL` passou a ser opcional. Se ausente, não envia `payer`
+  nem inventa um e-mail; o comprador preenche os dados no checkout de teste.
+- `KAIA_MP_TEST_SELLER_ID` também é opcional como pin adicional. Continua obrigatório
+  confirmar pela API `/users/me` que a credencial pertence a uma conta `test_user`.
+  Credencial de vendedor real continua bloqueada, mesmo com prefixo APP_USR.
+- O status privado pode verificar banco e credenciais em modo somente leitura com
+  cobranças desabilitadas, sem depender de configuração de frete. Ele informa
+  separadamente a pendência de frete e não cria uma order.
+- A migração de comprador opcional foi aplicada apenas ao novo Supabase de QA.
+  A asserção remota de checkout sem e-mail passou com rollback, preservando os
+  cinco pedidos sintéticos existentes. O RPC segue sem EXECUTE para `anon`.
+- Dez testes locais passaram, incluindo criação sem `payer`, vendedor não teste
+  recusado e consulta de prontidão sem ativar cobranças. Mercado Pago e SuperFrete
+  continuam simulados nesses testes; isso não comprova pagamento externo.
+
+A conta de teste do vendedor criada/fornecida pelo Mercado Pago continua sendo
+validada pelo backend; não é necessário procurar o ID manualmente para iniciar
+a preparação. Produção permanece fora do escopo e pagamentos seguem desabilitados.
+
 ## Atualização: Supabase remoto criado após liberação de vaga
 
 O usuário autorizou retirar o projeto PP-MT. O conector não possui exclusão de
@@ -72,9 +102,9 @@ continua recebendo HTTP 403 e os segredos de Preview ainda estavam ausentes na
 configurará os segredos no painel. Essas declarações são intenções, não confirmação
 de conclusão. `KAIA_MP_TEST_ENABLED` permanece `false`.
 
-Depois dos segredos, também conferir os metadados de teste `KAIA_MP_TEST_SELLER_ID`,
-`KAIA_MP_TEST_BUYER_EMAIL`, `KAIA_MP_TEST_SF_SERVICES` e
-`KAIA_SHIPPING_TECH_CONTACT`; a ausência deles deve continuar bloqueando o teste.
+Depois dos segredos, conferir `KAIA_MP_TEST_SF_SERVICES` e
+`KAIA_SHIPPING_TECH_CONTACT`. ID de vendedor e e-mail de comprador são opcionais,
+conforme a correção descrita no início deste documento.
 Nunca derivar modo de teste apenas do prefixo APP_USR: o backend exige conta test_user.
 
 Referências oficiais desta retomada:
@@ -240,8 +270,7 @@ sem secrets de Mercado Pago, Supabase ou SuperFrete.
    `KAIA_TEST_SUPABASE_SERVICE_KEY`, `KAIA_MP_TEST_ACCESS_TOKEN`,
    `KAIA_MP_WEBHOOK_SECRET`, `KAIA_SF_SANDBOX_TOKEN`.
 4. Configurar metadados não secretos de teste:
-   `KAIA_TEST_SUPABASE_URL`, `KAIA_MP_TEST_DATABASE_ID`, `KAIA_MP_TEST_SELLER_ID`,
-   `KAIA_MP_TEST_BUYER_EMAIL` (comprador `@testuser.com`),
+   `KAIA_TEST_SUPABASE_URL`, `KAIA_MP_TEST_DATABASE_ID`,
    `KAIA_MP_TEST_SF_SERVICES`, `KAIA_SHIPPING_TECH_CONTACT`, origem verificada.
    `KAIA_TEST_SUPABASE_ANON_KEY` não é necessária: o laboratório usa Access e não
    inclui cliente Supabase no navegador.

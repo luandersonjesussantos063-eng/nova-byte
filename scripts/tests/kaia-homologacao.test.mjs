@@ -7,6 +7,7 @@ import {onRequest as middleware} from '../../functions/_middleware.js';
 import {onRequestPost as orders} from '../../functions/api/kaia/mp-test/orders.js';
 import {onRequestPost as webhook} from '../../functions/api/kaia/mp-test/webhook.js';
 import {onRequestGet as orderStatus,onRequestPost as cancelOrder} from '../../functions/api/kaia/mp-test/order.js';
+import {onRequestGet as readiness} from '../../functions/api/kaia/mp-test/status.js';
 import {parseIntent,testConfig,verifiedRows,verifyTestSeller,paymentState,boundedJson,quote} from '../../kaia-glow/backend/mp-test-core.js';
 const env={KAIA_MP_TEST_ENABLED:'true',KAIA_MP_TEST_HOST:'qa.example.com',KAIA_TEST_SUPABASE_URL:'https://isolatedqa.supabase.co',
  KAIA_TEST_SUPABASE_SERVICE_KEY:'fixture-not-a-secret',KAIA_MP_TEST_DATABASE_ID:'fixture-database',KAIA_MP_TEST_ACCESS_TOKEN:'APP_USR-fixture',
@@ -60,6 +61,30 @@ test('APP_USR prefix alone cannot authorize a production seller',async()=>{
  await assert.rejects(verifyTestSeller(env,async()=>Response.json({id:123,tags:[]})),/CONTA_TESTE/);
  await verifyTestSeller(env,async()=>Response.json({id:123,tags:['test_user']}));
 });
+test('Checkout Pro Orders does not require a test buyer account or manually entered seller ID',async()=>{
+ const guest={...env};delete guest.KAIA_MP_TEST_BUYER_EMAIL;delete guest.KAIA_MP_TEST_SELLER_ID;
+ assert.equal(testConfig(request(),guest),'https://isolatedqa.supabase.co');
+ assert.equal((await verifyTestSeller(guest,async()=>Response.json({id:123,tags:['test_user']}))).testAccount,true);
+ await assert.rejects(verifyTestSeller(guest,async()=>Response.json({id:123,tags:[]})),/CONTA_TESTE/);
+ await assert.rejects(verifyTestSeller({...guest,KAIA_MP_TEST_SELLER_ID:'999'},async()=>Response.json({id:123,tags:['test_user']})),/CONTA_TESTE/);
+ assert.throws(()=>testConfig(request(),{...guest,KAIA_MP_TEST_ENABLED:'false'}),/TESTE_DESABILITADO/);
+});
+test('read-only readiness verifies test credentials before shipping is configured, without enabling charges',async()=>{
+ const guest={...env,KAIA_MP_TEST_ENABLED:'false'};
+ for(const key of ['KAIA_MP_TEST_BUYER_EMAIL','KAIA_MP_TEST_SELLER_ID','KAIA_SF_SANDBOX_TOKEN','KAIA_MP_TEST_SF_SERVICES','KAIA_SHIPPING_TECH_CONTACT'])delete guest[key];
+ const original=globalThis.fetch,called=[];
+ globalThis.fetch=async url=>{
+  called.push(new URL(url).pathname);
+  if(new URL(url).pathname==='/users/me')return Response.json({id:123,tags:['test_user']});
+  return Response.json({purpose:'kaia-homologacao-only',database_id:env.KAIA_MP_TEST_DATABASE_ID});
+ };
+ try{
+  const r=await readiness({request:request('/api/kaia/mp-test/status'),env:guest,data:identity});
+  const result=await r.json();assert.equal(result.ready,false);assert.equal(result.sellerTestAccount,true);
+  assert.deepEqual(result.missing,['KAIA_SF_SANDBOX_TOKEN','KAIA_MP_TEST_SF_SERVICES','KAIA_SHIPPING_TECH_CONTACT']);
+  assert.deepEqual(called,['/rest/v1/rpc/kaia_qa_environment','/users/me']);
+ }finally{globalThis.fetch=original;}
+});
 test('body limits and HMAC reject malformed or unsigned webhooks before database access',async()=>{
  await assert.rejects(boundedJson(new Request('https://qa.example.com',{method:'POST',body:'x'.repeat(17000)})),/EXCESSIVOS/);
  assert.equal((await webhook({request:request('/api/kaia/mp-test/webhook'),env})).status,401);
@@ -100,6 +125,7 @@ test('HTTP flow + real local PostgreSQL: timeout recovery, server totals, coupon
    await client.query(await readFile(new URL('../../supabase/kaia-mp-test/migrations/20261106171915_kaia_homologacao_checkout.sql',import.meta.url),'utf8'));
   if(!(await client.query("select to_regprocedure('public.kaia_qa_owned(uuid,text)') as t")).rows[0].t)
    await client.query(await readFile(new URL('../../supabase/kaia-mp-test/migrations/20261106174850_kaia_qa_owned_order.sql',import.meta.url),'utf8'));
+  await client.query(await readFile(new URL('../../supabase/kaia-mp-test/migrations/20261106183224_kaia_qa_optional_test_buyer.sql',import.meta.url),'utf8'));
   const marker=(await client.query('select database_id from kaia_mp_test.environment')).rows[0].database_id;
   const e={...env,KAIA_MP_TEST_DATABASE_ID:marker},key=crypto.randomUUID();
   const starting=(await client.query("select total_units from kaia_mp_test.test_catalog where sku='TEST-KAIA-BUNDLE'")).rows[0].total_units;
@@ -160,8 +186,10 @@ test('HTTP flow + real local PostgreSQL: timeout recovery, server totals, coupon
   // A paid order cannot be canceled through the unpaid-order API.
   assert.equal((await cancelOrder({request:new Request(ownRequest(),{method:'POST'}),env:e,data:identity})).status,409);
   const cancelKey=crypto.randomUUID();remote=null;status='created';detail='created';
-  const cancellable=await orders({request:new Request('https://qa.example.com/api/kaia/mp-test/orders',{method:'POST',headers:{'content-type':'application/json','x-idempotency-key':cancelKey},body:JSON.stringify(intent)}),env:e,data:identity});
+  const guest={...e};delete guest.KAIA_MP_TEST_BUYER_EMAIL;delete guest.KAIA_MP_TEST_SELLER_ID;
+  const cancellable=await orders({request:new Request('https://qa.example.com/api/kaia/mp-test/orders',{method:'POST',headers:{'content-type':'application/json','x-idempotency-key':cancelKey},body:JSON.stringify(intent)}),env:guest,data:identity});
   assert.equal(cancellable.status,201);
+  assert.equal(Object.hasOwn(posts[2].body,'payer'),false);
   const cancelRequest=()=>new Request('https://qa.example.com/api/kaia/mp-test/order?id='+remote.external_reference,{method:'POST'});
   assert.equal((await cancelOrder({request:cancelRequest(),env:e,data:identity})).status,503);
   const cancelled=await cancelOrder({request:cancelRequest(),env:e,data:identity});assert.equal(cancelled.status,200);assert.equal((await cancelled.json()).status,'cancelled');

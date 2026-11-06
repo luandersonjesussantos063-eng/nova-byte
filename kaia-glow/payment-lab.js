@@ -2,7 +2,7 @@ const form=document.querySelector('#checkout'),pay=document.querySelector('#pay'
 let attempt=null,ready=false;
 fetch('/api/kaia/mp-test/status').then(async r=>{
  const s=await r.json();ready=!!s.ready;pay.disabled=!ready;
- document.querySelector('#status').textContent=s.missing?.length?'Configuração de teste pendente: '+s.missing.join(', '):s.ready?'Ambiente preparado para uma tentativa de teste.':'Homologação bloqueada: banco isolado, credenciais e serviços de teste precisam estar confirmados.';
+ document.querySelector('#status').textContent=s.missing?.length?(s.sellerTestAccount?'Mercado Pago de teste e banco verificados. Frete pendente: ':'Configuração de teste pendente: ')+s.missing.join(', '):s.ready?'Ambiente preparado para uma tentativa de teste.':'Homologação bloqueada: banco isolado, credenciais e serviços de teste precisam estar confirmados.';
 }).catch(()=>{document.querySelector('#status').textContent='Não foi possível verificar o ambiente de teste.';});
 form.addEventListener('input',()=>{attempt=null;});
 form.addEventListener('submit',async e=>{
