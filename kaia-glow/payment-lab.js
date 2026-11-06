@@ -1,13 +1,19 @@
 const form=document.querySelector('#checkout'),pay=document.querySelector('#pay'),result=document.querySelector('#result');
-let attempt=null,ready=false;
+let attempt=null,ready=false,readinessState={};
+const mode=document.querySelector('#shippingMode'),shippingFields=document.querySelector('#shippingFields');
+function updateAvailability(){
+ const noDelivery=mode.value==='no_delivery';shippingFields.hidden=noDelivery;shippingFields.disabled=noDelivery;
+ ready=noDelivery?!!readinessState.paymentOnlyReady:!!readinessState.shippingReady;pay.disabled=!ready;
+}
 fetch('/api/kaia/mp-test/status').then(async r=>{
- const s=await r.json();ready=!!s.ready;pay.disabled=!ready;
- document.querySelector('#status').textContent=s.missing?.length?(s.sellerTestAccount?'Mercado Pago de teste e banco verificados. Frete pendente: ':'Configuração de teste pendente: ')+s.missing.join(', '):s.ready?'Ambiente preparado para uma tentativa de teste.':'Homologação bloqueada: banco isolado, credenciais e serviços de teste precisam estar confirmados.';
+ const s=await r.json();readinessState=s;
+ if(!s.paymentOnlyReady&&s.shippingReady)mode.value='sandbox';updateAvailability();
+ document.querySelector('#status').textContent=s.paymentOnlyReady?'Pronto para teste técnico de pagamento, com produto fictício e sem entrega. O frete SuperFrete continua separado e pendente.':s.shippingReady?'Ambiente de pagamento e frete sandbox preparado.':s.missing?.length?(s.sellerTestAccount?'Mercado Pago de teste e banco verificados. Frete pendente: ':'Configuração de teste pendente: ')+s.missing.join(', '):'Homologação bloqueada: configuração de teste ainda pendente.';
 }).catch(()=>{document.querySelector('#status').textContent='Não foi possível verificar o ambiente de teste.';});
-form.addEventListener('input',()=>{attempt=null;});
+form.addEventListener('input',()=>{attempt=null;updateAvailability();});
 form.addEventListener('submit',async e=>{
  e.preventDefault();const f=new FormData(form);
- const body={items:[{sku:f.get('sku'),quantity:Number(f.get('quantity'))}],destinoCep:f.get('cep'),serviceId:f.get('service'),coupon:f.get('coupon')};
+ const body={items:[{sku:f.get('sku'),quantity:Number(f.get('quantity'))}],coupon:f.get('coupon'),...(mode.value==='no_delivery'?{shippingMode:'no_delivery'}:{destinoCep:f.get('cep'),serviceId:f.get('service')})};
  if(!attempt)attempt={key:crypto.randomUUID(),body};pay.disabled=true;
  try{
   const r=await fetch('/api/kaia/mp-test/orders',{method:'POST',headers:{'content-type':'application/json','x-idempotency-key':attempt.key},body:JSON.stringify(attempt.body)});

@@ -354,3 +354,9 @@ Formulário de homologação/ativação de produção: **não enviado**.
 **Scores:** official quality: N/A; 8/9 verificações locais passaram, 1 parcial (callback externo ainda não cadastrado).
 **Verdict:** Bloqueado para homologação externa completa e produção.
 
+
+### Pagamento técnico sem entrega
+
+O preview privado permite `shippingMode=no_delivery` somente com `KAIA_QA_ALLOW_NO_DELIVERY=true` e `KAIA_MP_TEST_ENABLED=true`. Aceita exclusivamente SKUs sintéticos TEST-KAIA, sem entrega física. O servidor calcula os produtos e descontos e registra frete zero como ausência de entrega, nunca como cotação SuperFrete. Não libera produtos comerciais nem ignora preço/embalagem pendentes.
+
+Verificação local: 11 testes Node passaram, incluindo fluxo HTTP com PostgreSQL, idempotência, HMAC, notificações duplicadas, cancelamento e modo sem entrega. A migração foi aplicada exclusivamente ao banco de homologação. Pagamentos externos com cartões de teste e sandbox SuperFrete ainda exigem evidência; não foram declarados concluídos.

@@ -126,6 +126,8 @@ test('HTTP flow + real local PostgreSQL: timeout recovery, server totals, coupon
   if(!(await client.query("select to_regprocedure('public.kaia_qa_owned(uuid,text)') as t")).rows[0].t)
    await client.query(await readFile(new URL('../../supabase/kaia-mp-test/migrations/20261106174850_kaia_qa_owned_order.sql',import.meta.url),'utf8'));
   await client.query(await readFile(new URL('../../supabase/kaia-mp-test/migrations/20261106183224_kaia_qa_optional_test_buyer.sql',import.meta.url),'utf8'));
+  if(!(await client.query("select to_regprocedure('public.kaia_qa_prepare(uuid,text,text,jsonb,jsonb,integer,text,text,text)') as t")).rows[0].t)
+   await client.query(await readFile(new URL('../../supabase/kaia-mp-test/migrations/20261106184151_kaia_qa_no_delivery_payment.sql',import.meta.url),'utf8'));
   const marker=(await client.query('select database_id from kaia_mp_test.environment')).rows[0].database_id;
   const e={...env,KAIA_MP_TEST_DATABASE_ID:marker},key=crypto.randomUUID();
   const starting=(await client.query("select total_units from kaia_mp_test.test_catalog where sku='TEST-KAIA-BUNDLE'")).rows[0].total_units;
@@ -197,7 +199,28 @@ test('HTTP flow + real local PostgreSQL: timeout recovery, server totals, coupon
   assert.equal(cancelKeys.length,1);assert.notEqual(cancelKeys[0],cancelKey);
   const finalStock=(await client.query("select total_units,reserved_units from kaia_mp_test.test_catalog where sku='TEST-KAIA-BUNDLE'")).rows[0];
   assert.equal(finalStock.total_units,starting-1);assert.equal(finalStock.reserved_units,0);
+  remote=null;status='created';detail='created';
+  const paymentOnly={...guest,KAIA_QA_ALLOW_NO_DELIVERY:'true'};
+  for(const name of ['KAIA_SF_SANDBOX_TOKEN','KAIA_MP_TEST_SF_SERVICES','KAIA_SHIPPING_TECH_CONTACT'])delete paymentOnly[name];
+  const technicalBody={items:intent.items,shippingMode:'no_delivery',shipping:999999,total:1};
+  const technicalRequest=()=>new Request('https://qa.example.com/api/kaia/mp-test/orders',{method:'POST',headers:{'content-type':'application/json','x-idempotency-key':crypto.randomUUID()},body:JSON.stringify(technicalBody)});
+  assert.equal((await orders({request:technicalRequest(),env:guest,data:identity})).status,403);
+  assert.equal((await orders({request:technicalRequest(),env:paymentOnly,data:identity})).status,201);
+  assert.equal(posts.at(-1).body.total_amount,'24.99');
+  assert.equal(posts.at(-1).body.items.length,1);
+  const saved=(await client.query('select shipping_mode,shipping_cents,total_cents from kaia_mp_test.checkout_orders where id=$1',[remote.external_reference])).rows[0];
+  assert.deepEqual(saved,{shipping_mode:'no_delivery',shipping_cents:0,total_cents:2499});
+  status='canceled';detail='canceled';
+  assert.equal((await webhook({request:await event(),env:paymentOnly})).status,200);
   await client.query('set role anon');await assert.rejects(client.query('select public.kaia_qa_environment()'),/permission denied/);
   await client.query('reset role');
  }finally{globalThis.fetch=original;await client.end();}
+});
+
+test('technical no-delivery mode needs an explicit flag and never quotes physical freight',async()=>{
+ const parsed=parseIntent({items:intent.items,shippingMode:'no_delivery',shipping:8888,total:1});
+ assert.equal(parsed.destinoCep,null);assert.equal(parsed.shippingMode,'no_delivery');
+ await assert.rejects(quote(env,parsed,[{sku:'TEST-KAIA-BUNDLE'}]),/SEM_ENTREGA/);
+ assert.deepEqual(await quote({...env,KAIA_QA_ALLOW_NO_DELIVERY:'true'},parsed,[{sku:'TEST-KAIA-BUNDLE'}],()=>{throw Error('Unexpected freight call');}),{amount:0,serviceId:null,shippingMode:'no_delivery'});
+ assert.throws(()=>parseIntent({items:[{sku:'REAL-SKU',quantity:1}],shippingMode:'no_delivery'}),/ITEM_INVALIDO/);
 });

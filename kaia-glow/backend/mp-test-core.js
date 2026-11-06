@@ -59,8 +59,10 @@ export async function verifyTestSeller(env,fetcher=fetch){
  return {id:String(seller.id),testAccount:true};
 }
 export function parseIntent(data){
+ const shippingMode=data?.shippingMode||'sandbox';
  if(!data||!Array.isArray(data.items)||!data.items.length||data.items.length>24||
- !/^\d{8}$/.test(data.destinoCep||'')||!/^\d{1,3}$/.test(data.serviceId||''))throw new CheckoutError('DADOS_INVALIDOS',422);
+ !['sandbox','no_delivery'].includes(shippingMode)||
+ (shippingMode==='sandbox'&&(!/^\d{8}$/.test(data.destinoCep||'')||!/^\d{1,3}$/.test(data.serviceId||''))))throw new CheckoutError('DADOS_INVALIDOS',422);
  const items=data.items.map(i=>{
  if(!/^TEST-KAIA-[A-Z0-9-]{2,45}$/.test(i.sku||'')||!Number.isSafeInteger(i.quantity)||i.quantity<1||i.quantity>24)
  throw new CheckoutError('ITEM_INVALIDO',422);
@@ -70,7 +72,9 @@ export function parseIntent(data){
  const coupon=String(data.coupon||'').trim().toUpperCase();
  if(!/^[A-Z0-9_-]{0,40}$/.test(coupon))throw new CheckoutError('CUPOM_INVALIDO',422);
  // Deliberately discard browser prices, discounts, shipping amounts, email and status.
- return {items,destinoCep:data.destinoCep,serviceId:data.serviceId,coupon};
+ return {items,destinoCep:shippingMode==='sandbox'?data.destinoCep:null,
+ serviceId:shippingMode==='sandbox'?data.serviceId:null,coupon,
+ ...(shippingMode==='no_delivery'?{shippingMode}:{} )};
 }
 export async function fingerprint(value){return Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(JSON.stringify(value))))).map(b=>b.toString(16).padStart(2,'0')).join('');}
 export function cents(value){
@@ -88,6 +92,11 @@ export function verifiedRows(items,rows){
  throw new CheckoutError('CADASTRO_OU_ESTOQUE_PENDENTE');return {...p,quantity:i.quantity};});
 }
 export async function quote(env,intent,rows,fetcher=fetch){
+ if(intent.shippingMode==='no_delivery'){
+  if(env.KAIA_QA_ALLOW_NO_DELIVERY!=='true'||!rows.length||rows.some(p=>!/^TEST-KAIA-/.test(p.sku)))
+   throw new CheckoutError('MODO_SEM_ENTREGA_NAO_AUTORIZADO',403);
+  return {amount:0,serviceId:null,shippingMode:'no_delivery'};
+ }
  if(env.KAIA_SF_SANDBOX_CONFIRMED!=='true'||env.KAIA_SF_MODE!=='sandbox'||!env.KAIA_SF_SANDBOX_TOKEN||
  !/^\d{8}$/.test(env.KAIA_SHIP_FROM_CEP||'')||!env.KAIA_SHIPPING_TECH_CONTACT||
  !(env.KAIA_MP_TEST_SF_SERVICES||'').split(',').includes(intent.serviceId))throw new CheckoutError('FRETE_TESTE_PENDENTE',503);

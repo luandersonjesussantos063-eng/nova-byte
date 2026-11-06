@@ -9,7 +9,10 @@ export async function onRequestGet({request,env,data}){
   // Read-only readiness can verify saved keys while test charges stay disabled.
   testConfig(request,env,{requireEnabled:false});await databaseGuard(env);const seller=await verifyTestSeller(env);
   const missingShipping=shipping.filter(name=>!env[name]);
-  const ready=env.KAIA_MP_TEST_ENABLED==='true'&&env.KAIA_SF_MODE==='sandbox'&&env.KAIA_SF_SANDBOX_CONFIRMED==='true'&&missingShipping.length===0;
-  return reply({test:true,ready,productionCheckout:false,sellerTestAccount:seller.testAccount,missing:missingShipping});
+  const enabled=env.KAIA_MP_TEST_ENABLED==='true';
+  const shippingReady=enabled&&env.KAIA_SF_MODE==='sandbox'&&env.KAIA_SF_SANDBOX_CONFIRMED==='true'&&missingShipping.length===0;
+  const paymentOnlyReady=enabled&&env.KAIA_QA_ALLOW_NO_DELIVERY==='true';
+  return reply({test:true,ready:shippingReady||paymentOnlyReady,paymentOnlyReady,shippingReady,
+   productionCheckout:false,sellerTestAccount:seller.testAccount,missing:missingShipping});
  }catch{return reply({test:true,ready:false,productionCheckout:false});}
 }
