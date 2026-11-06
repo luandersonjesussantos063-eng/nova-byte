@@ -45,7 +45,7 @@ export async function mp(env,path,options={}){
  return r.json();
 }
 export function requireOrder(remote,record) {
- if(!remote||!/^ORD[A-Z0-9]+$/i.test(remote.id||'')||remote.live_mode!==true||
+ if(!remote||!/^ORD[A-Z0-9]+$/i.test(remote.id||'')||remote.live_mode===false||
  remote.external_reference!==record.id||remote.type!=='online'||remote.currency!=='BRL'||
  String(remote.total_amount)!==PRICE)throw new PaymentError('ORDER_INCONSISTENTE',409);
  return remote;
