@@ -2,7 +2,7 @@ import {readFile,writeFile,mkdir,rm,readdir,lstat,copyFile,access} from 'node:fs
 import {fileURLToPath} from 'node:url';import path from 'node:path';
 import {generateKaiaSeoPages} from './kaia-seo-pages.mjs';
 const root=fileURLToPath(new URL('../',import.meta.url)),source=path.join(root,'kaia-glow'),output=path.join(root,'dist','kaia-glow');
-const pages=['index.html','admin.html','conta.html','sobre.html','atendimento.html','privacidade.html','como-funciona-privacidade.html','termos-de-uso.html'];
+const pages=['index.html','compra-validacao.html','admin.html','conta.html','sobre.html','atendimento.html','privacidade.html','como-funciona-privacidade.html','termos-de-uso.html'];
 const scripts=['app.js','seo-product-live.js','marketing-insights.js','shipping-popup.js','catalog-overrides.js','catalog.js','admin.js','admin-marketplaces.js','admin-payments.js','admin-analytics.js','admin-coupons.js','auth-config.js','conta.js','customer-validation.js','menu-account.js','institucional.js'];
 const styles=['style.css','kaia-seo.css','shipping-popup.css','marketing-insights.css','admin.css','admin-marketplaces.css','admin-payments.css','admin-analytics.css','conta.css','institucional.css'];
 const marker=path.join(root,'dist','.kaia-glow-generated');
