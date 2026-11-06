@@ -35,7 +35,7 @@ async function inspectOrder(){
  try{
   const response=await fetch('/api/kaia/mp-test/order?id='+encodeURIComponent(currentOrder));
   const state=await response.json();if(version!==inspectVersion)return;if(!response.ok){orderState.textContent='Consulta bloqueada: '+state.code;cancel.hidden=true;return;}
-  orderState.textContent='Pedido '+state.id+': '+state.status+(state.awaitingWebhook?' — resultado no provedor: '+state.providerStatus+'; aguardando webhook validado.':'');
+  orderState.textContent='Pedido '+state.id+': '+state.status+(state.awaitingWebhook?' — resultado no provedor: '+state.providerStatus+'; aguardando webhook validado.':'')+(state.providerDetail?' — detalhe Mercado Pago: '+state.providerDetail:'');
   cancel.hidden=!state.canCancel;
   if(state.status==='pending'&&polls++<12)pollTimer=setTimeout(inspectOrder,5000);
  }catch{orderState.textContent='Não foi possível consultar o pedido. Tente novamente.';}
