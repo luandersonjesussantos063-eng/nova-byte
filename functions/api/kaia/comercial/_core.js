@@ -1,4 +1,4 @@
-// Kaia Glow — commercial checkout. Production-only, off by default.
+// Kaia Glow — commercial checkout. Production-only; all new sales are blocked until the first-wave database allowlist is enabled.
 // Never trust customer-supplied prices, addresses, shipping prices or order statuses.
 import {KAIA_AUTH} from '../../../../kaia-glow/auth-config.js';
 export const PROJECT='https://vajlhodqxskozuxxlujv.supabase.co';
@@ -9,7 +9,8 @@ export const money=n=>(n/100).toFixed(2);
 export function gate(request,env,{webhook=false}={}){
  const u=new URL(request.url);
  if(u.protocol!=='https:'||!['usekaiaglow.com.br','www.usekaiaglow.com.br'].includes(u.hostname))throw new CheckoutError('AMBIENTE_INVALIDO',403);
- if(env.KAIA_MP_COMMERCIAL_ENABLED!=='true')throw new CheckoutError('CHECKOUT_NAO_LIBERADO',503);
+ // The per-SKU first-wave database allowlist is the independent fail-closed switch.
+ // The webhook and status query must remain reachable to settle orders even after sales close.
  if(!env.KAIA_MP_PROD_ACCESS_TOKEN||!env.KAIA_MP_PROD_WEBHOOK_SECRET||!env.KAIA_MP_PROD_SUPABASE_SERVICE_KEY)throw new CheckoutError('CREDENCIAIS_INCOMPLETAS',503);
 }
 function serviceHeaders(env){
