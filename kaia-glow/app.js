@@ -76,67 +76,72 @@ function validatedMercadoPagoLink(raw){
 }
 function paymentBrowserOptions(raw,total,{previous=false}={}){
  const url=validatedMercadoPagoLink(raw);
- const earlier=$('#commercePaymentOptions');if(earlier)earlier.remove();
- const box=document.createElement('section');box.id='commercePaymentOptions';
- box.style.cssText='border:2px solid #775061;background:#fffafc;border-radius:12px;padding:16px;margin:12px 0;display:grid;gap:12px';
- const title=document.createElement('strong');
- title.textContent=previous?'Retomar pagamento pendente':'Pagamento preparado com segurança';
- const info=document.createElement('p');
- info.textContent=(total?'Total: '+money(total/100)+'. ':'')+'Para evitar erros ao abrir o aplicativo do Mercado Pago, prefira pagar pelo Chrome, com uma conta de comprador independente da conta vendedora.';
- const link=document.createElement('a');link.href=url;link.target='_blank';link.rel='noopener noreferrer';link.className='button';
- link.style.cssText='display:block;text-align:center;text-decoration:none';
- link.textContent='Abrir Mercado Pago no navegador ↗';
- const copy=document.createElement('button');copy.type='button';copy.className='button';
+ $('#commercePaymentOptions')?.remove();
+ const box=document.createElement('section');
+ box.id='commercePaymentOptions';box.className='kc-payment-ready';
+ const info=document.createElement('div');info.className='kc-ready-head';
+ const label=document.createElement('span');label.textContent=previous?'Pedido em aberto':'Pagamento';
+ const amount=document.createElement('strong');amount.textContent=money(total/100);
+ info.append(label,amount);
+ const link=document.createElement('a');link.href=url;link.target='_blank';
+ link.rel='noopener noreferrer';link.className='button kc-pay-action';
+ link.textContent='Pagar com Mercado Pago ↗';
+ const help=document.createElement('details');help.className='kc-payment-help';
+ const summary=document.createElement('summary');summary.textContent='Problemas para abrir?';
+ const copy=document.createElement('button');copy.type='button';copy.className='kc-text-action';
  copy.textContent='Copiar link para abrir no Chrome';
+ const fallback=document.createElement('div');fallback.className='kc-link-fallback';
  copy.onclick=async()=>{
-  try{await navigator.clipboard.writeText(url);copy.textContent='Link copiado! Cole na barra de endereço do Chrome.';}
+  try{await navigator.clipboard.writeText(url);copy.textContent='Link copiado. Abra no Chrome.';}
   catch{
+   fallback.replaceChildren();
    const input=document.createElement('input');input.type='text';input.readOnly=true;input.value=url;
-   input.setAttribute('aria-label','Link do Mercado Pago para copiar');
-   box.append(input);input.focus();input.select();copy.textContent='Selecione e copie o link abaixo';
+   input.setAttribute('aria-label','Link para copiar');
+   fallback.append(input);input.focus();input.select();
+   copy.textContent='Copie o endereço selecionado';
   }
  };
- const help=document.createElement('p');help.style.cssText='font-size:13px;opacity:.85';
- help.textContent='Se o aplicativo do Mercado Pago mostrar um erro, volte à sacola e use Copiar link para abrir diretamente no Chrome. Não pague duas vezes pelo mesmo pedido.';
- box.append(title,info,link,copy,help);
- const existing=$('#commercePendingOrder');
- if(existing)existing.insertAdjacentElement('afterend',box);
- else ($('#commerceEligibility')||$('#checkout')).insertAdjacentElement('afterend',box);
+ const tip=document.createElement('p');tip.textContent='Se o aplicativo apresentar erro, use o link copiado no Chrome. Evite pagar duas vezes pelo mesmo pedido.';
+ help.append(summary,copy,fallback,tip);
+ box.append(info,link,help);
+ ($('#kcPaymentArea')||$('#checkout')).append(box);
+ const btn=$('#checkout');if(btn)btn.hidden=true;
+ const note=$('#commerceEligibility');if(note)note.hidden=true;
  box.scrollIntoView({block:'nearest',behavior:'smooth'});
 }
 function renderPendingOrder(pending,token){
- const prior=$('#commercePendingOrder');if(prior)prior.remove();
- const box=document.createElement('section');box.id='commercePendingOrder';
- box.style.cssText='border:2px solid #8c5362;background:#fdf5f7;border-radius:12px;padding:16px;margin:12px 0;display:grid;gap:12px';
- const title=document.createElement('strong');title.textContent='Existe uma compra anterior aguardando pagamento';
+ $('#commercePendingOrder')?.remove();$('#commercePaymentOptions')?.remove();
+ const box=document.createElement('section');box.id='commercePendingOrder';box.className='kc-pending-order';
+ const title=document.createElement('strong');title.textContent='Você tem um pedido em aberto';
  const detail=document.createElement('p');
- const names=(pending.items||[]).map(i=>i.name).join(', ');
- detail.textContent=names+' · Total '+money(pending.totalCents/100)+'. Este pedido está reservando estoque e precisa ser concluído ou cancelado antes de iniciar outra compra.';
+ detail.textContent=(pending.items||[]).map(i=>i.name).join(', ')+' · '+money(pending.totalCents/100);
  box.append(title,detail);
  if(pending.checkoutUrl){
-  const resume=document.createElement('button');resume.type='button';resume.className='button';
-  resume.textContent='Abrir opções do pagamento anterior';
-  resume.onclick=()=>paymentBrowserOptions(pending.checkoutUrl,pending.totalCents,{previous:true});
+  const resume=document.createElement('a');resume.className='button kc-pay-action';
+  resume.href=validatedMercadoPagoLink(pending.checkoutUrl);resume.target='_blank';
+  resume.rel='noopener noreferrer';resume.textContent='Retomar pagamento ↗';
   box.append(resume);
-  const tip=document.createElement('small');
-  tip.textContent='Esse pedido anterior foi criado antes do ajuste do checkout. Se o Mercado Pago continuar recusando, cancele o pedido não pago para gerar um novo sem vincular o e-mail de colaborador.';
-  box.append(tip);
  }
- const cancel=document.createElement('button');cancel.type='button';cancel.className='button';
- cancel.textContent='Cancelar pedido anterior não pago';
+ const details=document.createElement('details');details.className='kc-payment-help';
+ const summary=document.createElement('summary');summary.textContent='Precisa cancelar este pedido?';
+ const cancel=document.createElement('button');cancel.type='button';cancel.className='kc-text-action';
+ cancel.textContent='Cancelar pedido não pago';
  cancel.onclick=async()=>{
-  if(!confirm('Deseja cancelar o pedido anterior de '+money(pending.totalCents/100)+'? O Mercado Pago deve confirmar o cancelamento antes de liberar o estoque.'))return;
-  cancel.disabled=true;cancel.textContent='Conferindo cancelamento no Mercado Pago…';
+  if(!confirm('Cancelar este pedido de '+money(pending.totalCents/100)+'? O estoque só será liberado após confirmação do Mercado Pago.'))return;
+  cancel.disabled=true;cancel.textContent='Verificando no Mercado Pago…';
   try{
    const r=await fetch('/api/kaia/comercial/pendente',{method:'POST',headers:{Authorization:'Bearer '+token,'content-type':'application/json'}});
    const info=await r.json();
-   if(!r.ok||!info.cancelled)throw Error(info.code||'O cancelamento ainda não foi confirmado.');
-   box.remove();checkoutEligibility();
-   checkoutNotice('Pedido anterior cancelado e estoque liberado. Confira se o CEP da sacola é o mesmo da sua conta antes de iniciar uma nova compra.');
-  }catch(e){cancel.disabled=false;cancel.textContent='Tentar cancelar novamente';checkoutNotice('Não foi possível cancelar com segurança: '+e.message,true);}
- };box.append(cancel);
- const note=$('#commerceEligibility');note?.insertAdjacentElement('afterend',box);
- checkoutNotice('Você já tem um pedido pendente. Escolha retomar ou cancelar antes de iniciar outro pedido.',true);
+   if(!r.ok||!info.cancelled)throw Error(info.code||'Cancelamento não confirmado.');
+   box.remove();const btn=$('#checkout');if(btn)btn.hidden=false;
+   checkoutEligibility();checkoutNotice('Pedido anterior cancelado. Você já pode conferir o frete da nova compra.');
+  }catch(e){cancel.disabled=false;cancel.textContent='Tentar cancelar novamente';checkoutNotice('Não foi possível cancelar: '+e.message,true);}
+ };
+ details.append(summary,cancel);box.append(details);
+ ($('#kcPaymentArea')||$('#commerceEligibility')).append(box);
+ const btn=$('#checkout');if(btn)btn.hidden=true;
+ const note=$('#commerceEligibility');if(note)note.hidden=true;
+ box.scrollIntoView({block:'nearest',behavior:'smooth'});
 }
 async function commercialCheckout(){
  const btn=$('#checkout');
@@ -155,7 +160,7 @@ async function commercialCheckout(){
   const pending=await pendingResponse.json();
   if(!pendingResponse.ok)throw Error(pending.code||'Não foi possível conferir seus pedidos anteriores.');
   if(pending.hasPending){
-   checkoutEligibility();renderPendingOrder(pending,token);return;
+   renderPendingOrder(pending,token);return;
   }
   if(!/^[0-9]{8}$/.test(currentPostal)||pending.registeredPostalCode!==currentPostal)
    throw Error('O CEP usado no frete é diferente do CEP salvo na sua conta ('+(pending.registeredPostalCode||'não cadastrado')+'). Atualize seu endereço em Minha conta e calcule o frete novamente antes de pagar.');
@@ -179,12 +184,8 @@ async function commercialCheckout(){
   const u=new URL(result.checkoutUrl);
   if(u.protocol!=='https:'||u.hostname!=='www.mercadopago.com.br'||!u.pathname.startsWith('/checkout/'))
    throw Error('Endereço de pagamento inválido.');
-  const total=money(result.totalCents/100);
-  if(!confirm('O total de produtos e frete, recalculado no servidor, é '+total+'. Deseja abrir o Mercado Pago?')){
-   checkoutEligibility();checkoutNotice('Seu pedido está reservado. Clique novamente e escolha retomar ou cancelar a compra.');return;
-  }
-  checkoutEligibility();
-  checkoutNotice('Pedido reservado. Escolha como abrir o pagamento. Nenhuma cobrança foi concluída ainda.');
+  // One primary payment action. The provider URL is shown only after
+  // the authenticated order and freight total have been saved by the server.
   paymentBrowserOptions(u.href,result.totalCents);
  }catch(e){
   checkoutEligibility();
