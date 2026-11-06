@@ -27,7 +27,8 @@ export async function onRequestGet({request,env}){
   gate(request,env);const user=await identity(request);
   let row=await activeOrder(env,user.id);
   if(row)row=await remoteSync(env,row);
-  return json(summary(row));
+  const details=await database(env,'kaia_customer_details?user_id=eq.'+encodeURIComponent(user.id)+'&select=postal_code');
+  return json({...summary(row),registeredPostalCode:String(details[0]?.postal_code||'').replace(/\\D/g,'')});
  }catch(e){return fail(e);}
 }
 export async function onRequestPost({request,env}){
