@@ -3,7 +3,6 @@ const validUrl=s=>{try{const u=new URL(s);return u.protocol==='https:'&&u.hostna
 export async function onRequestPost({request,env}){
  try{
   assertConfig(request,env);
-  if(!env.KAIA_MP_PUBLIC_ANON_KEY)throw new PaymentError('CHAVE_PUBLICA_PENDENTE');
   if(request.headers.get('Origin')!==new URL(request.url).origin)throw new PaymentError('ORIGEM_INVALIDA',403);
   await buyerAdmin(request,env);
   let record=await row(env);
@@ -38,7 +37,6 @@ export async function onRequestPost({request,env}){
 export async function onRequestGet({request,env}){
  try{
   assertConfig(request,env);
-  if(!env.KAIA_MP_PUBLIC_ANON_KEY)throw new PaymentError('CHAVE_PUBLICA_PENDENTE');
   await buyerAdmin(request,env);
   const record=await row(env);
   if(record.provider_order_id)await reconcile(env,requireOrder(await mp(env,'/v1/orders/'+encodeURIComponent(record.provider_order_id)),record),record);
