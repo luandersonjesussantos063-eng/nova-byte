@@ -1,14 +1,27 @@
-<!doctype html>
-<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="robots" content="noindex,nofollow"><meta name="theme-color" content="#f6f2eb">
-<title>Kaia Glow — compra de validação</title>
-<style>body{font-family:system-ui,-apple-system,sans-serif;background:#f6f2eb;color:#302c29;margin:0;display:grid;min-height:100vh;place-items:center}main{background:#fff;max-width:510px;margin:20px;padding:35px;border:1px solid #e2d7cd;border-radius:20px;box-shadow:0 6px 20px #0001}small{letter-spacing:.15em;text-transform:uppercase;color:#8a6d63}h1{font-size:28px;line-height:1.2}.price{font-size:34px;font-weight:750}button{display:block;width:100%;padding:17px;background:#d9d1c8;color:#666;border:0;border-radius:12px;font-weight:bold;font-size:16px;cursor:not-allowed}p{line-height:1.5}a{color:#674c46}</style>
-</head><body><main>
-<small>Kaia Glow</small>
-<h1>Compra de validação do checkout</h1>
-<p>Pagamento de verificação no valor de R$ 5,00, sem frete e sem produto físico. Ainda não disponível para cobrança.</p>
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow"><meta name="theme-color" content="#f6f2eb"><title>Kaia Glow — Compra de validação</title>
+<style>body{font-family:system-ui,-apple-system,sans-serif;background:#f6f2eb;color:#302c29;margin:0;display:grid;min-height:100vh;place-items:center}main{background:#fff;max-width:510px;margin:20px;padding:35px;border:1px solid #e2d7cd;border-radius:20px;box-shadow:0 6px 20px #0001}small{letter-spacing:.15em;text-transform:uppercase;color:#8a6d63}h1{font-size:28px;line-height:1.2}.price{font-size:34px;font-weight:750}button{display:block;width:100%;padding:17px;background:#3e302d;color:#fff;border:0;border-radius:12px;font-weight:bold;font-size:16px;cursor:pointer}button:disabled{background:#d9d1c8;color:#666;cursor:not-allowed}p{line-height:1.5}a{color:#674c46}</style></head>
+<body><main><small>Kaia Glow</small><h1>Compra de validação do checkout</h1>
+<p>Serviço de validação técnica de pagamento da própria loja: R$ 5,00, sem produto físico e sem frete. A cobrança será real e poderá gerar tarifas do Mercado Pago.</p>
 <p class="price">R$ 5,00</p>
-<button type="button" disabled aria-disabled="true">Pagamento temporariamente indisponível</button>
-<p role="status"><strong>Compra desativada:</strong> aguardando conexão segura do Mercado Pago, registro durável do pedido, validação de notificações e revisão da operação.</p>
-<p><a href="/">Voltar à loja Kaia Glow</a></p>
-</main></body></html>
+<button type="button" id="pay" disabled>Verificando liberação…</button>
+<p id="status" role="status">Para esta compra, entre com a conta administradora da loja.</p>
+<p id="result" role="status"></p>
+<p>O retorno do Mercado Pago não comprova aprovação. O status é confirmado por consulta autenticada ao servidor.</p>
+<p><a href="/conta.html">Entrar na minha conta</a> · <a href="/">Voltar à loja</a></p>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js" integrity="sha384-TcHRA3zBbn+Lexh5n+Oil4guNPOS3rjNDpGRAN46u/s/mB2IZ50ceC6TYDU2yvgK" crossorigin="anonymous"></script>
+<script type="module">
+import {KAIA_AUTH} from './auth-config.js';
+const button=document.getElementById('pay'),status=document.getElementById('status'),result=document.getElementById('result');
+const sb=window.supabase?.createClient(KAIA_AUTH.url,KAIA_AUTH.publishableKey,{auth:{storageKey:'kaia-glow-auth-v1',persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});
+async function session(){const {data}=await sb.auth.getSession();return data.session?.access_token;}
+async function api(method='GET'){const token=await session();if(!token)throw Error('Entre na conta administradora primeiro.');const r=await fetch('/api/kaia/checkout-validacao/order',{method,headers:{Authorization:'Bearer '+token,Accept:'application/json',...(method==='POST'?{'Content-Type':'application/json'}:{})},body:method==='POST'?'{}':undefined,cache:'no-store'});const data=await r.json();if(!r.ok)throw Error(data.code||'Pagamento indisponível');return data;}
+async function refresh(){
+ button.disabled=true;
+ if(!sb){status.textContent='Não foi possível carregar a autenticação.';return;}
+ try{const data=await api();const labels={created:'Aguardando compra',pending:'Pagamento pendente',approved:'Pagamento aprovado e confirmado',rejected:'Pagamento recusado',cancelled:'Pagamento cancelado',review_required:'Pagamento em revisão',refunded:'Pagamento reembolsado'};status.textContent='Estado do pedido: '+(labels[data.status]||data.status);button.disabled=!data.checkoutAvailable;button.textContent=data.status==='pending'?'Retomar pagamento de R$ 5,00':'Comprar por R$ 5,00';}catch(e){status.textContent='Compra indisponível: '+e.message;button.textContent='Pagamento indisponível';}
+}
+button.addEventListener('click',async()=>{button.disabled=true;result.textContent='Preparando pagamento…';try{const data=await api('POST');const u=new URL(data.checkoutUrl);if(u.protocol!=='https:'||u.hostname!=='www.mercadopago.com.br')throw Error('URL do pagamento inválida');location.assign(u.href);}catch(e){result.textContent='Não foi possível iniciar a cobrança: '+e.message;await refresh();}});
+refresh();
+</script></body></html>
