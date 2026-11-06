@@ -1,3 +1,4 @@
+import {KAIA_AUTH} from '../../../../kaia-glow/auth-config.js';
 // Kaia Glow, one-off production-only R$ 5.00 checkout. Server-side only.
 // Checkout remains disabled unless KAIA_MP_REAL_R5_ENABLED === 'true'.
 // Requires KAIA_MP_PROD_SUPABASE_SERVICE_KEY in Cloudflare Production.
@@ -18,11 +19,11 @@ export function assertConfig(request,env) {
 export async function buyerAdmin(request,env) {
  const token=/^Bearer (.+)$/.exec(request.headers.get('Authorization')||'')?.[1];
  if(!token||token.length>4000)throw new PaymentError('ENTRE_COM_CONTA_ADMINISTRADORA',401);
- const config=await fetch(PROJECT+'/auth/v1/user',{headers:{apikey:env.KAIA_MP_PUBLIC_ANON_KEY,Authorization:'Bearer '+token},signal:AbortSignal.timeout(6000)});
+ const config=await fetch(PROJECT+'/auth/v1/user',{headers:{apikey:KAIA_AUTH.publishableKey,Authorization:'Bearer '+token},signal:AbortSignal.timeout(6000)});
  if(!config.ok)throw new PaymentError('SESSAO_INVALIDA',401);
  const user=await config.json();
  if(!user.id||!user.email_confirmed_at)throw new PaymentError('EMAIL_NAO_CONFIRMADO',403);
- const check=await fetch(PROJECT+'/rest/v1/rpc/kaia_is_store_admin',{method:'POST',headers:{apikey:env.KAIA_MP_PUBLIC_ANON_KEY,Authorization:'Bearer '+token,'content-type':'application/json'},body:'{}',signal:AbortSignal.timeout(6000)});
+ const check=await fetch(PROJECT+'/rest/v1/rpc/kaia_is_store_admin',{method:'POST',headers:{apikey:KAIA_AUTH.publishableKey,Authorization:'Bearer '+token,'content-type':'application/json'},body:'{}',signal:AbortSignal.timeout(6000)});
  if(!check.ok||await check.json()!==true)throw new PaymentError('NAO_AUTORIZADO',403);
  return user.id;
 }
