@@ -2,6 +2,7 @@ import {KAIA_AUTH} from './auth-config.js';
 import {setupKaiaCoupons} from './admin-coupons.js';
 import {initKaiaAnalytics,loadKaiaAnalytics} from './admin-analytics.js';
 import {initKaiaMarketplaces,loadKaiaMarketplaces} from './admin-marketplaces.js';
+import {initKaiaPayments,loadKaiaPayments} from './admin-payments.js';
 const $=s=>document.querySelector(s),all=s=>Array.from(document.querySelectorAll(s));
 const sb=window.supabase?.createClient(KAIA_AUTH.url,KAIA_AUTH.publishableKey,{auth:{storageKey:'kaia-glow-auth-v1',persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
 const catalog=window.KAIA_CATALOG||[];let edits=new Map(),inventory=new Map(),selected=null,images=[],signedIn=false;
@@ -56,6 +57,7 @@ async function loadAdmin(){
  }
  initKaiaAnalytics(sb);
  initKaiaMarketplaces(sb,{onStockChanged:()=>loadAdmin()});
+ initKaiaPayments();
  $('#productCount').textContent=catalog.length;
  renderProductList();await setupKaiaCoupons(sb);
 }
@@ -218,6 +220,7 @@ all('[data-tab]').forEach(button=>button.onclick=()=>{
  $('#productsTab').hidden=current!=='products';$('#couponsTab').hidden=current!=='coupons';
  $('#analyticsTab').hidden=current!=='analytics';if(current==='analytics')loadKaiaAnalytics();
  $('#marketplacesTab').hidden=current!=='marketplaces';if(current==='marketplaces')loadKaiaMarketplaces();
+ $('#paymentsTab').hidden=current!=='payments';if(current==='payments')loadKaiaPayments();
 });
 $('#logoutButton').onclick=async()=>{await sb?.auth.signOut();setSignedIn(false);$('#adminPassword').value='';status('#loginStatus','Sessão encerrada.');};
 $('#loginForm').onsubmit=async e=>{
