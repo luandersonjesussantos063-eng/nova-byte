@@ -17,6 +17,8 @@ export async function onRequestPost({request,env}){
   if(!/^[0-9a-f]{8}-[0-9a-f-]{27,40}$/.test(input?.requestKey||''))throw new CheckoutError('CHAVE_PEDIDO_INVALIDA',422);
   const items=parseItems(input);
   const {postalCode}=await accountAddress(env,user.id);
+  if(!/^[0-9]{8}$/.test(String(input.postalCode||''))||input.postalCode!==postalCode)
+   throw new CheckoutError('CEP_DIFERENTE_DO_CADASTRO',422);
   const serviceId=String(input.serviceId||'');
   // An existing request is never repriced or re-reserved. Reuse its immutable snapshot.
   let records=await database(env,'kaia_commercial_payments?user_id=eq.'+user.id+'&request_key=eq.'+input.requestKey+'&select=*');
