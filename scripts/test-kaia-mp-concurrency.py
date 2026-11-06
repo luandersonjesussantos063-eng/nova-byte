@@ -22,7 +22,10 @@ parsed = urlparse(DSN)
 host = parsed.hostname or ""
 if not (
     host == f"db.{REF}.supabase.co"
-    or (host.startswith(("aws-", "db.")) and ".pooler.supabase.com" in host)
+    or (
+        ".pooler.supabase.com" in host
+        and parsed.username == f"postgres.{REF}"
+    )
 ):
     raise SystemExit("Database hostname does not match the expected Supabase test project.")
 if any(ref in DSN for ref in PRODUCTION_REFS):
