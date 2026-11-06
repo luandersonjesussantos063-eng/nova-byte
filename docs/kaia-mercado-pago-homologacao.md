@@ -34,6 +34,25 @@ na produção: ela constrói somente um laboratório privado de pagamentos.
 - Login autorizado de uma pessoa ainda precisa ser confirmado no navegador.
   Os testes locais de JWT usam chave sintética; não comprovam login humano na Cloudflare.
 
+### Publicação de preview — evidência da Cloudflare
+
+O commit de código `c26a6a23ddb17aab31b60682e140203f37c969e9` teve deploy de
+**preview** concluído com sucesso, ID `9a2e4b16-d4af-4da3-9e72-62eb39b15fda`.
+Alias efetivamente fornecido pela Cloudflare (nome truncado da branch):
+https://test-kaia-mercadopago-homolo.kaia-glow.pages.dev
+
+A [CI nova passou](https://github.com/luandersonjesussantos063-eng/nova-byte/actions/runs/42262415883).
+Nove previews antigos desta mesma branch, ainda em fila/idle e sem aliases,
+foram removidos para que builds anteriores ao isolamento não fossem publicados.
+Nenhum deploy de produção foi removido, substituído ou revertido.
+
+As sondagens HTTP deste ambiente retornaram **403 com servidor Envoy**, sem
+resposta identificável da aplicação, tanto no preview quanto na vitrine.
+Isso **não comprova** bloqueio pelo Access nem comportamento do checkout público:
+o teste HTTP fim a fim e o login humano no preview continuam pendentes.
+O estado de publicação é confirmado pela API Cloudflare; o bloqueio do checkout
+comercial é preservado no código da branch de produção, que não foi modificada.
+
 ### Supabase — bloqueio confirmado
 
 O responsável selecionou a organização **lucas-agora**. A tentativa de criar
@@ -156,7 +175,7 @@ sem secrets de Mercado Pago, Supabase ou SuperFrete.
 7. Só após conferir banco, conta test_user, comprador e frete, definir
    `KAIA_MP_TEST_ENABLED=true` **exclusivamente no preview** e redeploy do preview.
 8. Registrar webhook **Teste**, evento **Order (Mercado Pago)**, em
-   `https://test-kaia-mercadopago-homologacao.kaia-glow.pages.dev/api/kaia/mp-test/webhook`.
+   `https://test-kaia-mercadopago-homolo.kaia-glow.pages.dev/api/kaia/mp-test/webhook`.
    Confirmar o tópico efetivo da conta (`order`/`orders_v2`) no payload/documentação.
 9. Executar compra com cartões oficiais: APRO para aprovado, OTHE/FUND para recusado,
    CONT para pendente; cancelamento antes do pagamento conforme API oficial.
