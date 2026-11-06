@@ -9,7 +9,8 @@ export async function onRequestPost({request,env}){
   if(record.status==='approved'||record.status==='refunded')throw new PaymentError('VALIDACAO_JA_CONCLUIDA',409);
   if(record.provider_order_id){
    const remote=requireOrder(await mp(env,'/v1/orders/'+encodeURIComponent(record.provider_order_id)),record);
-   await reconcile(env,remote,record);
+   const sync=await reconcile(env,remote,record);
+   if(sync.state!=='pending')throw new PaymentError('PAGAMENTO_NAO_REABRIVEL',409);
    if(!validUrl(record.checkout_url))throw new PaymentError('CHECKOUT_INDISPONIVEL');
    return response({checkoutUrl:record.checkout_url,orderId:record.id});
   }
