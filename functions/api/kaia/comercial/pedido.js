@@ -31,6 +31,9 @@ export async function onRequestPost({request,env}){
    row=await orderRow(env,reserved.id);
   }
   if(row.user_id!==user.id)throw new CheckoutError('PEDIDO_NAO_AUTORIZADO',403);
+  if(row.shipping_service!==serviceId||row.postal_code!==postalCode||
+    row.items.length!==items.length||items.some(i=>!row.items.some(x=>x.sku===i.sku&&x.quantity===i.quantity)))
+    throw new CheckoutError('SOLICITACAO_JA_USADA_EM_OUTRA_SACOLA',409);
   if(['approved','refunded','rejected','cancelled','review_required'].includes(row.status))
     throw new CheckoutError('PEDIDO_NAO_REABRIVEL',409);
   if(row.provider_order_id){
@@ -42,7 +45,7 @@ export async function onRequestPost({request,env}){
   }
   const returnPage=ORIGIN+'/pedido.html?pedido='+encodeURIComponent(row.id);
   const remote=await provider(env,'/v1/orders',{key:row.request_key,payload:{
-   type:'online',processing_mode:'manual',total_amount:money(row.total_cents),
+   type:'online',processing_mode:'manual',expiration_time:'P1D',total_amount:money(row.total_cents),
    external_reference:row.id,payer:{email:user.email},
    items:itemsWithShipping(row),
    config:{online:{success_url:returnPage+'&retorno=sucesso',
