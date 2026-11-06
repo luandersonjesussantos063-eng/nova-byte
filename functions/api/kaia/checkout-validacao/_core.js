@@ -28,7 +28,7 @@ export async function buyerAdmin(request,env) {
  return user.id;
 }
 export async function db(env,path,method='GET',payload) {
- const r=await fetch(PROJECT+'/rest/v1/'+path,{method,headers:{apikey:env.KAIA_MP_PROD_SUPABASE_SERVICE_KEY,Authorization:'Bearer '+env.KAIA_MP_PROD_SUPABASE_SERVICE_KEY,Accept:'application/json','content-type':'application/json',Prefer:'return=representation'},body:payload?JSON.stringify(payload):undefined,signal:AbortSignal.timeout(6000)});
+ const r=await fetch(PROJECT+'/rest/v1/'+path,{method,headers:{apikey:env.KAIA_MP_PROD_SUPABASE_SERVICE_KEY,...(env.KAIA_MP_PROD_SUPABASE_SERVICE_KEY.startsWith('eyJ')?{Authorization:'Bearer '+env.KAIA_MP_PROD_SUPABASE_SERVICE_KEY}:{}),Accept:'application/json','content-type':'application/json',Prefer:'return=representation'},body:payload?JSON.stringify(payload):undefined,signal:AbortSignal.timeout(6000)});
  if(!r.ok)throw new PaymentError('REGISTRO_INDISPONIVEL');
  return r.json();
 }
