@@ -94,7 +94,7 @@ function selectProduct(p){
  selected=keyOf(p);const d=productData(p);images=[...(d.images||[])].filter(url=>url!==imagePlaceholder);
  $('#productForm').hidden=false;$('#editingProductTitle').textContent=d.name;$('#editingProductSku').textContent=p.sku||'Produto legado · sem SKU comercial';
  $('#editName').value=d.name;$('#editBrand').value=d.brand;$('#editCategory').value=d.category;
- $('#editPrice').value=d.price.toFixed(2);$('#editOldPrice').value=d.oldPrice.toFixed(2);
+ $('#editPrice').value=d.price.toFixed(2);$('#editOldPrice').value=d.oldPrice.toFixed(2);$('#confirmSalePrice').checked=false;
  $('#editStock').value=d.stock??0;$('#stockEditLabel').hidden=d.legacy;$('#editStock').disabled=d.legacy;$('#editStock').required=!d.legacy;
  $('#editDescription').value=d.description;$('#editVisible').checked=d.visible;
  $('#packagingFields').hidden=!d.isNew;
@@ -112,7 +112,7 @@ function startNewProduct(){
  $('#productForm').hidden=false;$('#editingProductTitle').textContent='Cadastrar novo produto';
  $('#editingProductSku').textContent='SKU automático · criado ao salvar o produto';
  $('#editName').value='';$('#editBrand').value='';$('#editCategory').value='Skincare';
- $('#editPrice').value='';$('#editOldPrice').value='0';
+ $('#editPrice').value='';$('#editOldPrice').value='0';$('#confirmSalePrice').checked=false;
  $('#editStock').value='0';$('#stockEditLabel').hidden=false;$('#editStock').disabled=false;$('#editStock').required=true;
  $('#editDescription').value='';$('#editVisible').checked=false;
  $('#packagingFields').hidden=false;
@@ -151,6 +151,7 @@ $('#productForm').onsubmit=async e=>{
  const isCreating=selected==='__new__';
  const product=isCreating?null:catalog.find(p=>keyOf(p)===selected);
  if(!isCreating&&!product)return;
+ if(!$('#confirmSalePrice').checked){status('#productStatus','Confirme que verificou o preço de venda atual antes de salvar.',true);return;}
  const price=cents($('#editPrice').value),old=cents($('#editOldPrice').value);
  const stock=isCreating||product.sku?Number($('#editStock').value):null;
  const brand=$('#editBrand').value.trim(),category=$('#editCategory').value;
