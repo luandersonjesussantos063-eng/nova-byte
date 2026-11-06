@@ -1,0 +1,17 @@
+/* Payment integration readiness: informational only, no credential input or activation controls. */
+.payment-stage-warning{background:#fff8ee;border:1px solid #efd9bd;border-radius:12px;padding:18px 21px;margin-bottom:21px;color:#775236}
+.payment-stage-warning strong{font-size:14px}.payment-stage-warning p{font-size:12px;color:#785943;margin:7px 0 0}
+.payment-stages{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px;margin:0 0 21px}
+.payment-stages .metric strong{font-size:17px;line-height:1.4;overflow-wrap:anywhere}
+.payment-columns{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:17px;align-items:start}
+.payment-columns .editor{min-width:0}
+.payment-steps{padding-left:23px;color:#604753;font-size:12px;line-height:1.8}
+.payment-steps li{padding:4px 0}
+.payment-main-link{display:inline-flex;text-decoration:none;padding:13px 17px;border-radius:9px;background:#592840;color:white;font-size:13px;font-weight:700;margin-top:15px}
+.payment-config{display:grid;gap:5px;margin-top:16px}
+.payment-config dt{font-size:12px;color:#4f3043;font-weight:700;margin-top:8px}
+.payment-config dd{margin:0;color:#785e6b;font-size:12px;line-height:1.6;overflow-wrap:anywhere}
+.payment-config code{background:#f9ecf2;border:1px solid #e8d6de;border-radius:5px;padding:5px 7px;color:#673550;font-size:11px}
+.payment-status{font-size:12px;color:#775d69;border-left:3px solid #b28ba0;padding:13px 16px;background:#fff;margin:20px 0}
+@media(max-width:900px){.payment-columns{grid-template-columns:1fr}}
+@media(max-width:620px){.payment-stages{grid-template-columns:1fr}.payment-stages .metric{padding:13px 16px}.payment-stages .metric strong{font-size:17px}.payment-stage-warning{padding:15px}}
