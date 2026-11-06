@@ -25,7 +25,7 @@ const pageLayout=({title,description,pathname,body,data,photo})=>{
  +'<meta property="og:type" content="website"><meta property="og:site_name" content="Kaia Glow">'
  +'<meta property="og:title" content="'+html(shorten(title,100))+'"><meta property="og:description" content="'+html(shorten(description,165))+'">'
  +'<meta property="og:url" content="'+html(canonical)+'">'+imageMeta
- +'<link rel="stylesheet" href="/kaia-seo.css?v=2">'+schema+'</head><body>'
+ +'<link rel="stylesheet" href="/kaia-seo.css?v=2"><link rel="stylesheet" href="/premium-seo.css?v=1">'+schema+'</head><body>'
  +'<a class="skip" href="#conteudo">Pular para conteúdo</a>'
  +'<header class="top"><div class="shell head"><a class="brand" href="/">KAIA GLOW</a><nav aria-label="Navegação da loja">'
  +'<a href="/#colecao">Loja</a><a href="/skincare-coreano/">Skincare coreano</a><a href="/categoria/cabelos/">Cabelos</a><a href="/cosmeticos-em-sao-paulo/">São Paulo</a></nav></div></header>'
