@@ -40,13 +40,21 @@ function checkoutEligibility(){
  const skus=cartItems(),eligible=commerceAllowed instanceof Map&&skus.length>0&&
  skus.every(x=>x.sku&&commerceAllowed.has(x.sku)&&
   Math.round(catalog.find(p=>p.sku===x.sku).price*100)===commerceAllowed.get(x.sku));
- const valid=eligible&&chosenShipping&&chosenShipping.signature===cartSignature()&&!coupon;
- btn.disabled=!valid;
- btn.textContent=valid?'Finalizar compra com Mercado Pago':!eligible?'Confira a disponibilidade dos produtos':!chosenShipping?'Informe o CEP e escolha o frete':chosenShipping.signature!==cartSignature()?'Consulte novamente o frete':'Confira as condições da compra';
- if(!eligible&&commerceAllowed instanceof Map){const note=$('#commerceEligibility');if(note)note.textContent='A compra está disponível somente para os 29 produtos da primeira etapa, com estoque confirmado.';}
- if(eligible&&!chosenShipping){const note=$('#commerceEligibility');if(note)note.textContent='Produtos liberados. Consulte e escolha uma modalidade de frete antes de pagar.';}
- if(eligible&&chosenShipping&&!coupon){const note=$('#commerceEligibility');if(note)note.textContent='Sacola conferida. O valor final será recalculado antes de abrir o Mercado Pago.';}
- if(coupon){const note=$('#commerceEligibility');if(note)note.textContent='Cupons ainda não estão disponíveis no checkout comercial. Remova o cupom para prosseguir.';}
+ const shippingValid=!!(chosenShipping&&chosenShipping.signature===cartSignature()&&
+  chosenShipping.postalCode===postalDigits($('#shippingPostalCode')?.value));
+ const subtotal=cart.reduce((sum,r)=>sum+variantFor(catalog.find(p=>p.id===r.id),r.variantId).price*r.qty,0);
+ const shipping=shippingValid?chosenShipping.amountCents/100:0;
+ if($('#kcShippingAmount'))$('#kcShippingAmount').textContent=shippingValid?money(shipping):'A calcular';
+ if($('#kcTotal'))$('#kcTotal').textContent=money(subtotal+shipping);
+ const prepared=!!($('#commercePaymentOptions')||$('#commercePendingOrder'));
+ btn.hidden=prepared;btn.disabled=!eligible||!shippingValid||!!coupon||prepared;
+ btn.textContent=!eligible?'Produto indisponível':!shippingValid?'Escolha o frete':'Continuar para pagamento';
+ const note=$('#commerceEligibility');if(!note||prepared)return;
+ note.hidden=false;note.style.color='';note.style.fontWeight='';
+ note.textContent=!eligible?'Um ou mais itens ainda não estão liberados para compra.':
+  !shippingValid?'Selecione o frete para continuar.':
+  coupon?'Cupons não estão disponíveis neste checkout.':'';
+ note.hidden=!!(eligible&&shippingValid&&!coupon);
 }
 async function fetchEligible(){
  const version=++commerceFetchVersion;
@@ -228,26 +236,32 @@ all('[data-step]').forEach(b=>b.onclick=()=>{const r=cart.find(x=>x.key===b.data
   }
   const choices=Array.isArray(info.opcoes)?info.opcoes:[];
   if(!choices.length){status.textContent='Nenhuma opção de envio retornada para esta sacola.';return;}
-  status.textContent=choices.length+' '+(choices.length===1?'opção de frete encontrada':'opções de frete encontradas')+'. ';
-  const button=document.createElement('button');
-  button.type='button';button.className='shipping-show-options';
-  button.textContent='Ver preços e prazos do frete ↗';
-  button.onclick=()=>window.kaiaShowShippingOptions(info,cep);
-  status.appendChild(button);
+  const list=$('#kcShippingChoices');list.replaceChildren();
+  status.textContent='Selecione uma modalidade de entrega:';
   for(const option of choices){
-   const shippingButton=document.createElement('button');shippingButton.type='button';
-   shippingButton.className='shipping-show-options';
-   const label=option.servico||option.transportadora||('Opção '+option.id);
-   shippingButton.textContent='Selecionar '+label+' — '+money(option.freteCentavos/100)+' · '+option.previsaoDias+' dias';
-   shippingButton.onclick=()=>{
-    chosenShipping={serviceId:String(option.id),signature:cartSignature(),amountCents:option.freteCentavos,postalCode:postalDigits(cep)};
-    status.textContent='Frete selecionado: '+label+' — '+money(option.freteCentavos/100)+'. Total estimado: '+money(subtotal-discount+option.freteCentavos/100)+'. O valor final será conferido novamente antes do pagamento.';
+   const cents=Number(option.freteCentavos);
+   if(!Number.isSafeInteger(cents)||cents<=0)continue;
+   const serviceId=String(option.id),label=String(option.servico||option.transportadora||('Entrega '+serviceId));
+   const button=document.createElement('button');button.type='button';
+   button.className='kc-shipping-option';button.setAttribute('aria-pressed','false');
+   const name=document.createElement('strong');name.textContent=label;
+   const eta=document.createElement('span');eta.className='kc-shipping-eta';
+   const days=Number(option.previsaoDias);
+   eta.textContent=Number.isFinite(days)&&days>0?'Estimativa: '+days+' dias':'Prazo informado na transportadora';
+   const price=document.createElement('b');price.textContent=money(cents/100);
+   button.append(name,eta,price);
+   button.onclick=()=>{
+    chosenShipping={serviceId,signature:cartSignature(),amountCents:cents,postalCode:postalDigits(cep)};
+    list.querySelectorAll('button').forEach(b=>{b.classList.remove('is-selected');b.setAttribute('aria-pressed','false')});
+    button.classList.add('is-selected');button.setAttribute('aria-pressed','true');
+    status.textContent='Entrega selecionada: '+label+'.';
     checkoutEligibility();
    };
-   status.appendChild(shippingButton);
+   list.append(button);
   }
+  if(!list.children.length)status.textContent='Nenhuma modalidade disponível para este CEP.';
  }catch{status.textContent='Não foi possível consultar o frete agora. Confira sua conexão e tente novamente.';}
-};$('#shippingPostalCode').oninput=()=>{chosenShipping=null;checkoutEligibility();};$('#checkout').onclick=commercialCheckout;fetchEligible();checkoutEligibility();}
+};$('#shippingPostalCode').oninput=()=>{chosenShipping=null;$('#kcShippingChoices')?.replaceChildren();if($('#shippingQuoteResult'))$('#shippingQuoteResult').textContent='Calcule o frete para este CEP.';checkoutEligibility();};$('#checkout').onclick=commercialCheckout;fetchEligible();checkoutEligibility();}
 $('#bagButton').onclick=()=>{renderBag();$('#bagDialog').showModal()};
 function info(type){let html='';if(type==='checkout')html='<h2>Finalização indisponível no momento</h2><p>Não foi possível iniciar a finalização online. Fale com a Kaia Glow para receber atendimento. Nenhum pagamento foi iniciado.</p><a class="button" href="'+esc(whatsappUrl('Olá! Preciso de ajuda para finalizar uma compra na Kaia Glow.'))+'" target="_blank" rel="noopener noreferrer">Falar com a equipe</a>';
 if(type==='privacy')html='<h2>Sua privacidade na Kaia Glow</h2><p>A conta utiliza dados reais: nome, e-mail, CPF, nascimento, telefone e endereço. Saiba como tratamos seus dados de navegação, cadastro e atendimento. Consulte as finalidades, os provedores, os dados locais e seus direitos na política completa.</p><a class="button" href="privacidade.html">Ler Política de privacidade ↗</a>';
