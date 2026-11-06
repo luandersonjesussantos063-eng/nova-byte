@@ -48,7 +48,9 @@ export async function onRequestPost({request,env}){
   const returnPage=ORIGIN+'/pedido.html?pedido='+encodeURIComponent(row.id);
   const remote=await provider(env,'/v1/orders',{key:row.request_key,payload:{
    type:'online',processing_mode:'manual',expiration_time:'P1D',total_amount:money(row.total_cents),
-   external_reference:row.id,payer:{email:user.email},
+   // Allow the buyer to choose an independent Mercado Pago account or checkout as guest.
+   // Binding the store login email to a Mercado Pago collaborator can block checkout.
+   external_reference:row.id,
    items:itemsWithShipping(row),
    config:{online:{success_url:returnPage+'&retorno=sucesso',
     failure_url:returnPage+'&retorno=falha',
