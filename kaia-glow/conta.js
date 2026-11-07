@@ -95,6 +95,14 @@ async function loadAccount(){
  if(detailResult.error){setMode('login',false);status('Não foi possível carregar seu cadastro. Tente entrar novamente.',true);return;}
  const details=detailResult.data;profileRequired=!details;
  fillCustomerDetails(details);
+ const preferences=await supa.from('kaia_customer_marketing_preferences')
+  .select('offers_email,named_analytics').eq('user_id',user.id).maybeSingle();
+ if(seq!==sequence)return;
+ $('#offersEmailOptin').checked=preferences.data?.offers_email===true;
+ $('#namedAnalyticsOptin').checked=preferences.data?.named_analytics===true;
+ $('#marketingPreferenceStatus').textContent=preferences.error?
+  'Não conseguimos carregar suas preferências; nada foi alterado.':'';
+
  all('[data-account-tab]').forEach(b=>b.disabled=profileRequired&&b.dataset.accountTab!=='dados');
  $('#profileSetupNote').textContent=profileRequired?'Etapa 2 de 2: complete seus dados pessoais e de entrega para concluir o cadastro. Confira seus dados antes de concluir uma compra.':'Seu cadastro está completo. Confira ou atualize seus dados antes das próximas compras.';
  let claimMessage='';
@@ -167,6 +175,18 @@ $('#ordersList').addEventListener('submit',async event=>{
   if(error)throw error;
   await loadAccount();status('Sua solicitação foi registrada. Você receberá confirmação por e-mail.');
  }catch(e){status('Não foi possível solicitar: '+(e.message||'tente novamente'),true);button.disabled=false;}
+});
+$('#marketingPreferenceForm').addEventListener('submit',async event=>{
+ event.preventDefault();if(!supa||!user)return;
+ const button=$('#marketingPreferenceForm button[type=submit]');
+ const note=$('#marketingPreferenceStatus');button.disabled=true;
+ note.textContent='Salvando suas autorizações…';
+ const {error}=await supa.rpc('kaia_set_customer_marketing',{
+  p_offers:$('#offersEmailOptin').checked,p_named:$('#namedAnalyticsOptin').checked
+ });
+ note.textContent=error?'Não foi possível salvar: '+error.message:
+  'Suas preferências foram atualizadas. Você pode alterá-las quando quiser.';
+ button.disabled=false;
 });
 $('#authForm').addEventListener('submit',async event=>{
  event.preventDefault();if(!supa)return;const button=$('#authSubmit');button.disabled=true;authBusy=true;status('Aguarde…');
