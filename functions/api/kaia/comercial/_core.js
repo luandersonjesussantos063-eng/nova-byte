@@ -86,7 +86,8 @@ export async function quote(env,items,postalCode,serviceId){
  const offers=await r.json();const selected=Array.isArray(offers)?offers.find(x=>String(x.id)===serviceId&&x.has_error!==true):null;
  const cents=Math.round(Number(selected?.price)*100);
  if(!Number.isSafeInteger(cents)||cents<=0||cents>1000000)throw new CheckoutError('SEM_FRETE_VALIDO',422);
- return {cents,serviceId};
+ const days=Number(selected?.delivery_time ?? selected?.delivery_range?.max ?? 0);
+ return {cents,serviceId,deliveryDays:Number.isSafeInteger(days)&&days>=1&&days<=90?days:null};
 }
 export async function provider(env,path,{payload,key}={}){
  let r;try{r=await fetch('https://api.mercadopago.com'+path,{method:payload?'POST':'GET',
