@@ -29,6 +29,7 @@ function productData(p){const e=edits.get(keyOf(p)),stock=inventory.get(p.sku),l
 };}
 function setSignedIn(ok,email=''){
  signedIn=ok;$('#loginPanel').hidden=ok;$('#adminPanel').hidden=!ok;$('#logoutButton').hidden=!ok;
+ $('#adminNavToggle').hidden=!ok;if(!ok)closeAdminMenu();
  if(ok)$('#adminIdentity').textContent=email;
 }
 async function authorize(){
@@ -41,7 +42,8 @@ async function authorize(){
  const own=await sb.rpc('kaia_is_store_owner');isOwner=own.data===true&&!own.error;
  await setupKaiaTeam(sb,isOwner);await loadAdmin();
  const requested=location.hash.replace(/^#/,'');
- if(['products','coupons','cancellations','analytics','marketplaces','payments','team','customers'].includes(requested))openAdminTab(requested,false);
+ if(['overview','products','coupons','cancellations','analytics','marketplaces','payments','team','customers'].includes(requested))openAdminTab(requested,false);
+ else openAdminTab('overview',false);
 }
 async function loadAdmin(){
  const [products,stock,newProducts]=await Promise.all([
@@ -66,7 +68,7 @@ async function loadAdmin(){
  initKaiaMarketplaces(sb,{onStockChanged:()=>loadAdmin()});
  initKaiaPayments();setupKaiaCancellations(sb);
  $('#productCount').textContent=catalog.length;
- renderProductList();await setupKaiaCoupons(sb);await refreshCommerce();
+ renderProductList();await setupKaiaCoupons(sb);await refreshCommerce();await refreshOverview();
 }
 async function refreshCommerce(){
  try{
@@ -89,6 +91,69 @@ function updateCommercePanel(){
    'Compra online LIBERADA: este produto está apto a entrar na sacola e no checkout.':
    'Compra online BLOQUEADA: o produto está na vitrine, mas ainda precisa de liberação comercial.';
  $('#confirmPackageRelease').checked=false;
+}
+// The overview reads current catalog, current stock and privileged counts.
+let overviewBusy=false;
+const overviewNumber=value=>value===null?'—':Number(value).toLocaleString('pt-BR');
+function appendOverviewAlert({icon,title,description,tab,clear=false}){
+ const root=$('#overviewAlerts');
+ const card=document.createElement('div');card.className='overview-alert'+(clear?' is-clear':'');
+ const mark=document.createElement('span');mark.className='overview-alert-icon';
+ mark.setAttribute('aria-hidden','true');mark.textContent=icon;
+ const body=document.createElement('div');
+ const name=document.createElement('strong');name.textContent=title;
+ const desc=document.createElement('p');desc.textContent=description;
+ body.append(name,desc);
+ if(tab){
+  const btn=document.createElement('button');btn.type='button';btn.dataset.openPanel=tab;
+  btn.textContent='Abrir esta área';body.append(btn);
+ }
+ card.append(mark,body);root.append(card);
+}
+async function refreshOverview(){
+ if(!signedIn||overviewBusy)return;
+ overviewBusy=true;
+ const update=$('#overviewRefresh');update.disabled=true;
+ $('#overviewUpdated').textContent='Atualizando dados da operação…';
+ try{
+  const counts=Array.from(inventory.values()).filter(r=>Number.isFinite(Number(r.available_units)));
+  const low=counts.filter(r=>Number(r.available_units)<=5);
+  $('#overviewLowStock').textContent=overviewNumber(low.length);
+  $('#overviewSellable').textContent=overviewNumber(commercialSkus instanceof Set?commercialSkus.size:null);
+  const [cancels,couponResult]=await Promise.all([
+   sb.from('kaia_cancellation_requests').select('id',{count:'exact',head:true}).eq('status','requested'),
+   sb.from('kaia_admin_coupons').select('code',{count:'exact',head:true}).eq('active',true)
+  ]);
+  const pending=cancels.error?null:cancels.count;
+  const campaigns=couponResult.error?null:couponResult.count;
+  $('#overviewPending').textContent=overviewNumber(pending);
+  $('#overviewCouponInfo').textContent=campaigns===null?'Verificar campanhas no painel':
+   campaigns===0?'Nenhum cupom ativo':'Cupons ativos: '+overviewNumber(campaigns);
+  const root=$('#overviewAlerts');root.replaceChildren();
+  if(pending===null)appendOverviewAlert({icon:'i',title:'Cancelamentos não consultados',
+   description:'Não foi possível conferir as solicitações neste momento.',tab:'cancellations'});
+  else if(pending>0)appendOverviewAlert({icon:'!',title:pending+' cancelamento(s) aguardando decisão',
+   description:'Solicitações recebidas que precisam de análise da loja.',tab:'cancellations'});
+  if(low.length){
+   const short=low.slice(0,4).map(r=>{
+    const product=catalog.find(x=>x.sku===r.sku);
+    return (product?.name||r.sku)+' ('+r.available_units+')';
+   }).join(' · ');
+   appendOverviewAlert({icon:'!',title:low.length+' produto(s) com até 5 unidades',
+    description:short+(low.length>4?' · e outros '+(low.length-4):''),tab:'marketplaces'});
+  }
+  if(campaigns===0)appendOverviewAlert({icon:'i',title:'Nenhum cupom ativo',
+   description:'Os envios direcionados de ofertas precisam de um cupom ativo compatível.',tab:'coupons'});
+  else if(campaigns===null)appendOverviewAlert({icon:'i',title:'Cupons não consultados',
+   description:'Abra a seção de cupons para conferir as campanhas.',tab:'coupons'});
+  if(commercialSkus===null)appendOverviewAlert({icon:'i',title:'Checkout não consultado',
+   description:'Não foi possível verificar os produtos liberados para compra.',tab:'products'});
+  if(!root.childElementCount)appendOverviewAlert({icon:'✓',title:'Nenhuma pendência detectada neste resumo',
+   description:'Continue acompanhando pedidos, pagamentos e estoque nas suas respectivas áreas.',clear:true});
+  $('#overviewUpdated').textContent='Resumo consultado em '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+ }catch{
+  $('#overviewUpdated').textContent='Não foi possível atualizar todos os indicadores. Tente novamente.';
+ }finally{overviewBusy=false;update.disabled=false;}
 }
 function renderProductList(){
  const term=$('#productSearch').value.trim().toLocaleLowerCase('pt-BR');const parent=$('#productList');parent.replaceChildren();
