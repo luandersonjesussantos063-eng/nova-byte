@@ -346,22 +346,74 @@ async function changeCommercialRelease(enable){
 }
 $('#releaseOnlineButton').onclick=()=>changeCommercialRelease(true);
 $('#pauseOnlineButton').onclick=()=>changeCommercialRelease(false);
-function openAdminTab(current,updateHash=true){
- if(!['products','coupons','cancellations','analytics','marketplaces','payments','team','customers'].includes(current))return;
- if(current==='team'&&!isOwner)return;
- const selected=all('[data-tab]').find(button=>button.dataset.tab===current);
- all('[data-tab]').forEach(b=>b.setAttribute('aria-selected',String(b.dataset.tab===current)));
- $('#productsTab').hidden=current!=='products';$('#couponsTab').hidden=current!=='coupons';
- $('#cancellationsTab').hidden=current!=='cancellations';if(current==='cancellations')loadKaiaCancellations();
- $('#teamTab').hidden=current!=='team';if(current==='team')loadKaiaTeam();
- $('#customersTab').hidden=current!=='customers';if(current==='customers')loadKaiaCustomers();
- $('#analyticsTab').hidden=current!=='analytics';if(current==='analytics')loadKaiaAnalytics();
- $('#marketplacesTab').hidden=current!=='marketplaces';if(current==='marketplaces')loadKaiaMarketplaces();
- $('#paymentsTab').hidden=current!=='payments';if(current==='payments')loadKaiaPayments();
- if(updateHash)history.replaceState(null,'',location.pathname+location.search+'#'+current);
- selected?.scrollIntoView({block:'nearest',inline:'nearest'});
+const panelMeta={
+ overview:['INÍCIO · PAINEL ADMINISTRATIVO','Visão geral','Acompanhe os pontos importantes da sua operação em um só lugar.'],
+ products:['OPERAÇÃO · CATÁLOGO','Produtos e fotos','Organize sua vitrine, preços, descrições e imagens dos produtos.'],
+ marketplaces:['OPERAÇÃO · ESTOQUE','Estoque e marketplaces','Acompanhe saldos e integrações de venda.'],
+ payments:['OPERAÇÃO · FINANCEIRO','Pagamentos','Confira a configuração do checkout e dos serviços de pagamento.'],
+ cancellations:['OPERAÇÃO · PÓS-VENDA','Cancelamentos','Analise solicitações e acompanhe reembolsos.'],
+ customers:['RELACIONAMENTO · CLIENTES','Clientes e ofertas','Consulte cadastros, preferências e ofertas autorizadas.'],
+ coupons:['RELACIONAMENTO · CAMPANHAS','Cupons','Organize suas promoções e acompanhe os códigos cadastrados.'],
+ analytics:['RELACIONAMENTO · MÉTRICAS','Visitas e interesse','Veja estatísticas autorizadas e dados agregados de navegação.'],
+ team:['ADMINISTRAÇÃO · ACESSOS','Equipe e permissões','Gerencie as pessoas autorizadas a administrar a loja.']
+};
+function closeAdminMenu(){
+ $('#adminSidebar').classList.remove('is-open');
+ $('#adminNavScrim').hidden=true;
+ $('#adminNavToggle').setAttribute('aria-expanded','false');
+ $('#adminNavToggle').setAttribute('aria-label','Abrir menu de gestão');
 }
-all('[data-tab]').forEach(button=>button.onclick=()=>openAdminTab(button.dataset.tab));
+function setAdminMenu(open){
+ if(!signedIn)return;
+ $('#adminSidebar').classList.toggle('is-open',open);
+ $('#adminNavScrim').hidden=!open;
+ $('#adminNavToggle').setAttribute('aria-expanded',String(open));
+ $('#adminNavToggle').setAttribute('aria-label',open?'Fechar menu de gestão':'Abrir menu de gestão');
+}
+function openAdminTab(current,updateHash=true){
+ if(!Object.hasOwn(panelMeta,current))return;
+ if(current==='team'&&!isOwner)return;
+ const selected=all('.admin-tabs [data-tab]').find(button=>button.dataset.tab===current);
+ if(!selected||selected.hidden)return;
+ all('.admin-tabs [data-tab]').forEach(b=>{
+  const active=b.dataset.tab===current;
+  b.setAttribute('aria-selected',String(active));
+  b.tabIndex=active?0:-1;
+ });
+ const [category,title,description]=panelMeta[current];
+ $('#workspaceCategory').textContent=category;
+ $('#workspaceTitle').textContent=title;
+ $('#workspaceDescription').textContent=description;
+ for(const name of Object.keys(panelMeta)){
+  const section=$('#'+name+'Tab');
+  if(section)section.hidden=current!==name;
+ }
+ if(current==='overview')refreshOverview();
+ if(current==='cancellations')loadKaiaCancellations();
+ if(current==='team')loadKaiaTeam();
+ if(current==='customers')loadKaiaCustomers();
+ if(current==='analytics')loadKaiaAnalytics();
+ if(current==='marketplaces')loadKaiaMarketplaces();
+ if(current==='payments')loadKaiaPayments();
+ if(updateHash)history.replaceState(null,'',location.pathname+location.search+'#'+current);
+ closeAdminMenu();
+ if(updateHash)window.scrollTo({top:0,behavior:'instant'});
+}
+all('.admin-tabs [data-tab]').forEach(button=>button.onclick=()=>openAdminTab(button.dataset.tab));
+$('#overviewTab').addEventListener('click',event=>{
+ const target=event.target.closest('[data-open-panel]');
+ if(target)openAdminTab(target.dataset.openPanel);
+});
+$('#overviewRefresh').onclick=()=>refreshOverview();
+$('#adminNavToggle').onclick=()=>setAdminMenu(!$('#adminSidebar').classList.contains('is-open'));
+$('#adminNavScrim').onclick=closeAdminMenu;
+document.addEventListener('keydown',event=>{
+ if(event.key==='Escape')closeAdminMenu();
+});
+window.addEventListener('hashchange',()=>{
+ const tab=location.hash.slice(1);
+ if(signedIn&&Object.hasOwn(panelMeta,tab))openAdminTab(tab,false);
+});
 $('#logoutButton').onclick=async()=>{await sb?.auth.signOut();setSignedIn(false);$('#adminPassword').value='';status('#loginStatus','Sessão encerrada.');};
 $('#loginForm').onsubmit=async e=>{
  e.preventDefault();const btn=$('#loginForm button');btn.disabled=true;status('#loginStatus','Verificando acesso…');
