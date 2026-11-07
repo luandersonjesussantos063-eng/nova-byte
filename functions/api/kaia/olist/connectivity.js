@@ -3,14 +3,16 @@
 // Returns only coarse HTTP/network status and never logs response bodies.
 const targets=[
  {name:'oauth_discovery',url:'https://accounts.tiny.com.br/realms/tiny/.well-known/openid-configuration'},
- {name:'oauth_token',url:'https://accounts.tiny.com.br/realms/tiny/protocol/openid-connect/token'},
+ {name:'oauth_token_get',url:'https://accounts.tiny.com.br/realms/tiny/protocol/openid-connect/token'},
+ {name:'oauth_token_post_no_credentials',url:'https://accounts.tiny.com.br/realms/tiny/protocol/openid-connect/token',method:'POST'},
  {name:'olist_api',url:'https://erp.tiny.com.br/public-api/v3/produtos?limit=1'}
 ];
 async function probe(item){
  try{
   const result=await fetch(item.url,{
-   method:'GET',redirect:'manual',
-   headers:{accept:'application/json'},
+   method:item.method||'GET',redirect:'manual',
+   headers:{accept:'application/json',...(item.method==='POST'?{'content-type':'application/x-www-form-urlencoded'}:{})},
+   ...(item.method==='POST'?{body:'grant_type=authorization_code'}:{}),
    signal:AbortSignal.timeout(6500)
   });
   const redirected=result.status>=300&&result.status<400;
