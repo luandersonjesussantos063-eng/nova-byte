@@ -1,6 +1,16 @@
 import {CheckoutError,json,fail,gate,identity,accountAddress,parseItems,verifiedInventory,quote,database,provider,orderRow,reconcile,checkoutLink,money} from './_core.js';
 const ORIGIN='https://usekaiaglow.com.br';
 function itemsWithShipping(row){
+ // With coupons, MP must receive the exact discounted total. The immutable
+ // cart details and per-item original prices remain in the server-side order.
+ if(row.coupon_code){
+  const items=[];
+  if(row.products_cents>0)items.push({title:'Produtos Kaia Glow - desconto aplicado',
+   quantity:1,unit_price:money(row.products_cents)});
+  if(row.shipping_cents>0)items.push({title:'Entrega - SuperFrete',
+   quantity:1,unit_price:money(row.shipping_cents)});
+  return items;
+ }
  return [...row.items.map(i=>({title:i.name.slice(0,110),quantity:i.quantity,unit_price:money(i.unit_cents)})),
   {title:'Entrega - SuperFrete',quantity:1,unit_price:money(row.shipping_cents)}];
 }
@@ -20,22 +30,43 @@ export async function onRequestPost({request,env}){
   if(!/^[0-9]{8}$/.test(String(input.postalCode||''))||input.postalCode!==postalCode)
    throw new CheckoutError('CEP_DIFERENTE_DO_CADASTRO',422);
   const serviceId=String(input.serviceId||'');
+  const couponCode=String(input.coupon||'').trim().toUpperCase();
+  if(couponCode&&!/^[A-Z0-9_-]{3,24}$/.test(couponCode))
+   throw new CheckoutError('CUPOM_INVALIDO',422);
   // An existing request is never repriced or re-reserved. Reuse its immutable snapshot.
   let records=await database(env,'kaia_commercial_payments?user_id=eq.'+user.id+'&request_key=eq.'+input.requestKey+'&select=*');
   let row=records[0];
   if(!row){
    const verified=await verifiedInventory(env,items);
    const shipping=await quote(env,verified,postalCode,serviceId);
-   const reserved=await database(env,'rpc/kaia_commercial_reserve',{method:'POST',body:{
+   const endpoint=couponCode?'rpc/kaia_commercial_reserve_discounted':'rpc/kaia_commercial_reserve';
+   const body={
     p_user_id:user.id,p_request_key:input.requestKey,p_items:items,
     p_shipping_cents:shipping.cents,p_shipping_service:shipping.serviceId,p_postal_code:postalCode
-   }});
+   };
+   if(couponCode){body.p_coupon_code=couponCode;body.p_delivery_days=shipping.deliveryDays;}
+   const reserved=await database(env,endpoint,{method:'POST',body});
    row=await orderRow(env,reserved.id);
+   // ETA is advisory. Missing carrier estimate must never mark shipping as
+   // scheduled; the delivery email will say "to be confirmed".
+   if(!couponCode&&shipping.deliveryDays){
+    await database(env,'kaia_commercial_payments?id=eq.'+row.id+
+     '&shipping_estimated_days=is.null',{method:'PATCH',body:{
+      shipping_estimated_days:shipping.deliveryDays
+     }});
+    row.shipping_estimated_days=shipping.deliveryDays;
+   }
   }
   if(row.user_id!==user.id)throw new CheckoutError('PEDIDO_NAO_AUTORIZADO',403);
+  if((row.coupon_code||'')!==couponCode)
+   throw new CheckoutError('CUPOM_DIFERENTE_DA_SOLICITACAO',409);
   if(row.shipping_service!==serviceId||row.postal_code!==postalCode||
     row.items.length!==items.length||items.some(i=>!row.items.some(x=>x.sku===i.sku&&x.quantity===i.quantity)))
     throw new CheckoutError('SOLICITACAO_JA_USADA_EM_OUTRA_SACOLA',409);
+  if(row.status==='approved'&&row.total_cents===0&&
+    row.coupon_code===couponCode&&row.provider_order_id===null)
+   return json({id:row.id,totalCents:0,complimentary:true,
+    status:'approved',checkoutUrl:null});
   if(['approved','refunded','rejected','cancelled','review_required'].includes(row.status))
     throw new CheckoutError('PEDIDO_NAO_REABRIVEL',409);
   if(row.provider_order_id){
@@ -84,6 +115,9 @@ export async function onRequestGet({request,env}){
    row=await orderRow(env,id);
   }
   return json({id:row.id,status:row.status,productsCents:row.products_cents,shippingCents:row.shipping_cents,totalCents:row.total_cents,
+    couponCode:row.coupon_code||null,discountCents:row.discount_cents||0,
+    complimentary:row.total_cents===0&&row.status==='approved',
+    deliveryBusinessDays:row.shipping_estimated_days||null,
     items:row.items.map(i=>({name:i.name,quantity:i.quantity,unitCents:i.unit_cents}))});
  }catch(e){return fail(e);}
 }
