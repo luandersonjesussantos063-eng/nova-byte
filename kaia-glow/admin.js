@@ -397,7 +397,7 @@ function openAdminTab(current,updateHash=true){
  if(current==='payments')loadKaiaPayments();
  if(updateHash)history.replaceState(null,'',location.pathname+location.search+'#'+current);
  closeAdminMenu();
- if(updateHash)window.scrollTo({top:0,behavior:'instant'});
+ if(updateHash)window.scrollTo({top:0,behavior:'auto'});
 }
 all('.admin-tabs [data-tab]').forEach(button=>button.onclick=()=>openAdminTab(button.dataset.tab));
 $('.admin-tabs').addEventListener('keydown',event=>{
