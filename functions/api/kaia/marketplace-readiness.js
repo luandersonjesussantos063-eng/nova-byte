@@ -36,6 +36,7 @@ export async function onRequestGet({request,env}){
   return response({
    skuCount:inventory.length,
    activeSiteSkuCount:enabled.size,
+   firstWaveSkus:[...enabled].sort(),
    activeSiteStockUnits:inventory.filter(i=>enabled.has(i.sku)).reduce((sum,i)=>sum+Math.max(0,Number(i.available_units)||0),0),
    channels,
    integrationMode:'preparation_only',
