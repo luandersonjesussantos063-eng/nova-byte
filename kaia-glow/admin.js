@@ -400,6 +400,19 @@ function openAdminTab(current,updateHash=true){
  if(updateHash)window.scrollTo({top:0,behavior:'instant'});
 }
 all('.admin-tabs [data-tab]').forEach(button=>button.onclick=()=>openAdminTab(button.dataset.tab));
+$('.admin-tabs').addEventListener('keydown',event=>{
+ if(!['ArrowDown','ArrowUp','Home','End'].includes(event.key))return;
+ const tabs=all('.admin-tabs [data-tab]').filter(tab=>!tab.hidden);
+ if(!tabs.length)return;
+ const current=tabs.indexOf(document.activeElement);
+ let idx=current<0?0:current;
+ if(event.key==='Home')idx=0;
+ if(event.key==='End')idx=tabs.length-1;
+ if(event.key==='ArrowDown')idx=(idx+1)%tabs.length;
+ if(event.key==='ArrowUp')idx=(idx-1+tabs.length)%tabs.length;
+ event.preventDefault();
+ const next=tabs[idx];openAdminTab(next.dataset.tab);next.focus();
+});
 $('#overviewTab').addEventListener('click',event=>{
  const target=event.target.closest('[data-open-panel]');
  if(target)openAdminTab(target.dataset.openPanel);
