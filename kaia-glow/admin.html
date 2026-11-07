@@ -40,12 +40,12 @@
 <label class="upload-label" for="editUpload">Adicionar fotos (JPG, PNG ou WebP — até 5 MB por foto)</label><input type="file" id="editUpload" multiple accept="image/jpeg,image/png,image/webp">
 <p class="muted" id="uploadStatus" role="status"></p>
 <div class="editor-actions"><button type="submit" class="primary-button" id="saveProductButton">Salvar alterações</button><button type="button" id="cancelNewProduct" class="ghost-button" hidden>Cancelar novo cadastro</button></div><p id="productStatus" role="status" aria-live="polite"></p></form></div></section>
-<section id="couponsTab" class="admin-section" hidden><div class="section-header"><div><h2>Cupons de desconto</h2><p>Crie códigos que poderão ser usados na sacola. O pagamento continua desativado.</p></div></div>
+<section id="couponsTab" class="admin-section" hidden><div class="section-header"><div><h2>Cupons de desconto</h2><p>Cupons são validados no servidor antes da confirmação do pedido. Cupom de 100% inclui frete grátis e a loja assume o custo da entrega.</p></div></div>
 <div class="coupon-layout"><form id="couponForm" class="editor"><span class="eyebrow">CAMPANHA</span><h3>Criar ou editar cupom</h3>
 <div class="form-grid"><label class="full">Código do cupom<input id="couponCode" type="text" maxlength="24" pattern="[A-Za-z0-9_-]{3,24}" required placeholder="EX: BEMVINDA10" autocapitalize="characters"></label>
 <label>Tipo<select id="couponType"><option value="percent">Porcentagem (%)</option><option value="fixed">Valor fixo (R$)</option></select></label>
-<label>Valor do desconto<input id="couponValue" type="number" min="1" max="90" step="1" required></label>
-<label>Pedido mínimo (R$)<input id="couponMinimum" type="number" min="0" step="0.01" value="0"></label>
+<label>Valor do desconto<input id="couponValue" type="number" min="1" max="100" step="1" required></label>
+<p class="full">Atenção: 100% concede os produtos e a entrega gratuitamente, sem Mercado Pago. Compartilhe esse código apenas com clientes autorizados.</p><label>Pedido mínimo (R$)<input id="couponMinimum" type="number" min="0" step="0.01" value="0"></label>
 <label>Início (opcional)<input id="couponStart" type="date"></label>
 <label>Vencimento (opcional)<input id="couponEnd" type="date"></label>
 <label class="check-label"><input id="couponActive" type="checkbox" checked> Cupom ativo</label></div>
@@ -220,5 +220,5 @@
 <footer class="admin-footer">Kaia Glow · Painel restrito de gestão. O acesso é controlado pelo Supabase Auth.</footer>
 <script src="catalog.js?v=1"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js" integrity="sha384-TcHRA3zBbn+Lexh5n+Oil4guNPOS3rjNDpGRAN46u/s/mB2IZ50ceC6TYDU2yvgK" crossorigin="anonymous"></script>
-<script type="module" src="admin.js?v=8"></script>
+<script type="module" src="admin.js?v=9"></script>
 </body></html>
