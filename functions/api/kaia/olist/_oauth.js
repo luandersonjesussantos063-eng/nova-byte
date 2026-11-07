@@ -5,7 +5,7 @@ import {db,PaymentError,HOSTS} from '../checkout-validacao/_core.js';
 export const CALLBACK='https://usekaiaglow.com.br/api/kaia/olist/callback';
 export const AUTH_URL='https://accounts.tiny.com.br/realms/tiny/protocol/openid-connect/auth';
 export const TOKEN_URL='https://accounts.tiny.com.br/realms/tiny/protocol/openid-connect/token';
-export const API_URL='https://erp.tiny.com.br/public-api/v3';
+export const API_URL='https://api.tiny.com.br/public-api/v3';
 const encoder=new TextEncoder();
 export function guardOrigin(request){
  const url=new URL(request.url);
