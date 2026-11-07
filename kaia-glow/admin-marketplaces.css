@@ -48,3 +48,31 @@
 .admin-tabs{max-width:100%;overflow-x:auto;overflow-y:hidden;scrollbar-width:thin;-webkit-overflow-scrolling:touch}
 .admin-tabs button{flex:0 0 auto;white-space:nowrap}
 #marketplacesTab{max-width:100%;min-width:0}
+
+/* Integration checklist: compact mobile-first controls, no false connected indicators. */
+.mp-setup{border:1px solid #e5d7dc;border-radius:13px;background:#fff;padding:19px;margin-bottom:20px}
+.mp-setup-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;flex-wrap:wrap}
+.mp-setup-heading h3{font-size:24px;color:#50283b;margin:7px 0 6px}
+.mp-setup-heading p{font-size:12px;color:#755b68;line-height:1.65;max-width:680px;margin:0}
+.mp-setup-heading button{max-width:100%;min-height:44px}
+.mp-setup-steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:18px 0}
+.mp-setup-steps article{display:grid;gap:9px;align-content:start;background:#faf7f6;
+ border:1px solid #eee6e4;border-radius:9px;padding:13px;min-width:0}
+.mp-setup-steps strong{font-size:12px;color:#47263a}
+.mp-setup-steps span{font-size:11px;line-height:1.5;color:#6f6167}
+.mp-setup-steps a{font-size:11px;line-height:1.4;font-weight:700;color:#66354f;
+ text-decoration:underline;text-underline-offset:3px;overflow-wrap:anywhere}
+.mp-readiness-note{background:#f8f2f4;border:1px solid #eee4e7;border-radius:8px;
+ padding:12px 14px;font-size:12px;color:#5f3a4c;line-height:1.55;margin:0}
+.mp-readiness-note strong{display:block;margin-bottom:7px}
+.mp-readiness-note p{margin:4px 0;font-size:11px;line-height:1.55;color:#755967}
+#mpGoToMapping{align-self:end}
+@media(max-width:900px){.mp-setup-steps{grid-template-columns:1fr}}
+@media(max-width:600px){
+ .mp-setup{padding:14px}
+ .mp-setup-heading h3{font-size:21px}
+ .mp-setup-heading button{width:100%}
+ .mp-setup-steps{gap:8px;margin:13px 0}
+ .mp-setup-steps article{padding:12px}
+ #marketplacesTab .section-header{align-items:flex-start}
+}

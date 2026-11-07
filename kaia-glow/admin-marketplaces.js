@@ -1,6 +1,6 @@
 // Kaia Glow multichannel command center.
 // No marketplace tokens in browser. All writes call admin-only RPCs and never issue external sync.
-let sb=null,afterStockChange=null,stockRows=[],links=[],overview=null,initialized=false;
+let sb=null,afterStockChange=null,stockRows=[],links=[],overview=null,initialized=false,readiness=null;
 const $=s=>document.querySelector(s);
 const labelChannel=channel=>channel==='shopee'?'Shopee':'TikTok Shop';
 const labelStatus=s=>({
@@ -183,11 +183,71 @@ async function saveMapping(ev){
  }catch(error){text('#mpMapStatus','Não foi possível vincular: '+error.message);}
  finally{button.disabled=false;}
 }
+async function loadMarketplaceReadiness(){
+ const area=$('#mpIntegrationReadiness');
+ if(!area||!sb)return;
+ area.textContent='Conferindo as autorizações das duas plataformas…';
+ try{
+  const {data,error}=await sb.auth.getSession();
+  if(error||!data?.session?.access_token)throw Error('Faça login novamente para consultar as integrações.');
+  const r=await fetch('/api/kaia/marketplace-readiness',{
+   headers:{Authorization:'Bearer '+data.session.access_token},cache:'no-store'});
+  const info=await r.json();
+  if(!r.ok)throw Error(info.code||'Não foi possível consultar as conexões.');
+  readiness=info;
+  const parts=(info.channels||[]).map(ch=>{
+   const title=labelChannel(ch.id);
+   const state=ch.authorized?'loja autorizada':'loja ainda não autorizada';
+   const credentials=ch.appCredentialsConfigured?'aplicativo cadastrado':'credenciais do aplicativo pendentes';
+   return title+': '+state+' · '+credentials+' · '+ch.verifiedSkuCount+' anúncios conferidos';
+  });
+  area.replaceChildren();
+  const strong=field('strong','','Preparo: '+info.activeSiteSkuCount+' SKUs na primeira etapa, '+info.skuCount+' no catálogo.');
+  area.append(strong);
+  for(const item of parts)area.append(field('p','',item));
+  area.append(field('p','','A sincronização de estoque e pedidos permanece desativada até a autorização e os testes oficiais.'));
+ }catch(e){
+  readiness=null;area.textContent='Não foi possível verificar a integração: '+e.message;
+ }
+}
+function cleanCsv(value){
+ const raw=String(value??'');
+ const safe=/^[=+\-@\t\r]/.test(raw)?'\''+raw:raw;
+ return '"'+safe.replace(/"/g,'""')+'"';
+}
+async function downloadFirstWaveSkuCsv(){
+ const button=$('#mpExportWave');if(!button)return;
+ button.disabled=true;
+ try{
+  if(!readiness)await loadMarketplaceReadiness();
+  const skus=readiness?.firstWaveSkus;
+  if(!Array.isArray(skus)||skus.length===0)throw Error('A lista da primeira etapa não foi carregada.');
+  const rows=[[
+   'SKU Kaia Glow','Produto Kaia Glow','Estoque central (consulta)',
+   'Shopee ID do produto','Shopee ID da variação','Shopee SKU externo',
+   'TikTok ID do produto','TikTok ID da variação','TikTok SKU externo'
+  ]];
+  for(const sku of skus){
+   const row=stockRows.find(x=>x.sku===sku);
+   if(!row)throw Error('O SKU '+sku+' não está disponível no painel. Atualize a lista.');
+   rows.push([sku,skuTitle(sku),row.available_units,'','','','','','']);
+  }
+  const csv='\ufeff'+rows.map(row=>row.map(cleanCsv).join(';')).join('\r\n');
+  const blob=new Blob([csv],{type:'text/csv;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;
+  a.download='kaia-glow-29-skus-marketplaces.csv';document.body.append(a);a.click();a.remove();
+  URL.revokeObjectURL(url);
+  text('#mpDashboardStatus','Planilha gerada com '+skus.length+' produtos da primeira etapa. Preencha somente os IDs reais de Shopee e TikTok Shop após autorizá-las.');
+ }catch(e){text('#mpDashboardStatus','Não foi possível gerar a planilha: '+e.message);}
+ finally{button.disabled=false;}
+}
 export function initKaiaMarketplaces(client,options={}){
  sb=client;afterStockChange=options.onStockChanged||null;
  if(initialized)return;
  initialized=true;
  $('#mpRefresh').onclick=()=>loadKaiaMarketplaces();
+ $('#mpExportWave').onclick=downloadFirstWaveSkuCsv;
  $('#mpStockSku').onchange=renderCurrent;
  $('#mpStockForm').onsubmit=saveStock;
  $('#mpMappingForm').onsubmit=saveMapping;
@@ -214,4 +274,5 @@ export async function loadKaiaMarketplaces(){
  renderSkuOptions();renderConnections(overview.connections);renderLinks();
  renderMovements(history.data||[]);renderOrders(orders.data||[]);renderOutbox(outbox.data||[]);
  text('#mpDashboardStatus','Dados do estoque central atualizados. A integração com Shopee e TikTok Shop está desligada até a autorização das contas e a validação de pedidos e anúncios.');
+ await loadMarketplaceReadiness();
 }
