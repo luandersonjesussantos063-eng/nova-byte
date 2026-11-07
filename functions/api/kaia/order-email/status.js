@@ -10,13 +10,12 @@ export async function onRequestGet({request,env}){
   const queued=await db(env,'kaia_order_mail_outbox?select=status&limit=1000');
   return response({enabled:settings?.[0]?.enabled===true,
     senderConfigured:!!env.KAIA_ORDER_EMAIL_API_KEY&&
-     /^[^\s@<>]+@usekaiaglow\.com\.br$/i.test(env.KAIA_ORDER_EMAIL_FROM||'')&&
-     true,
+     /^[^\s@<>]+@usekaiaglow\.com\.br$/i.test(env.KAIA_ORDER_EMAIL_FROM||''),
     queued:queued.filter(x=>x.status==='queued').length,
     sending:queued.filter(x=>x.status==='sending').length,
     accepted:queued.filter(x=>x.status==='sent').length,
     failed:queued.filter(x=>x.status==='failed').length,
     lastError:settings?.[0]?.last_error_code||null,
-    notificationTypes:['buyer','merchant'],confirmationOnly:true});
+    merchantRecipient:'Usekaiaglow@gmail.com',notificationTypes:['buyer','merchant'],confirmationOnly:true});
  }catch(e){return fail(e);}
 }
