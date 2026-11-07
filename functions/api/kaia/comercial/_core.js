@@ -40,7 +40,7 @@ export async function accountAddress(env,userId){
  return {postalCode:String(d.postal_code).replace(/\D/g,''),address:d};
 }
 export function parseItems(data){
- if(!data||!Array.isArray(data.items)||data.items.length<1||data.items.length>12||data.coupon)
+ if(!data||!Array.isArray(data.items)||data.items.length<1||data.items.length>12)
   throw new CheckoutError('SACOLA_INVALIDA',422);
  const seen=new Set();let total=0;
  const rows=data.items.map(r=>{
