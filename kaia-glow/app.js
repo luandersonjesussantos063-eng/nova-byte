@@ -249,8 +249,8 @@ $('#bagContent').innerHTML=`<div class="bag-body kc-checkout"><section class="kc
 <div class="kc-amount-line"><span>Produtos</span><strong>${money(subtotal)}</strong></div>
 <div class="kc-amount-line"><span>Entrega</span><strong id="kcShippingAmount">A calcular</strong></div>
 <form id="kcCouponForm" class="kc-cep-form" aria-label="Aplicar cupom">
-<label for="kcCouponCode">Cupom</label><input id="kcCouponCode" type="text" maxlength="24" placeholder="Digite seu cupom" autocomplete="off" value="${esc(coupon)}">
-<button id="kcCouponApply" type="submit">Aplicar</button></form>
+<label for="kcCouponCode">Cupom de desconto</label><input id="kcCouponCode" type="text" maxlength="24" placeholder="Ex.: KAIA100" autocomplete="off" value="${esc(coupon)}">
+<button id="kcCouponApply" type="submit">Aplicar cupom</button></form>
 <p id="kcCouponStatus" class="kc-inline-hint" role="status"></p>
 <div id="kcCouponSavings" hidden><div class="kc-amount-line"><span>Desconto em produtos</span><strong>− <span id="kcProductDiscount">R$ 0,00</span></strong></div><div class="kc-amount-line"><span>Frete grátis</span><strong>− <span id="kcShippingDiscount">R$ 0,00</span></strong></div></div>
 <div class="kc-total-line"><span>Total</span><strong id="kcTotal">${money(subtotal)}</strong></div><p class="kc-inline-hint" id="commerceEligibility" role="status">Escolha o frete para continuar.</p><div id="kcPaymentArea"><button class="button" id="checkout" disabled>Escolher frete</button></div><p class="kc-secure-note">Pedidos pagos usam Mercado Pago. Pedidos grátis são registrados sem cobrança.</p></section></div>`;
@@ -259,11 +259,22 @@ couponStatus.textContent=fullCoupon()?'Cupom '+coupon+' aplicado: produtos e fre
 $('#kcCouponForm').onsubmit=e=>{
  e.preventDefault();
  const entry=$('#kcCouponCode').value.trim().toUpperCase();
- if(!entry){coupon='';couponStatus.textContent='Cupom removido.';checkoutEligibility();return;}
+ if(!entry){
+  coupon='';
+  $('#commercePaymentOptions')?.remove();
+  $('#commercePendingOrder')?.remove();
+  couponStatus.textContent='Cupom removido.';
+  checkoutEligibility();return;
+ }
  const result=calculateCoupon(entry,couponItems());
  if(!result.valid||!result.gift){couponStatus.textContent=result.message||'Cupom indisponível para esta compra.';return;}
  coupon=entry;sessionStorage.removeItem('kaia_order_request_v1');
- couponStatus.textContent='Cupom '+entry+' aplicado: 100% em produtos e frete grátis.';
+ const hadOldCheckout=!!($('#commercePaymentOptions')||$('#commercePendingOrder'));
+ // Don't leave a payable old Mercado Pago link visible after a free coupon was chosen.
+ $('#commercePaymentOptions')?.remove();
+ $('#commercePendingOrder')?.remove();
+ couponStatus.textContent='Cupom '+entry+' aplicado: 100% em produtos e frete grátis.'+
+  (hadOldCheckout?' O pagamento anterior não deve ser usado. Confirme o novo pedido abaixo.':'');
  checkoutEligibility();
 };
 all('[data-step]').forEach(b=>b.onclick=()=>{const r=cart.find(x=>x.key===b.dataset.key);r.qty=Math.max(1,Math.min(10,r.qty+Number(b.dataset.step)));shippingReset();renderBag()});all('[data-remove]').forEach(b=>b.onclick=()=>{cart=cart.filter(r=>r.key!==b.dataset.remove);shippingReset();renderBag()});$('#shippingQuoteForm').onsubmit=async e=>{
