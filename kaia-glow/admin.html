@@ -39,7 +39,13 @@
 <div id="photoList" class="photo-list" aria-label="Fotos cadastradas"></div>
 <label class="upload-label" for="editUpload">Adicionar fotos (JPG, PNG ou WebP — até 5 MB por foto)</label><input type="file" id="editUpload" multiple accept="image/jpeg,image/png,image/webp">
 <p class="muted" id="uploadStatus" role="status"></p>
-<div class="editor-actions"><button type="submit" class="primary-button" id="saveProductButton">Salvar alterações</button><button type="button" id="cancelNewProduct" class="ghost-button" hidden>Cancelar novo cadastro</button></div><p id="productStatus" role="status" aria-live="polite"></p></form></div></section>
+<div class="editor-actions"><button type="submit" class="primary-button" id="saveProductButton">Salvar alterações</button><button type="button" id="cancelNewProduct" class="ghost-button" hidden>Cancelar novo cadastro</button></div><p id="productStatus" role="status" aria-live="polite"></p>
+<fieldset id="commerceRelease" class="package-fields" hidden><legend>Liberação para compra online</legend>
+<p id="commerceReleaseState" role="status" aria-live="polite">Consulte o status da compra.</p>
+<p>Salve primeiro as alterações do produto. Exibir na vitrine não significa autorizar pagamentos: a liberação é uma etapa separada.</p>
+<label class="check-label"><input type="checkbox" id="confirmPackageRelease"> Confirmei pessoalmente o estoque, o preço de venda e o peso e as medidas reais da embalagem pronta para envio. Autorizo que este produto seja comprado com pagamento real.</label>
+<div class="editor-actions"><button id="releaseOnlineButton" type="button" class="primary-button">Liberar compra online</button><button id="pauseOnlineButton" type="button" class="ghost-button">Pausar compra online</button></div>
+<p id="commerceActionStatus" role="status" aria-live="polite"></p></fieldset></form></div></section>
 <section id="couponsTab" class="admin-section" hidden><div class="section-header"><div><h2>Cupons de desconto</h2><p>Crie códigos que poderão ser usados na sacola. O pagamento continua desativado.</p></div></div>
 <div class="coupon-layout"><form id="couponForm" class="editor"><span class="eyebrow">CAMPANHA</span><h3>Criar ou editar cupom</h3>
 <div class="form-grid"><label class="full">Código do cupom<input id="couponCode" type="text" maxlength="24" pattern="[A-Za-z0-9_-]{3,24}" required placeholder="EX: BEMVINDA10" autocapitalize="characters"></label>
