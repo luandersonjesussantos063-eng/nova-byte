@@ -57,7 +57,7 @@ function contents(order,kind){
   const n=textValue(x.name,120),q=Number(x.quantity),u=Number(x.unit_cents);
   const quantity=Number.isSafeInteger(q)&&q>0&&q<=100?q:0;
   const unit=Number.isSafeInteger(u)&&u>=0&&u<=10000000?u:0;
-  return {name:n,quantity,unit,amount:quantity*unit};
+  return {name:n,sku:textValue(x.sku,90),quantity,unit,amount:quantity*unit};
  });
  const buyerLines=[
   'Olá, '+customer+'!',
