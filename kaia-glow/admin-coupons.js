@@ -3,7 +3,7 @@ const cents=v=>Math.round(Number(v||0)*100);
 const money=v=>Number(v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
 let client=null,loaded=[];
 const state=(msg,err=false)=>{const n=$('#couponStatus');n.textContent=msg;n.classList.toggle('error',err);};
-const priceField=()=>{const percent=$('#couponType').value==='percent';$('#couponValue').max=percent?'90':'100000';$('#couponValue').step=percent?'1':'0.01';};
+const priceField=()=>{const percent=$('#couponType').value==='percent';$('#couponValue').max=percent?'100':'100000';$('#couponValue').step=percent?'1':'0.01';};
 function render(){
  const root=$('#couponList');root.replaceChildren();$('#couponCount').textContent=loaded.length;
  if(!loaded.length){const p=document.createElement('p');p.textContent='Ainda não há cupons cadastrados.';root.append(p);return;}
@@ -15,6 +15,7 @@ function render(){
   head.append(strong,label);
   const caption=document.createElement('small');caption.textContent=(c.discount_type==='percent'?c.discount_value+'%':money(c.discount_value/100))+' de desconto'
    +(c.min_order_cents>0?' · pedido acima de '+money(c.min_order_cents/100):'')
+   +(c.discount_type==='percent'&&c.discount_value===100?' · frete grátis (loja assume a entrega)':'')
    +(c.ends_at?' · até '+c.ends_at.split('-').reverse().join('/'):'');
   const buttons=document.createElement('div');
   const edit=document.createElement('button');edit.type='button';edit.textContent='Editar';edit.onclick=()=>fill(c);
@@ -51,9 +52,13 @@ export async function setupKaiaCoupons(sb){
   const value=kind==='percent'?Number($('#couponValue').value):cents($('#couponValue').value);
   const min=cents($('#couponMinimum').value);
   if(!/^[A-Z0-9_-]{3,24}$/.test(code)||!Number.isSafeInteger(value)||value<1||
-   (kind==='percent'&&value>90)||!Number.isSafeInteger(min)||min<0){state('Confira o código e os valores.',true);return;}
+   (kind==='percent'&&value>100)||!Number.isSafeInteger(min)||min<0){state('Confira o código e os valores.',true);return;}
   const params={p_code:code,p_discount_type:kind,p_discount_value:value,p_min_order_cents:min,
    p_starts_at:$('#couponStart').value||null,p_ends_at:$('#couponEnd').value||null,p_active:$('#couponActive').checked};
+  if(kind==='percent'&&value===100){
+   const accepted=window.confirm('ATENÇÃO: cupom de 100% também oferece FRETE GRÁTIS. A Kaia Glow assume todos os custos de produtos e entrega. Pedidos totalmente gratuitos não usam Mercado Pago e precisam do fluxo de confirmação próprio. Deseja salvar esse cupom?');
+   if(!accepted)return;
+  }
   const btn=$('#saveCouponButton');btn.disabled=true;state('Salvando…');
   try{const {error}=await client.rpc('kaia_admin_upsert_coupon',params);if(error)throw error;
    state('Cupom salvo! Os cupons ativos aparecem no site.');await reload();}
