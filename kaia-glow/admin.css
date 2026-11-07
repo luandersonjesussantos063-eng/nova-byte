@@ -52,7 +52,7 @@ body{background:var(--admin-bg);color:var(--admin-ink)}
 .admin-top-actions{gap:18px}.admin-top-actions a{font-size:13px;text-decoration:none;font-weight:650}
 .admin-top-actions a:hover{text-decoration:underline}.admin-top-actions #logoutButton{font-size:13px;font-weight:700;border:1px solid var(--admin-border);border-radius:10px;padding:10px 15px}
 .admin-top-actions #logoutButton:hover{background:#fbf1f6}
-.admin-menu-toggle{border:1px solid #e9dce3!important;border-radius:10px;background:#fff!important;padding:9px 12px;font-weight:650;font-size:13px!important;align-items:center;gap:7px}
+ .admin-menu-toggle{display:none;border:1px solid #e9dce3!important;border-radius:10px;background:#fff!important;padding:9px 12px;font-weight:650;font-size:13px!important;align-items:center;gap:7px}
 .admin-shell{max-width:none;margin:0;padding:0;min-height:calc(100vh - 140px)}
 .admin-shell>.login-card{margin:clamp(35px,7vh,90px) auto}
 .admin-workspace{display:grid;grid-template-columns:264px minmax(0,1fr);align-items:start;min-height:calc(100vh - 76px)}
