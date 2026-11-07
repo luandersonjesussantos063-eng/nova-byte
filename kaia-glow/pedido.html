@@ -1,5 +1,5 @@
 <!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>Kaia Glow — Meu pedido</title><style>body{font:16px system-ui,sans-serif;background:#f6f1eb;color:#34272e;margin:0;display:grid;place-items:center;min-height:100vh}main{background:white;border:1px solid #e9dede;box-shadow:0 10px 34px #0001;border-radius:18px;padding:30px;max-width:580px;width:calc(100% - 60px)}h1{font-size:28px}button,a.button{border:0;border-radius:10px;padding:13px 22px;background:#3c2a31;color:white;text-decoration:none;cursor:pointer;display:inline-block}p{line-height:1.6}.muted{color:#685b60}</style></head>
-<body><main><small>KAIA GLOW • PEDIDO</small><h1 id="title">Consultando pagamento…</h1><p id="status" role="status" aria-live="polite">Verificando o status diretamente com o Mercado Pago.</p><p id="total"></p><p class="muted">O redirecionamento do navegador não confirma aprovação. Somente o sistema de pagamentos pode confirmar o recebimento.</p><button id="refresh">Consultar novamente</button> <a href="/conta.html?aba=pedidos">Meus pedidos</a> <a href="/">Voltar à loja</a></main>
+<body><main><small>KAIA GLOW • PEDIDO</small><h1 id="title">Consultando pagamento…</h1><p id="status" role="status" aria-live="polite">Verificando o status diretamente com o Mercado Pago.</p><p id="total"></p><p class="muted">A confirmação vem do servidor da Kaia Glow após verificar o pagamento ou o cupom de cortesia. O prazo de entrega é estimado e pode variar por feriados e postagem.</p><button id="refresh">Consultar novamente</button> <a href="/conta.html?aba=pedidos">Meus pedidos</a> <a href="/">Voltar à loja</a></main>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js" integrity="sha384-TcHRA3zBbn+Lexh5n+Oil4guNPOS3rjNDpGRAN46u/s/mB2IZ50ceC6TYDU2yvgK" crossorigin="anonymous"></script>
 <script type="module">
 import {KAIA_AUTH} from './auth-config.js';
@@ -7,7 +7,7 @@ const $=id=>document.getElementById(id);
 const uuid=new URLSearchParams(location.search).get('pedido');
 const sb=window.supabase?.createClient(KAIA_AUTH.url,KAIA_AUTH.publishableKey,{auth:{storageKey:'kaia-glow-auth-v1',persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});
 async function refresh(){
- $('refresh').disabled=true;$('status').textContent='Consultando o Mercado Pago…';
+ $('refresh').disabled=true;$('status').textContent='Consultando a confirmação do pedido…';
  try{
   if(!/^[0-9a-f-]{36}$/.test(uuid||''))throw Error('Número do pedido inválido.');
   const {data}=await sb.auth.getSession();
@@ -15,8 +15,8 @@ async function refresh(){
   const r=await fetch('/api/kaia/comercial/pedido?id='+encodeURIComponent(uuid),{headers:{Authorization:'Bearer '+data.session.access_token},cache:'no-store'});
   const o=await r.json();if(!r.ok)throw Error(o.code||'Consulta indisponível');
   const messages={created:'Pedido reservado; pagamento ainda não iniciado.',pending:'Aguardando confirmação do Mercado Pago.',approved:'Pagamento aprovado. Pedido confirmado!',rejected:'Pagamento recusado.',cancelled:'Pagamento cancelado.',review_required:'Pedido em revisão. Procure o atendimento.',refunded:'Pagamento reembolsado.'};
-  $('title').textContent=o.status==='approved'?'Pagamento aprovado!':'Situação do seu pedido';
-  $('status').textContent=messages[o.status]||'Status em revisão.';
+  $('title').textContent=o.status==='approved'?(o.complimentary?'Pedido confirmado!':'Pagamento aprovado!'):'Situação do seu pedido';
+  $('status').textContent=o.complimentary&&o.status==='approved'?'Cortesia confirmada. Produtos e entrega gratuitos, sem cobrança.':messages[o.status]||'Status em revisão.';
   $('total').textContent='Valor total: '+(o.totalCents/100).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
  }catch(e){$('title').textContent='Não foi possível confirmar';$('status').textContent=e.message;}
  finally{$('refresh').disabled=false;}
