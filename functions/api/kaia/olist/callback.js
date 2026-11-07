@@ -6,6 +6,7 @@ const allowedCodes=new Set([
  'OLIST_CLIENTE_INVALIDO','OLIST_CODIGO_RECUSADO','OLIST_APLICATIVO_NAO_AUTORIZADO',
  'OLIST_SOLICITACAO_INVALIDA','OLIST_TIPO_AUTORIZACAO_INVALIDO','OLIST_CREDENCIAIS_RECUSADAS',
  'OLIST_LIMITE_DE_REQUISICOES','OLIST_SERVICO_RECUSOU_TOKEN','OLIST_FALHA_COMUNICACAO',
+ 'OLIST_FALHA_REDE','OLIST_TEMPO_ESGOTADO','OLIST_TOKEN_REDIRECIONADO',
  'OLIST_RESPOSTA_TOKEN_INVALIDA','OLIST_TOKEN_INCOMPLETO',
  'OLIST_CRIPTOGRAFIA_INDISPONIVEL','OLIST_GRAVACAO_INDISPONIVEL','REGISTRO_INDISPONIVEL',
  'AUTORIZACAO_EXPIRADA','AUTORIZACAO_INVALIDA','CREDENCIAIS_OLIST_AUSENTES',
@@ -62,6 +63,9 @@ export async function onRequestGet({request,env}){
    OLIST_CREDENCIAIS_RECUSADAS:'A Olist recusou as credenciais do aplicativo. Confira as chaves de acesso na Olist e no Cloudflare.',
    OLIST_CODIGO_RECUSADO:'O código de autorização expirou ou não corresponde à URL cadastrada. Inicie a conexão novamente e confira a URL de redirecionamento.',
    OLIST_FALHA_COMUNICACAO:'Não conseguimos comunicar com a Olist. Tente novamente após conferir a disponibilidade do serviço.',
+   OLIST_FALHA_REDE:'O servidor não conseguiu concluir uma chamada de rede ao endpoint de token da Olist. Não altere as chaves até identificarmos o bloqueio.',
+   OLIST_TEMPO_ESGOTADO:'A conexão com o servidor de autenticação da Olist excedeu o tempo limite. Aguarde uma nova tentativa.',
+   OLIST_TOKEN_REDIRECIONADO:'O servidor da Olist respondeu com um redirecionamento inesperado ao receber a solicitação de token. Vamos conferir o endpoint sem enviar chaves para outro endereço.',
    OLIST_TOKEN_INCOMPLETO:'A Olist respondeu, mas não enviou todos os dados necessários para manter a autorização. Será preciso revisar o formato da resposta.'
   };
   return successPage('Não foi possível concluir a conexão',
