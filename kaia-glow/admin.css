@@ -18,3 +18,22 @@
 #cancellationAdminList article label{display:grid;gap:8px;margin:12px 0;font-weight:600}
 #cancellationAdminList textarea{width:100%;box-sizing:border-box;padding:12px;border:1px solid #d4bfca;border-radius:10px;font:inherit;resize:vertical;min-height:88px}
 #cancellationAdminList .editor-actions{display:flex;flex-wrap:wrap;gap:10px}
+
+/* CRM: readable, compact client records, with no exposure of anonymous metrics. */
+.kaia-customer-admin-list{display:grid;gap:16px}
+.customer-insight-card{border:1px solid #e5d4df;background:#fff;border-radius:16px;padding:22px;overflow-wrap:anywhere}
+.customer-insight-head{display:flex;justify-content:space-between;align-items:start;gap:12px}
+.customer-insight-head h3{margin:0;color:#552942;font-size:19px}
+.customer-insight-head p{margin:5px 0}
+.customer-status{display:inline-block;padding:5px 11px;border-radius:20px;background:#f7ecf2;color:#623951;font-size:12px}
+.customer-insight-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:11px;margin:15px 0}
+.customer-insight-stats>div{background:#f9f4f6;border-radius:10px;padding:13px}
+.customer-insight-stats span,.customer-insight-stats strong{display:block}
+.customer-insight-stats strong{font-size:17px;overflow-wrap:anywhere}
+.customer-insight-products{border-top:1px solid #e6d7df;padding-top:12px}
+.customer-insight-products ul{padding-left:20px}
+.customer-coupon-send{border-top:1px solid #e6d7df;padding-top:14px;display:flex;flex-wrap:wrap;align-items:end;gap:12px}
+.customer-coupon-send label{display:grid;flex:1;min-width:190px;gap:6px}
+.customer-coupon-send select{padding:10px;border:1px solid #d2bdc7;border-radius:10px;max-width:100%;background:white}
+.customer-coupon-send p{width:100%;margin:0}
+@media(max-width:700px){.customer-insight-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.customer-insight-head{flex-wrap:wrap}}
