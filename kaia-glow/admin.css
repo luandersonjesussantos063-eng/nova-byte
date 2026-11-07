@@ -37,3 +37,142 @@
 .customer-coupon-send select{padding:10px;border:1px solid #d2bdc7;border-radius:10px;max-width:100%;background:white}
 .customer-coupon-send p{width:100%;margin:0}
 @media(max-width:700px){.customer-insight-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.customer-insight-head{flex-wrap:wrap}}
+
+
+/* --------------------------------------------------------------------------
+   KAIA GLOW CONTROL CENTER · 2026
+   A cohesive management workspace; forms and business logic remain untouched.
+--------------------------------------------------------------------------- */
+:root{--admin-bg:#faf8fa;--admin-surface:#fff;--admin-ink:#302530;--admin-border:#eee5eb;--admin-wine:#542b43;--admin-muted:#786a75;--admin-shadow:0 12px 32px rgba(63,35,53,.045)}
+body{background:var(--admin-bg);color:var(--admin-ink)}
+.admin-top{position:sticky;top:0;z-index:45;padding:12px clamp(18px,2.5vw,38px);height:76px;background:rgba(255,255,255,.97);backdrop-filter:blur(14px);border-bottom:1px solid var(--admin-border)}
+.admin-brand{gap:14px}.admin-brand .brand-mark{width:45px;height:45px;border-radius:14px;font:500 30px Georgia,serif;background:var(--admin-wine);box-shadow:0 4px 12px #542b4321}
+.admin-brand strong{letter-spacing:2.8px;color:var(--admin-wine);font-size:13px}
+.admin-brand small{font-size:9px;font-weight:700;letter-spacing:1.6px;margin-top:5px}
+.admin-top-actions{gap:18px}.admin-top-actions a{font-size:13px;text-decoration:none;font-weight:650}
+.admin-top-actions a:hover{text-decoration:underline}.admin-top-actions #logoutButton{font-size:13px;font-weight:700;border:1px solid var(--admin-border);border-radius:10px;padding:10px 15px}
+.admin-top-actions #logoutButton:hover{background:#fbf1f6}
+.admin-menu-toggle{border:1px solid #e9dce3!important;border-radius:10px;background:#fff!important;padding:9px 12px;font-weight:650;font-size:13px!important;align-items:center;gap:7px}
+.admin-shell{max-width:none;margin:0;padding:0;min-height:calc(100vh - 140px)}
+.admin-shell>.login-card{margin:clamp(35px,7vh,90px) auto}
+.admin-workspace{display:grid;grid-template-columns:264px minmax(0,1fr);align-items:start;min-height:calc(100vh - 76px)}
+.admin-sidebar{position:sticky;top:76px;align-self:start;display:flex;flex-direction:column;height:calc(100dvh - 76px);overflow-y:auto;overscroll-behavior:contain;padding:27px 14px 16px 18px;background:#fff;border-right:1px solid var(--admin-border);scrollbar-width:thin}
+.admin-sidebar-heading{padding:0 14px 22px;border-bottom:1px solid var(--admin-border);margin-bottom:19px}
+.admin-sidebar-kicker{font-size:10px;letter-spacing:1.6px;font-weight:800;color:#9e7388}
+.admin-sidebar-heading strong{display:block;font:500 22px Georgia,serif;color:var(--admin-wine);margin-top:7px}
+.admin-sidebar-heading p{margin:6px 0 0;font-size:12px}
+.admin-sidebar .admin-tabs{display:flex;flex-direction:column;gap:3px;flex:0 0 auto;margin:0;padding:0;border:0}
+.admin-nav-group{font-size:9px;letter-spacing:1.8px;font-weight:800;color:#a7939f;margin:18px 11px 10px}
+.admin-sidebar .admin-tabs button{display:flex;align-items:center;width:100%;min-height:45px;text-align:left;gap:12px;border:1px solid transparent;border-radius:11px;padding:10px 12px;color:#6a5963;background:transparent;font-family:Arial,sans-serif;font-size:12.5px;font-weight:650;line-height:1.35;white-space:normal}
+.admin-sidebar .admin-tabs button:hover{background:#faf3f7;color:var(--admin-wine)}
+.admin-sidebar .admin-tabs button[aria-selected=true]{border-color:#f1e1ea;background:#f8edf3;color:var(--admin-wine);font-weight:800;box-shadow:inset 3px 0 0 var(--admin-wine)}
+.admin-nav-icon{width:19px;height:19px;flex:none;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.admin-nav-chevron{font-size:19px;line-height:1;color:#b4a0ac;margin-left:auto}
+.admin-sidebar .admin-tabs button[aria-selected=true] .admin-nav-chevron{color:var(--admin-wine)}
+.admin-sidebar-footer{margin-top:auto;border-top:1px solid var(--admin-border);padding:16px 10px 4px;display:flex;align-items:flex-start;gap:9px;font-size:11px;color:#685c65;line-height:1.5}
+.admin-sidebar-footer small{font-size:10px;color:#a1939d}
+.sidebar-status-dot{width:8px;height:8px;border-radius:50%;background:#4a9678;flex:none;margin-top:4px;box-shadow:0 0 0 3px #e6f4ec}
+.admin-nav-scrim{display:none}
+.admin-content{min-width:0;max-width:1640px;width:100%;margin:0 auto;padding:clamp(23px,3vw,44px) clamp(16px,2.7vw,50px) 64px}
+#adminPanel .page-intro{align-items:flex-start;margin-bottom:28px}
+#adminPanel .page-intro h1{font:500 clamp(28px,3.1vw,37px)/1.1 Georgia,serif;color:var(--admin-wine);margin:9px 0 8px}
+#adminPanel .page-intro p{font-size:13px;margin:0;max-width:620px}
+#adminPanel .page-intro .eyebrow{color:#95677f}
+.account-chip{font-size:11px;color:#694f5f;background:#fff;border:1px solid var(--admin-border);box-shadow:0 4px 20px #502a4408;padding:10px 13px;max-width:300px}
+#adminPanel .admin-section{min-width:0}
+#adminPanel .admin-section .section-header{background:#fff;border:1px solid var(--admin-border);border-radius:15px;padding:20px 23px;margin-bottom:22px;box-shadow:var(--admin-shadow)}
+#adminPanel .admin-section .section-header h2{font-size:clamp(22px,2vw,28px);color:var(--admin-wine);margin:4px 0 6px}
+#adminPanel .admin-section .section-header p{font-size:12px;max-width:780px;margin:4px 0}
+#adminPanel .metric,#adminPanel .product-picker,#adminPanel .editor,#adminPanel .coupon-admin-list{border-color:var(--admin-border);box-shadow:var(--admin-shadow);border-radius:15px}
+#adminPanel .metric strong{color:var(--admin-wine)}
+#adminPanel .primary-button{border-radius:10px;background:var(--admin-wine)}
+#adminPanel .ghost-button{border-radius:10px;border-color:#e5d4dc}
+#adminPanel input:not([type=checkbox]):not([type=file]),#adminPanel select,#adminPanel textarea{border-color:#dfcfd8;border-radius:10px}
+#adminPanel .product-layout{grid-template-columns:minmax(235px,.9fr) minmax(0,1.4fr)}
+#adminPanel .product-list{scrollbar-width:thin}
+#adminPanel .product-option{padding:13px 8px;border-radius:10px;transition:background .15s}
+#adminPanel .product-option.active{background:#f7eaf1}
+#adminPanel .coupon-layout{align-items:start}
+.coupon-list-heading{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.coupon-total{border:1px solid #e8d7e0;border-radius:100px;background:#fbf4f8;padding:6px 12px;font-size:11px;color:#78556a}
+.coupon-total strong{color:#552b43;font-size:14px}
+#overviewTab .overview-welcome{display:flex;align-items:center;justify-content:space-between;gap:20px;border:1px solid #ead9e2;border-radius:20px;background:linear-gradient(115deg,#fff 27%,#faeef4 100%);padding:26px clamp(18px,2.2vw,35px);margin-bottom:22px}
+#overviewTab .overview-welcome h2{font:500 clamp(25px,2.6vw,31px)/1.2 Georgia,serif;margin:8px 0 8px;color:var(--admin-wine)}
+#overviewTab .overview-welcome p{margin:0;max-width:560px;font-size:12.5px}
+#overviewTab .overview-welcome button{display:flex;align-items:center;justify-content:center;gap:8px;white-space:nowrap;min-height:43px}
+#overviewTab .overview-welcome button .admin-nav-icon{width:16px;height:16px}
+#overviewTab .overview-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin:0 0 22px}
+#overviewTab .overview-metrics .metric{position:relative;min-width:0;padding:23px 22px;overflow:hidden}
+#overviewTab .overview-metrics .metric:before{content:"";position:absolute;top:0;left:20px;width:42px;height:3px;border-radius:0 0 4px 4px;background:#9c6684}
+#overviewTab .overview-metrics .metric small{font-size:11px;color:#75636d}
+#overviewTab .overview-metrics .metric strong{font-family:Arial,sans-serif;font-weight:750;font-size:32px;letter-spacing:-1px;margin:11px 0}
+#overviewTab .overview-metrics .metric span{font-size:11px;color:#988692;display:block}
+#overviewTab .overview-grid{display:grid;grid-template-columns:1.05fr 1fr;gap:18px}
+#overviewTab .overview-panel{background:#fff;border:1px solid var(--admin-border);border-radius:18px;padding:26px;box-shadow:var(--admin-shadow);min-width:0}
+#overviewTab .overview-panel-heading{padding-bottom:13px;border-bottom:1px solid #f0e6ec;margin-bottom:11px}
+#overviewTab .overview-panel-heading h3{font:500 22px Georgia,serif;color:var(--admin-wine);margin:8px 0}
+#overviewTab .quick-actions{display:grid;gap:5px}
+#overviewTab .quick-actions button{width:100%;display:flex;align-items:center;text-align:left;gap:13px;border:1px solid transparent;border-radius:12px;padding:12px 10px;background:#fff;color:#65475a;min-height:66px}
+#overviewTab .quick-actions button:hover,#overviewTab .quick-actions button:focus-visible{background:#fbf2f7;border-color:#eee0e8}
+#overviewTab .quick-actions button>span{flex:1}
+#overviewTab .quick-actions strong{display:block;color:#4f2d40;font-size:13px}
+#overviewTab .quick-actions small{display:block;color:#887481;font-size:11px;margin-top:5px}
+#overviewTab .quick-actions .admin-nav-icon.arrow{width:16px;color:#aa8c9e}
+#overviewTab .overview-alerts{display:grid;gap:10px}
+.overview-alert{display:flex;align-items:flex-start;gap:12px;border:1px solid #f0e4ea;border-radius:12px;background:#fdfafc;padding:14px}
+.overview-alert-icon{border-radius:50%;background:#f6e8ef;color:#75415f;display:grid;place-items:center;font-weight:700;font-size:14px;width:29px;height:29px;flex:none}
+.overview-alert strong{display:block;font-size:12px;color:#543147}
+.overview-alert p{font-size:11px;margin:4px 0 0;line-height:1.55;color:#8b7683}
+.overview-alert button{margin-top:8px;border:0;background:transparent;color:#66384f;font-weight:700;font-size:11px;padding:0;text-decoration:underline}
+.overview-alert.is-clear{border-color:#e2eee8;background:#fafdfb}
+.overview-alert.is-clear .overview-alert-icon{background:#e5f3eb;color:#287754}
+.overview-updated{font-size:10px!important;margin:17px 0 0!important;color:#9a8793!important}
+.overview-footnote{margin-top:16px;font-size:11px;line-height:1.5;color:#978692}
+#adminPanel .admin-footer{background:white}
+@media(min-width:901px) and (max-width:1150px){
+ .admin-workspace{grid-template-columns:238px minmax(0,1fr)}
+ .admin-sidebar{padding-left:10px;padding-right:10px}
+ .admin-content{padding-left:22px;padding-right:22px}
+ #overviewTab .overview-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}
+ #overviewTab .overview-grid{grid-template-columns:1fr}
+}
+@media(max-width:900px){
+ .admin-workspace{display:block}
+ .admin-sidebar{position:fixed;left:0;top:0;bottom:0;width:min(290px,88vw);height:100dvh;padding-top:26px;transform:translateX(-105%);transition:transform .22s ease;z-index:90;box-shadow:14px 0 36px #37152a20}
+ .admin-sidebar.is-open{transform:translateX(0)}
+ .admin-nav-scrim:not([hidden]){display:block;position:fixed;inset:0;background:rgba(37,20,29,.49);border:0;padding:0;z-index:85;cursor:pointer}
+ #adminNavToggle:not([hidden]){display:inline-flex}
+ .admin-content{padding:25px 20px 54px}
+ #overviewTab .overview-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}
+ #overviewTab .overview-grid{grid-template-columns:1fr}
+ #adminPanel .product-layout{grid-template-columns:1fr}
+}
+@media(max-width:620px){
+ .admin-top{height:65px;padding:10px 13px;gap:10px}
+ .admin-brand{gap:8px}.admin-brand .brand-mark{width:37px;height:37px;font-size:25px;border-radius:10px}
+ .admin-brand strong{font-size:11px;letter-spacing:1.3px}.admin-brand small{font-size:8px;letter-spacing:.9px;margin-top:3px}
+ .admin-top-actions{gap:7px}.admin-top-actions a{font-size:11px}
+ .admin-top-actions #logoutButton{font-size:11px;padding:8px;border-radius:8px}
+ .admin-menu-toggle{font-size:11px!important;padding:8px!important}
+ .admin-content{padding:20px 12px 42px}
+ #adminPanel .page-intro{display:flex;flex-direction:column;align-items:flex-start;gap:10px;margin-bottom:19px}
+ #adminPanel .page-intro h1{font-size:28px;margin:5px 0 5px}
+ #adminPanel .page-intro p{font-size:12px}
+ .account-chip{max-width:100%;font-size:10px}
+ #overviewTab .overview-welcome{display:block;padding:20px 18px}
+ #overviewTab .overview-welcome button{width:100%;margin-top:17px}
+ #overviewTab .overview-metrics{gap:9px;margin-bottom:12px}
+ #overviewTab .overview-metrics .metric{padding:18px 13px}
+ #overviewTab .overview-metrics .metric strong{font-size:26px}
+ #overviewTab .overview-metrics .metric small{font-size:10px}
+ #overviewTab .overview-metrics .metric span{font-size:10px}
+ #overviewTab .overview-panel{padding:19px 14px}
+ #overviewTab .overview-grid{gap:12px}
+ #adminPanel .admin-section .section-header{padding:18px 14px}
+ #adminPanel .admin-section .section-header .editor-header-actions{margin-top:15px}
+ #adminPanel .metric,#adminPanel .product-picker,#adminPanel .editor,#adminPanel .coupon-admin-list{padding:16px}
+ #adminPanel .product-list{max-height:330px}
+ #adminPanel .admin-section .section-header h2{font-size:23px}
+ .customer-insight-stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(prefers-reduced-motion:reduce){.admin-sidebar{transition:none}#overviewTab .quick-actions button{transition:none}}
