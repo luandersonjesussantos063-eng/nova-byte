@@ -66,14 +66,36 @@ export async function tokenRequest(env,params){
  const body=new URLSearchParams({
   client_id:env.KAIA_OLIST_CLIENT_ID,client_secret:env.KAIA_OLIST_CLIENT_SECRET,...params
  });
- const response=await fetch(TOKEN_URL,{method:'POST',headers:{
-  'content-type':'application/x-www-form-urlencoded',accept:'application/json'
- },body:body.toString(),redirect:'error',signal:AbortSignal.timeout(10000)});
- if(!response.ok)throw new PaymentError('OLIST_NAO_AUTORIZOU_TOKEN',502);
- const result=await response.json();
+ let response;
+ try{
+  response=await fetch(TOKEN_URL,{method:'POST',headers:{
+   'content-type':'application/x-www-form-urlencoded',accept:'application/json'
+  },body:body.toString(),redirect:'error',signal:AbortSignal.timeout(10000)});
+ }catch{throw new PaymentError('OLIST_FALHA_COMUNICACAO',502);}
+ // Only use OAuth standard error enums. Never return/log token endpoint body,
+ // client_id, client_secret, authorization code, access or refresh tokens.
+ if(!response.ok){
+  let kind='';
+  try{
+   const data=await response.json();
+   if(typeof data?.error==='string')kind=data.error;
+  }catch{}
+  const known={
+   invalid_client:'OLIST_CLIENTE_INVALIDO',
+   invalid_grant:'OLIST_CODIGO_RECUSADO',
+   unauthorized_client:'OLIST_APLICATIVO_NAO_AUTORIZADO',
+   invalid_request:'OLIST_SOLICITACAO_INVALIDA',
+   unsupported_grant_type:'OLIST_TIPO_AUTORIZACAO_INVALIDO'
+  };
+  throw new PaymentError(known[kind]||
+   (response.status===401||response.status===403?'OLIST_CREDENCIAIS_RECUSADAS':
+    response.status===429?'OLIST_LIMITE_DE_REQUISICOES':'OLIST_SERVICO_RECUSOU_TOKEN'),502);
+ }
+ let result;
+ try{result=await response.json();}catch{throw new PaymentError('OLIST_RESPOSTA_TOKEN_INVALIDA',502);}
  if(typeof result.access_token!=='string'||!result.access_token||
     typeof result.refresh_token!=='string'||!result.refresh_token)
-  throw new PaymentError('OLIST_TOKEN_INVALIDO',502);
+  throw new PaymentError('OLIST_TOKEN_INCOMPLETO',502);
  return {
   access_token:result.access_token,refresh_token:result.refresh_token,
   expires_at:Date.now()+Math.max(60,Number(result.expires_in)||300)*1000,
@@ -82,7 +104,9 @@ export async function tokenRequest(env,params){
  };
 }
 export async function persistTokens(env,tokens,adminId,refreshed=false){
- const encrypted=await sealTokens(env,tokens);
+ let encrypted;
+ try{encrypted=await sealTokens(env,tokens);}
+ catch{throw new PaymentError('OLIST_CRIPTOGRAFIA_INDISPONIVEL',503);}
  const update={
   ...encrypted,expires_at:new Date(tokens.expires_at).toISOString(),
   updated_at:new Date().toISOString(),
