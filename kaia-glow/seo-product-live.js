@@ -21,8 +21,10 @@ if(article){
       explanation.textContent='Este produto não faz mais parte do catálogo disponível. Conheça os outros cuidados da Kaia Glow.';
       const link=document.createElement('a');link.className='button';link.href='/';
       link.textContent='Conhecer outros produtos';
-      replacement.append(h1,explanation,link);article.replaceWith(replacement);
-      article.nextElementSibling?.remove();
+      replacement.append(h1,explanation,link);
+      const related=article.nextElementSibling;
+      article.replaceWith(replacement);
+      if(related?.matches('section.content'))related.remove();
       document.querySelectorAll('script[type="application/ld+json"]').forEach(node=>node.remove());
       document.title='Produto retirado da loja | Kaia Glow';
      }else{
