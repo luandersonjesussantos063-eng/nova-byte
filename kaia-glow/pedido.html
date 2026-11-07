@@ -21,7 +21,7 @@ async function refresh(){
   $('title').textContent=o.freeOrder?'Pedido grátis confirmado!':o.status==='approved'?'Pagamento aprovado!':'Situação do seu pedido';
   $('status').textContent=o.freeOrder?'Cupom '+o.couponCode+' aplicado: 100% de desconto e frete grátis. Nenhum pagamento foi cobrado.':o.expired?'O prazo do pedido terminou e o Mercado Pago confirmou o cancelamento. É possível iniciar outra compra.':messages[o.status]||'Status em revisão.';
   $('items').textContent=(o.items||[]).map(i=>i.name+' (x'+i.quantity+')').join(', ');
-  $('total').textContent='Valor total deste pedido: '+(o.totalCents/100).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+  $('total').textContent='Valor total deste pedido: '+(o.totalCents/100).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})+(o.freeOrder?' (frete grátis)':'');
   if(['created','pending'].includes(o.status))refreshTimer=setTimeout(refresh,15000);
  }catch(e){$('title').textContent='Não foi possível confirmar';$('status').textContent=e.message;}
  finally{$('refresh').disabled=false;}
