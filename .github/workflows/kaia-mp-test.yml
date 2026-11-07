@@ -1,0 +1,32 @@
+name: Kaia Mercado Pago sandbox checks
+on:
+  push:
+    paths:
+      - 'functions/api/kaia/mp-test/**'
+      - 'functions/api/kaia/mercado-pago-webhook.js'
+      - 'kaia-glow/backend/mp-test-core.js'
+      - 'kaia-glow/backend/mp-test/**'
+      - 'scripts/tests/kaia-mp-test.test.mjs'
+      - '.github/workflows/kaia-mp-test.yml'
+  pull_request:
+    paths:
+      - 'functions/api/kaia/mp-test/**'
+      - 'kaia-glow/backend/mp-test*'
+      - 'kaia-glow/backend/mp-test/**'
+      - 'scripts/tests/kaia-mp-test.test.mjs'
+      - '.github/workflows/kaia-mp-test.yml'
+permissions:
+  contents: read
+jobs:
+  sandbox-local:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - run: node --test scripts/tests/kaia-mp-test.test.mjs
+      - run: node scripts/build-kaia-site.mjs
