@@ -7,6 +7,7 @@ const json=(x,s=200)=>new Response(JSON.stringify(x),{
  status:s,headers:{'content-type':'application/json; charset=utf-8',
  'cache-control':'no-store','x-robots-tag':'noindex,nofollow'}});
 const MERCHANT_EMAIL='Usekaiaglow@gmail.com';
+const DEFAULT_SENDER='pedidos@usekaiaglow.com.br';
 const uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const safeMail=s=>typeof s==='string'&&s.length<=180&&
  /^[^\s@<>]+@[^\s@<>]+\.[A-Za-z]{2,}$/.test(s);
@@ -143,7 +144,7 @@ function contents(order,kind,paymentMethod){
  return {subject,text:lines.join('\n'),html:markup};
 }
 async function send(env,to,content,key){
- const rawFrom=env.KAIA_ORDER_EMAIL_FROM;
+ const rawFrom=env.KAIA_ORDER_EMAIL_FROM||DEFAULT_SENDER;
  if(!safeMail(rawFrom)||!rawFrom.toLowerCase().endsWith('@usekaiaglow.com.br')||
   !safeMail(to)||!env.KAIA_ORDER_EMAIL_API_KEY)
   throw new PaymentError('EMAIL_CONFIGURACAO_PENDENTE',503);
@@ -179,8 +180,8 @@ export async function onRequestPost({request,env}){
   if(claimed!==true)throw new PaymentError('EMAIL_DESAFIO_EXPIRADO',403);
   // Fail closed until a verified sending domain, recipient and secret exist.
   if(!env.KAIA_ORDER_EMAIL_API_KEY||
-   !safeMail(env.KAIA_ORDER_EMAIL_FROM)||
-   !env.KAIA_ORDER_EMAIL_FROM.toLowerCase().endsWith('@usekaiaglow.com.br')||
+   !safeMail(env.KAIA_ORDER_EMAIL_FROM||DEFAULT_SENDER)||
+   !(env.KAIA_ORDER_EMAIL_FROM||DEFAULT_SENDER).toLowerCase().endsWith('@usekaiaglow.com.br')||
    !safeMail(MERCHANT_EMAIL))
     throw new PaymentError('EMAIL_CONFIGURACAO_PENDENTE',503);
   const batch=await db(env,'rpc/kaia_mail_claim_batch','POST',{});
