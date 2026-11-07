@@ -1,7 +1,7 @@
 import {KAIA_AUTH} from './auth-config.js';
 import {setupKaiaCoupons} from './admin-coupons.js';
 import {initKaiaAnalytics,loadKaiaAnalytics} from './admin-analytics.js';
-import {initKaiaMarketplaces,loadKaiaMarketplaces} from './admin-marketplaces.js?v=3';
+import {initKaiaMarketplaces,loadKaiaMarketplaces} from './admin-marketplaces.js?v=4';
 import {initKaiaPayments,loadKaiaPayments} from './admin-payments.js';
 const $=s=>document.querySelector(s),all=s=>Array.from(document.querySelectorAll(s));
 const sb=window.supabase?.createClient(KAIA_AUTH.url,KAIA_AUTH.publishableKey,{auth:{storageKey:'kaia-glow-auth-v1',persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
