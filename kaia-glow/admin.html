@@ -1,20 +1,82 @@
 <!doctype html>
 <html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow"><meta name="referrer" content="strict-origin-when-cross-origin">
-<title>Painel administrativo · Kaia Glow</title><link rel="stylesheet" href="admin.css?v=2"><link rel="stylesheet" href="admin-analytics.css?v=1"><link rel="stylesheet" href="admin-marketplaces.css?v=4"><link rel="stylesheet" href="admin-payments.css?v=1"></head>
+<title>Painel administrativo · Kaia Glow</title><link rel="stylesheet" href="admin.css?v=3"><link rel="stylesheet" href="admin-analytics.css?v=1"><link rel="stylesheet" href="admin-marketplaces.css?v=4"><link rel="stylesheet" href="admin-payments.css?v=1"></head>
 <body>
-<header class="admin-top"><div class="admin-brand"><span class="brand-mark">K</span><div><strong>KAIA GLOW</strong><small>GESTÃO DA LOJA</small></div></div><div class="admin-top-actions"><a href="/" target="_blank" rel="noopener noreferrer">Ver a loja ↗</a><button type="button" id="logoutButton" hidden>Sair</button></div></header>
+<header class="admin-top"><div class="admin-brand"><span class="brand-mark" aria-hidden="true">K</span><div><strong>KAIA GLOW</strong><small>PAINEL DE GESTÃO</small></div></div><div class="admin-top-actions"><button type="button" id="adminNavToggle" class="admin-menu-toggle" aria-label="Abrir menu de gestão" aria-controls="adminSidebar" aria-expanded="false" hidden><span aria-hidden="true">☰</span> Menu</button><a href="/" target="_blank" rel="noopener noreferrer">Ver loja <span aria-hidden="true">↗</span></a><button type="button" id="logoutButton" hidden>Sair</button></div></header>
 <main class="admin-shell">
-<section id="loginPanel" class="login-card"><span class="eyebrow">ÁREA RESTRITA</span><h1>Seu espaço de gestão.</h1><p>Edite a vitrine, acompanhe os produtos e organize suas campanhas com uma única conta autorizada.</p>
+<section id="loginPanel" class="login-card"><span class="eyebrow">ÁREA RESTRITA</span><h1>Seu espaço de gestão.</h1><p>Acesse produtos, vendas, clientes e operações com segurança, usando sua conta autorizada.</p>
 <form id="loginForm"><label for="adminEmail">E-mail cadastrado</label><input type="email" id="adminEmail" autocomplete="username" required placeholder="seu@email.com">
 <label for="adminPassword">Senha</label><input type="password" id="adminPassword" autocomplete="current-password" required placeholder="Sua senha">
 <button type="submit" class="primary-button">Entrar no painel</button></form>
 <p class="login-hint">Somente contas autorizadas com e-mail confirmado podem fazer alterações. Para criar seu login, use <a href="/conta.html?modo=cadastro">Cadastrar conta com o e-mail autorizado</a>. Se já possui cadastro, basta entrar acima.</p>
 <p id="loginStatus" role="status" aria-live="polite"></p></section>
+<svg class="admin-icon-sprite" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false" style="position:absolute;width:0;height:0;overflow:hidden">
+<symbol id="kg-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></symbol>
+<symbol id="kg-box" viewBox="0 0 24 24"><path d="m12 2 9 5-9 5-9-5 9-5Z"/><path d="M3 7v10l9 5 9-5V7M12 12v10"/></symbol>
+<symbol id="kg-layers" viewBox="0 0 24 24"><path d="m12 3 9 5-9 5-9-5 9-5ZM3 12l9 5 9-5M3 16l9 5 9-5"/></symbol>
+<symbol id="kg-credit" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="3"/><path d="M2 10h20M6 15h4"/></symbol>
+<symbol id="kg-rotate" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5M9 11l3 3 4-5"/></symbol>
+<symbol id="kg-users" viewBox="0 0 24 24"><circle cx="9" cy="8" r="4"/><path d="M2 21v-2a7 7 0 0 1 14 0v2M16 5a4 4 0 0 1 0 8m3 8v-2a7 7 0 0 0-2.5-5.3"/></symbol>
+<symbol id="kg-chart" viewBox="0 0 24 24"><path d="M3 21V3M3 21h18M7 17v-5M12 17V7M17 17v-9"/></symbol>
+<symbol id="kg-tag" viewBox="0 0 24 24"><path d="M3 4h10l8 8-9 9-9-9V4Z"/><circle cx="8.5" cy="8.5" r="1"/></symbol>
+<symbol id="kg-shield" viewBox="0 0 24 24"><path d="M12 2 4 5v6c0 5 3 8 8 11 5-3 8-6 8-11V5l-8-3ZM9 12l2 2 4-4"/></symbol>
+<symbol id="kg-arrow" viewBox="0 0 24 24"><path d="M5 12h14m-6-6 6 6-6 6"/></symbol>
+<symbol id="kg-refresh" viewBox="0 0 24 24"><path d="M21 4v6h-6M3 20v-6h6M20 10a8 8 0 0 0-14-3L3 10m1 4a8 8 0 0 0 14 3l3-3"/></symbol>
+</svg>
 <section id="adminPanel" hidden>
-<div class="page-intro"><div><span class="eyebrow">PAINEL KAIA</span><h1>Controle da sua vitrine.</h1><p>Gerencie produtos, pedidos, estoque e canais de venda em um único lugar.</p></div><div class="account-chip" id="adminIdentity"></div></div>
-<div class="dashboard-metrics"><div class="metric"><small>Produtos da vitrine</small><strong id="productCount">—</strong></div><div class="metric"><small>Cupons cadastrados</small><strong id="couponCount">—</strong></div><div class="metric"><small>Checkout</small><strong>Mercado Pago</strong></div></div>
-<div class="admin-tabs" role="tablist" aria-label="Áreas de gestão"><button type="button" data-tab="products" aria-selected="true">Produtos e fotos</button><button type="button" data-tab="coupons" aria-selected="false">Cupons</button><button type="button" data-tab="cancellations" aria-selected="false">Cancelamentos</button><button type="button" data-tab="customers" aria-selected="false">Clientes e ofertas</button><button type="button" data-tab="team" aria-selected="false" hidden>Equipe e acessos</button><button type="button" data-tab="analytics" aria-selected="false">Visitas e interesse</button><button type="button" data-tab="marketplaces" aria-selected="false">Estoque e marketplaces</button><button type="button" data-tab="payments" aria-selected="false">Pagamentos</button></div>
+<div class="admin-workspace">
+<aside class="admin-sidebar" id="adminSidebar" aria-label="Menu administrativo">
+  <div class="admin-sidebar-heading"><span class="admin-sidebar-kicker">PAINEL DE CONTROLE</span><strong>Minha operação</strong><p>Todos os setores da loja</p></div>
+  <nav class="admin-tabs" role="tablist" aria-label="Áreas de gestão" aria-orientation="vertical">
+    <span class="admin-nav-group">INÍCIO</span>
+    <button type="button" role="tab" id="nav-overview" data-tab="overview" aria-controls="overviewTab" aria-selected="true" tabindex="0"><svg class="admin-nav-icon" aria-hidden="true"><use href="#kg-grid"></use></svg><span>Visão geral</span><span class="admin-nav-chevron" aria-hidden="true">›</span></button>
+    <span class="admin-nav-group">OPERAÇÃO</span>
+    <button type="button" role="tab" id="nav-products" data-tab="products" aria-controls="productsTab" aria-selected="false" tabindex="-1"><svg class="admin-nav-icon" aria-hidden="true"><use href="#kg-box"></use></svg><span>Produtos e fotos</span><span class="admin-nav-chevron" aria-hidden="true">›</span></button>
+    <button type="button" role="tab" id="nav-marketplaces" data-tab="marketplaces" aria-controls="marketplacesTab" aria-selected="false" tabindex="-1"><svg class="admin-nav-icon" aria-hidden="true"><use href="#kg-layers"></use></svg><span>Estoque e marketplaces</span><span class="admin-nav-chevron" aria-hidden="true">›</span></button>
+    <button type="button" role="tab" id="nav-payments" data-tab="payments" aria-controls="paymentsTab" aria-selected="false" tabindex="-1"><svg class="admin-nav-icon" aria-hidden="true"><use href="#kg-credit"></use></svg><span>Pagamentos</span><span class="admin-nav-chevron" aria-hidden="true">›</span></button>
+    <button type="button" role="tab" id="nav-cancellations" data-tab="cancellations" aria-controls="cancellationsTab" aria-selected="false" tabindex="-1"><svg class="admin-nav-icon" aria-hidden="true"><use href="#kg-rotate"></use></svg><span>Cancelamentos</span><span class="admin-nav-chevron" aria-hidden="true">›</span></button>
+    <span class="admin-nav-group">RELACIONAMENTO</span>
+    <button type="button" role="tab" id="nav-customers" data-tab="customers" aria-controls="customersTab" aria-selected="false" tabindex="-1"><svg class="admin-nav-icon" aria-hidden="true"><use href="#kg-users"></use></svg><span>Clientes e ofertas</span><span class="admin-nav-chevron" aria-hidden="true">›</span></button>
+    <button type="button" role="tab" id="nav-coupons" data-tab="coupons" aria-controls="couponsTab" aria-selected="false" tabindex="-1"><svg class="admin-nav-icon" aria-hidden="true"><use href="#kg-tag"></use></svg><span>Cupons</span><span class="admin-nav-chevron" aria-hidden="true">›</span></button>
+    <button type="button" role="tab" id="nav-analytics" data-tab="analytics" aria-controls="analyticsTab" aria-selected="false" tabindex="-1"><svg class="admin-nav-icon" aria-hidden="true"><use href="#kg-chart"></use></svg><span>Visitas e interesse</span><span class="admin-nav-chevron" aria-hidden="true">›</span></button>
+    <span class="admin-nav-group">ACESSO</span>
+    <button type="button" role="tab" id="nav-team" data-tab="team" aria-controls="teamTab" aria-selected="false" tabindex="-1" hidden><svg class="admin-nav-icon" aria-hidden="true"><use href="#kg-shield"></use></svg><span>Equipe e permissões</span><span class="admin-nav-chevron" aria-hidden="true">›</span></button>
+  </nav>
+  <div class="admin-sidebar-footer"><span class="sidebar-status-dot" aria-hidden="true"></span><span>Painel com acesso protegido<br><small>Kaia Glow · Administração</small></span></div>
+</aside>
+<button id="adminNavScrim" class="admin-nav-scrim" type="button" aria-label="Fechar menu" hidden></button>
+<div class="admin-content">
+<div class="page-intro"><div class="admin-page-heading"><span class="eyebrow" id="workspaceCategory">INÍCIO · PAINEL ADMINISTRATIVO</span><h1 id="workspaceTitle">Visão geral</h1><p id="workspaceDescription">Acompanhe os pontos importantes da sua operação em um só lugar.</p></div><div class="account-chip" id="adminIdentity"></div></div>
+<section id="overviewTab" class="admin-section" role="tabpanel" aria-labelledby="nav-overview">
+ <div class="overview-welcome">
+  <div><span class="eyebrow">BEM-VINDA AO SEU ESPAÇO</span><h2>O que precisa da sua atenção hoje?</h2><p>Um resumo rápido da Kaia Glow, com informações reais do catálogo e das solicitações recebidas.</p></div>
+  <button id="overviewRefresh" type="button" class="ghost-button"><svg class="admin-nav-icon" aria-hidden="true"><use href="#kg-refresh"></use></svg> Atualizar resumo</button>
+ </div>
+ <div class="dashboard-metrics overview-metrics" aria-label="Indicadores de operação">
+  <div class="metric"><small>Produtos cadastrados</small><strong id="productCount">—</strong><span>Itens do catálogo</span></div>
+  <div class="metric"><small>Disponíveis para comprar</small><strong id="overviewSellable">—</strong><span>Produtos habilitados no checkout</span></div>
+  <div class="metric"><small>Estoque até 5 unidades</small><strong id="overviewLowStock">—</strong><span>Produtos com pouco saldo</span></div>
+  <div class="metric"><small>Cancelamentos para analisar</small><strong id="overviewPending">—</strong><span>Pedidos aguardando decisão</span></div>
+ </div>
+ <div class="overview-grid">
+  <section class="overview-panel" aria-labelledby="quickTitle">
+   <div class="overview-panel-heading"><span class="eyebrow">ACESSOS RÁPIDOS</span><h3 id="quickTitle">O que deseja fazer?</h3></div>
+   <div class="quick-actions">
+    <button type="button" data-open-panel="products"><svg class="admin-nav-icon" aria-hidden="true"><use href="#kg-box"></use></svg><span><strong>Cadastrar ou editar produto</strong><small>Fotos, preço, estoque e publicação</small></span><svg class="admin-nav-icon arrow" aria-hidden="true"><use href="#kg-arrow"></use></svg></button>
+    <button type="button" data-open-panel="cancellations"><svg class="admin-nav-icon" aria-hidden="true"><use href="#kg-rotate"></use></svg><span><strong>Analisar cancelamentos</strong><small>Solicitações e reembolsos pendentes</small></span><svg class="admin-nav-icon arrow" aria-hidden="true"><use href="#kg-arrow"></use></svg></button>
+    <button type="button" data-open-panel="customers"><svg class="admin-nav-icon" aria-hidden="true"><use href="#kg-users"></use></svg><span><strong>Encontrar um cliente</strong><small>Pedidos, interesses e ofertas autorizadas</small></span><svg class="admin-nav-icon arrow" aria-hidden="true"><use href="#kg-arrow"></use></svg></button>
+    <button type="button" data-open-panel="coupons"><svg class="admin-nav-icon" aria-hidden="true"><use href="#kg-tag"></use></svg><span><strong>Gerenciar cupons</strong><small id="overviewCouponInfo">Conferindo campanhas…</small></span><svg class="admin-nav-icon arrow" aria-hidden="true"><use href="#kg-arrow"></use></svg></button>
+   </div>
+  </section>
+  <section class="overview-panel" aria-labelledby="attentionTitle">
+   <div class="overview-panel-heading"><span class="eyebrow">ACOMPANHAMENTO</span><h3 id="attentionTitle">Itens que merecem atenção</h3></div>
+   <div id="overviewAlerts" class="overview-alerts" aria-live="polite"><p>Consultando informações de estoque e solicitações…</p></div>
+   <p class="overview-updated" id="overviewUpdated" role="status" aria-live="polite">—</p>
+  </section>
+ </div>
+ <div class="overview-footnote">Indicadores para apoio operacional. O limite de 5 unidades é apenas um alerta visual, não altera o estoque mínimo configurado.</div>
+</section>
 <section id="productsTab" class="admin-section">
 <div class="section-header"><div><h2>Produtos, preços e fotos</h2><p>Edite os produtos existentes ou cadastre um novo com fotos, preço, categoria e estoque.</p></div><div class="editor-header-actions"><button id="reloadButton" type="button" class="ghost-button">Atualizar lista</button><button id="addProductButton" type="button" class="primary-button">+ Novo produto</button></div></div>
 <div class="product-layout"><div class="product-picker"><label for="productSearch">Buscar produto ou SKU</label><input id="productSearch" type="search" autocomplete="off" placeholder="Nome, marca ou código"><div id="productList" class="product-list" aria-label="Produtos cadastrados"></div></div>
@@ -56,7 +118,7 @@
 <label>Vencimento (opcional)<input id="couponEnd" type="date"></label>
 <label class="check-label"><input id="couponActive" type="checkbox" checked> Cupom ativo</label></div>
 <div class="editor-actions"><button type="submit" class="primary-button" id="saveCouponButton">Salvar cupom</button><button type="reset" class="ghost-button">Limpar</button></div><p id="couponStatus" role="status" aria-live="polite"></p></form>
-<div class="coupon-admin-list"><h3>Cupons cadastrados</h3><div id="couponList" class="coupons-list"></div></div></div></section>
+<div class="coupon-admin-list"><div class="coupon-list-heading"><h3>Cupons cadastrados</h3><span class="coupon-total"><strong id="couponCount">—</strong> cadastrados</span></div><div id="couponList" class="coupons-list"></div></div></div></section>
 
 <section id="cancellationsTab" class="admin-section" hidden>
 <div class="section-header"><div><span class="eyebrow">KAIA GLOW · PÓS-VENDA</span>
@@ -260,9 +322,9 @@
  <p><a class="payment-main-link" href="/liberacao-vendas.html">Ver relatório de liberação: preços, estoque e embalagens por produto ↗</a></p>
  <p id="mpPaymentStatus" role="status" class="payment-status">Consultando o servidor da Kaia Glow...</p>
 </section>
-</section></main>
+</div></div></section></main>
 <footer class="admin-footer">Kaia Glow · Painel restrito de gestão. O acesso é controlado pelo Supabase Auth.</footer>
 <script src="catalog.js?v=1"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js" integrity="sha384-TcHRA3zBbn+Lexh5n+Oil4guNPOS3rjNDpGRAN46u/s/mB2IZ50ceC6TYDU2yvgK" crossorigin="anonymous"></script>
-<script type="module" src="admin.js?v=8"></script>
+<script type="module" src="admin.js?v=9"></script>
 </body></html>
