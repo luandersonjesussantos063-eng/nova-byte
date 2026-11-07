@@ -37,13 +37,15 @@ export async function onRequestGet({request,env}){
    throw new PaymentError('AUTORIZACAO_EXPIRADA',403);
   claimed=true;
   const tokens=await tokenRequest(env,{grant_type:'authorization_code',code,redirect_uri:CALLBACK});
-  await db(env,'kaia_olist_oauth_state?state_hash=eq.'+stateHash,'PATCH',{
+  // Diagnostic writes must never prevent already-issued OAuth codes from
+  // being saved. A code can be exchanged only once.
+  try{await db(env,'kaia_olist_oauth_state?state_hash=eq.'+stateHash,'PATCH',{
    exchange_stage:'token_received',last_transition_at:new Date().toISOString()
-  });
+  });}catch{}
   await persistTokens(env,tokens,rows[0].admin_id);
-  await db(env,'kaia_olist_oauth_state?state_hash=eq.'+stateHash,'PATCH',{
+  try{await db(env,'kaia_olist_oauth_state?state_hash=eq.'+stateHash,'PATCH',{
    exchange_stage:'completed',error_code:null,last_transition_at:new Date().toISOString()
-  });
+  });}catch{}
   return successPage('Olist autorizada com sucesso',
    'A autorização foi salva de forma protegida. Nenhum saldo, pedido ou preço foi alterado. Volte ao painel e teste a leitura de produtos.');
  }catch(e){
