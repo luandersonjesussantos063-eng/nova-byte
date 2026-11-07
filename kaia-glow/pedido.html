@@ -18,8 +18,8 @@ async function refresh(){
   const r=await fetch('/api/kaia/comercial/pedido?id='+encodeURIComponent(uuid),{headers:{Authorization:'Bearer '+data.session.access_token},cache:'no-store'});
   const o=await r.json();if(!r.ok)throw Error(o.code||'Consulta indisponível');
   const messages={created:'Pedido reservado; pagamento ainda não iniciado.',pending:'Aguardando confirmação do Mercado Pago.',approved:'Pagamento aprovado. Pedido confirmado!',rejected:'Pagamento recusado.',cancelled:'Pedido cancelado. Volte à loja para refazer a compra com um novo valor.',review_required:'Pedido em revisão. Procure o atendimento.',refunded:'Pagamento reembolsado.'};
-  $('title').textContent=o.status==='approved'?'Pagamento aprovado!':'Situação do seu pedido';
-  $('status').textContent=o.expired?'O prazo do pedido terminou e o Mercado Pago confirmou o cancelamento. É possível iniciar outra compra.':messages[o.status]||'Status em revisão.';
+  $('title').textContent=o.freeOrder?'Pedido grátis confirmado!':o.status==='approved'?'Pagamento aprovado!':'Situação do seu pedido';
+  $('status').textContent=o.freeOrder?'Cupom '+o.couponCode+' aplicado: 100% de desconto e frete grátis. Nenhum pagamento foi cobrado.':o.expired?'O prazo do pedido terminou e o Mercado Pago confirmou o cancelamento. É possível iniciar outra compra.':messages[o.status]||'Status em revisão.';
   $('items').textContent=(o.items||[]).map(i=>i.name+' (x'+i.quantity+')').join(', ');
   $('total').textContent='Valor total deste pedido: '+(o.totalCents/100).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
   if(['created','pending'].includes(o.status))refreshTimer=setTimeout(refresh,15000);
