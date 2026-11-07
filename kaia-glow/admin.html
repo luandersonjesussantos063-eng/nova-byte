@@ -14,7 +14,7 @@
 <section id="adminPanel" hidden>
 <div class="page-intro"><div><span class="eyebrow">PAINEL KAIA</span><h1>Controle da sua vitrine.</h1><p>Gerencie produtos, pedidos, estoque e canais de venda em um único lugar.</p></div><div class="account-chip" id="adminIdentity"></div></div>
 <div class="dashboard-metrics"><div class="metric"><small>Produtos da vitrine</small><strong id="productCount">—</strong></div><div class="metric"><small>Cupons cadastrados</small><strong id="couponCount">—</strong></div><div class="metric"><small>Checkout</small><strong>Mercado Pago</strong></div></div>
-<div class="admin-tabs" role="tablist" aria-label="Áreas de gestão"><button type="button" data-tab="products" aria-selected="true">Produtos e fotos</button><button type="button" data-tab="coupons" aria-selected="false">Cupons</button><button type="button" data-tab="cancellations" aria-selected="false">Cancelamentos</button><button type="button" data-tab="team" aria-selected="false" hidden>Equipe e acessos</button><button type="button" data-tab="analytics" aria-selected="false">Visitas e interesse</button><button type="button" data-tab="marketplaces" aria-selected="false">Estoque e marketplaces</button><button type="button" data-tab="payments" aria-selected="false">Pagamentos</button></div>
+<div class="admin-tabs" role="tablist" aria-label="Áreas de gestão"><button type="button" data-tab="products" aria-selected="true">Produtos e fotos</button><button type="button" data-tab="coupons" aria-selected="false">Cupons</button><button type="button" data-tab="cancellations" aria-selected="false">Cancelamentos</button><button type="button" data-tab="customers" aria-selected="false">Clientes e ofertas</button><button type="button" data-tab="team" aria-selected="false" hidden>Equipe e acessos</button><button type="button" data-tab="analytics" aria-selected="false">Visitas e interesse</button><button type="button" data-tab="marketplaces" aria-selected="false">Estoque e marketplaces</button><button type="button" data-tab="payments" aria-selected="false">Pagamentos</button></div>
 <section id="productsTab" class="admin-section">
 <div class="section-header"><div><h2>Produtos, preços e fotos</h2><p>Edite os produtos existentes ou cadastre um novo com fotos, preço, categoria e estoque.</p></div><div class="editor-header-actions"><button id="reloadButton" type="button" class="ghost-button">Atualizar lista</button><button id="addProductButton" type="button" class="primary-button">+ Novo produto</button></div></div>
 <div class="product-layout"><div class="product-picker"><label for="productSearch">Buscar produto ou SKU</label><input id="productSearch" type="search" autocomplete="off" placeholder="Nome, marca ou código"><div id="productList" class="product-list" aria-label="Produtos cadastrados"></div></div>
@@ -65,6 +65,23 @@
 <p id="cancellationAdminStatus" role="status" aria-live="polite">Consultando solicitações…</p>
 <div id="cancellationAdminList" class="coupons-list" aria-live="polite"></div>
 <p class="muted">Em compras pagas, aprovar o pedido não significa que o dinheiro foi estornado. A confirmação final exige verificar o reembolso no Mercado Pago e informar sua referência. Produtos já enviados não retornam automaticamente ao estoque.</p>
+</section>
+<section id="customersTab" class="admin-section" hidden>
+<div class="section-header"><div><span class="eyebrow">RELACIONAMENTO · KAIA GLOW</span>
+<h2>Clientes e ofertas</h2><p>Encontre clientes, veja seus pedidos e, quando autorizado, seus interesses por produtos. Envie um cupom somente a quem optou por receber ofertas.</p></div>
+<button class="ghost-button" id="refreshCustomers" type="button">Atualizar clientes</button></div>
+<div class="editor" style="margin:0 0 18px">
+<div class="form-grid">
+<label for="customerSearch">Buscar cliente por nome ou e-mail<input id="customerSearch" type="search" placeholder="Ex.: Mariana" autocomplete="off"></label>
+<label for="customerSegment">Filtrar clientes<select id="customerSegment">
+<option value="all">Todos os cadastrados</option><option value="opted">Aceitam e-mails de ofertas</option>
+<option value="interest">Autorizaram métricas por conta</option><option value="orders">Já compraram</option>
+<option value="new">Ainda não compraram</option>
+</select></label>
+</div><p id="customerAdminStatus" role="status" aria-live="polite">Consultando clientes…</p>
+<p class="muted">Produtos visualizados e tempo de atenção só aparecem depois do consentimento expresso na conta. O histórico anônimo anterior não é vinculado ao cliente.</p>
+</div>
+<div id="customerAdminList" class="kaia-customer-admin-list"></div>
 </section>
 <section id="teamTab" class="admin-section" hidden>
  <div class="section-header"><div><span class="eyebrow">CONTROLE DO PROPRIETÁRIO</span><h2>Equipe e acessos</h2>
