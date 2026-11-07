@@ -81,6 +81,9 @@ async function fetchEligible(){
 function postalDigits(v){return String(v||'').replace(/\D/g,'');}
 function checkoutNotice(message,isError=false){
  const note=$('#commerceEligibility');if(!note)return;
+ // checkoutEligibility() hides this banner for otherwise valid baskets. Always reveal errors.
+ note.hidden=false;
+ note.setAttribute('role','alert');
  note.textContent=message;note.style.color=isError?'#a02d33':'';note.style.fontWeight=isError?'700':'';
  if(isError)note.scrollIntoView({block:'nearest',behavior:'smooth'});
 }
