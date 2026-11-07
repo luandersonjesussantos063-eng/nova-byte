@@ -70,8 +70,19 @@ export async function tokenRequest(env,params){
  try{
   response=await fetch(TOKEN_URL,{method:'POST',headers:{
    'content-type':'application/x-www-form-urlencoded',accept:'application/json'
-  },body:body.toString(),redirect:'error',signal:AbortSignal.timeout(10000)});
- }catch{throw new PaymentError('OLIST_FALHA_COMUNICACAO',502);}
+  },body:body.toString(),redirect:'manual',signal:AbortSignal.timeout(10000)});
+ }catch(e){
+  // Do not include raw exceptions, URL, client credentials or OAuth code
+  // in diagnostics. Only expose a static, non-sensitive error category.
+  const kind=e?.name==='TimeoutError'||e?.name==='AbortError'?
+   'OLIST_TEMPO_ESGOTADO':'OLIST_FALHA_REDE';
+  throw new PaymentError(kind,502);
+ }
+ // Never automatically resend client secrets or authorization codes to a
+ // redirected host. Unlike redirect:'error', manual mode preserves the HTTP
+ // response and prevents a redirect from masquerading as a network failure.
+ if(response.status>=300&&response.status<400)
+  throw new PaymentError('OLIST_TOKEN_REDIRECIONADO',502);
  // Only use OAuth standard error enums. Never return/log token endpoint body,
  // client_id, client_secret, authorization code, access or refresh tokens.
  if(!response.ok){
