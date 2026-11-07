@@ -16,6 +16,20 @@ export async function onRequestPost({request,env}){
     !/^[0-9a-f]{8}-[0-9a-f-]{27,40}$/.test(data?.requestKey||''))
    throw new CheckoutError('CUPOM_OU_SOLICITACAO_INVALIDA',422);
   const items=parseItems({items:data.items});
+  const coupons=await database(env,'kaia_admin_coupons?code=eq.'+encodeURIComponent(code)+
+   '&select=code,active,discount_type,discount_value,min_order_cents,starts_at,ends_at&limit=1');
+  const configured=coupons[0];
+  const today=new Intl.DateTimeFormat('en-CA',{timeZone:'America/Campo_Grande',
+    year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
+  if(!configured||configured.active!==true||configured.discount_type!=='percent'||
+     configured.discount_value!==100||(configured.starts_at&&today<configured.starts_at)||
+     (configured.ends_at&&today>configured.ends_at))
+   throw new CheckoutError('CUPOM_INVALIDO',422);
+  const redeemed=await database(env,'kaia_commercial_payments?user_id=eq.'+
+   encodeURIComponent(user.id)+'&coupon_code=eq.'+encodeURIComponent(code)+
+   '&status=eq.approved&select=request_key&limit=1');
+  if(redeemed.some(r=>r.request_key!==data.requestKey))
+   throw new CheckoutError('CUPOM_JA_UTILIZADO',409);
   const {postalCode}=await accountAddress(env,user.id);
   if(data.postalCode!==postalCode)throw new CheckoutError('CEP_DIFERENTE_DO_CADASTRO',422);
   // Price, stock and carrier cost are re-read on the server, never trusted from the browser.
