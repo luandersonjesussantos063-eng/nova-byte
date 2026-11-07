@@ -61,7 +61,7 @@ function render(){
   label.append(select);offer.append(label);
   const send=el('button','primary-button','Enviar cupom por e-mail');
   send.type='button';send.disabled=!c.offersEmail||!coupons.length;
-  const notice=el('p','muted',!c.offersEmail?'Sem autorização para receber promoções.':'O código será enviado por e-mail, sem envio automático para outros clientes.');
+  const notice=el('p','muted',!c.offersEmail?'Sem autorização para receber promoções.':!coupons.length?'Nenhum cupom de 100% com frete grátis está ativo. Crie ou ative um na aba Cupons.':'O código será enviado por e-mail, sem envio automático para outros clientes.');
   send.onclick=async()=>{
    if(!select.value)return customerNote('Selecione um cupom ativo.',true);
    if(!confirm('Enviar o cupom '+select.value+' para '+c.name+' pelo e-mail autorizado?'))return;
@@ -88,7 +88,7 @@ export async function loadKaiaCustomers(){
  if(result.error){customerNote('Não foi possível carregar os clientes. Confira as permissões.',true);return;}
  customers=Array.isArray(result.data)?result.data:[];
  coupons=active.error?[]:active.data||[];
- customerNote(customers.length+' cliente(s) encontrado(s). Somente dados de navegação autorizados estão vinculados a pessoas.');
+ customerNote(customers.length+' cliente(s) encontrado(s). '+(!coupons.length?'Não há cupom integral ativo disponível para envio. ':'')+'Somente dados de navegação autorizados estão vinculados a pessoas.');
  render();
 }
 export function setupKaiaCustomers(sb){
