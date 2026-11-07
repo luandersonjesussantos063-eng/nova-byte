@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow"><meta name="referrer" content="strict-origin-when-cross-origin">
-<title>Painel administrativo · Kaia Glow</title><link rel="stylesheet" href="admin.css?v=2"><link rel="stylesheet" href="admin-analytics.css?v=1"><link rel="stylesheet" href="admin-marketplaces.css?v=2"><link rel="stylesheet" href="admin-payments.css?v=1"></head>
+<title>Painel administrativo · Kaia Glow</title><link rel="stylesheet" href="admin.css?v=2"><link rel="stylesheet" href="admin-analytics.css?v=1"><link rel="stylesheet" href="admin-marketplaces.css?v=3"><link rel="stylesheet" href="admin-payments.css?v=1"></head>
 <body>
 <header class="admin-top"><div class="admin-brand"><span class="brand-mark">K</span><div><strong>KAIA GLOW</strong><small>GESTÃO DA LOJA</small></div></div><div class="admin-top-actions"><a href="/" target="_blank" rel="noopener noreferrer">Ver a loja ↗</a><button type="button" id="logoutButton" hidden>Sair</button></div></header>
 <main class="admin-shell">
@@ -81,6 +81,19 @@
   <p>Um saldo central para os produtos da loja. Organize os vínculos dos anúncios agora; a integração automática só começa depois de autorizar a Shopee e o TikTok Shop.</p>
  </div><button type="button" id="mpRefresh" class="ghost-button">Atualizar painel</button></div>
  <div class="mp-warning" role="note"><strong>Sincronização externa desativada por enquanto.</strong> Alterar o estoque aqui atualiza o banco central, mas <strong>não atualiza Shopee ou TikTok Shop</strong> até conectar e validar cada conta.</div>
+ <section class="mp-olist-panel" aria-labelledby="mpOlistTitle">
+  <div class="mp-olist-main">
+   <div><span class="eyebrow">FONTE OFICIAL DE ESTOQUE</span>
+    <h3 id="mpOlistTitle">Olist ERP</h3>
+    <p>A Olist é a referência das quantidades. Autorize a API para verificar os produtos no ERP antes de qualquer sincronização.</p></div>
+   <div class="mp-olist-actions">
+    <button type="button" class="primary-button" id="mpOlistAuthorize">Conectar Olist</button>
+    <button type="button" class="ghost-button" id="mpOlistTest" hidden>Testar leitura dos produtos</button>
+   </div>
+  </div>
+  <p class="mp-olist-status" id="mpOlistStatus" role="status" aria-live="polite">Verificando conexão protegida…</p>
+  <p class="mp-tip">A autorização não altera estoque ou pedidos. O envio automático continuará desligado até conferir os saldos, as reservas e o registro de vendas.</p>
+ </section>
  <div class="mp-setup" aria-labelledby="mpSetupTitle">
   <div class="mp-setup-heading">
    <div><span class="eyebrow">PREPARAÇÃO DA INTEGRAÇÃO</span><h3 id="mpSetupTitle">Conectar Shopee e TikTok Shop</h3>
@@ -197,5 +210,5 @@
 <footer class="admin-footer">Kaia Glow · Painel restrito de gestão. O acesso é controlado pelo Supabase Auth.</footer>
 <script src="catalog.js?v=1"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js" integrity="sha384-TcHRA3zBbn+Lexh5n+Oil4guNPOS3rjNDpGRAN46u/s/mB2IZ50ceC6TYDU2yvgK" crossorigin="anonymous"></script>
-<script type="module" src="admin.js?v=6"></script>
+<script type="module" src="admin.js?v=7"></script>
 </body></html>

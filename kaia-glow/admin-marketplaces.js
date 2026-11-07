@@ -242,12 +242,66 @@ async function downloadFirstWaveSkuCsv(){
  }catch(e){text('#mpDashboardStatus','Não foi possível gerar a planilha: '+e.message);}
  finally{button.disabled=false;}
 }
+
+async function adminOlistRequest(endpoint,method='GET'){
+ const {data,error}=await sb.auth.getSession();
+ const token=data?.session?.access_token;
+ if(error||!token)throw Error('A sessão expirou. Entre novamente no painel.');
+ const r=await fetch(endpoint,{
+  method,headers:{Authorization:'Bearer '+token,...(method==='POST'?{'content-type':'application/json'}:{})},
+  ...(method==='POST'?{body:'{}'}:{}),cache:'no-store'
+ });
+ const body=await r.json().catch(()=>({code:'RESPOSTA_INVALIDA'}));
+ if(!r.ok)throw Error(body.code||'Não foi possível acessar a Olist.');
+ return body;
+}
+async function loadOlistConnection(){
+ const node=$('#mpOlistStatus'),button=$('#mpOlistAuthorize'),test=$('#mpOlistTest');
+ if(!node||!button||!test)return;
+ node.textContent='Conferindo o acesso protegido à Olist…';
+ try{
+  const info=await adminOlistRequest('/api/kaia/olist/status');
+  button.disabled=!info.configured;
+  if(!info.configured){node.textContent='As credenciais da Olist ainda não estão completas no Cloudflare.';test.hidden=true;return;}
+  if(info.authorized){
+   node.textContent='Olist autorizada em '+date(info.authorizedAt)+'. A sincronização automática ainda está desligada.';
+   button.textContent='Reautorizar Olist';test.hidden=false;
+  }else{
+   node.textContent='Credenciais cadastradas. Falta a autorização da conta Olist para consultar os produtos.';
+   button.textContent='Conectar Olist';test.hidden=true;
+  }
+ }catch(e){node.textContent='Não foi possível verificar a Olist: '+e.message;test.hidden=true;}
+}
+async function startOlistAuthorization(){
+ const button=$('#mpOlistAuthorize'),node=$('#mpOlistStatus');
+ button.disabled=true;node.textContent='Preparando autorização segura…';
+ try{
+  const info=await adminOlistRequest('/api/kaia/olist/start','POST');
+  const url=new URL(info.authorizationUrl);
+  if(url.protocol!=='https:'||url.hostname!=='accounts.tiny.com.br'||
+    url.pathname!=='/realms/tiny/protocol/openid-connect/auth')
+   throw Error('O endereço de autenticação recebido não é válido.');
+  window.location.assign(url.href);
+ }catch(e){node.textContent='Não foi possível iniciar a autorização: '+e.message;button.disabled=false;}
+}
+async function testOlistProducts(){
+ const button=$('#mpOlistTest'),node=$('#mpOlistStatus');
+ button.disabled=true;node.textContent='Testando apenas leitura de produtos na Olist…';
+ try{
+  const info=await adminOlistRequest('/api/kaia/olist/status','POST');
+  if(!info.ok)throw Error(info.code||'A consulta não foi concluída.');
+  node.textContent='Consulta de produtos autorizada. Nenhuma quantidade, pedido ou preço foi alterado. Sincronização automática permanece desligada.';
+ }catch(e){node.textContent='A leitura não foi validada: '+e.message;}
+ finally{button.disabled=false;}
+}
 export function initKaiaMarketplaces(client,options={}){
  sb=client;afterStockChange=options.onStockChanged||null;
  if(initialized)return;
  initialized=true;
  $('#mpRefresh').onclick=()=>loadKaiaMarketplaces();
  $('#mpExportWave').onclick=downloadFirstWaveSkuCsv;
+ $('#mpOlistAuthorize').onclick=startOlistAuthorization;
+ $('#mpOlistTest').onclick=testOlistProducts;
  $('#mpStockSku').onchange=renderCurrent;
  $('#mpStockForm').onsubmit=saveStock;
  $('#mpMappingForm').onsubmit=saveMapping;
@@ -274,5 +328,5 @@ export async function loadKaiaMarketplaces(){
  renderSkuOptions();renderConnections(overview.connections);renderLinks();
  renderMovements(history.data||[]);renderOrders(orders.data||[]);renderOutbox(outbox.data||[]);
  text('#mpDashboardStatus','Dados do estoque central atualizados. A integração com Shopee e TikTok Shop está desligada até a autorização das contas e a validação de pedidos e anúncios.');
- await loadMarketplaceReadiness();
+ await Promise.all([loadMarketplaceReadiness(),loadOlistConnection()]);
 }
