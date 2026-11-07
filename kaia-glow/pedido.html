@@ -1,5 +1,27 @@
-<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>Kaia Glow — Meu pedido</title><style>body{font:16px system-ui,sans-serif;background:#f6f1eb;color:#34272e;margin:0;display:grid;place-items:center;min-height:100vh}main{background:white;border:1px solid #e9dede;box-shadow:0 10px 34px #0001;border-radius:18px;padding:30px;max-width:580px;width:calc(100% - 60px)}h1{font-size:28px}button,a.button{border:0;border-radius:10px;padding:13px 22px;background:#3c2a31;color:white;text-decoration:none;cursor:pointer;display:inline-block}p{line-height:1.6}.muted{color:#685b60}</style></head>
-<body><main><small>KAIA GLOW • PEDIDO</small><h1 id="title">Consultando pagamento…</h1><p id="status" role="status" aria-live="polite">Verificando o status diretamente com o Mercado Pago.</p><p id="items"></p><p id="total"></p><p class="muted" id="paymentDisclaimer">O redirecionamento do navegador não confirma aprovação. Somente o sistema de pagamentos pode confirmar o recebimento.</p><button id="refresh">Consultar novamente</button> <a href="/conta.html?aba=pedidos">Meus pedidos</a> <a href="/">Voltar à loja</a></main>
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>Kaia Glow — Meu pedido</title><style>body{font:16px system-ui,sans-serif;background:#f6f1eb;color:#34272e;margin:0;display:grid;place-items:center;min-height:100vh}main{background:white;border:1px solid #e9dede;box-shadow:0 10px 34px #0001;border-radius:18px;padding:30px;max-width:580px;width:calc(100% - 60px)}h1{font-size:28px}button,a.button{border:0;border-radius:10px;padding:13px 22px;background:#3c2a31;color:white;text-decoration:none;cursor:pointer;display:inline-block}p{line-height:1.6}.muted{color:#685b60}
+#cancellationSection{border-top:1px solid #eadde3;margin-top:20px;padding-top:18px}
+#cancellationSection[hidden],#cancellationForm[hidden],#cancellationButton[hidden]{display:none}
+#cancellationSection h2{font-size:1.12rem;color:#552942}
+#cancellationForm label{display:block;font-weight:650;margin:12px 0 8px}
+#cancellationForm textarea{box-sizing:border-box;width:100%;min-height:105px;border:1px solid #d9c4ce;border-radius:10px;padding:12px;font:inherit;resize:vertical}
+#cancellationButton{margin-top:8px;border:1px solid #62374d;background:#fff;color:#54233d}
+#cancellationForm button{margin-top:12px;background:#54233d}
+#cancellationMessage{color:#573a48}
+#cancellationMessage.error{color:#a02d33;font-weight:650}
+@media(max-width:480px){main{padding:24px;width:calc(100% - 48px)}main a{display:inline-block;margin-top:10px}h1{font-size:27px}}</style></head>
+<body><main><small>KAIA GLOW • PEDIDO</small><h1 id="title">Consultando pagamento…</h1><p id="status" role="status" aria-live="polite">Verificando o status diretamente com o Mercado Pago.</p><p id="items"></p><p id="total"></p><p class="muted" id="paymentDisclaimer">O redirecionamento do navegador não confirma aprovação. Somente o sistema de pagamentos pode confirmar o recebimento.</p><button id="refresh">Consultar novamente</button> <a href="/conta.html?aba=pedidos">Meus pedidos</a> <a href="/">Voltar à loja</a>
+<section id="cancellationSection" hidden aria-labelledby="cancellationTitle">
+ <h2 id="cancellationTitle">Precisa cancelar este pedido?</h2>
+ <p class="muted">Você pode solicitar o cancelamento aqui mesmo. A Kaia Glow receberá a solicitação no painel e a confirmação chegará por e-mail.</p>
+ <button id="cancellationButton" type="button" hidden>Solicitar cancelamento</button>
+ <form id="cancellationForm" hidden>
+  <label for="cancellationReason">Motivo do cancelamento</label>
+  <textarea id="cancellationReason" maxlength="1000" minlength="5" rows="3" required placeholder="Conte por que deseja cancelar este pedido"></textarea>
+  <p class="muted">O pedido não será cancelado até a solicitação ser analisada. Seus direitos de arrependimento em compras online serão respeitados.</p>
+  <button id="sendCancellation" type="submit">Enviar solicitação</button>
+ </form>
+ <p id="cancellationMessage" role="status" aria-live="polite"></p>
+</section></main>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js" integrity="sha384-TcHRA3zBbn+Lexh5n+Oil4guNPOS3rjNDpGRAN46u/s/mB2IZ50ceC6TYDU2yvgK" crossorigin="anonymous"></script>
 <script type="module">
 import {KAIA_AUTH} from './auth-config.js';
@@ -7,6 +29,7 @@ const $=id=>document.getElementById(id);
 const uuid=new URLSearchParams(location.search).get('pedido');
 const sb=window.supabase?.createClient(KAIA_AUTH.url,KAIA_AUTH.publishableKey,{auth:{storageKey:'kaia-glow-auth-v1',persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});
 let refreshTimer=null;
+const orderNumber=typeof uuid==='string'&&/^[0-9a-f-]{36}$/.test(uuid)?'KG-'+uuid.replace(/-/g,''):null;
 async function refresh(){
  clearTimeout(refreshTimer);
  if($('refresh').disabled)return;
@@ -23,10 +46,67 @@ async function refresh(){
   $('items').textContent=(o.items||[]).map(i=>i.name+' (x'+i.quantity+')').join(', ');
   $('paymentDisclaimer').hidden=!!o.freeOrder;
   $('total').textContent='Valor total deste pedido: '+(o.totalCents/100).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})+(o.freeOrder?' (frete grátis)':'');
+  await showCancellation(o);
   if(['created','pending'].includes(o.status))refreshTimer=setTimeout(refresh,15000);
  }catch(e){$('title').textContent='Não foi possível confirmar';$('status').textContent=e.message;}
  finally{$('refresh').disabled=false;}
 }
+const cancelLabels={
+ requested:'Solicitação de cancelamento enviada. Aguardando análise da Kaia Glow.',
+ approved:'Cancelamento aprovado e concluído.',
+ approved_refund_pending:'Cancelamento aceito. Aguardando confirmação do reembolso.',
+ denied:'A solicitação não foi aceita. Confira a resposta da Kaia Glow.'
+};
+async function showCancellation(order){
+ const section=$('cancellationSection'),button=$('cancellationButton'),form=$('cancellationForm'),note=$('cancellationMessage');
+ section.hidden=true;button.hidden=true;form.hidden=true;note.textContent='';note.classList.remove('error');
+ if(order.status!=='approved'||!orderNumber)return;
+ try{
+  const [{data:owned,error:orderError},{data:request,error:cancelError}]=await Promise.all([
+   sb.from('kaia_orders').select('order_number,status').eq('order_number',orderNumber).maybeSingle(),
+   sb.from('kaia_cancellation_requests').select('status,reason,decision_note').eq('payment_id',uuid).maybeSingle()
+  ]);
+  if(orderError||cancelError)throw Error('Não foi possível carregar a situação do cancelamento.');
+  if(!owned)return;
+  section.hidden=false;
+  if(owned.status==='cancelled'){
+   note.textContent='Este pedido foi cancelado.';return;
+  }
+  if(request){
+   note.textContent=(cancelLabels[request.status]||'Solicitação em acompanhamento.')+
+    (request.decision_note?' Resposta da loja: '+request.decision_note:'');
+   return;
+  }
+  button.hidden=false;
+ }catch{
+  // Fail closed for an inaccessible order; the link to My Orders remains available.
+  section.hidden=false;
+  note.textContent='Consulte a opção de cancelamento em Meus pedidos.';
+ }
+}
+$('cancellationButton').onclick=()=>{
+ $('cancellationButton').hidden=true;$('cancellationForm').hidden=false;
+ $('cancellationReason').focus();
+};
+$('cancellationForm').onsubmit=async event=>{
+ event.preventDefault();
+ const reason=$('cancellationReason').value.trim();
+ const note=$('cancellationMessage'),send=$('sendCancellation');
+ if(reason.length<5){note.textContent='Informe um motivo com pelo menos 5 caracteres.';note.classList.add('error');return}
+ if(!window.confirm('Enviar solicitação de cancelamento deste pedido para a Kaia Glow?'))return;
+ send.disabled=true;note.textContent='Enviando solicitação…';note.classList.remove('error');
+ try{
+  const {error}=await sb.rpc('kaia_customer_request_cancellation',{
+   p_order_number:orderNumber,p_reason:reason
+  });
+  if(error)throw error;
+  $('cancellationForm').hidden=true;
+  note.textContent='Solicitação recebida. A Kaia Glow foi notificada e você receberá uma confirmação por e-mail.';
+ }catch(error){
+  note.textContent='Não foi possível registrar a solicitação: '+(error?.message||'tente novamente.');
+  note.classList.add('error');
+ }finally{send.disabled=false}
+};
 $('refresh').onclick=refresh;
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&!refreshTimer&&!$('refresh').disabled)refresh();});
 refresh();
