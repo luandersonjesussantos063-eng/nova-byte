@@ -35,6 +35,8 @@ async function authorize(){
  const result=await sb.rpc('kaia_is_store_admin');
  if(result.error||result.data!==true){setSignedIn(false);status('#loginStatus','Esta conta ainda não tem autorização administrativa. O e-mail precisa estar confirmado e aprovado.',true);return;}
  setSignedIn(true,user.email);await loadAdmin();
+ const requested=location.hash.replace(/^#/,'');
+ if(['products','coupons','analytics','marketplaces','payments'].includes(requested))openAdminTab(requested,false);
 }
 async function loadAdmin(){
  const [products,stock,newProducts]=await Promise.all([
@@ -215,14 +217,18 @@ $('#productForm').onsubmit=async e=>{
  }catch(err){status('#productStatus','Não foi possível salvar: '+(err.message||'verifique a autorização.'),true);}
  finally{btn.disabled=false;}
 };
-all('[data-tab]').forEach(button=>button.onclick=()=>{
- const current=button.dataset.tab;
+function openAdminTab(current,updateHash=true){
+ if(!['products','coupons','analytics','marketplaces','payments'].includes(current))return;
+ const selected=all('[data-tab]').find(button=>button.dataset.tab===current);
  all('[data-tab]').forEach(b=>b.setAttribute('aria-selected',String(b.dataset.tab===current)));
  $('#productsTab').hidden=current!=='products';$('#couponsTab').hidden=current!=='coupons';
  $('#analyticsTab').hidden=current!=='analytics';if(current==='analytics')loadKaiaAnalytics();
  $('#marketplacesTab').hidden=current!=='marketplaces';if(current==='marketplaces')loadKaiaMarketplaces();
  $('#paymentsTab').hidden=current!=='payments';if(current==='payments')loadKaiaPayments();
-});
+ if(updateHash)history.replaceState(null,'',location.pathname+location.search+'#'+current);
+ selected?.scrollIntoView({block:'nearest',inline:'nearest'});
+}
+all('[data-tab]').forEach(button=>button.onclick=()=>openAdminTab(button.dataset.tab));
 $('#logoutButton').onclick=async()=>{await sb?.auth.signOut();setSignedIn(false);$('#adminPassword').value='';status('#loginStatus','Sessão encerrada.');};
 $('#loginForm').onsubmit=async e=>{
  e.preventDefault();const btn=$('#loginForm button');btn.disabled=true;status('#loginStatus','Verificando acesso…');
