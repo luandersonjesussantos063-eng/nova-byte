@@ -34,7 +34,40 @@ function deliveryEstimate(creation,days){
  timeZone:'UTC'}).format(d);
 }
 const textValue=(v,max=200)=>String(v??'').trim().slice(0,max);
-function contents(order,kind){
+
+async function confirmedPaymentMethod(env,order){
+ if(order.total_cents===0)return 'Cortesia com cupom — nenhum pagamento necessário';
+ const id=order.provider_order_id;
+ if(!/^ORD[A-Z0-9]+$/i.test(id||'')||!env.KAIA_MP_PROD_ACCESS_TOKEN)
+  return 'Mercado Pago — meio de pagamento não informado';
+ try{
+  const r=await fetch('https://api.mercadopago.com/v1/orders/'+encodeURIComponent(id),{
+   method:'GET',headers:{Authorization:'Bearer '+env.KAIA_MP_PROD_ACCESS_TOKEN,Accept:'application/json'},
+   redirect:'manual',signal:AbortSignal.timeout(7000)
+  });
+  if(!r.ok||r.status>=300&&r.status<400)return 'Mercado Pago — modalidade não disponível';
+  const p=await r.json();
+  if(p.id!==id||p.external_reference!==order.id||p.live_mode===false||p.currency!=='BRL')
+   return 'Mercado Pago — modalidade não disponível';
+  const methods=Array.isArray(p.transactions?.payments)?p.transactions.payments:[];
+  const approved=methods.filter(x=>x.status==='processed'||x.status==='approved');
+  const pay=(approved.length?approved:methods)[0];
+  const method=pay?.payment_method;
+  if(!method||typeof method!=='object')return 'Mercado Pago — modalidade não informada';
+  const type=String(method.type||'').toLowerCase();
+  const brand=String(method.id||'').toLowerCase();
+  const installments=Number(method.installments||pay?.installments);
+  const suffix=Number.isSafeInteger(installments)&&installments>1&&installments<=24?
+   ' em '+installments+'x':'';
+  if(brand==='pix'||type==='bank_transfer'&&brand==='pix')return 'Pix via Mercado Pago';
+  if(type==='credit_card')return 'Cartão de crédito'+suffix+' via Mercado Pago';
+  if(type==='debit_card')return 'Cartão de débito via Mercado Pago';
+  if(type==='account_money')return 'Saldo Mercado Pago';
+  if(type==='ticket')return 'Boleto via Mercado Pago';
+  return 'Mercado Pago — modalidade informada no comprovante';
+ }catch{return 'Mercado Pago — modalidade não disponível';}
+}
+function contents(order,kind,paymentMethod){
  const id='KG-'+String(order.id||'').replace(/-/g,'').toUpperCase();
  const customer=textValue(order.buyer_name,100);
  const address=order.destination||{};
@@ -48,8 +81,7 @@ function contents(order,kind){
   'Previsão de entrega: em confirmação pela transportadora.';
  const products=Array.isArray(order.items)?order.items:[];
  const free=order.total_cents===0;
- const payment=free?'Cortesia com cupom — nenhum pagamento necessário':
-  'Mercado Pago — modalidade escolhida no checkout (Pix, cartão ou outra)';
+ const payment=paymentMethod||'Mercado Pago — modalidade não informada';
  const discount=Number(order.discount_cents||0);
  const shipping=Number(order.shipping_cents||0);
  const subtotal=Number(order.list_products_cents??order.products_cents)||0;
@@ -122,7 +154,7 @@ async function send(env,to,content,key){
     Authorization:'Bearer '+env.KAIA_ORDER_EMAIL_API_KEY,
     'Content-Type':'application/json','Idempotency-Key':key
    },body:JSON.stringify({from:'Kaia Glow <'+rawFrom+'>',to:[to],
-    subject:content.subject,text:content.text,html:content.html}),
+    subject:content.subject,text:content.text,html:content.html,reply_to:[MERCHANT_EMAIL]}),
    signal:AbortSignal.timeout(10000)
   });
  }catch{throw new PaymentError('EMAIL_FALHA_REDE',503);}
@@ -166,7 +198,8 @@ export async function onRequestPost({request,env}){
     if(!order||order.total_cents<0||!safeMail(order.buyer_email))
      throw new PaymentError('EMAIL_PEDIDO_INCOMPLETO',503);
     const to=job.kind==='buyer'?order.buyer_email:MERCHANT_EMAIL;
-    const content=contents(order,job.kind);
+    const paymentMethod=await confirmedPaymentMethod(env,order);
+    const content=contents(order,job.kind,paymentMethod);
     providerId=await send(env,to,content,'kaia-confirmed-'+job.payment_id+'-'+job.kind);
     success=true;stats.accepted++;
    }catch(e){
