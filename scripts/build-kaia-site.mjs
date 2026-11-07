@@ -12,8 +12,28 @@ async function copy(relative){const src=path.join(source,relative),dest=path.joi
 for(const file of [...pages,...scripts,...styles])await copy(file);
 async function assets(relative='assets'){for(const entry of await readdir(path.join(source,relative),{withFileTypes:true})){const file=path.join(relative,entry.name);if(entry.isSymbolicLink())throw Error('Link simbólico não permitido: '+file);if(entry.isDirectory())await assets(file);else{if(!/\.(?:png|jpe?g|webp|avif|gif|svg|ico|mp4|webm|woff2?)$/i.test(file))throw Error('Tipo de arquivo não permitido nos assets: '+file);await copy(file)}}}
 await assets();
+// Content hashes invalidate browser caches whenever checkout or other local assets change.
+const {createHash}=await import('node:crypto');
+const versionedAssets=await Promise.all([...scripts,...styles].map(async asset=>{
+ const bytes=await readFile(path.join(output,asset));
+ return [asset,createHash('sha256').update(bytes).digest('hex').slice(0,12)];
+}));
+for(const page of pages){
+ const location=path.join(output,page);
+ let html=await readFile(location,'utf8');
+ for(const [asset,hash] of versionedAssets){
+  const escaped=asset.replaceAll('.',String.raw`\.`);
+  const re=new RegExp('((?:src|href)=")(/?)'+escaped+'(?:\\?v=[A-Za-z0-9_-]+)?(?=")','g');
+  html=html.replace(re,(_m,prefix,slash)=>prefix+slash+asset+'?v='+hash);
+ }
+ await writeFile(location,html);
+}
 // Public storefront and product pages are discoverable. Admin/account stay noindex.
 await writeFile(path.join(output,'_headers'),'/*\n  X-Content-Type-Options: nosniff\n  Referrer-Policy: strict-origin-when-cross-origin\n  X-Frame-Options: SAMEORIGIN\n\n/admin.html\n  X-Robots-Tag: noindex, nofollow\n  Cache-Control: no-store\n\n/admin\n  X-Robots-Tag: noindex, nofollow\n  Cache-Control: no-store\n\n/conta.html\n  X-Robots-Tag: noindex, nofollow\n  Cache-Control: no-store\n\n/conta\n  X-Robots-Tag: noindex, nofollow\n  Cache-Control: no-store\n');
+// Always revalidate the storefront HTML and commercial checkout scripts.
+await writeFile(path.join(output,'_headers'),
+ (await readFile(path.join(output,'_headers'),'utf8'))+
+ '\\n/\\n  Cache-Control: no-cache, must-revalidate\\n\\n/index.html\\n  Cache-Control: no-cache, must-revalidate\\n\\n/app.js\\n  Cache-Control: no-cache, must-revalidate\\n\\n/catalog-overrides.js\\n  Cache-Control: no-cache, must-revalidate\\n');
 await writeFile(path.join(output,'robots.txt'),'User-agent: *\nDisallow: /api/\nSitemap: https://usekaiaglow.com.br/sitemap.xml\nSitemap: https://usekaiaglow.com.br/sitemap-novos.xml\n');
 await generateKaiaSeoPages(source,output);
 // Invoke only Kaia API routes with Pages Functions; all static assets stay static.
