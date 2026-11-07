@@ -1,4 +1,5 @@
 import {CheckoutError,json,fail,gate,identity,accountAddress,parseItems,verifiedInventory,quote,database,provider,orderRow,reconcile,checkoutLink,money} from './_core.js';
+import {synchronizeAndExpire,expirationTimestamp} from './_expiry.js';
 const ORIGIN='https://usekaiaglow.com.br';
 function itemsWithShipping(row){
  return [...row.items.map(i=>({title:i.name.slice(0,110),quantity:i.quantity,unit_price:money(i.unit_cents)})),
@@ -92,12 +93,13 @@ export async function onRequestGet({request,env}){
   const id=new URL(request.url).searchParams.get('id');
   let row=await orderRow(env,id);
   if(row.user_id!==user.id)throw new CheckoutError('PEDIDO_NAO_AUTORIZADO',403);
+  let autoCancelled=false;
   if(row.provider_order_id){
-   const remote=await provider(env,'/v1/orders/'+encodeURIComponent(row.provider_order_id));
-   await reconcile(env,remote,row);
-   row=await orderRow(env,id);
+   const synced=await synchronizeAndExpire(env,row);
+   row=synced.row;autoCancelled=synced.autoCancelled;
   }
   return json({id:row.id,status:row.status,productsCents:row.products_cents,shippingCents:row.shipping_cents,totalCents:row.total_cents,
+    expiresAt:new Date(expirationTimestamp(row)).toISOString(),expired: autoCancelled,
     items:row.items.map(i=>({name:i.name,quantity:i.quantity,unitCents:i.unit_cents}))});
  }catch(e){return fail(e);}
 }
