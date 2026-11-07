@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow"><meta name="referrer" content="strict-origin-when-cross-origin">
-<title>Painel administrativo · Kaia Glow</title><link rel="stylesheet" href="admin.css?v=2"><link rel="stylesheet" href="admin-analytics.css?v=1"><link rel="stylesheet" href="admin-marketplaces.css?v=1"><link rel="stylesheet" href="admin-payments.css?v=1"></head>
+<title>Painel administrativo · Kaia Glow</title><link rel="stylesheet" href="admin.css?v=2"><link rel="stylesheet" href="admin-analytics.css?v=1"><link rel="stylesheet" href="admin-marketplaces.css?v=2"><link rel="stylesheet" href="admin-payments.css?v=1"></head>
 <body>
 <header class="admin-top"><div class="admin-brand"><span class="brand-mark">K</span><div><strong>KAIA GLOW</strong><small>GESTÃO DA LOJA</small></div></div><div class="admin-top-actions"><a href="/" target="_blank" rel="noopener noreferrer">Ver a loja ↗</a><button type="button" id="logoutButton" hidden>Sair</button></div></header>
 <main class="admin-shell">
@@ -12,8 +12,8 @@
 <p class="login-hint">Somente contas autorizadas com e-mail confirmado podem fazer alterações. Para criar seu login, use <a href="/conta.html?modo=cadastro">Cadastrar conta com o e-mail autorizado</a>. Se já possui cadastro, basta entrar acima.</p>
 <p id="loginStatus" role="status" aria-live="polite"></p></section>
 <section id="adminPanel" hidden>
-<div class="page-intro"><div><span class="eyebrow">PAINEL KAIA</span><h1>Controle da sua vitrine.</h1><p>Atualizações salvas aqui passam a aparecer no site. As compras continuam bloqueadas até o Mercado Pago estar pronto.</p></div><div class="account-chip" id="adminIdentity"></div></div>
-<div class="dashboard-metrics"><div class="metric"><small>Produtos da vitrine</small><strong id="productCount">—</strong></div><div class="metric"><small>Cupons cadastrados</small><strong id="couponCount">—</strong></div><div class="metric"><small>Pagamento</small><strong class="pending">Em preparação</strong></div></div>
+<div class="page-intro"><div><span class="eyebrow">PAINEL KAIA</span><h1>Controle da sua vitrine.</h1><p>Gerencie produtos, pedidos, estoque e canais de venda em um único lugar.</p></div><div class="account-chip" id="adminIdentity"></div></div>
+<div class="dashboard-metrics"><div class="metric"><small>Produtos da vitrine</small><strong id="productCount">—</strong></div><div class="metric"><small>Cupons cadastrados</small><strong id="couponCount">—</strong></div><div class="metric"><small>Checkout</small><strong>Mercado Pago</strong></div></div>
 <div class="admin-tabs" role="tablist" aria-label="Áreas de gestão"><button type="button" data-tab="products" aria-selected="true">Produtos e fotos</button><button type="button" data-tab="coupons" aria-selected="false">Cupons</button><button type="button" data-tab="analytics" aria-selected="false">Visitas e interesse</button><button type="button" data-tab="marketplaces" aria-selected="false">Estoque e marketplaces</button><button type="button" data-tab="payments" aria-selected="false">Pagamentos</button></div>
 <section id="productsTab" class="admin-section">
 <div class="section-header"><div><h2>Produtos, preços e fotos</h2><p>Edite os produtos existentes ou cadastre um novo com fotos, preço, categoria e estoque.</p></div><div class="editor-header-actions"><button id="reloadButton" type="button" class="ghost-button">Atualizar lista</button><button id="addProductButton" type="button" class="primary-button">+ Novo produto</button></div></div>
@@ -81,6 +81,23 @@
   <p>Um saldo central para os produtos da loja. Organize os vínculos dos anúncios agora; a integração automática só começa depois de autorizar a Shopee e o TikTok Shop.</p>
  </div><button type="button" id="mpRefresh" class="ghost-button">Atualizar painel</button></div>
  <div class="mp-warning" role="note"><strong>Sincronização externa desativada por enquanto.</strong> Alterar o estoque aqui atualiza o banco central, mas <strong>não atualiza Shopee ou TikTok Shop</strong> até conectar e validar cada conta.</div>
+ <div class="mp-setup" aria-labelledby="mpSetupTitle">
+  <div class="mp-setup-heading">
+   <div><span class="eyebrow">PREPARAÇÃO DA INTEGRAÇÃO</span><h3 id="mpSetupTitle">Conectar Shopee e TikTok Shop</h3>
+   <p>O estoque central já existe. A autorização de cada loja é feita na plataforma oficial, sem compartilhar senhas aqui.</p></div>
+   <button type="button" id="mpExportWave" class="ghost-button">Baixar planilha dos 29 SKUs</button>
+  </div>
+  <div class="mp-setup-steps">
+   <article><strong>01 · Shopee</strong><span>Autorizar a loja e o aplicativo na Shopee Open Platform.</span>
+    <a href="https://open.shopee.com/" target="_blank" rel="noopener noreferrer">Abrir Shopee Open Platform ↗</a></article>
+   <article><strong>02 · TikTok Shop</strong><span>Registrar/autorizar a integração no TikTok Shop Partner Center.</span>
+    <a href="https://partner.tiktokshop.com/" target="_blank" rel="noopener noreferrer">Abrir Partner Center ↗</a></article>
+   <article><strong>03 · Conferência</strong><span>Vincular os SKUs locais aos anúncios reais e testar pedidos e cancelamentos antes da sincronização.</span>
+    <a href="#mpMappingForm" id="mpGoToMapping">Ver vínculo de anúncios ↗</a></article>
+  </div>
+  <p id="mpIntegrationReadiness" class="mp-readiness-note" role="status" aria-live="polite">Conferindo o preparo das duas plataformas…</p>
+  <p class="mp-tip">A planilha inclui os 29 produtos liberados no site e campos vazios para os IDs de anúncio e variação de cada marketplace. Ela não altera o estoque e não autoriza contas.</p>
+ </div>
  <div class="mp-kpis">
    <div class="metric"><small>Produtos com SKU</small><strong id="mpSkuCount">—</strong></div>
    <div class="metric"><small>Unidades disponíveis</small><strong id="mpUnits">—</strong></div>
@@ -180,5 +197,5 @@
 <footer class="admin-footer">Kaia Glow · Painel restrito de gestão. O acesso é controlado pelo Supabase Auth.</footer>
 <script src="catalog.js?v=1"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js" integrity="sha384-TcHRA3zBbn+Lexh5n+Oil4guNPOS3rjNDpGRAN46u/s/mB2IZ50ceC6TYDU2yvgK" crossorigin="anonymous"></script>
-<script type="module" src="admin.js?v=5"></script>
+<script type="module" src="admin.js?v=6"></script>
 </body></html>
