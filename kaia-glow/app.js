@@ -11,7 +11,7 @@ const KAIA_COUPONS=(window.KAIA_ACTIVE_COUPONS||[]).map(c=>{
  return {code:c.code,type:'discount',percent:percent?c.discount_value:0,fixedCents:percent?0:c.discount_value,
   expires:c.ends_at||'9999-12-31',starts:c.starts_at||'0000-01-01',min:c.min_order_cents/100,
   title:'Um carinho de '+label,discountLabel:label,
-  condition:c.min_order_cents?'Para pedidos a partir de '+money(c.min_order_cents/100)+'.':'Válido para produtos da coleção Kaia Glow.'};
+  condition:(c.min_order_cents?'Para pedidos a partir de '+money(c.min_order_cents/100)+'. ':'')+(c.discount_value===100&&percent?'100% em produtos e frete grátis; um resgate por conta cadastrada.':'Válido para produtos da coleção Kaia Glow.')};
 });
 function couponToday(){const parts=new Intl.DateTimeFormat('en-CA',{timeZone:'America/Campo_Grande',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());return ['year','month','day'].map(key=>parts.find(p=>p.type===key).value).join('-')}
 function calculateCoupon(code,items,today=couponToday()){
@@ -26,7 +26,7 @@ function calculateCoupon(code,items,today=couponToday()){
  const eligible=items.filter(item=>!c.category||item.category===c.category).reduce((sum,item)=>sum+item.price*item.qty,0);
  if(eligible<=0)return {...result,message:c.category?'Adicione produtos de '+c.category+' para usar este cupom.':'Adicione produtos à sacola para usar este cupom.'};
  const discount=c.percent>0?Math.round(eligible*c.percent)/100:Math.min(eligible,c.fixedCents/100);
- return {valid:true,discount,gift:false,message:'Prévia do desconto aplicada. A compra continua indisponível.'};
+ return {valid:true,discount,gift:c.percent===100,message:c.percent===100?'Produtos com 100% de desconto e frete grátis.':'Este cupom ainda não está disponível no checkout.'};
 }
 function couponItems(){return cart.map(r=>{const p=catalog.find(p=>p.id===r.id);return {category:p.category,price:variantFor(p,r.variantId).price,qty:r.qty}})}
 
@@ -35,6 +35,8 @@ let commerceAllowed=null,chosenShipping=null,commerceFetchVersion=0;
 const cartItems=()=>cart.map(r=>({sku:catalog.find(p=>p.id===r.id)?.sku,quantity:r.qty}));
 function cartSignature(){return JSON.stringify(cartItems().slice().sort((a,b)=>String(a.sku).localeCompare(String(b.sku))));}
 function shippingReset(){chosenShipping=null;}
+function fullCoupon(){return KAIA_COUPONS.some(c=>c.code===coupon&&c.percent===100)&&
+ calculateCoupon(coupon,couponItems()).valid}
 function checkoutEligibility(){
  const btn=$('#checkout');if(!btn)return;
  const skus=cartItems(),eligible=commerceAllowed instanceof Map&&skus.length>0&&
@@ -44,17 +46,23 @@ function checkoutEligibility(){
   chosenShipping.postalCode===postalDigits($('#shippingPostalCode')?.value));
  const subtotal=cart.reduce((sum,r)=>sum+variantFor(catalog.find(p=>p.id===r.id),r.variantId).price*r.qty,0);
  const shipping=shippingValid?chosenShipping.amountCents/100:0;
+ const isFree=fullCoupon();
  if($('#kcShippingAmount'))$('#kcShippingAmount').textContent=shippingValid?money(shipping):'A calcular';
- if($('#kcTotal'))$('#kcTotal').textContent=money(subtotal+shipping);
+ if($('#kcProductDiscount'))$('#kcProductDiscount').textContent=money(isFree?subtotal:0);
+ if($('#kcShippingDiscount'))$('#kcShippingDiscount').textContent=money(isFree?shipping:0);
+ if($('#kcCouponSavings'))$('#kcCouponSavings').hidden=!isFree;
+ if($('#kcPaymentProvider'))$('#kcPaymentProvider').textContent=isFree?'Cupom integral':'Mercado Pago';
+ if($('#kcTotal'))$('#kcTotal').textContent=money(isFree?0:subtotal+shipping);
  const prepared=!!($('#commercePaymentOptions')||$('#commercePendingOrder'));
- btn.hidden=prepared;btn.disabled=!eligible||!shippingValid||!!coupon||prepared;
- btn.textContent=!eligible?'Produto indisponível':!shippingValid?'Escolha o frete':'Continuar para pagamento';
+ btn.hidden=prepared;btn.disabled=!eligible||!shippingValid||(!!coupon&&!isFree)||prepared;
+ btn.textContent=!eligible?'Produto indisponível':!shippingValid?'Escolha o frete':isFree?'Confirmar pedido grátis':'Continuar para pagamento';
  const note=$('#commerceEligibility');if(!note||prepared)return;
  note.hidden=false;note.style.color='';note.style.fontWeight='';
  note.textContent=!eligible?'Um ou mais itens ainda não estão liberados para compra.':
   !shippingValid?'Selecione o frete para continuar.':
-  coupon?'Cupons não estão disponíveis neste checkout.':'';
- note.hidden=!!(eligible&&shippingValid&&!coupon);
+  coupon&&!isFree?'Este cupom não pode ser usado nesta sacola.':
+  isFree?'100% de desconto e frete grátis. O pedido será confirmado sem cobrar pagamento.':'';
+ note.hidden=!!(eligible&&shippingValid&&(!coupon||isFree));
 }
 async function fetchEligible(){
  const version=++commerceFetchVersion;
@@ -182,24 +190,33 @@ async function commercialCheckout(){
   }
   if(!/^[0-9]{8}$/.test(currentPostal)||pending.registeredPostalCode!==currentPostal)
    throw Error('O CEP usado no frete é diferente do CEP salvo na sua conta ('+(pending.registeredPostalCode||'não cadastrado')+'). Atualize seu endereço em Minha conta e calcule o frete novamente antes de pagar.');
-  const fingerprint=cartSignature()+'|'+chosenShipping.serviceId+'|'+currentPostal;
+  const fingerprint=cartSignature()+'|'+chosenShipping.serviceId+'|'+currentPostal+'|'+(coupon||'');
   let savedRequest;try{savedRequest=JSON.parse(sessionStorage.getItem('kaia_order_request_v1')||'null');}catch{}
   if(!savedRequest||savedRequest.fingerprint!==fingerprint||
      !savedRequest.createdAt||Date.now()-savedRequest.createdAt>60_000){
    savedRequest={fingerprint,key:crypto.randomUUID(),createdAt:Date.now()};
    sessionStorage.setItem('kaia_order_request_v1',JSON.stringify(savedRequest));
   }
-  btn.textContent='Preparando pedido…';
-  const r=await fetch('/api/kaia/comercial/pedido',{method:'POST',headers:{
+  const isFree=fullCoupon();
+  btn.textContent=isFree?'Confirmando pedido grátis…':'Preparando pedido…';
+  const r=await fetch(isFree?'/api/kaia/comercial/gratis':'/api/kaia/comercial/pedido',{method:'POST',headers:{
    Authorization:'Bearer '+token,'content-type':'application/json',Accept:'application/json'},
-   body:JSON.stringify({items:cartItems(),serviceId:chosenShipping.serviceId,postalCode:currentPostal,requestKey:savedRequest.key})});
+   body:JSON.stringify({items:cartItems(),serviceId:chosenShipping.serviceId,postalCode:currentPostal,requestKey:savedRequest.key,...(isFree?{coupon}:{})})});
   const result=await r.json();
   if(!r.ok)throw Error(({
    CEP_DIFERENTE_DO_CADASTRO:'O CEP da sacola está diferente do endereço cadastrado. Atualize Minha conta e consulte o frete novamente.',
    BANCO_NAO_CONCLUIU_OPERACAO:'Não foi possível reservar o estoque. Confira se já existe um pedido pendente.',
    ENTRE_NA_CONTA:'É necessário entrar na sua conta para pagar.',
-   PRODUTO_SEM_LIBERACAO_OU_ESTOQUE:'Produto indisponível ou estoque insuficiente.'
+   PRODUTO_SEM_LIBERACAO_OU_ESTOQUE:'Produto indisponível ou estoque insuficiente.',
+   CUPOM_INVALIDO:'Cupom inativo ou expirado.',
+   CUPOM_JA_UTILIZADO:'Este cupom integral já foi utilizado por esta conta.'
   })[result.code]||result.code||'Não foi possível iniciar seu pedido.');
+  if(isFree){
+   if(result.status!=='approved'||result.totalCents!==0||!result.freeOrder||
+      !/^[0-9a-f-]{36}$/.test(result.id||''))throw Error('O pedido grátis não foi confirmado.');
+   cart=[];coupon='';shippingReset();sessionStorage.removeItem('kaia_order_request_v1');
+   location.assign('/pedido.html?pedido='+encodeURIComponent(result.id));return;
+  }
   const u=new URL(result.checkoutUrl);
   if(u.protocol!=='https:'||u.hostname!=='www.mercadopago.com.br'||!u.pathname.startsWith('/checkout/'))
    throw Error('Endereço de pagamento inválido.');
@@ -227,8 +244,28 @@ function variantFor(p,id){return p.variants.find(v=>String(v.id)===String(id))||
 function openProduct(id){const p=catalog.find(x=>x.id===id);if(!p)return;current=p;currentVariant=variantFor(p);qty=1;$('#productContent').innerHTML=`<div class="product-detail"><div class="detail-images"><img id="detailImage" class="main-photo" src="${esc(p.images[0])}" alt="${esc(p.name)}"><div class="thumbs">${p.images.map((im,i)=>`<button data-photo="${i}" aria-label="Ver foto ${i+1}"><img src="${esc(im)}" alt="Foto ${i+1}" loading="lazy"></button>`).join('')}</div></div><div class="detail-info"><span class="eyebrow">${esc(p.brand)} · ${esc(p.category)}</span><h2>${esc(p.name)}</h2><div class="product-price" id="detailPrice">${money(currentVariant.price)}</div><p class="detail-note">${p.available?'Consulte a disponibilidade.':'Produto indisponível.'}</p>${p.variants.length>1?`<label>Opção<select id="variant">${p.variants.map(v=>`<option value="${v.id}" ${v.id===currentVariant.id?'selected':''}>${esc(v.label)}${v.available?'':' · esgotado'}</option>`).join('')}</select></label>`:''}<div class="quantity"><button id="qtyDown" aria-label="Diminuir quantidade">−</button><output id="detailQty">1</output><button id="qtyUp" aria-label="Aumentar quantidade">+</button></div><button class="button" id="addDetail" ${currentVariant.available&&(commerceAllowed instanceof Map)&&commerceAllowed.has(p.sku)?'':'disabled'}>${currentVariant.available&&(commerceAllowed instanceof Map)&&commerceAllowed.has(p.sku)?'Adicionar à sacola':'Compra em breve'}</button><a class="button outline product-whatsapp" href="${esc(whatsappUrl('Olá! Vim pelo site da Kaia Glow e gostaria de saber mais sobre o produto: '+p.name+'.\n'+'https://usekaiaglow.com.br/#produto-'+p.id))}" target="_blank" rel="noopener noreferrer">Tirar dúvida no WhatsApp ↗</a><details class="kc-product-details"><summary>Detalhes e modo de uso</summary><div class="description">${esc(p.description||'Confira as informações deste produto no catálogo original da Kaia Glow. Para saber mais, fale com a equipe Kaia Glow.')}</div></details><p class="detail-note">Consulte as informações e recomendações da embalagem.</p></div></div>`;all('[data-photo]').forEach(b=>b.onclick=()=>{$('#detailImage').src=p.images[+b.dataset.photo]});$('#qtyDown').onclick=()=>{$('#detailQty').textContent=qty=Math.max(1,qty-1)};$('#qtyUp').onclick=()=>{$('#detailQty').textContent=qty=Math.min(10,qty+1)};$('#addDetail').onclick=()=>addCart(p.id,currentVariant.id,qty);if($('#variant'))$('#variant').onchange=e=>{currentVariant=variantFor(p,e.target.value);$('#detailPrice').textContent=money(currentVariant.price);$('#addDetail').disabled=!(currentVariant.available&&(commerceAllowed instanceof Map)&&commerceAllowed.has(p.sku));$('#addDetail').textContent=$('#addDetail').disabled?'Compra em breve':'Adicionar à sacola'};if(!$('#productDialog').open)$('#productDialog').showModal();$('#productDialog').scrollTop=0;window.kaiaMarketing?.productOpened(p);history.replaceState(null,'','#produto-'+id)}
 function addCart(id,variantId,quantity=1){const p=catalog.find(x=>x.id===id),v=variantFor(p,variantId);if(!v.available)return;if(!(commerceAllowed instanceof Map)||!commerceAllowed.has(p.sku)){toast('Este produto ficará disponível em outra etapa de vendas.');return;}window.kaiaMarketing?.cartAdded(p);const key=id+'-'+v.id,row=cart.find(x=>x.key===key);if(row)row.qty=Math.min(10,row.qty+quantity);else cart.push({key,id,variantId:v.id,qty:Math.min(10,quantity)});shippingReset();counts();toast('Adicionado à sua sacola.');if($('#bagDialog').open)renderBag()}
 function renderBag(){counts();if(!cart.length){$('#bagContent').innerHTML='<div class="bag-body empty"><h2>Sua próxima descoberta<br>está te esperando.</h2><p>Explore a coleção e monte sua sacola.</p><button class="button" id="backShopping">Continuar explorando ↗</button></div>';$('#backShopping').onclick=()=>$('#bagDialog').close();return}
-const subtotal=cart.reduce((a,r)=>a+variantFor(catalog.find(p=>p.id===r.id),r.variantId).price*r.qty,0),discount=0;coupon='';
-$('#bagContent').innerHTML=`<div class="bag-body kc-checkout"><section class="kc-cart-section"><div class="kc-section-title"><h3>Seu pedido</h3><span>${cart.length} ${cart.length===1?'item':'itens'}</span></div>${cart.map(r=>{const p=catalog.find(p=>p.id===r.id),v=variantFor(p,r.variantId);return `<div class="bag-item"><img src="${esc(p.images[0])}" alt="${esc(p.name)}"><div><h3>${esc(p.name)}</h3>${p.variants.length>1?`<small>${esc(v.label)}</small>`:''}<small>${money(v.price)}</small><div class="quantity"><button data-step="-1" data-key="${r.key}" aria-label="Diminuir ${esc(p.name)}">−</button><output>${r.qty}</output><button data-step="1" data-key="${r.key}" aria-label="Aumentar ${esc(p.name)}">+</button></div><button class="remove" data-remove="${r.key}">Remover</button></div></div>`}).join('')}</section><section class="kc-delivery-section"><div class="kc-section-title"><h3>Entrega</h3><a class="kc-account-link" href="/conta.html?aba=dados" target="_blank" rel="noopener noreferrer">Meu endereço ↗</a></div><form id="shippingQuoteForm" class="kc-cep-form" aria-label="Calcular frete"><label for="shippingPostalCode">CEP</label><input id="shippingPostalCode" name="cep" inputmode="numeric" autocomplete="postal-code" maxlength="9" placeholder="00000-000" aria-label="CEP de entrega" required><button type="submit">Calcular</button></form><p class="kc-inline-hint" id="shippingQuoteResult" role="status" aria-live="polite">Informe seu CEP para ver as opções de entrega.</p><div id="kcShippingChoices" class="kc-shipping-choices" aria-label="Modalidades de entrega"></div></section><section class="kc-payment-section"><div class="kc-section-title"><h3>Pagamento</h3><span>Mercado Pago</span></div><div class="kc-amount-line"><span>Produtos</span><strong>${money(subtotal)}</strong></div><div class="kc-amount-line"><span>Entrega</span><strong id="kcShippingAmount">A calcular</strong></div><div class="kc-total-line"><span>Total</span><strong id="kcTotal">${money(subtotal)}</strong></div><p class="kc-inline-hint" id="commerceEligibility" role="status">Escolha o frete para continuar.</p><div id="kcPaymentArea"><button class="button" id="checkout" disabled>Escolher frete</button></div><p class="kc-secure-note">Pagamento protegido pelo Mercado Pago.</p></section></div>`;
+const subtotal=cart.reduce((a,r)=>a+variantFor(catalog.find(p=>p.id===r.id),r.variantId).price*r.qty,0);
+$('#bagContent').innerHTML=`<div class="bag-body kc-checkout"><section class="kc-cart-section"><div class="kc-section-title"><h3>Seu pedido</h3><span>${cart.length} ${cart.length===1?'item':'itens'}</span></div>${cart.map(r=>{const p=catalog.find(p=>p.id===r.id),v=variantFor(p,r.variantId);return `<div class="bag-item"><img src="${esc(p.images[0])}" alt="${esc(p.name)}"><div><h3>${esc(p.name)}</h3>${p.variants.length>1?`<small>${esc(v.label)}</small>`:''}<small>${money(v.price)}</small><div class="quantity"><button data-step="-1" data-key="${r.key}" aria-label="Diminuir ${esc(p.name)}">−</button><output>${r.qty}</output><button data-step="1" data-key="${r.key}" aria-label="Aumentar ${esc(p.name)}">+</button></div><button class="remove" data-remove="${r.key}">Remover</button></div></div>`}).join('')}</section><section class="kc-delivery-section"><div class="kc-section-title"><h3>Entrega</h3><a class="kc-account-link" href="/conta.html?aba=dados" target="_blank" rel="noopener noreferrer">Meu endereço ↗</a></div><form id="shippingQuoteForm" class="kc-cep-form" aria-label="Calcular frete"><label for="shippingPostalCode">CEP</label><input id="shippingPostalCode" name="cep" inputmode="numeric" autocomplete="postal-code" maxlength="9" placeholder="00000-000" aria-label="CEP de entrega" required><button type="submit">Calcular</button></form><p class="kc-inline-hint" id="shippingQuoteResult" role="status" aria-live="polite">Informe seu CEP para ver as opções de entrega.</p><div id="kcShippingChoices" class="kc-shipping-choices" aria-label="Modalidades de entrega"></div></section><section class="kc-payment-section"><div class="kc-section-title"><h3>Pagamento</h3><span id="kcPaymentProvider">Mercado Pago</span></div>
+<div class="kc-amount-line"><span>Produtos</span><strong>${money(subtotal)}</strong></div>
+<div class="kc-amount-line"><span>Entrega</span><strong id="kcShippingAmount">A calcular</strong></div>
+<form id="kcCouponForm" class="kc-cep-form" aria-label="Aplicar cupom">
+<label for="kcCouponCode">Cupom</label><input id="kcCouponCode" type="text" maxlength="24" placeholder="Digite seu cupom" autocomplete="off" value="${esc(coupon)}">
+<button id="kcCouponApply" type="submit">Aplicar</button></form>
+<p id="kcCouponStatus" class="kc-inline-hint" role="status"></p>
+<div id="kcCouponSavings" hidden><div class="kc-amount-line"><span>Desconto em produtos</span><strong>− <span id="kcProductDiscount">R$ 0,00</span></strong></div><div class="kc-amount-line"><span>Frete grátis</span><strong>− <span id="kcShippingDiscount">R$ 0,00</span></strong></div></div>
+<div class="kc-total-line"><span>Total</span><strong id="kcTotal">${money(subtotal)}</strong></div><p class="kc-inline-hint" id="commerceEligibility" role="status">Escolha o frete para continuar.</p><div id="kcPaymentArea"><button class="button" id="checkout" disabled>Escolher frete</button></div><p class="kc-secure-note">Pedidos pagos usam Mercado Pago. Pedidos grátis são registrados sem cobrança.</p></section></div>`;
+const couponStatus=$('#kcCouponStatus');
+couponStatus.textContent=fullCoupon()?'Cupom '+coupon+' aplicado: produtos e frete grátis.':'';
+$('#kcCouponForm').onsubmit=e=>{
+ e.preventDefault();
+ const entry=$('#kcCouponCode').value.trim().toUpperCase();
+ if(!entry){coupon='';couponStatus.textContent='Cupom removido.';checkoutEligibility();return;}
+ const result=calculateCoupon(entry,couponItems());
+ if(!result.valid||!result.gift){couponStatus.textContent=result.message||'Cupom indisponível para esta compra.';return;}
+ coupon=entry;sessionStorage.removeItem('kaia_order_request_v1');
+ couponStatus.textContent='Cupom '+entry+' aplicado: 100% em produtos e frete grátis.';
+ checkoutEligibility();
+};
 all('[data-step]').forEach(b=>b.onclick=()=>{const r=cart.find(x=>x.key===b.dataset.key);r.qty=Math.max(1,Math.min(10,r.qty+Number(b.dataset.step)));shippingReset();renderBag()});all('[data-remove]').forEach(b=>b.onclick=()=>{cart=cart.filter(r=>r.key!==b.dataset.remove);shippingReset();renderBag()});$('#shippingQuoteForm').onsubmit=async e=>{
  e.preventDefault();
  const status=$('#shippingQuoteResult'),cep=postalDigits($('#shippingPostalCode').value);
@@ -386,7 +423,7 @@ counts();
 // Coupon catalogue stays behind its tab so the main product flow remains compact.
 const couponsDialog=$('#couponsDialog');
 function openCoupons(){if(kaiaMenuDialog.open)kaiaMenuDialog.close();if(!couponsDialog.open)couponsDialog.showModal()}
-function renderCoupons(){if(!KAIA_COUPONS.length){$('#couponGrid').innerHTML='<p class="coupon-empty">Não há cupons disponíveis no momento. Consulte a equipe para conhecer as condições vigentes.</p>';return;}const type=$('#couponType').value,today=couponToday();$('#couponGrid').innerHTML=KAIA_COUPONS.filter(c=>type==='all'||c.type===type).map(c=>{const expired=today>c.expires;return `<article class="coupon-ticket"><span class="coupon-ticket-tag">${esc(c.discountLabel)}</span><h3>${esc(c.title)}</h3><p class="coupon-expiry">${expired?'Expirado em':'Válido até'} ${c.expires.split('-').reverse().join('/')}</p><details class="coupon-conditions"><summary>Condições</summary><p>${esc(c.condition)} Válido até a data indicada, no horário de Mato Grosso. Consulte os critérios de uso desta oferta antes de concluir a compra.</p></details><div class="coupon-ticket-bottom"><button class="coupon-products" data-coupon-products="${c.code}">Ver produtos ↗</button><button class="coupon-copy" data-copy-coupon="${c.code}" aria-label="Copiar cupom ${c.code}" ${expired?'disabled':''}><span>${c.code}</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="3" stroke="currentColor" stroke-width="1.5"/><path d="M15 5V4a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h1" stroke="currentColor" stroke-width="1.5"/></svg></button></div></article>`}).join('')}
+function renderCoupons(){if(!KAIA_COUPONS.length){$('#couponGrid').innerHTML='<p class="coupon-empty">Não há cupons disponíveis no momento. Consulte a equipe para conhecer as condições vigentes.</p>';return;}const type=$('#couponType').value,today=couponToday();$('#couponGrid').innerHTML=KAIA_COUPONS.filter(c=>type==='all'||c.type===type).map(c=>{const expired=today>c.expires;return `<article class="coupon-ticket"><span class="coupon-ticket-tag">${esc(c.discountLabel)}</span><h3>${esc(c.title)}</h3><p class="coupon-expiry">${c.expires==='9999-12-31'?'Sem data de expiração':(expired?'Expirado em ':'Válido até ')+c.expires.split('-').reverse().join('/')}</p><details class="coupon-conditions"><summary>Condições</summary><p>${esc(c.condition)} Válido até a data indicada, no horário de Mato Grosso. Consulte os critérios de uso desta oferta antes de concluir a compra.</p></details><div class="coupon-ticket-bottom"><button class="coupon-products" data-coupon-products="${c.code}">Ver produtos ↗</button><button class="coupon-copy" data-copy-coupon="${c.code}" aria-label="Copiar cupom ${c.code}" ${expired?'disabled':''}><span>${c.code}</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="3" stroke="currentColor" stroke-width="1.5"/><path d="M15 5V4a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h1" stroke="currentColor" stroke-width="1.5"/></svg></button></div></article>`}).join('')}
 all('[data-open-coupons]').forEach(button=>button.addEventListener('click',openCoupons));
 $('#couponType').onchange=renderCoupons;
 couponsDialog.addEventListener('click',async event=>{

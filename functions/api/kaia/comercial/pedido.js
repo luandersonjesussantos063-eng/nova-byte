@@ -99,6 +99,8 @@ export async function onRequestGet({request,env}){
    row=synced.row;autoCancelled=synced.autoCancelled;
   }
   return json({id:row.id,status:row.status,productsCents:row.products_cents,shippingCents:row.shipping_cents,totalCents:row.total_cents,
+    freeOrder:row.status==='approved'&&row.total_cents===0&&!!row.coupon_code&&!row.provider_order_id,
+    couponCode:row.coupon_code||null,listProductsCents:row.list_products_cents||null,listShippingCents:row.list_shipping_cents||null,
     expiresAt:new Date(expirationTimestamp(row)).toISOString(),expired: autoCancelled,
     items:row.items.map(i=>({name:i.name,quantity:i.quantity,unitCents:i.unit_cents}))});
  }catch(e){return fail(e);}
