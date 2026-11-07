@@ -10,8 +10,8 @@ export async function onRequestGet({request,env}){
   const queued=await db(env,'kaia_order_mail_outbox?select=status&limit=1000');
   return response({enabled:settings?.[0]?.enabled===true,
     senderConfigured:!!env.KAIA_ORDER_EMAIL_API_KEY&&
-     /^[^\\s@<>]+@usekaiaglow\\.com\\.br$/i.test(env.KAIA_ORDER_EMAIL_FROM||'')&&
-     /^[^\\s@<>]+@[^\\s@<>]+\\.[A-Za-z]{2,}$/.test(env.KAIA_ORDER_NOTIFY_TO||''),
+     /^[^\s@<>]+@usekaiaglow\.com\.br$/i.test(env.KAIA_ORDER_EMAIL_FROM||'')&&
+     /^[^\s@<>]+@[^\s@<>]+\.[A-Za-z]{2,}$/.test(env.KAIA_ORDER_NOTIFY_TO||''),
     queued:queued.filter(x=>x.status==='queued').length,
     sending:queued.filter(x=>x.status==='sending').length,
     accepted:queued.filter(x=>x.status==='sent').length,
