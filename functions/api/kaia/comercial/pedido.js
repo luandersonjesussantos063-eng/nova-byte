@@ -31,6 +31,20 @@ export async function onRequestPost({request,env}){
     p_shipping_cents:shipping.cents,p_shipping_service:shipping.serviceId,p_postal_code:postalCode
    }});
    row=await orderRow(env,reserved.id);
+   // Keep the carrier's estimate alongside the immutable order snapshot for
+   // confirmation emails. Failure to save optional ETA must not create a second
+   // payment attempt or invalidate stock already reserved by the RPC.
+   if(shipping.estimatedDays!==null){
+    try{
+     const saved=await database(env,'kaia_commercial_payments?id=eq.'+row.id+
+      '&status=eq.created&shipping_estimated_days=is.null',{
+      method:'PATCH',prefer:'return=representation',body:{
+       shipping_estimated_days:shipping.estimatedDays,updated_at:new Date().toISOString()
+      }
+     });
+     if(Array.isArray(saved)&&saved.length===1)row=saved[0];
+    }catch{/* ETA is optional; checkout still uses server-verified price and shipping. */}
+   }
   }
   if(row.user_id!==user.id)throw new CheckoutError('PEDIDO_NAO_AUTORIZADO',403);
   if(row.shipping_service!==serviceId||row.postal_code!==postalCode||
