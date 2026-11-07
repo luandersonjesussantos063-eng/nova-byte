@@ -16,8 +16,8 @@ export async function onRequestPost({request,env}){
   gate(request,env);
   await authorize(request);
   const cutoff=new Date(Date.now()-60_000).toISOString();
-  const candidates=await database(env,'kaia_commercial_payments?status=in.(created,pending)&created_at=lt.'+
-   encodeURIComponent(cutoff)+'&select=*&order=created_at.asc&limit=12');
+  const candidates=await database(env,'kaia_commercial_payments?status=eq.pending&provider_order_id=not.is.null&created_at=lt.'+
+   encodeURIComponent(cutoff)+'&select=*&order=updated_at.asc&limit=6');
   let cancelled=0,held=0;
   for(const row of candidates){
    if(!row.provider_order_id){held++;continue;} // Never guess if MP order creation failed mid-flight.
