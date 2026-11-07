@@ -1,5 +1,6 @@
 import {KAIA_AUTH} from './auth-config.js';
 import {setupKaiaCoupons} from './admin-coupons.js';
+import {setupKaiaCancellations,loadKaiaCancellations} from './admin-cancellations.js';
 import {initKaiaAnalytics,loadKaiaAnalytics} from './admin-analytics.js';
 import {initKaiaMarketplaces,loadKaiaMarketplaces} from './admin-marketplaces.js?v=4';
 import {initKaiaPayments,loadKaiaPayments} from './admin-payments.js';
@@ -36,7 +37,7 @@ async function authorize(){
  if(result.error||result.data!==true){setSignedIn(false);status('#loginStatus','Esta conta ainda não tem autorização administrativa. O e-mail precisa estar confirmado e aprovado.',true);return;}
  setSignedIn(true,user.email);await loadAdmin();
  const requested=location.hash.replace(/^#/,'');
- if(['products','coupons','analytics','marketplaces','payments'].includes(requested))openAdminTab(requested,false);
+ if(['products','coupons','cancellations','analytics','marketplaces','payments'].includes(requested))openAdminTab(requested,false);
 }
 async function loadAdmin(){
  const [products,stock,newProducts]=await Promise.all([
@@ -59,7 +60,7 @@ async function loadAdmin(){
  }
  initKaiaAnalytics(sb);
  initKaiaMarketplaces(sb,{onStockChanged:()=>loadAdmin()});
- initKaiaPayments();
+ initKaiaPayments();setupKaiaCancellations(sb);
  $('#productCount').textContent=catalog.length;
  renderProductList();await setupKaiaCoupons(sb);await refreshCommerce();
 }
@@ -277,10 +278,11 @@ async function changeCommercialRelease(enable){
 $('#releaseOnlineButton').onclick=()=>changeCommercialRelease(true);
 $('#pauseOnlineButton').onclick=()=>changeCommercialRelease(false);
 function openAdminTab(current,updateHash=true){
- if(!['products','coupons','analytics','marketplaces','payments'].includes(current))return;
+ if(!['products','coupons','cancellations','analytics','marketplaces','payments'].includes(current))return;
  const selected=all('[data-tab]').find(button=>button.dataset.tab===current);
  all('[data-tab]').forEach(b=>b.setAttribute('aria-selected',String(b.dataset.tab===current)));
  $('#productsTab').hidden=current!=='products';$('#couponsTab').hidden=current!=='coupons';
+ $('#cancellationsTab').hidden=current!=='cancellations';if(current==='cancellations')loadKaiaCancellations();
  $('#analyticsTab').hidden=current!=='analytics';if(current==='analytics')loadKaiaAnalytics();
  $('#marketplacesTab').hidden=current!=='marketplaces';if(current==='marketplaces')loadKaiaMarketplaces();
  $('#paymentsTab').hidden=current!=='payments';if(current==='payments')loadKaiaPayments();

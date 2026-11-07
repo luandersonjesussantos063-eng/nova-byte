@@ -61,6 +61,8 @@ function activateTab(tab){
 all('[data-account-tab]').forEach(b=>b.addEventListener('click',()=>activateTab(b.dataset.accountTab)));
 const referralLabels={registered:'Cadastro confirmado · em análise',validated:'Indicação validada',reward_ready:'Brinde liberado',reward_sent:'Brinde enviado'};
 const orderLabels={received:'Recebido',confirmed:'Confirmado',preparing:'Em preparação',shipped:'Enviado',delivered:'Entregue',cancelled:'Cancelado'};
+const cancelLabels={requested:'Solicitação em análise',approved:'Pedido cancelado',
+ approved_refund_pending:'Cancelamento aprovado · reembolso pendente',denied:'Solicitação não aceita'};
 const date=s=>new Intl.DateTimeFormat('pt-BR',{dateStyle:'medium'}).format(new Date(s));
 const money=c=>new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(c/100);
 async function loadAccount(){
@@ -103,9 +105,10 @@ async function loadAccount(){
   if(result.error){claimMessage='Seu cadastro está pronto. Não foi possível registrar a indicação agora; tente atualizar a página.';}
   else {claimMessage=({registered:'Indicação registrada! A equipe vai validar a participação e o brinde.',self:'Seu próprio link não conta como indicação.',invalid:'Este convite não está disponível. Confira o link com quem indicou você.'})[result.data]||'';pendingCode=null;try{localStorage.removeItem(REF_KEY)}catch{}}
  }
- const [referrals,orders]=await Promise.all([
+ const [referrals,orders,cancellations]=await Promise.all([
   supa.from('kaia_referrals').select('id,status,created_at').order('created_at',{ascending:false}).limit(100),
-  supa.from('kaia_orders').select('id,order_number,status,total_cents,items,created_at').order('created_at',{ascending:false}).limit(100)
+  supa.from('kaia_orders').select('id,order_number,status,total_cents,items,created_at').order('created_at',{ascending:false}).limit(100),
+  supa.from('kaia_cancellation_requests').select('id,order_number,status,reason,decision_note').order('requested_at',{ascending:false}).limit(100)
  ]);
  if(seq!==sequence)return;
  $('#memberName').textContent=profile.full_name;$('#memberEmail').textContent=user.email;
@@ -121,11 +124,50 @@ async function loadAccount(){
  }
  if(orders.error)$('#ordersList').textContent='Não foi possível carregar seus pedidos. Atualize a página para tentar novamente.';
  else{
-  $('#ordersList').innerHTML=orders.data.length?orders.data.map(o=>`<article class="account-record"><h3>Pedido ${esc(o.order_number)} · ${money(o.total_cents)}</h3><time datetime="${esc(o.created_at)}">${date(o.created_at)}</time><span class="account-badge">${esc(orderLabels[o.status]||o.status)}</span><ul>${(Array.isArray(o.items)?o.items:[]).filter(i=>i&&typeof i==='object').map(i=>`<li>${esc(i.quantity||1)} × ${esc(i.name||'Produto')}</li>`).join('')}</ul></article>`).join(''):'<div class="account-empty"><h3>Você ainda não tem pedidos por aqui.</h3><p>Quando a equipe vincular um pedido à sua conta, você poderá acompanhar a situação nesta área.</p><a href="./" class="account-text-button">Explorar a coleção ↗</a></div>';
+  const byOrder=new Map((cancellations.data||[]).map(x=>[x.order_number,x]));
+  $('#ordersList').innerHTML=orders.data.length?orders.data.map(o=>{
+   const c=byOrder.get(o.order_number);
+   return `<article class="account-record">
+    <h3>Pedido ${esc(o.order_number)} · ${money(o.total_cents)}</h3>
+    <time datetime="${esc(o.created_at)}">${date(o.created_at)}</time>
+    <span class="account-badge">${esc(orderLabels[o.status]||o.status)}</span>
+    <ul>${(Array.isArray(o.items)?o.items:[]).filter(x=>x&&typeof x==='object').map(i=>
+     `<li>${esc(i.quantity||1)} × ${esc(i.name||'Produto')}</li>`).join('')}</ul>
+    ${c?`<p><strong>${esc(cancelLabels[c.status]||c.status)}</strong></p>
+      <p class="account-small">Motivo: ${esc(c.reason)}</p>
+      ${c.decision_note?`<p class="account-small">Resposta: ${esc(c.decision_note)}</p>`:''}`:
+      o.status!=='cancelled'?`<button type="button" class="account-text-button" data-cancel-open="${esc(o.order_number)}">Solicitar cancelamento</button>
+        <form data-cancel-form="${esc(o.order_number)}" hidden>
+        <label>Motivo<textarea name="reason" minlength="5" maxlength="1000" rows="3" required placeholder="Por que deseja cancelar?"></textarea></label>
+        <p class="account-small">A Kaia Glow analisará a solicitação. Você receberá confirmação por e-mail. O direito de arrependimento em compras online será respeitado.</p>
+        <button class="button" type="submit">Enviar solicitação</button></form>`:''}
+    </article>`;
+  }).join(''):'<div class="account-empty"><h3>Você ainda não tem pedidos por aqui.</h3></div>';
  }
  $('#authPanel').hidden=true;$('#memberPanel').hidden=false;
  activateTab(new URLSearchParams(location.search).get('aba')||'dados');status((profileRequired?'Confirme seus dados abaixo para concluir o cadastro. ':'' )+ (claimMessage||((referrals.error||orders.error)?'Algumas informações não carregaram. Tente atualizar.':'')));
 }
+$('#ordersList').addEventListener('click',event=>{
+ const button=event.target.closest('[data-cancel-open]');if(!button)return;
+ const form=all('[data-cancel-form]').find(f=>f.dataset.cancelForm===button.dataset.cancelOpen);
+ if(!form)return;form.hidden=!form.hidden;
+ button.textContent=form.hidden?'Solicitar cancelamento':'Fechar solicitação';
+});
+$('#ordersList').addEventListener('submit',async event=>{
+ const form=event.target.closest('[data-cancel-form]');if(!form)return;
+ event.preventDefault();if(!user||!supa)return;
+ const reason=form.querySelector('textarea').value.trim();
+ if(reason.length<5){status('Descreva o motivo do cancelamento.',true);return}
+ if(!confirm('Enviar solicitação de cancelamento deste pedido?'))return;
+ const button=form.querySelector('button[type=submit]');button.disabled=true;
+ status('Registrando a solicitação…');
+ try{
+  const {error}=await supa.rpc('kaia_customer_request_cancellation',{
+   p_order_number:form.dataset.cancelForm,p_reason:reason});
+  if(error)throw error;
+  await loadAccount();status('Sua solicitação foi registrada. Você receberá confirmação por e-mail.');
+ }catch(e){status('Não foi possível solicitar: '+(e.message||'tente novamente'),true);button.disabled=false;}
+});
 $('#authForm').addEventListener('submit',async event=>{
  event.preventDefault();if(!supa)return;const button=$('#authSubmit');button.disabled=true;authBusy=true;status('Aguarde…');
  const email=$('#accountEmail').value.trim(),password=$('#accountPassword').value,name=$('#accountName').value.trim();

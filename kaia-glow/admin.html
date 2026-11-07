@@ -14,7 +14,7 @@
 <section id="adminPanel" hidden>
 <div class="page-intro"><div><span class="eyebrow">PAINEL KAIA</span><h1>Controle da sua vitrine.</h1><p>Gerencie produtos, pedidos, estoque e canais de venda em um único lugar.</p></div><div class="account-chip" id="adminIdentity"></div></div>
 <div class="dashboard-metrics"><div class="metric"><small>Produtos da vitrine</small><strong id="productCount">—</strong></div><div class="metric"><small>Cupons cadastrados</small><strong id="couponCount">—</strong></div><div class="metric"><small>Checkout</small><strong>Mercado Pago</strong></div></div>
-<div class="admin-tabs" role="tablist" aria-label="Áreas de gestão"><button type="button" data-tab="products" aria-selected="true">Produtos e fotos</button><button type="button" data-tab="coupons" aria-selected="false">Cupons</button><button type="button" data-tab="analytics" aria-selected="false">Visitas e interesse</button><button type="button" data-tab="marketplaces" aria-selected="false">Estoque e marketplaces</button><button type="button" data-tab="payments" aria-selected="false">Pagamentos</button></div>
+<div class="admin-tabs" role="tablist" aria-label="Áreas de gestão"><button type="button" data-tab="products" aria-selected="true">Produtos e fotos</button><button type="button" data-tab="coupons" aria-selected="false">Cupons</button><button type="button" data-tab="cancellations" aria-selected="false">Cancelamentos</button><button type="button" data-tab="analytics" aria-selected="false">Visitas e interesse</button><button type="button" data-tab="marketplaces" aria-selected="false">Estoque e marketplaces</button><button type="button" data-tab="payments" aria-selected="false">Pagamentos</button></div>
 <section id="productsTab" class="admin-section">
 <div class="section-header"><div><h2>Produtos, preços e fotos</h2><p>Edite os produtos existentes ou cadastre um novo com fotos, preço, categoria e estoque.</p></div><div class="editor-header-actions"><button id="reloadButton" type="button" class="ghost-button">Atualizar lista</button><button id="addProductButton" type="button" class="primary-button">+ Novo produto</button></div></div>
 <div class="product-layout"><div class="product-picker"><label for="productSearch">Buscar produto ou SKU</label><input id="productSearch" type="search" autocomplete="off" placeholder="Nome, marca ou código"><div id="productList" class="product-list" aria-label="Produtos cadastrados"></div></div>
@@ -58,6 +58,14 @@
 <div class="editor-actions"><button type="submit" class="primary-button" id="saveCouponButton">Salvar cupom</button><button type="reset" class="ghost-button">Limpar</button></div><p id="couponStatus" role="status" aria-live="polite"></p></form>
 <div class="coupon-admin-list"><h3>Cupons cadastrados</h3><div id="couponList" class="coupons-list"></div></div></div></section>
 
+<section id="cancellationsTab" class="admin-section" hidden>
+<div class="section-header"><div><span class="eyebrow">KAIA GLOW · PÓS-VENDA</span>
+<h2>Solicitações de cancelamento</h2><p>Veja o motivo do cliente, decida e envie uma resposta por e-mail. Solicitações de arrependimento legal devem ser respeitadas.</p>
+</div><button type="button" class="ghost-button" id="refreshCancellations">Atualizar solicitações</button></div>
+<p id="cancellationAdminStatus" role="status" aria-live="polite">Consultando solicitações…</p>
+<div id="cancellationAdminList" class="coupons-list" aria-live="polite"></div>
+<p class="muted">Em compras pagas, aprovar o pedido não significa que o dinheiro foi estornado. A confirmação final exige verificar o reembolso no Mercado Pago e informar sua referência. Produtos já enviados não retornam automaticamente ao estoque.</p>
+</section>
 <section id="analyticsTab" class="admin-section" hidden>
  <div class="section-header"><div><span class="eyebrow">COMPORTAMENTO DE VISITANTES</span>
  <h2>O que desperta interesse?</h2>
