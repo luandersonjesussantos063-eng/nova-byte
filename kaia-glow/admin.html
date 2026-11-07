@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow"><meta name="referrer" content="strict-origin-when-cross-origin">
-<title>Painel administrativo · Kaia Glow</title><link rel="stylesheet" href="admin.css?v=2"><link rel="stylesheet" href="admin-analytics.css?v=1"><link rel="stylesheet" href="admin-marketplaces.css?v=3"><link rel="stylesheet" href="admin-payments.css?v=1"></head>
+<title>Painel administrativo · Kaia Glow</title><link rel="stylesheet" href="admin.css?v=2"><link rel="stylesheet" href="admin-analytics.css?v=1"><link rel="stylesheet" href="admin-marketplaces.css?v=4"><link rel="stylesheet" href="admin-payments.css?v=1"></head>
 <body>
 <header class="admin-top"><div class="admin-brand"><span class="brand-mark">K</span><div><strong>KAIA GLOW</strong><small>GESTÃO DA LOJA</small></div></div><div class="admin-top-actions"><a href="/" target="_blank" rel="noopener noreferrer">Ver a loja ↗</a><button type="button" id="logoutButton" hidden>Sair</button></div></header>
 <main class="admin-shell">
@@ -89,9 +89,19 @@
    <div class="mp-olist-actions">
     <button type="button" class="primary-button" id="mpOlistAuthorize">Conectar Olist</button>
     <button type="button" class="ghost-button" id="mpOlistTest" hidden>Testar leitura dos produtos</button>
+    <button type="button" class="ghost-button" id="mpOlistCompare" hidden>Conferir estoque dos 51 SKUs</button>
    </div>
   </div>
   <p class="mp-olist-status" id="mpOlistStatus" role="status" aria-live="polite">Verificando conexão protegida…</p>
+  <div class="mp-olist-preview" id="mpOlistPreview" hidden aria-live="polite">
+   <h4>Conferência com estoque da Olist</h4>
+   <p id="mpOlistPreviewSummary" class="mp-olist-preview-summary"></p>
+   <div class="mp-table-wrap"><table class="mp-table">
+    <thead><tr><th>Produto / SKU</th><th>Site</th><th>Olist disponível</th><th>Reserva local</th><th>Proposta para o site</th></tr></thead>
+    <tbody id="mpOlistPreviewBody"></tbody>
+   </table></div>
+   <p class="mp-tip" id="mpOlistPreviewNote"></p>
+  </div>
   <p class="mp-tip">A autorização não altera estoque ou pedidos. O envio automático continuará desligado até conferir os saldos, as reservas e o registro de vendas.</p>
  </section>
  <div class="mp-setup" aria-labelledby="mpSetupTitle">
@@ -210,5 +220,5 @@
 <footer class="admin-footer">Kaia Glow · Painel restrito de gestão. O acesso é controlado pelo Supabase Auth.</footer>
 <script src="catalog.js?v=1"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js" integrity="sha384-TcHRA3zBbn+Lexh5n+Oil4guNPOS3rjNDpGRAN46u/s/mB2IZ50ceC6TYDU2yvgK" crossorigin="anonymous"></script>
-<script type="module" src="admin.js?v=7"></script>
+<script type="module" src="admin.js?v=8"></script>
 </body></html>
