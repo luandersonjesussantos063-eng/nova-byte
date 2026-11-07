@@ -4,17 +4,32 @@ import {KAIA_AUTH} from '/auth-config.js';
 const article=document.querySelector('article.product-detail[data-product-key]');
 if(article){
  const key=article.dataset.productKey;
- const params=new URLSearchParams({select:'product_key,name,description,images,visible',product_key:'eq.'+key});
+ const params=new URLSearchParams({select:'product_key,name,description,images,visible,archived',product_key:'eq.'+key});
  const req=KAIA_AUTH.url+'/rest/v1/kaia_catalog_overrides?'+params;
  try{
   const response=await fetch(req,{headers:{apikey:KAIA_AUTH.publishableKey,Authorization:'Bearer '+KAIA_AUTH.publishableKey,Accept:'application/json'},cache:'no-store'});
   if(response.ok){
    const data=await response.json(),updated=data?.[0];
    if(updated){
-    if(updated.visible===false){
-     const notice=document.createElement('p');notice.className='callout';
-     notice.textContent='Este produto não está disponível na vitrine no momento. Consulte outras opções da Kaia Glow.';
-     article.querySelector('.details')?.append(notice);
+    if(updated.visible===false||updated.archived===true){
+     const archived=updated.archived===true;
+     if(archived){
+      const replacement=document.createElement('section');
+      replacement.className='content archived-product-message';
+      const h1=document.createElement('h1');h1.textContent='Produto retirado da loja';
+      const explanation=document.createElement('p');
+      explanation.textContent='Este produto não faz mais parte do catálogo disponível. Conheça os outros cuidados da Kaia Glow.';
+      const link=document.createElement('a');link.className='button';link.href='/';
+      link.textContent='Conhecer outros produtos';
+      replacement.append(h1,explanation,link);article.replaceWith(replacement);
+      article.nextElementSibling?.remove();
+      document.querySelectorAll('script[type="application/ld+json"]').forEach(node=>node.remove());
+      document.title='Produto retirado da loja | Kaia Glow';
+     }else{
+      const notice=document.createElement('p');notice.className='callout';
+      notice.textContent='Este produto não está disponível na vitrine no momento. Consulte outras opções da Kaia Glow.';
+      article.querySelector('.details')?.append(notice);
+     }
      const meta=document.querySelector('meta[name=robots]');if(meta)meta.content='noindex,follow';
     }else{
      const title=updated.name?.trim(),description=updated.description?.trim();
