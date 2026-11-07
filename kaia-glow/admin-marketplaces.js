@@ -256,21 +256,22 @@ async function adminOlistRequest(endpoint,method='GET'){
  return body;
 }
 async function loadOlistConnection(){
- const node=$('#mpOlistStatus'),button=$('#mpOlistAuthorize'),test=$('#mpOlistTest');
- if(!node||!button||!test)return;
+ const node=$('#mpOlistStatus'),button=$('#mpOlistAuthorize'),
+  test=$('#mpOlistTest'),compare=$('#mpOlistCompare');
+ if(!node||!button||!test||!compare)return;
  node.textContent='Conferindo o acesso protegido à Olist…';
  try{
   const info=await adminOlistRequest('/api/kaia/olist/status');
   button.disabled=!info.configured;
-  if(!info.configured){node.textContent='As credenciais da Olist ainda não estão completas no Cloudflare.';test.hidden=true;return;}
+  if(!info.configured){node.textContent='As credenciais da Olist ainda não estão completas no Cloudflare.';test.hidden=true;compare.hidden=true;return;}
   if(info.authorized){
    node.textContent='Olist autorizada em '+date(info.authorizedAt)+'. A sincronização automática ainda está desligada.';
-   button.textContent='Reautorizar Olist';test.hidden=false;
+   button.textContent='Reautorizar Olist';test.hidden=false;compare.hidden=false;
   }else{
    node.textContent='Credenciais cadastradas. Falta a autorização da conta Olist para consultar os produtos.';
-   button.textContent='Conectar Olist';test.hidden=true;
+   button.textContent='Conectar Olist';test.hidden=true;compare.hidden=true;
   }
- }catch(e){node.textContent='Não foi possível verificar a Olist: '+e.message;test.hidden=true;}
+ }catch(e){node.textContent='Não foi possível verificar a Olist: '+e.message;test.hidden=true;compare.hidden=true;}
 }
 async function startOlistAuthorization(){
  const button=$('#mpOlistAuthorize'),node=$('#mpOlistStatus');
@@ -294,6 +295,44 @@ async function testOlistProducts(){
  }catch(e){node.textContent='A leitura não foi validada: '+e.message;}
  finally{button.disabled=false;}
 }
+
+async function compareOlistStock(){
+ const button=$('#mpOlistCompare'),status=$('#mpOlistStatus');
+ const pane=$('#mpOlistPreview'),summary=$('#mpOlistPreviewSummary');
+ const body=$('#mpOlistPreviewBody'),note=$('#mpOlistPreviewNote');
+ button.disabled=true;pane.hidden=true;
+ status.textContent='Conferindo os 51 SKUs e as reservas locais com a Olist (somente leitura)…';
+ try{
+  const data=await adminOlistRequest('/api/kaia/olist/stock-preview','POST');
+  if(data.mode!=='preview_only'||!Array.isArray(data.rows))
+   throw Error('Resposta de conferência incompleta.');
+  const s=data.summary;
+  if(!s||typeof s.different!=='number'||data.siteSkuCount!==51)
+   throw Error('A quantidade de produtos não corresponde ao catálogo esperado.');
+  summary.textContent=data.siteSkuCount+' SKUs no site · '+s.matched+
+   ' encontrados na Olist · '+s.different+' saldos divergentes · '+
+   s.missing+' não encontrados · '+s.duplicate+' duplicados · '+s.invalid+
+   ' inválidos · '+s.reservedSiteUnits+' unidades reservadas em pagamentos pendentes.';
+  const exceptional=data.rows.filter(x=>x.state!=='equal');
+  body.replaceChildren();
+  if(!exceptional.length)emptyRow(body,5,'Nenhuma diferença encontrada. Os saldos consultados coincidem com o site.');
+  for(const item of exceptional){
+   const tr=field('tr');
+   const prod=td(tr,skuTitle(item.sku));
+   prod.append(field('small','mp-sku',item.sku));
+   td(tr,pt(item.local));
+   td(tr,item.olistAvailable===undefined?'Não encontrado / verificar':pt(item.olistAvailable));
+   td(tr,pt(item.reservation));
+   td(tr,item.suggested===undefined?'Exige conferência':pt(item.suggested));
+   body.append(tr);
+  }
+  note.textContent='Prévia consultada em '+date(data.checkedAt)+
+   '. Nenhuma alteração foi realizada. A quantidade proposta considera o disponível na Olist menos reservas locais ainda não enviadas para a Olist. O próximo passo é validar como registrar pedidos aprovados antes de ativar alterações automáticas.';
+  pane.hidden=false;
+  status.textContent='Conferência de estoque concluída. Olist segue como referência; nenhuma quantidade, preço ou pedido foi modificado.';
+ }catch(e){status.textContent='A conferência não foi concluída: '+e.message;}
+ finally{button.disabled=false;}
+}
 export function initKaiaMarketplaces(client,options={}){
  sb=client;afterStockChange=options.onStockChanged||null;
  if(initialized)return;
@@ -302,6 +341,7 @@ export function initKaiaMarketplaces(client,options={}){
  $('#mpExportWave').onclick=downloadFirstWaveSkuCsv;
  $('#mpOlistAuthorize').onclick=startOlistAuthorization;
  $('#mpOlistTest').onclick=testOlistProducts;
+ $('#mpOlistCompare').onclick=compareOlistStock;
  $('#mpStockSku').onchange=renderCurrent;
  $('#mpStockForm').onsubmit=saveStock;
  $('#mpMappingForm').onsubmit=saveMapping;
