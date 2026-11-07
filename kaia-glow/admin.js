@@ -5,7 +5,7 @@ import {initKaiaMarketplaces,loadKaiaMarketplaces} from './admin-marketplaces.js
 import {initKaiaPayments,loadKaiaPayments} from './admin-payments.js';
 const $=s=>document.querySelector(s),all=s=>Array.from(document.querySelectorAll(s));
 const sb=window.supabase?.createClient(KAIA_AUTH.url,KAIA_AUTH.publishableKey,{auth:{storageKey:'kaia-glow-auth-v1',persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
-const catalog=window.KAIA_CATALOG||[];let edits=new Map(),inventory=new Map(),selected=null,images=[],signedIn=false;
+const catalog=window.KAIA_CATALOG||[];let edits=new Map(),inventory=new Map(),selected=null,images=[],signedIn=false,commercialSkus=null;
 const imagePlaceholder='assets/kaia-product-photo-pending.svg';
 const keyOf=p=>p.sku||'legacy:'+p.id;
 const cents=v=>Math.round(Number(v||0)*100);
@@ -61,7 +61,29 @@ async function loadAdmin(){
  initKaiaMarketplaces(sb,{onStockChanged:()=>loadAdmin()});
  initKaiaPayments();
  $('#productCount').textContent=catalog.length;
- renderProductList();await setupKaiaCoupons(sb);
+ renderProductList();await setupKaiaCoupons(sb);await refreshCommerce();
+}
+async function refreshCommerce(){
+ try{
+  const response=await fetch('/api/kaia/comercial/catalogo',{cache:'no-store'});
+  if(!response.ok)throw Error('Consulta comercial indisponível');
+  const data=await response.json();
+  commercialSkus=new Set((data.products||[]).map(item=>item.sku));
+ }catch{commercialSkus=null;}
+ updateCommercePanel();
+}
+function updateCommercePanel(){
+ const panel=$('#commerceRelease');if(!panel)return;
+ const product=catalog.find(p=>keyOf(p)===selected);
+ const isNew=!!(product?.isNew&&selected!=='__new__');
+ panel.hidden=!isNew;if(!isNew)return;
+ const state=$('#commerceReleaseState');
+ state.textContent=commercialSkus===null?
+  'Não foi possível consultar a liberação comercial. Confira a conexão antes de vender.':
+  commercialSkus.has(selected)?
+   'Compra online LIBERADA: este produto está apto a entrar na sacola e no checkout.':
+   'Compra online BLOQUEADA: o produto está na vitrine, mas ainda precisa de liberação comercial.';
+ $('#confirmPackageRelease').checked=false;
 }
 function renderProductList(){
  const term=$('#productSearch').value.trim().toLocaleLowerCase('pt-BR');const parent=$('#productList');parent.replaceChildren();
@@ -105,7 +127,7 @@ function selectProduct(p){
  $('#saveProductButton').textContent='Salvar alterações';
  $('#cancelNewProduct').hidden=true;$('#newProductPhotoHint').hidden=!d.isNew;
  $('#uploadStatus').textContent='';$('#productStatus').textContent='';
- renderPhotos();renderProductList();
+ renderPhotos();renderProductList();updateCommercePanel();
  if(matchMedia('(max-width:800px)').matches)$('#productForm').scrollIntoView({behavior:'smooth',block:'start'});
 }
 function startNewProduct(){
@@ -122,7 +144,7 @@ function startNewProduct(){
  $('#saveProductButton').textContent='Cadastrar produto';
  $('#cancelNewProduct').hidden=false;$('#newProductPhotoHint').hidden=false;
  $('#uploadStatus').textContent='';$('#productStatus').textContent='';
- renderPhotos();renderProductList();
+ renderPhotos();renderProductList();updateCommercePanel();
  $('#productForm').scrollIntoView({behavior:'smooth',block:'start'});
  $('#editName').focus();
 }
@@ -208,15 +230,52 @@ $('#productForm').onsubmit=async e=>{
    $('#productCount').textContent=catalog.length;
    const added=catalog.find(p=>p.sku===saveKey);if(added)selectProduct(added);
    status('#productStatus',common.p_visible?
-    'Produto cadastrado e publicado! Abra a loja para conferir.':
+    'Produto cadastrado na vitrine. Para receber pedidos online, confirme a embalagem e use “Liberar compra online” abaixo.':
     'Produto cadastrado como rascunho. Ative “Exibir na vitrine” e salve quando quiser publicar.');
   }else{
    status('#productStatus','Alterações salvas. Atualize a vitrine para conferir.');
   }
-  renderProductList();
+  renderProductList();await refreshCommerce();
  }catch(err){status('#productStatus','Não foi possível salvar: '+(err.message||'verifique a autorização.'),true);}
  finally{btn.disabled=false;}
 };
+async function changeCommercialRelease(enable){
+ if(!signedIn||!selected||selected==='__new__')return;
+ const p=catalog.find(p=>keyOf(p)===selected);
+ if(!p?.isNew)return;
+ if(enable&&!$('#confirmPackageRelease').checked){
+  status('#commerceActionStatus','Marque a confirmação do estoque, preço e embalagem real antes de liberar pagamentos.',true);
+  return;
+ }
+ const question=enable?
+  'Confirma que verificou os dados salvos e deseja permitir pagamentos reais deste produto?':
+  'Confirma que deseja pausar novas compras online deste produto?';
+ if(!window.confirm(question))return;
+ const release=$('#releaseOnlineButton'),pause=$('#pauseOnlineButton');
+ release.disabled=true;pause.disabled=true;
+ status('#commerceActionStatus',enable?'Verificando e liberando a compra…':'Pausando novas compras…');
+ try{
+  const {error}=await sb.rpc('kaia_admin_set_product_commerce',{
+   p_product_key:selected,p_enable:enable,p_package_confirmed:enable
+  });
+  if(error)throw error;
+  await refreshCommerce();
+  if(commercialSkus===null)status('#commerceActionStatus',
+   'A alteração foi registrada, mas não foi possível verificar o checkout. Confira a conexão antes de vender.',true);
+  else if(enable&&!commercialSkus.has(selected))status('#commerceActionStatus',
+   'Liberação registrada, mas o checkout ainda não reconhece o produto. Verifique estoque e serviço de pagamentos.',true);
+  else status('#commerceActionStatus',enable?
+   'Compra online liberada. Atualize a loja para testar a sacola e o frete.':
+   'Compra online pausada. O produto não aceita novas compras.');
+ }catch(error){
+  status('#commerceActionStatus','Não foi possível alterar a compra online: '+(error.message||'verifique a autorização.'),true);
+ }finally{
+  release.disabled=false;pause.disabled=false;
+  $('#confirmPackageRelease').checked=false;
+ }
+}
+$('#releaseOnlineButton').onclick=()=>changeCommercialRelease(true);
+$('#pauseOnlineButton').onclick=()=>changeCommercialRelease(false);
 function openAdminTab(current,updateHash=true){
  if(!['products','coupons','analytics','marketplaces','payments'].includes(current))return;
  const selected=all('[data-tab]').find(button=>button.dataset.tab===current);
