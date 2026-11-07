@@ -116,7 +116,7 @@ async function refreshOverview(){
  const update=$('#overviewRefresh');update.disabled=true;
  $('#overviewUpdated').textContent='Atualizando dados da operação…';
  try{
-  const counts=Array.from(inventory.values()).filter(r=>Number.isFinite(Number(r.available_units)));
+  const counts=Array.from(inventory.values()).filter(r=>r.available_units!==null&&r.available_units!==undefined&&Number.isFinite(Number(r.available_units)));
   const low=counts.filter(r=>Number(r.available_units)<=5);
   $('#overviewLowStock').textContent=overviewNumber(low.length);
   $('#overviewSellable').textContent=overviewNumber(commercialSkus instanceof Set?commercialSkus.size:null);
@@ -397,7 +397,7 @@ function openAdminTab(current,updateHash=true){
  if(current==='payments')loadKaiaPayments();
  if(updateHash)history.replaceState(null,'',location.pathname+location.search+'#'+current);
  closeAdminMenu();
- if(updateHash)window.scrollTo({top:0,behavior:'instant'});
+ if(updateHash)window.scrollTo({top:0,behavior:'auto'});
 }
 all('.admin-tabs [data-tab]').forEach(button=>button.onclick=()=>openAdminTab(button.dataset.tab));
 $('.admin-tabs').addEventListener('keydown',event=>{
