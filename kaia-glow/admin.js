@@ -1,12 +1,14 @@
 import {KAIA_AUTH} from './auth-config.js';
 import {setupKaiaCoupons} from './admin-coupons.js';
+import {setupKaiaTeam,loadKaiaTeam} from './admin-team.js';
+import {setupKaiaCustomers,loadKaiaCustomers} from './admin-customers.js';
 import {setupKaiaCancellations,loadKaiaCancellations} from './admin-cancellations.js';
 import {initKaiaAnalytics,loadKaiaAnalytics} from './admin-analytics.js';
 import {initKaiaMarketplaces,loadKaiaMarketplaces} from './admin-marketplaces.js?v=4';
 import {initKaiaPayments,loadKaiaPayments} from './admin-payments.js';
 const $=s=>document.querySelector(s),all=s=>Array.from(document.querySelectorAll(s));
 const sb=window.supabase?.createClient(KAIA_AUTH.url,KAIA_AUTH.publishableKey,{auth:{storageKey:'kaia-glow-auth-v1',persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
-const catalog=window.KAIA_CATALOG||[];let edits=new Map(),inventory=new Map(),selected=null,images=[],signedIn=false,commercialSkus=null;
+const catalog=window.KAIA_CATALOG||[];let edits=new Map(),inventory=new Map(),selected=null,images=[],signedIn=false,commercialSkus=null,isOwner=false;
 const imagePlaceholder='assets/kaia-product-photo-pending.svg';
 const keyOf=p=>p.sku||'legacy:'+p.id;
 const cents=v=>Math.round(Number(v||0)*100);
@@ -35,9 +37,11 @@ async function authorize(){
  if(error||!user){setSignedIn(false);return;}
  const result=await sb.rpc('kaia_is_store_admin');
  if(result.error||result.data!==true){setSignedIn(false);status('#loginStatus','Esta conta ainda não tem autorização administrativa. O e-mail precisa estar confirmado e aprovado.',true);return;}
- setSignedIn(true,user.email);await loadAdmin();
+ setSignedIn(true,user.email);
+ const own=await sb.rpc('kaia_is_store_owner');isOwner=own.data===true&&!own.error;
+ await setupKaiaTeam(sb,isOwner);await loadAdmin();
  const requested=location.hash.replace(/^#/,'');
- if(['products','coupons','cancellations','analytics','marketplaces','payments'].includes(requested))openAdminTab(requested,false);
+ if(['products','coupons','cancellations','analytics','marketplaces','payments','team','customers'].includes(requested))openAdminTab(requested,false);
 }
 async function loadAdmin(){
  const [products,stock,newProducts]=await Promise.all([
@@ -58,7 +62,7 @@ async function loadAdmin(){
     available:!!edit.available,variants:[{id:Number(row.id),label:'Única',
     price:edit.price_cents/100,available:!!edit.available,sku:row.sku}],isNew:true});
  }
- initKaiaAnalytics(sb);
+ initKaiaAnalytics(sb);setupKaiaCustomers(sb);
  initKaiaMarketplaces(sb,{onStockChanged:()=>loadAdmin()});
  initKaiaPayments();setupKaiaCancellations(sb);
  $('#productCount').textContent=catalog.length;
@@ -278,11 +282,14 @@ async function changeCommercialRelease(enable){
 $('#releaseOnlineButton').onclick=()=>changeCommercialRelease(true);
 $('#pauseOnlineButton').onclick=()=>changeCommercialRelease(false);
 function openAdminTab(current,updateHash=true){
- if(!['products','coupons','cancellations','analytics','marketplaces','payments'].includes(current))return;
+ if(!['products','coupons','cancellations','analytics','marketplaces','payments','team','customers'].includes(current))return;
+ if(current==='team'&&!isOwner)return;
  const selected=all('[data-tab]').find(button=>button.dataset.tab===current);
  all('[data-tab]').forEach(b=>b.setAttribute('aria-selected',String(b.dataset.tab===current)));
  $('#productsTab').hidden=current!=='products';$('#couponsTab').hidden=current!=='coupons';
  $('#cancellationsTab').hidden=current!=='cancellations';if(current==='cancellations')loadKaiaCancellations();
+ $('#teamTab').hidden=current!=='team';if(current==='team')loadKaiaTeam();
+ $('#customersTab').hidden=current!=='customers';if(current==='customers')loadKaiaCustomers();
  $('#analyticsTab').hidden=current!=='analytics';if(current==='analytics')loadKaiaAnalytics();
  $('#marketplacesTab').hidden=current!=='marketplaces';if(current==='marketplaces')loadKaiaMarketplaces();
  $('#paymentsTab').hidden=current!=='payments';if(current==='payments')loadKaiaPayments();

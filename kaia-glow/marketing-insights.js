@@ -9,6 +9,32 @@
   accept=document.getElementById('kaiaCookieAccept'),
   reject=document.getElementById('kaiaCookieReject');
  let permission=null,visitor=null,session=null,active=null,pageLogged=false;
+ let personalClient=null,personalAllowed=false,namedPageLogged=false;
+ // Named analytics require a separate explicit account preference in addition to
+ // the existing consent for anonymous metrics.
+ async function initializePersonalTracking(){
+  personalAllowed=false;
+  if(permission!==true||!window.supabase)return;
+  try{
+   const {KAIA_AUTH}=await import('./auth-config.js');
+   const client=window.supabase.createClient(KAIA_AUTH.url,KAIA_AUTH.publishableKey,
+    {auth:{storageKey:'kaia-glow-auth-v1',persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});
+   const {data:{user}}=await client.auth.getUser();
+   if(!user?.email_confirmed_at||permission!==true)return;
+   const {data,error}=await client.from('kaia_customer_marketing_preferences')
+     .select('named_analytics').eq('user_id',user.id).maybeSingle();
+   if(error||data?.named_analytics!==true||permission!==true)return;
+   personalClient=client;personalAllowed=true;
+   if(!namedPageLogged){namedPageLogged=true;personalEvent('page_view',null,0);}
+  }catch{personalAllowed=false;}
+ }
+ function personalEvent(kind,key,seconds){
+  if(permission!==true||!personalAllowed||!personalClient)return;
+  personalClient.rpc('kaia_record_customer_interest',{
+   p_kind:kind,p_product_key:key,p_visible_seconds:Math.min(1800,Math.max(0,Math.round(seconds)))
+  }).then(()=>{},()=>{});
+ }
+
  try{const saved=localStorage.getItem(PREF);if(saved==='yes'||saved==='no')permission=saved==='yes';}catch{}
  function uuid(){return crypto.randomUUID();}
  function loadIds(){
@@ -28,6 +54,7 @@
    method:'POST',headers:{apikey:key,Authorization:'Bearer '+key,'Content-Type':'application/json'},
    body:JSON.stringify(payload),mode:'cors',cache:'no-store',keepalive:true
   }).catch(()=>{});
+  personalEvent(kind,productKey,seconds);
  }
  function pageVisit(){
   if(permission!==true||pageLogged)return;
@@ -63,8 +90,8 @@
    document.cookie='kaia_metrics='+ (allow?'yes':'no')+'; Path=/; Max-Age=15552000; SameSite=Lax; Secure';
    if(!allow){localStorage.removeItem(VISITOR);sessionStorage.removeItem(SESSION);}
   }catch{}
-  if(allow){loadIds();pageLogged=false;pageVisit();}
-  else{visitor=null;session=null;pageLogged=false;}
+  if(allow){loadIds();pageLogged=false;pageVisit();initializePersonalTracking();}
+  else{visitor=null;session=null;pageLogged=false;personalAllowed=false;personalClient=null;namedPageLogged=false;}
   hideBanner();
  }
  accept?.addEventListener('click',()=>setPreference(true));
@@ -77,6 +104,7 @@
  window.addEventListener('pagehide',closeProduct,{capture:true});
  if(permission===true){loadIds();pageVisit();}
  else if(permission===null)showBanner();
+ window.addEventListener('load',()=>{if(permission===true)initializePersonalTracking();});
  window.kaiaMarketing={productOpened:openProduct,productClosed:closeProduct,cartAdded:addToCart,
   hasAnalyticsConsent:()=>permission===true};
 })();

@@ -183,6 +183,30 @@ function cancellationContents(order,kind){
   '<h1 style="color:#552942">Kaia Glow · '+html(label)+'</h1>'+
   lines.map(x=>'<p style="overflow-wrap:anywhere">'+html(x)+'</p>').join('')+'</div>'};
 }
+function personalCouponContents(c){
+ const name=textValue(c.name,110),code=textValue(c.code,24);
+ const expiration=c.expires?'Válido até '+textValue(c.expires,16)+'.':'Confira a disponibilidade do cupom na loja.';
+ const lines=[
+  'Olá, '+name+'!',
+  'A Kaia Glow reservou uma oferta para você.',
+  'Seu cupom: '+code,
+  'Desconto: 100% no valor dos produtos e frete grátis.',
+  'A oferta é válida para produtos disponíveis, conforme as condições do site, e somente uma utilização por conta.',
+  expiration,
+  'Use seu código na sacola: https://usekaiaglow.com.br/',
+  'Você recebeu este e-mail porque autorizou ofertas na sua conta.',
+  'Para deixar de receber mensagens promocionais, desative a opção em https://usekaiaglow.com.br/conta.html?aba=dados',
+  'Com carinho, equipe Kaia Glow.'
+ ];
+ const subject='Kaia Glow • Seu cupom de cuidado '+code;
+ return {
+  subject,text:lines.join('\n'),
+  html:'<div style="max-width:640px;margin:auto;background:#fff;border:1px solid #eddee5;border-radius:16px;padding:28px;font:15px/1.7 Arial,sans-serif;color:#3a2c34">'+
+  '<p style="letter-spacing:3px;color:#783e5d">KAIA GLOW</p>'+
+  '<h1 style="font:500 27px Georgia,serif;color:#54233d">Uma surpresa para seu cuidado</h1>'+
+  lines.map(x=>'<p>'+html(x)+'</p>').join('')+'</div>'
+ };
+}
 async function send(env,to,content,key){
  const rawFrom=env.KAIA_ORDER_EMAIL_FROM||DEFAULT_SENDER;
  if(!safeMail(rawFrom)||!rawFrom.toLowerCase().endsWith('@usekaiaglow.com.br')||
@@ -257,6 +281,33 @@ export async function onRequestPost({request,env}){
     p_message_id:providerId,p_code:errorCode
    });}catch{/* Avoid leaking details or falsely claiming delivery. */}
   }
+  // Additional opt-in marketing jobs, kept separate from transactional receipts.
+  // Failure must not interrupt the purchase-confirmation queue.
+  try{
+   const couponJobs=await db(env,'rpc/kaia_coupon_mail_claim_batch','POST',{});
+   if(Array.isArray(couponJobs)){
+    for(const job of couponJobs){
+     stats.attempted++;
+     let success=false,messageId=null,errorCode=null;
+     try{
+      if(!uuid.test(job.id)||!uuid.test(job.lease_id))
+       throw new PaymentError('EMAIL_ITEM_FILA_INVALIDO',503);
+      const details=await db(env,'rpc/kaia_coupon_mail_details','POST',{p_id:job.id});
+      if(!details||!safeMail(details.email)||details.value!==100)
+       throw new PaymentError('EMAIL_SEM_AUTORIZACAO',422);
+      messageId=await send(env,details.email,personalCouponContents(details),
+       'kaia-target-coupon-'+job.id);
+      success=true;stats.accepted++;
+     }catch(e){
+      errorCode=e instanceof PaymentError?e.code:'EMAIL_ERRO_INTERNO';stats.failed++;
+     }
+     try{await db(env,'rpc/kaia_coupon_mail_mark','POST',{
+      p_id:job.id,p_lease:job.lease_id,p_success:success,
+      p_message_id:messageId,p_error:errorCode
+     });}catch{/* Keep retry/idempotency safeguards in place. */}
+    }
+   }
+  }catch{/* Transactional mail remains unaffected by the marketing queue. */}
   return json({ok:true,providerAccepted:stats.accepted,attempted:stats.attempted,
    failed:stats.failed});
  }catch(e){
