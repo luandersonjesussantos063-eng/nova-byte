@@ -76,3 +76,20 @@
  .mp-setup-steps article{padding:12px}
  #marketplacesTab .section-header{align-items:flex-start}
 }
+
+/* Olist official ERP OAuth onboarding */
+.mp-olist-panel{padding:19px 21px;margin:0 0 20px;border:1px solid #d8d4d1;
+ border-radius:13px;background:#fbfaf8}
+.mp-olist-main{display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap}
+.mp-olist-main h3{margin:7px 0 5px;font-size:24px;color:#4d293b}
+.mp-olist-main p{margin:0;max-width:650px;color:#715c67;font-size:12px;line-height:1.65}
+.mp-olist-actions{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.mp-olist-actions button{min-height:44px;padding-inline:16px}
+.mp-olist-status{margin:14px 0 5px;padding:10px 13px;border-radius:8px;
+ background:#f2e9ee;color:#513447;font-size:12px;line-height:1.6}
+@media(max-width:650px){
+ .mp-olist-panel{padding:14px}
+ .mp-olist-main h3{font-size:22px}
+ .mp-olist-actions{display:grid;width:100%;grid-template-columns:1fr}
+ .mp-olist-actions button{width:100%}
+}
