@@ -143,6 +143,46 @@ function contents(order,kind,paymentMethod){
   '<small style="color:#796e76">Mensagem transacional. Não responda com dados de cartão ou senhas.</small></div>';
  return {subject,text:lines.join('\n'),html:markup};
 }
+function cancellationContents(order,kind){
+ const num=String(order.order_number||'');
+ const buyer=kind.endsWith('_buyer');
+ const customer=textValue(order.buyer_name,100);
+ const amount=brl(order.total_cents);
+ const names=(Array.isArray(order.items)?order.items:[]).map(x=>
+  textValue(x.quantity,3)+' × '+textValue(x.name,120)).join('; ');
+ const reason=textValue(order.reason,950);
+ const note=textValue(order.decision_note,950);
+ const detail=kind.startsWith('cancel_requested')?
+   'Recebemos o pedido de cancelamento e ele já está disponível para análise da loja.':
+   kind.startsWith('cancel_refund_pending')?
+   'A loja aceitou o cancelamento. O pedido pago aguarda confirmação do reembolso; ainda não considere o valor estornado.':
+   kind.startsWith('cancel_approved')?
+   (order.paid?'Cancelamento concluído após confirmação do reembolso pela loja.':'Cancelamento aprovado. Nenhum pagamento foi efetuado.') :
+   'A loja informou que não aceitou a solicitação. Se for exercício do direito de arrependimento previsto em lei, entre em contato para revisão.';
+ const label=kind.startsWith('cancel_requested')?'Solicitação de cancelamento recebida':
+  kind.startsWith('cancel_refund_pending')?'Cancelamento aceito, reembolso pendente':
+  kind.startsWith('cancel_approved')?'Pedido cancelado':'Resposta sobre solicitação de cancelamento';
+ const subject=buyer?'Kaia Glow • '+label+' · '+num:
+  'Kaia Glow • '+(kind.startsWith('cancel_requested')?'Nova solicitação':'Atualização de cancelamento')+' · '+num;
+ const lines=[
+  buyer?'Olá, '+customer+'.':'Solicitação sobre compra de '+customer,
+  label,
+  detail,
+  'Pedido: '+num,
+  'Produtos: '+names,
+  'Total original: '+amount,
+  'Motivo informado: '+reason,
+  ...(note?['Resposta da loja: '+note]:[]),
+  ...(order.refund_reference?['Referência de reembolso registrada pela loja: '+textValue(order.refund_reference,120)]:[]),
+  buyer?'Acompanhe em https://usekaiaglow.com.br/conta.html?aba=pedidos':
+   'Analise em https://usekaiaglow.com.br/admin.html#cancellations',
+  'Kaia Glow'
+ ];
+ return {subject,text:lines.join('\n'),
+  html:'<div style="max-width:640px;margin:auto;background:#fff;border:1px solid #eadce4;border-radius:14px;padding:26px;font:15px/1.6 Arial,sans-serif;color:#3b2b35">'+
+  '<h1 style="color:#552942">Kaia Glow · '+html(label)+'</h1>'+
+  lines.map(x=>'<p style="overflow-wrap:anywhere">'+html(x)+'</p>').join('')+'</div>'};
+}
 async function send(env,to,content,key){
  const rawFrom=env.KAIA_ORDER_EMAIL_FROM||DEFAULT_SENDER;
  if(!safeMail(rawFrom)||!rawFrom.toLowerCase().endsWith('@usekaiaglow.com.br')||
@@ -191,17 +231,22 @@ export async function onRequestPost({request,env}){
    stats.attempted++;
    let success=false,providerId=null,errorCode=null;
    try{
+    const isCancel=typeof job.kind==='string'&&job.kind.startsWith('cancel_');
     if(!uuid.test(job.id)||!uuid.test(job.payment_id)||!uuid.test(job.lease_id)||
-       !['buyer','merchant'].includes(job.kind))
+       !['buyer','merchant','cancel_requested_buyer','cancel_requested_merchant',
+         'cancel_approved_buyer','cancel_approved_merchant',
+         'cancel_denied_buyer','cancel_denied_merchant',
+         'cancel_refund_pending_buyer','cancel_refund_pending_merchant'].includes(job.kind))
      throw new PaymentError('EMAIL_ITEM_FILA_INVALIDO',503);
-    const order=await db(env,'rpc/kaia_mail_order_details','POST',
-     {p_payment_id:job.payment_id});
+    const order=await db(env,isCancel?'rpc/kaia_mail_cancellation_details':
+       'rpc/kaia_mail_order_details','POST',{p_payment_id:job.payment_id});
     if(!order||order.total_cents<0||!safeMail(order.buyer_email))
      throw new PaymentError('EMAIL_PEDIDO_INCOMPLETO',503);
-    const to=job.kind==='buyer'?order.buyer_email:MERCHANT_EMAIL;
-    const paymentMethod=await confirmedPaymentMethod(env,order);
-    const content=contents(order,job.kind,paymentMethod);
-    providerId=await send(env,to,content,'kaia-confirmed-'+job.payment_id+'-'+job.kind);
+    const to=job.kind.endsWith('_buyer')||job.kind==='buyer'?order.buyer_email:MERCHANT_EMAIL;
+    const content=isCancel?cancellationContents(order,job.kind):
+      contents(order,job.kind,await confirmedPaymentMethod(env,order));
+    providerId=await send(env,to,content,
+     'kaia-'+(isCancel?'cancellation':'confirmed')+'-'+job.payment_id+'-'+job.kind);
     success=true;stats.accepted++;
    }catch(e){
     errorCode=e instanceof PaymentError?e.code:'EMAIL_ERRO_INTERNO';stats.failed++;
