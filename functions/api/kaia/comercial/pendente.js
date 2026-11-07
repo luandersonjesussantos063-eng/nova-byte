@@ -1,17 +1,11 @@
 // One unsettled order per buyer protects central stock against over-reservation.
 // Only its owner can view/resume/cancel it. Never release reserved stock before provider cancellation.
 import {CheckoutError,json,fail,gate,identity,database,provider,reconcile,checkoutLink} from './_core.js';
+import {synchronizeAndExpire,expirationTimestamp} from './_expiry.js';
 async function activeOrder(env,userId){
   const rows=await database(env,'kaia_commercial_payments?user_id=eq.'+encodeURIComponent(userId)+
    '&status=in.(created,pending,review_required)&select=*&order=created_at.desc&limit=1');
   return rows[0]||null;
-}
-async function remoteSync(env,row){
- if(!row.provider_order_id)return row;
- const remote=await provider(env,'/v1/orders/'+encodeURIComponent(row.provider_order_id));
- await reconcile(env,remote,row);
- const rows=await database(env,'kaia_commercial_payments?id=eq.'+encodeURIComponent(row.id)+'&select=*');
- return rows[0];
 }
 function summary(row){
  if(!row||!['created','pending','review_required'].includes(row.status))
@@ -19,16 +13,19 @@ function summary(row){
  let link=null;
  if(row.checkout_url){try{link=checkoutLink(row.checkout_url);}catch{}}
  return {hasPending:true,id:row.id,status:row.status,items:row.items.map(x=>({name:x.name,quantity:x.quantity})),
-   totalCents:row.total_cents,createdAt:row.created_at,postalCode:row.postal_code,
+   totalCents:row.total_cents,createdAt:row.created_at,expiresAt:new Date(expirationTimestamp(row)).toISOString(),postalCode:row.postal_code,
    checkoutUrl:link,cancelable:row.status==='pending'&&!!row.provider_order_id};
 }
 export async function onRequestGet({request,env}){
  try{
   gate(request,env);const user=await identity(request);
-  let row=await activeOrder(env,user.id);
-  if(row)row=await remoteSync(env,row);
+  let row=await activeOrder(env,user.id),autoCancelled=false;
+  if(row){
+   const latest=await synchronizeAndExpire(env,row);
+   row=latest.row;autoCancelled=latest.autoCancelled;
+  }
   const details=await database(env,'kaia_customer_details?user_id=eq.'+encodeURIComponent(user.id)+'&select=postal_code');
-  return json({...summary(row),registeredPostalCode:String(details[0]?.postal_code||'').replace(/\D/g,'')});
+  return json({...summary(row),expired: autoCancelled,registeredPostalCode:String(details[0]?.postal_code||'').replace(/\D/g,'')});
  }catch(e){return fail(e);}
 }
 export async function onRequestPost({request,env}){

@@ -119,9 +119,9 @@ function paymentBrowserOptions(raw,total,{previous=false}={}){
 function renderPendingOrder(pending,token){
  $('#commercePendingOrder')?.remove();$('#commercePaymentOptions')?.remove();
  const box=document.createElement('section');box.id='commercePendingOrder';box.className='kc-pending-order';
- const title=document.createElement('strong');title.textContent='Você tem um pedido em aberto';
+ const title=document.createElement('strong');title.textContent='Existe um pedido anterior aguardando pagamento';
  const detail=document.createElement('p');
- detail.textContent=(pending.items||[]).map(i=>i.name).join(', ')+' · '+money(pending.totalCents/100);
+ detail.textContent='Pedido anterior: '+(pending.items||[]).map(i=>i.name).join(', ')+' · '+money(pending.totalCents/100)+'. Esse não é o valor da sua sacola atual.';
  box.append(title,detail);
  if(pending.checkoutUrl){
   const resume=document.createElement('a');resume.className='button kc-pay-action';
@@ -140,7 +140,7 @@ function renderPendingOrder(pending,token){
    const r=await fetch('/api/kaia/comercial/pendente',{method:'POST',headers:{Authorization:'Bearer '+token,'content-type':'application/json'}});
    const info=await r.json();
    if(!r.ok||!info.cancelled)throw Error(info.code||'Cancelamento não confirmado.');
-   box.remove();const btn=$('#checkout');if(btn)btn.hidden=false;
+   box.remove();sessionStorage.removeItem('kaia_order_request_v1');const btn=$('#checkout');if(btn)btn.hidden=false;
    checkoutEligibility();checkoutNotice('Pedido anterior cancelado. Você já pode conferir o frete da nova compra.');
   }catch(e){cancel.disabled=false;cancel.textContent='Tentar cancelar novamente';checkoutNotice('Não foi possível cancelar: '+e.message,true);}
  };
@@ -149,6 +149,16 @@ function renderPendingOrder(pending,token){
  const btn=$('#checkout');if(btn)btn.hidden=true;
  const note=$('#commerceEligibility');if(note)note.hidden=true;
  box.scrollIntoView({block:'nearest',behavior:'smooth'});
+ // No confirmation dialog is needed: recheck automatically when the 60s hold expires.
+ const ms=Date.parse(pending.expiresAt||'')-Date.now();
+ if(Number.isFinite(ms)&&ms>0&&ms<=60_000){
+  setTimeout(()=>{
+   if(!document.contains(box))return;
+   box.remove();const retry=$('#checkout');if(retry)retry.hidden=false;
+   checkoutEligibility();
+   if(retry&&!retry.disabled)commercialCheckout();
+  },ms+400);
+ }
 }
 async function commercialCheckout(){
  const btn=$('#checkout');
@@ -166,6 +176,7 @@ async function commercialCheckout(){
   const pendingResponse=await fetch('/api/kaia/comercial/pendente',{headers:{Authorization:'Bearer '+token},cache:'no-store'});
   const pending=await pendingResponse.json();
   if(!pendingResponse.ok)throw Error(pending.code||'Não foi possível conferir seus pedidos anteriores.');
+  if(pending.expired)sessionStorage.removeItem('kaia_order_request_v1');
   if(pending.hasPending){
    renderPendingOrder(pending,token);return;
   }
@@ -173,8 +184,9 @@ async function commercialCheckout(){
    throw Error('O CEP usado no frete é diferente do CEP salvo na sua conta ('+(pending.registeredPostalCode||'não cadastrado')+'). Atualize seu endereço em Minha conta e calcule o frete novamente antes de pagar.');
   const fingerprint=cartSignature()+'|'+chosenShipping.serviceId+'|'+currentPostal;
   let savedRequest;try{savedRequest=JSON.parse(sessionStorage.getItem('kaia_order_request_v1')||'null');}catch{}
-  if(!savedRequest||savedRequest.fingerprint!==fingerprint){
-   savedRequest={fingerprint,key:crypto.randomUUID()};
+  if(!savedRequest||savedRequest.fingerprint!==fingerprint||
+     !savedRequest.createdAt||Date.now()-savedRequest.createdAt>60_000){
+   savedRequest={fingerprint,key:crypto.randomUUID(),createdAt:Date.now()};
    sessionStorage.setItem('kaia_order_request_v1',JSON.stringify(savedRequest));
   }
   btn.textContent='Preparando pedido…';
