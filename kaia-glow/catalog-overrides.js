@@ -24,6 +24,20 @@
    const list=window.KAIA_CATALOG||[];
    const rows=results[0].status==='fulfilled'?(results[0].value||[]):[];
    const byKey=new Map(rows.map(r=>[r.product_key,r]));
+   // SEO navigation is generated from the original legacy catalogue at build time.
+   // Remove links to archived entries when live catalogue data is loaded.
+   if(results[0].status==='fulfilled'){
+    const archivedLegacy=new Set(rows.filter(r=>r.archived===true&&
+     /^legacy:[0-9]{1,15}$/.test(r.product_key||''))
+     .map(r=>r.product_key.slice(7)));
+    if(archivedLegacy.size){
+     document.querySelectorAll('.kaia-seo-product-links a[href]').forEach(link=>{
+      const path=new URL(link.href,location.origin).pathname;
+      const id=/\/produtos\/[^/]+-([0-9]{1,15})\/?$/.exec(path)?.[1];
+      if(id&&archivedLegacy.has(id))link.remove();
+     });
+    }
+   }
    if(results[0].status==='fulfilled'){
     for(let i=list.length-1;i>=0;i--){
      const product=list[i],row=byKey.get(product.sku||'legacy:'+product.id);

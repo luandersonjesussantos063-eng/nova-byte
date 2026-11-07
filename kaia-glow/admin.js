@@ -23,7 +23,7 @@ function productData(p){const e=edits.get(keyOf(p)),stock=inventory.get(p.sku),l
  stock:legacy?null:stock?.available_units??0,
  weight:stock?.weight_grams??null,length:stock?.length_cm??null,
  width:stock?.width_cm??null,height:stock?.height_cm??null,
- visible:e?.visible??true,
+ visible:e?.visible??true,archived:e?.archived===true,
  images:e?.images?.length?e.images:p.images,
  legacy,isNew:!!p.isNew,available:legacy?false:(stock?.available_units??0)>0
 };}
@@ -67,7 +67,7 @@ async function loadAdmin(){
  initKaiaAnalytics(sb);setupKaiaCustomers(sb);
  initKaiaMarketplaces(sb,{onStockChanged:()=>loadAdmin()});
  initKaiaPayments();setupKaiaCancellations(sb);
- $('#productCount').textContent=catalog.length;
+ $('#productCount').textContent=catalog.filter(p=>!productData(p).archived).length;
  renderProductList();await setupKaiaCoupons(sb);await refreshCommerce();await refreshOverview();
 }
 async function refreshCommerce(){
@@ -83,7 +83,7 @@ function updateCommercePanel(){
  const panel=$('#commerceRelease');if(!panel)return;
  const product=catalog.find(p=>keyOf(p)===selected);
  const isNew=!!(product?.isNew&&selected!=='__new__');
- panel.hidden=!isNew;if(!isNew)return;
+ panel.hidden=!isNew||productData(product).archived;if(!isNew||productData(product).archived)return;
  const state=$('#commerceReleaseState');
  state.textContent=commercialSkus===null?
   'Não foi possível consultar a liberação comercial. Confira a conexão antes de vender.':
@@ -116,7 +116,7 @@ async function refreshOverview(){
  const update=$('#overviewRefresh');update.disabled=true;
  $('#overviewUpdated').textContent='Atualizando dados da operação…';
  try{
-  const counts=Array.from(inventory.values()).filter(r=>r.available_units!==null&&r.available_units!==undefined&&Number.isFinite(Number(r.available_units)));
+  const counts=Array.from(inventory.values()).filter(r=>r.available_units!==null&&r.available_units!==undefined&&Number.isFinite(Number(r.available_units))&&!edits.get(r.sku)?.archived);
   const low=counts.filter(r=>Number(r.available_units)<=5);
   $('#overviewLowStock').textContent=overviewNumber(low.length);
   $('#overviewSellable').textContent=overviewNumber(commercialSkus instanceof Set?commercialSkus.size:null);
@@ -157,15 +157,16 @@ async function refreshOverview(){
 }
 function renderProductList(){
  const term=$('#productSearch').value.trim().toLocaleLowerCase('pt-BR');const parent=$('#productList');parent.replaceChildren();
+ const showArchived=$('#showArchivedProducts').checked;
  const matched=catalog.filter(p=>{const d=productData(p);
-  return (d.name+' '+d.brand+' '+(p.sku||'')).toLocaleLowerCase('pt-BR').includes(term);
+  return d.archived===showArchived&&(d.name+' '+d.brand+' '+(p.sku||'')).toLocaleLowerCase('pt-BR').includes(term);
  });
  for(const p of matched){
   const d=productData(p),btn=document.createElement('button');btn.type='button';btn.className='product-option'+(selected===d.key?' active':'');
   btn.append(picture(d.images?.[0],p.name));
   const info=document.createElement('span'),name=document.createElement('strong'),small=document.createElement('small');
   name.textContent=d.name;small.textContent=money(d.price)+(d.legacy?' · legado':' · '+d.stock+' un.');
-  info.append(name,small);if(!d.visible){const hidden=document.createElement('small');hidden.textContent='Oculto da loja';info.append(hidden);}
+  info.append(name,small);if(d.archived){const archived=document.createElement('small');archived.textContent='Excluído · fora do checkout';info.append(archived);}else if(!d.visible){const hidden=document.createElement('small');hidden.textContent='Oculto da loja';info.append(hidden);}
   btn.append(info);btn.onclick=()=>selectProduct(p);parent.append(btn);
  }
  if(!matched.length){const msg=document.createElement('p');msg.textContent='Nenhum produto encontrado.';parent.append(msg);}
@@ -194,7 +195,9 @@ function selectProduct(p){
  $('#packagingFields').hidden=!d.isNew;
  $('#editWeight').value=d.isNew?(d.weight??''):'';$('#editLength').value=d.isNew?(d.length??''):'';
  $('#editWidth').value=d.isNew?(d.width??''):'';$('#editHeight').value=d.isNew?(d.height??''):'';
- $('#saveProductButton').textContent='Salvar alterações';
+ $('#saveProductButton').textContent='Salvar alterações';$('#saveProductButton').hidden=d.archived;
+ $('#archiveProductButton').hidden=d.archived;$('#restoreProductButton').hidden=!d.archived;
+ $('#archiveProductHint').hidden=false;
  $('#cancelNewProduct').hidden=true;$('#newProductPhotoHint').hidden=!d.isNew;
  $('#uploadStatus').textContent='';$('#productStatus').textContent='';
  renderPhotos();renderProductList();updateCommercePanel();
@@ -211,7 +214,8 @@ function startNewProduct(){
  $('#editDescription').value='';$('#editVisible').checked=false;
  $('#packagingFields').hidden=false;
  for(const field of ['editWeight','editLength','editWidth','editHeight'])$('#'+field).value='';
- $('#saveProductButton').textContent='Cadastrar produto';
+ $('#saveProductButton').textContent='Cadastrar produto';$('#saveProductButton').hidden=false;
+ $('#archiveProductButton').hidden=true;$('#restoreProductButton').hidden=true;$('#archiveProductHint').hidden=true;
  $('#cancelNewProduct').hidden=false;$('#newProductPhotoHint').hidden=false;
  $('#uploadStatus').textContent='';$('#productStatus').textContent='';
  renderPhotos();renderProductList();updateCommercePanel();
@@ -224,7 +228,42 @@ $('#cancelNewProduct').onclick=()=>{
 };
 
 $('#productSearch').oninput=renderProductList;
+$('#showArchivedProducts').onchange=()=>{selected=null;$('#productForm').hidden=true;renderProductList();};
 $('#reloadButton').onclick=()=>{if(signedIn)loadAdmin();};
+async function changeArchiveState(archive){
+ if(!signedIn||!selected||selected==='__new__')return;
+ const product=catalog.find(p=>keyOf(p)===selected);
+ if(!product)return;
+ const data=productData(product);
+ if(data.archived===archive)return;
+ const ask=archive?
+  'Excluir “'+data.name+'” da loja? O produto sairá da vitrine e não poderá ser comprado. O histórico dos pedidos será preservado. Você poderá restaurá-lo depois.':
+  'Restaurar “'+data.name+'” ao catálogo administrativo? Ele continuará oculto da loja até você salvar a publicação novamente.';
+ if(!window.confirm(ask))return;
+ const button=$('#'+(archive?'archiveProductButton':'restoreProductButton'));
+ button.disabled=true;status('#productStatus',archive?'Excluindo produto da loja…':'Restaurando produto ao catálogo…');
+ try{
+  const params={
+   p_product_key:selected,p_archive:archive,
+   p_name:data.name,p_description:data.description,p_price_cents:cents(data.price),
+   p_old_price_cents:cents(data.oldPrice),p_images:data.images?.filter(x=>x!==imagePlaceholder)||[],
+   p_brand:data.brand,p_category:data.category
+  };
+  const {data:response,error}=await sb.rpc('kaia_admin_set_product_archived',params);
+  if(error)throw error;
+  if(response?.archived!==archive)throw Error('A operação não foi confirmada pelo servidor.');
+  selected=null;images=[];$('#productForm').hidden=true;
+  $('#showArchivedProducts').checked=!archive;
+  await loadAdmin();
+  status('#catalogActionNotice',archive?
+   'Produto excluído da vitrine e do checkout. Pedidos antigos preservados. Use “Ver produtos excluídos” para restaurar.':
+   'Produto restaurado ao painel, mas continua oculto da loja. Selecione-o e salve para republicar.');
+ }catch(err){
+  status('#productStatus','Não foi possível '+(archive?'excluir':'restaurar')+': '+(err.message||'verifique os pedidos pendentes e o acesso.'),true);
+ }finally{button.disabled=false;}
+}
+$('#archiveProductButton').onclick=()=>changeArchiveState(true);
+$('#restoreProductButton').onclick=()=>changeArchiveState(false);
 $('#editUpload').onchange=async e=>{
  const files=[...(e.target.files||[])];e.target.value='';
  if(!selected||!signedIn)return;
@@ -245,6 +284,7 @@ $('#productForm').onsubmit=async e=>{
  const isCreating=selected==='__new__';
  const product=isCreating?null:catalog.find(p=>keyOf(p)===selected);
  if(!isCreating&&!product)return;
+ if(product&&productData(product).archived){status('#productStatus','Restaure o produto antes de editá-lo.',true);return;}
  if(!$('#confirmSalePrice').checked){status('#productStatus','Confirme que verificou o preço de venda atual antes de salvar.',true);return;}
  const price=cents($('#editPrice').value),old=cents($('#editOldPrice').value);
  const stock=isCreating||product.sku?Number($('#editStock').value):null;
@@ -297,7 +337,7 @@ $('#productForm').onsubmit=async e=>{
    available_units:stock,weight_grams:weights.p_weight_grams,
    length_cm:weights.p_length_cm,width_cm:weights.p_width_cm,height_cm:weights.p_height_cm});
   if(isCreating){
-   $('#productCount').textContent=catalog.length;
+   $('#productCount').textContent=catalog.filter(p=>!productData(p).archived).length;
    const added=catalog.find(p=>p.sku===saveKey);if(added)selectProduct(added);
    status('#productStatus',common.p_visible?
     'Produto cadastrado na vitrine. Para receber pedidos online, confirme a embalagem e use “Liberar compra online” abaixo.':

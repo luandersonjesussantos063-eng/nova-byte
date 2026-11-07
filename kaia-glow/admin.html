@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow"><meta name="referrer" content="strict-origin-when-cross-origin">
-<title>Painel administrativo · Kaia Glow</title><link rel="stylesheet" href="admin.css?v=3"><link rel="stylesheet" href="admin-analytics.css?v=1"><link rel="stylesheet" href="admin-marketplaces.css?v=4"><link rel="stylesheet" href="admin-payments.css?v=1"></head>
+<title>Painel administrativo · Kaia Glow</title><link rel="stylesheet" href="admin.css?v=4"><link rel="stylesheet" href="admin-analytics.css?v=1"><link rel="stylesheet" href="admin-marketplaces.css?v=4"><link rel="stylesheet" href="admin-payments.css?v=1"></head>
 <body>
 <header class="admin-top"><div class="admin-brand"><span class="brand-mark" aria-hidden="true">K</span><div><strong>KAIA GLOW</strong><small>PAINEL DE GESTÃO</small></div></div><div class="admin-top-actions"><button type="button" id="adminNavToggle" class="admin-menu-toggle" aria-label="Abrir menu de gestão" aria-controls="adminSidebar" aria-expanded="false" hidden><span aria-hidden="true">☰</span> Menu</button><a href="/" target="_blank" rel="noopener noreferrer">Ver loja <span aria-hidden="true">↗</span></a><button type="button" id="logoutButton" hidden>Sair</button></div></header>
 <main class="admin-shell">
@@ -79,7 +79,10 @@
 </section>
 <section id="productsTab" class="admin-section">
 <div class="section-header"><div><h2>Produtos, preços e fotos</h2><p>Edite os produtos existentes ou cadastre um novo com fotos, preço, categoria e estoque.</p></div><div class="editor-header-actions"><button id="reloadButton" type="button" class="ghost-button">Atualizar lista</button><button id="addProductButton" type="button" class="primary-button">+ Novo produto</button></div></div>
-<div class="product-layout"><div class="product-picker"><label for="productSearch">Buscar produto ou SKU</label><input id="productSearch" type="search" autocomplete="off" placeholder="Nome, marca ou código"><div id="productList" class="product-list" aria-label="Produtos cadastrados"></div></div>
+<div class="product-layout"><div class="product-picker"><label for="productSearch">Buscar produto ou SKU</label><input id="productSearch" type="search" autocomplete="off" placeholder="Nome, marca ou código">
+<label class="archive-filter" for="showArchivedProducts"><input id="showArchivedProducts" type="checkbox"> Ver produtos excluídos</label>
+<p class="catalog-archive-help" id="catalogActionNotice" role="status" aria-live="polite">Produtos excluídos somem da vitrine e do checkout, mas os pedidos antigos são preservados.</p>
+<div id="productList" class="product-list" aria-label="Produtos cadastrados"></div></div>
 <form id="productForm" class="editor" hidden><span class="eyebrow">EDIÇÃO DE PRODUTO</span><h3 id="editingProductTitle">Selecione um produto</h3><p id="editingProductSku" class="muted"></p>
 <div class="form-grid">
 <label class="full">Nome do produto<input id="editName" type="text" maxlength="200" required placeholder="Ex.: Sérum facial de niacinamida 30 ml"></label>
@@ -101,7 +104,9 @@
 <div id="photoList" class="photo-list" aria-label="Fotos cadastradas"></div>
 <label class="upload-label" for="editUpload">Adicionar fotos (JPG, PNG ou WebP — até 5 MB por foto)</label><input type="file" id="editUpload" multiple accept="image/jpeg,image/png,image/webp">
 <p class="muted" id="uploadStatus" role="status"></p>
-<div class="editor-actions"><button type="submit" class="primary-button" id="saveProductButton">Salvar alterações</button><button type="button" id="cancelNewProduct" class="ghost-button" hidden>Cancelar novo cadastro</button></div><p id="productStatus" role="status" aria-live="polite"></p>
+<div class="editor-actions"><button type="submit" class="primary-button" id="saveProductButton">Salvar alterações</button><button type="button" id="cancelNewProduct" class="ghost-button" hidden>Cancelar novo cadastro</button><button type="button" id="archiveProductButton" class="danger-button" hidden>Excluir produto da loja</button><button type="button" id="restoreProductButton" class="ghost-button" hidden>Restaurar produto ao painel</button></div>
+<p class="catalog-archive-help" id="archiveProductHint" hidden>A exclusão retira o produto da loja e das vendas, sem apagar estoque, comprovantes ou pedidos. É possível restaurar depois.</p>
+<p id="productStatus" role="status" aria-live="polite"></p>
 <fieldset id="commerceRelease" class="package-fields" hidden><legend>Liberação para compra online</legend>
 <p id="commerceReleaseState" role="status" aria-live="polite">Consulte o status da compra.</p>
 <p>Salve primeiro as alterações do produto. Exibir na vitrine não significa autorizar pagamentos: a liberação é uma etapa separada.</p>
@@ -326,5 +331,5 @@
 <footer class="admin-footer">Kaia Glow · Painel restrito de gestão. O acesso é controlado pelo Supabase Auth.</footer>
 <script src="catalog.js?v=1"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js" integrity="sha384-TcHRA3zBbn+Lexh5n+Oil4guNPOS3rjNDpGRAN46u/s/mB2IZ50ceC6TYDU2yvgK" crossorigin="anonymous"></script>
-<script type="module" src="admin.js?v=9"></script>
+<script type="module" src="admin.js?v=10"></script>
 </body></html>

@@ -176,3 +176,13 @@ body{background:var(--admin-bg);color:var(--admin-ink)}
  .customer-insight-stats{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
 @media(prefers-reduced-motion:reduce){.admin-sidebar{transition:none}#overviewTab .quick-actions button{transition:none}}
+
+
+/* Reversible removal of products, keeping accounting and purchase history intact. */
+.archive-filter{display:flex;align-items:center;gap:9px;padding:12px 10px;margin:13px 0 8px;border-radius:10px;background:#fbf4f8;color:#60354b;font-size:12px;font-weight:750}
+.archive-filter input{width:18px;height:18px;accent-color:var(--admin-wine,var(--wine));flex:none}
+.catalog-archive-help{color:#896977!important;font-size:11px!important;line-height:1.6!important;margin:7px 0 13px!important}
+#productForm .danger-button{background:#fff;color:#ab3d50;border:1px solid #d99ba6;padding:12px 17px;border-radius:10px;font-size:12px;font-weight:750;min-height:45px}
+#productForm .danger-button:hover,#productForm .danger-button:focus-visible{background:#fff0f2;border-color:#b24659}
+#productForm .danger-button:disabled{opacity:.55;cursor:wait}
+#archiveProductHint{padding:11px 13px;border:1px solid #f1e3eb;border-radius:9px;background:#fdf8fa}
