@@ -208,7 +208,7 @@
   <h2>Estoque e marketplaces</h2>
   <p>Um saldo central para os produtos da loja. Organize os vínculos dos anúncios agora; a integração automática só começa depois de autorizar a Shopee e o TikTok Shop.</p>
  </div><button type="button" id="mpRefresh" class="ghost-button">Atualizar painel</button></div>
- <div class="mp-warning" role="note"><strong>Sincronização externa desativada por enquanto.</strong> Alterar o estoque aqui atualiza o banco central, mas <strong>não atualiza Shopee ou TikTok Shop</strong> até conectar e validar cada conta.</div>
+ <div class="mp-warning" role="note"><strong>Integrações de marketplaces:</strong> a Shopee e a conexão direta do TikTok Shop ainda exigem autorização. O acompanhamento automático de reduções de estoque pela Olist é um processo separado, com controle próprio logo abaixo.</div>
  <section class="mp-olist-panel" aria-labelledby="mpOlistTitle">
   <div class="mp-olist-main">
    <div><span class="eyebrow">FONTE OFICIAL DE ESTOQUE</span>
@@ -230,7 +230,21 @@
    </table></div>
    <p class="mp-tip" id="mpOlistPreviewNote"></p>
   </div>
-  <p class="mp-tip">A autorização não altera estoque ou pedidos. O envio automático continuará desligado até conferir os saldos, as reservas e o registro de vendas.</p>
+  <section class="mp-auto-stock" id="mpOlistAutoPanel" aria-labelledby="mpOlistAutoTitle">
+   <div class="mp-olist-main"><div>
+    <span class="eyebrow">ESTOQUE AUTOMÁTICO · OLIST ERP</span>
+    <h4 id="mpOlistAutoTitle">Atualização automática do estoque</h4>
+    <p id="mpOlistAutoStatus" role="status" aria-live="polite">Verificando agendamento seguro…</p>
+   </div><button type="button" class="primary-button" id="mpOlistAutoToggle" disabled>Ativar sincronização</button></div>
+   <p class="mp-tip">A Kaia consulta a Olist a cada 5 minutos, atualiza apenas quantidades que diminuíram e registra as alterações. Não desconta novamente o mesmo pedido. A reposição de estoque deve ser conferida na Olist antes de ajustar o painel.</p>
+   <div id="mpOlistAutoPreconditions">
+    <label class="mp-auto-check"><input type="checkbox" id="mpTiktokOrdersConfirmed"> Confirmei que o TikTok Shop está conectado ao ERP da Olist e que a importação automática de pedidos está ativada.</label>
+    <label class="mp-auto-check"><input type="checkbox" id="mpOlistStockRuleConfirmed"> Confirmei que a regra de estoque da Olist está dando baixa nas vendas do TikTok Shop e conferi os saldos.</label>
+    <p class="mp-tip">Faça a conferência completa dos 51 SKUs acima antes de ativar. Apenas o proprietário pode ligar ou pausar esta automação.</p>
+    <a href="https://ajuda.olist.com/marketplaces-tiktok-shop/como-integrar-o-erp-com-o-tiktok-shop" target="_blank" rel="noopener noreferrer">Como configurar TikTok Shop na Olist ↗</a>
+   </div>
+  </section>
+  <p class="mp-tip">A leitura da Olist não autoriza automaticamente integrações externas. O sincronismo de saldo só pode ser ligado após a conferência da Olist e a confirmação das regras de pedidos do TikTok Shop.</p>
  </section>
  <div class="mp-setup" aria-labelledby="mpSetupTitle">
   <div class="mp-setup-heading">
