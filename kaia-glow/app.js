@@ -9,7 +9,8 @@
  const ids={street:'kgAddressStreet',street_number:'kgAddressNumber',complement:'kgAddressComplement',
   neighborhood:'kgAddressNeighborhood',city:'kgAddressCity',state:'kgAddressState'};
  const onlyDigits=v=>String(v||'').replace(/\D/g,'');
- let saved=null,confirmed=null,signature=()=>'',onChange=()=>{},serial=0,loading=false,edited=false,mountGeneration=0,postalReference=null;
+ let saved=null,confirmed=null,signature=()=>'',onChange=()=>{},serial=0,loading=false,edited=false,mountGeneration=0,postalReference=null,lastPostal='',lookupActive=null,lookupCEP='';
+ const dirtyFields=new Set();
  const pendingInput=()=>keys.some(k=>$(ids[k])?.value.trim());
  const getPostal=()=>onlyDigits($('shippingPostalCode')?.value);
  const formData=()=>Object.fromEntries(keys.map(k=>[k,$(ids[k])?.value.trim()||'']));
@@ -39,22 +40,50 @@
  }
  async function lookup(cep,version){
   if(!/^[0-9]{8}$/.test(cep))return;
-  status('Buscando endereço pelo CEP…');
-  const controller=new AbortController();
-  const timer=setTimeout(()=>controller.abort(),7000);
-  try{
-   const r=await fetch('https://viacep.com.br/ws/'+cep+'/json/',{signal:controller.signal});
-   const v=await r.json();
-   if(!r.ok||v.erro)throw Error('CEP não encontrado');
-   if(version!==serial||cep!==getPostal())return;
-   postalReference={postal:cep,city:String(v.localidade||'').trim(),state:String(v.uf||'').trim()};
-   const data={street:v.logradouro||'',street_number:'',complement:'',
-    neighborhood:v.bairro||'',city:v.localidade||'',state:v.uf||''};
-   fill(data,{emptyOnly:true});
-   status('Confira os dados do CEP e o número do imóvel antes de confirmar.');
-  }catch{
-   if(version===serial&&cep===getPostal())status('Não conseguimos completar o CEP automaticamente. Preencha o endereço manualmente.');
-  }finally{clearTimeout(timer);}
+  // Do not launch duplicate requests when account data finishes loading later.
+  if(lookupActive&&lookupCEP===cep)return lookupActive;
+  lookupCEP=cep;
+  const request=(async()=>{
+   status('Buscando endereço pelo CEP…');
+   const providers=[
+    {url:'https://viacep.com.br/ws/'+cep+'/json/',convert:v=>({
+     street:v.logradouro||'',neighborhood:v.bairro||'',city:v.localidade||'',state:v.uf||'',notFound:!!v.erro
+    })},
+    {url:'https://brasilapi.com.br/api/cep/v2/'+cep,convert:v=>({
+     street:v.street||'',neighborhood:v.neighborhood||'',city:v.city||'',state:v.state||'',notFound:false
+    })}
+   ];
+   for(const provider of providers){
+    const controller=new AbortController();
+    const timer=setTimeout(()=>controller.abort(),6500);
+    try{
+     const response=await fetch(provider.url,{signal:controller.signal,headers:{Accept:'application/json'}});
+     if(!response.ok)throw Error('Serviço de CEP indisponível');
+     const value=provider.convert(await response.json());
+     if(value.notFound||!value.city||!value.state)throw Error('CEP não localizado');
+     if(version!==serial||cep!==getPostal()||!$('kgAddressForm'))return;
+     postalReference={postal:cep,city:String(value.city).trim(),state:String(value.state).trim()};
+     // The CEP is authoritative for locality. Never overwrite manually edited fields.
+     for(const key of ['street','neighborhood','city','state']){
+      const input=$(ids[key]);
+      if(input&&value[key]&&!dirtyFields.has(key))input.value=String(value[key]).trim();
+     }
+     status(value.street&&value.neighborhood
+      ?'Endereço encontrado. Confira o número e o complemento, se houver.'
+      :'CEP localizado. Confira e complete rua e bairro, além do número.');
+     recalc();
+     return;
+    }catch(error){
+     // A second provider is tried, without changing fields the client typed.
+    }finally{clearTimeout(timer)}
+   }
+   if(version===serial&&cep===getPostal()&&$('kgAddressForm'))
+    status('Não conseguimos consultar esse CEP agora. Confira e preencha o endereço manualmente.');
+  })();
+  lookupActive=request;
+  try{return await request}finally{
+   if(lookupActive===request){lookupActive=null;lookupCEP='';}
+  }
  }
  async function load(){
   const version=serial,generation=mountGeneration;
@@ -86,14 +115,21 @@
   }finally{loading=false;}
  }
  function postalChanged(){
-  const version=++serial,cep=getPostal();
+  const cep=getPostal();
+  if(cep===lastPostal)return;
+  const previous=lastPostal;lastPostal=cep;
+  const version=++serial;
   confirmed=null;postalReference=null;
   if(!$('kgDeliveryAddressMount'))return;
-  if(cep.length!==8){edited=false;fill(null);invalidate('Informe os 8 números do CEP para preencher seu endereço.');return;}
-  edited=false;fill(null);
+  if(cep.length!==8){
+   if(previous.length===8){dirtyFields.clear();edited=false;fill(null);}
+   invalidate('Informe os 8 números do CEP para preencher seu endereço.');
+   return;
+  }
+  dirtyFields.clear();edited=false;fill(null);
   if(saved&&cep===onlyDigits(saved.postal_code)){
    fill(saved,{emptyOnly:true});
-   invalidate('Endereço do cadastro recuperado. Confira número e complemento.');
+   invalidate('Endereço cadastrado carregado. Conferindo os dados pelo CEP…');
   }else invalidate('Consultando CEP…');
   lookup(cep,version);
  }
@@ -142,6 +178,7 @@
   const existingDraft=previous?formData():null;
   const previousPostal=getPostal();
   mountGeneration++;serial++;
+  lastPostal=getPostal();dirtyFields.clear();lookupActive=null;lookupCEP='';
   confirmed=null;postalReference=null;edited=!!existingDraft&&Object.values(existingDraft).some(v=>v);
   loading=false;
   signature=options.cartSignature||(()=> '');
@@ -163,13 +200,17 @@
   if(existingDraft&&previousPostal===getPostal())fill(existingDraft);
   $('kgAddressForm').addEventListener('submit',confirm);
   $('kgAddressForm').querySelectorAll('input').forEach(input=>input.addEventListener('input',()=>{
-   edited=true;invalidate();
+   edited=true;
+   const key=keys.find(k=>ids[k]===input.id);
+   if(key)dirtyFields.add(key);
+   invalidate();
   }));
   recalc();
   load();
  }
  window.kaiaDeliveryAddress={mount,postalChanged,isConfirmed,reset(){
-  serial++;mountGeneration++;confirmed=null;saved=null;edited=false;postalReference=null;recalc();
+  serial++;mountGeneration++;confirmed=null;saved=null;edited=false;postalReference=null;
+  dirtyFields.clear();lastPostal='';lookupActive=null;lookupCEP='';recalc();
  }};
 })();
 
