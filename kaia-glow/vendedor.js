@@ -52,15 +52,11 @@ function renderSales(rows){
  }
 }
 function productShareLink(p,code){
- const root='https://usekaiaglow.com.br/';
- let path='/';
- try{
-  const value=new URL(p.url||root,root);
-  if(value.hostname==='usekaiaglow.com.br'||value.hostname==='www.usekaiaglow.com.br')
-   path=value.pathname;
- }catch{}
- const address=new URL(path,root);address.searchParams.set('vendedor',code);
- if(path==='/')address.hash='produto-'+p.id;
+ // Root shop explicitly supports opening #produto-ID after catalogue sync.
+ // A standalone SEO product page might otherwise discard the referral query.
+ const address=new URL('https://usekaiaglow.com.br/');
+ address.searchParams.set('vendedor',code);
+ address.hash='produto-'+String(p.id);
  return address.href;
 }
 async function renderProducts(seller){
