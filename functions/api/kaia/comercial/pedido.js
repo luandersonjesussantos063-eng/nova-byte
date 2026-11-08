@@ -43,14 +43,13 @@ export async function onRequestPost({request,env}){
     if(available[0]?.discount_type==='percent'&&available[0]?.discount_value===100)
      throw new CheckoutError('CUPOM_REQUER_PEDIDO_GRATIS',409);
    }
-   const reserved=await database(env,coupon?
-    'rpc/kaia_commercial_reserve_discounted':'rpc/kaia_commercial_reserve',{
+   const reserved=await database(env,'rpc/kaia_checkout_reserve_attributed',{
      method:'POST',body:{
       p_user_id:user.id,p_request_key:input.requestKey,p_items:items,
       p_shipping_cents:shipping.cents,p_shipping_service:shipping.serviceId,
-      p_postal_code:postalCode,...(coupon?{
-       p_coupon_code:coupon,p_delivery_days:shipping.estimatedDays
-      }:{})
+      p_postal_code:postalCode,p_coupon_code:coupon||null,
+      p_delivery_days:shipping.estimatedDays,
+      p_seller_code:String(input.sellerCode||'').slice(0,36)
      }
    });
    row=await orderRow(env,reserved.id);
