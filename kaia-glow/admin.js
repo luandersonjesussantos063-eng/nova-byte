@@ -3,7 +3,7 @@ import {setupKaiaCoupons} from './admin-coupons.js';
 import {setupKaiaTeam,loadKaiaTeam} from './admin-team.js';
 import {setupKaiaCustomers,loadKaiaCustomers} from './admin-customers.js';
 import {setupKaiaCancellations,loadKaiaCancellations} from './admin-cancellations.js';
-import {setupKaiaPreorders,loadKaiaPreorders} from './admin-preorders.js?v=1';
+import {setupKaiaPreorders,loadKaiaPreorders} from './admin-preorders.js?v=2';
 import {initKaiaAnalytics,loadKaiaAnalytics} from './admin-analytics.js';
 import {initKaiaMarketplaces,loadKaiaMarketplaces} from './admin-marketplaces.js?v=4';
 import {initKaiaPayments,loadKaiaPayments} from './admin-payments.js?v=2';
