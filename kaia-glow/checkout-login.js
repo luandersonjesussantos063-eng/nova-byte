@@ -13,6 +13,7 @@
  }
  function notify(){
   if(typeof callback==='function')callback(active);
+  window.dispatchEvent(new Event('kaia:checkout-auth-changed'));
  }
  function accountRedirect(mode='login'){
   try{localStorage.setItem(RESUME_KEY,JSON.stringify({created:Date.now()}));}catch{}
