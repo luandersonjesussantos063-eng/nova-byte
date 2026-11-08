@@ -493,7 +493,7 @@ all('[data-step]').forEach(b=>b.onclick=()=>{const r=cart.find(x=>x.key===b.data
 };$('#shippingPostalCode').oninput=()=>{chosenShipping=null;$('#kcShippingChoices')?.replaceChildren();if($('#shippingQuoteResult'))$('#shippingQuoteResult').textContent='Calcule o frete para este CEP.';checkoutEligibility();};$('#checkout').onclick=commercialCheckout;fetchEligible();checkoutEligibility();}
 function openBagDrawer(){renderBag();if(!$('#bagDialog').open)$('#bagDialog').showModal();window.kaiaCheckoutGate?.refresh();}
 $('#bagButton').onclick=openBagDrawer;
-window.kaiaCheckoutGate?.onChange(()=>{
+window.addEventListener('kaia:checkout-auth-changed',()=>{
  if($('#bagDialog').open)renderBag();
 });
 if(new URLSearchParams(location.search).get('sacola')==='1'){
