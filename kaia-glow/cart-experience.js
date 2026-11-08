@@ -98,11 +98,18 @@ function afterBagRender({cart,eligible,onAdd}){
  heading.append(el('h3','','Adicionar embalagem para presente?'),el('small','','Opcional'));
  giftSection.append(heading);
  const choices=el('div','kg-gift-options');
- for(const [value,label,icon] of [['none','Sem embalagem','—'],['box','Caixa','▣'],['bag','Sacola','♧']]){
+ for(const [value,label,illustration] of [
+  ['none','Sem embalagem','/assets/gift-no-packaging.svg'],
+  ['box','Caixa','/assets/gift-box.svg'],
+  ['bag','Sacola','/assets/gift-bag.svg']
+ ]){
   const row=el('label','kg-gift-option'),input=el('input');
   input.type='radio';input.name='kgGift';input.value=value;input.checked=gift===value;
   input.onchange=()=>{if(input.checked)gift=value;};
-  row.append(input,el('span','kg-gift-icon',icon),el('span','',label));choices.append(row);
+  const image=el('img','kg-gift-illustration');
+  image.src=illustration;image.alt='';image.width=76;image.height=76;
+  image.loading='eager';image.decoding='async';
+  row.append(input,image,el('span','kg-gift-caption',label));choices.append(row);
  }
  giftSection.append(choices,el('p','kg-gift-note',
   'Embalagem sujeita à confirmação da Kaia Glow, sem cobrança adicional não autorizada.'));
