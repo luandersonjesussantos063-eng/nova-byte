@@ -2,9 +2,9 @@ import {readFile,writeFile,mkdir,rm,readdir,lstat,copyFile,access} from 'node:fs
 import {fileURLToPath} from 'node:url';import path from 'node:path';
 import {generateKaiaSeoPages} from './kaia-seo-pages.mjs';
 const root=fileURLToPath(new URL('../',import.meta.url)),source=path.join(root,'kaia-glow'),output=path.join(root,'dist','kaia-glow');
-const pages=['links/index.html','index.html','compra-validacao.html','pedido.html','liberacao-vendas.html','admin.html','conta.html','sobre.html','atendimento.html','privacidade.html','como-funciona-privacidade.html','termos-de-uso.html'];
-const scripts=['app.js','seo-product-live.js','marketing-insights.js','shipping-popup.js','catalog-overrides.js','catalog.js','admin.js','admin-team.js','admin-customers.js','admin-cancellations.js','admin-preorders.js','admin-marketplaces.js','admin-payments.js','admin-analytics.js','admin-coupons.js','auth-config.js','conta.js','customer-validation.js','menu-account.js','institucional.js'];
-const styles=['style.css','kaia-seo.css','premium-seo.css','shipping-popup.css','marketing-insights.css','premium-refine.css','admin.css','admin-marketplaces.css','admin-payments.css','admin-analytics.css','conta.css','institucional.css'];
+const pages=['links/index.html','index.html','compra-validacao.html','pedido.html','liberacao-vendas.html','admin.html','vendedor.html','conta.html','sobre.html','atendimento.html','privacidade.html','como-funciona-privacidade.html','termos-de-uso.html'];
+const scripts=['app.js','seo-product-live.js','marketing-insights.js','shipping-popup.js','catalog-overrides.js','catalog.js','admin.js','admin-sellers.js','vendedor.js','admin-team.js','admin-customers.js','admin-cancellations.js','admin-preorders.js','admin-marketplaces.js','admin-payments.js','admin-analytics.js','admin-coupons.js','auth-config.js','conta.js','customer-validation.js','menu-account.js','institucional.js'];
+const styles=['style.css','kaia-seo.css','premium-seo.css','shipping-popup.css','marketing-insights.css','premium-refine.css','admin.css','admin-sellers.css','vendedor.css','admin-marketplaces.css','admin-payments.css','admin-analytics.css','conta.css','institucional.css'];
 const marker=path.join(root,'dist','.kaia-glow-generated');
 try{await access(output);await access(marker);await rm(output,{recursive:true});}catch(e){if(e.code!=='ENOENT')throw e;try{await access(output);throw Error('A pasta de destino existe sem identificação de build. Preserve seu conteúdo antes de continuar.');}catch(check){if(check.code!=='ENOENT')throw check;}}
 await mkdir(output,{recursive:true});await writeFile(marker,'Kaia Glow generated static deployment\n');let count=0;
@@ -34,6 +34,9 @@ await writeFile(path.join(output,'_headers'),'/*\n  X-Content-Type-Options: nosn
 await writeFile(path.join(output,'_headers'),
  (await readFile(path.join(output,'_headers'),'utf8'))+
  '\\n/\\n  Cache-Control: no-cache, must-revalidate\\n\\n/index.html\\n  Cache-Control: no-cache, must-revalidate\\n\\n/app.js\\n  Cache-Control: no-cache, must-revalidate\\n\\n/catalog-overrides.js\\n  Cache-Control: no-cache, must-revalidate\\n');
+await writeFile(path.join(output,'_headers'),
+ (await readFile(path.join(output,'_headers'),'utf8'))+
+ '\n/vendedor.html\n  X-Robots-Tag: noindex, nofollow\n  Cache-Control: no-store\n');
 await writeFile(path.join(output,'robots.txt'),'User-agent: *\nDisallow: /api/\nSitemap: https://usekaiaglow.com.br/sitemap.xml\nSitemap: https://usekaiaglow.com.br/sitemap-novos.xml\n');
 await generateKaiaSeoPages(source,output);
 // Invoke only Kaia API routes with Pages Functions; all static assets stay static.
