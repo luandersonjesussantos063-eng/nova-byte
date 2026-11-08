@@ -294,7 +294,7 @@ $('#productForm').onsubmit=async e=>{
  const brand=$('#editBrand').value.trim(),category=$('#editCategory').value;
  if(!Number.isSafeInteger(price)||price<100||!Number.isSafeInteger(old)||old<0
   ||(stock!==null&&(!Number.isSafeInteger(stock)||stock<0||stock>100000))
-  ||brand.length<2||!['Skincare','Cabelos','Corpo e spa'].includes(category)){
+  ||brand.length<2||!['Skincare','Maquiagem','Perfumaria','Cabelos','Corpo e spa'].includes(category)){
   status('#productStatus','Confira nome, marca, categoria, preços e estoque.',true);return;
  }
  const photos=images.filter(url=>url!==imagePlaceholder);
