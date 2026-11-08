@@ -139,3 +139,17 @@
  .kg-dock-total{display:flex;align-items:center;justify-content:space-between}
  .kg-dock-action #kcPaymentArea .button{min-height:42px}
 }
+
+
+/* Kaia Glow — escolha de pagamento sem alterar o processamento financeiro */
+.kg-payment-methods{border:0;padding:0;margin:18px 0 16px;min-width:0}
+.kg-payment-methods[hidden]{display:none}
+.kg-payment-methods legend{font-size:12px;font-weight:700;color:#563346;margin-bottom:9px}
+.kg-payment-option{display:flex;align-items:center;gap:11px;padding:12px 14px;margin:7px 0;
+ border:1px solid #e8d8dd;border-radius:12px;background:#fffdfc;cursor:pointer}
+.kg-payment-option:has(input:checked){border-color:#906078;background:#fbf4f7}
+.kg-payment-option input{accent-color:#66344f;width:17px;height:17px;flex-shrink:0}
+.kg-payment-option-copy{display:flex;flex-direction:column;gap:3px;min-width:0}
+.kg-payment-option-copy strong{font-size:13px;color:#422c39}
+.kg-payment-option-copy small{font-size:11px;color:#75616c;line-height:1.45}
+.kg-payment-method-note{font-size:11px;line-height:1.55;color:#806e77;margin:9px 0 12px}
