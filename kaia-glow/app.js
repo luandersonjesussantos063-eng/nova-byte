@@ -6,13 +6,29 @@ const whatsappUrl=message=>'https://wa.me/5511965677152?text='+encodeURIComponen
 const money=n=>n.toLocaleString('pt-BR',{style:'currency',currency:'BRL'}),normalize=s=>s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
 function read(k,f){try{return JSON.parse(localStorage.getItem(k))??f}catch{return f}}function save(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch{}}
 // Only merchant-activated coupons retrieved from Supabase; no demo codes.
-const KAIA_COUPONS=(window.KAIA_ACTIVE_COUPONS||[]).map(c=>{
+function couponModel(c){
  const percent=c.discount_type==='percent',label=percent?c.discount_value+'% OFF':money(c.discount_value/100)+' OFF';
- return {code:c.code,type:'discount',percent:percent?c.discount_value:0,fixedCents:percent?0:c.discount_value,
-  expires:c.ends_at||'9999-12-31',starts:c.starts_at||'0000-01-01',min:c.min_order_cents/100,
-  title:'Um carinho de '+label,discountLabel:label,
-  condition:(c.min_order_cents?'Para pedidos a partir de '+money(c.min_order_cents/100)+'. ':'')+(c.discount_value===100&&percent?'100% em produtos e frete grátis; um resgate por conta cadastrada.':'Válido para produtos da coleção Kaia Glow.')};
-});
+ return {code:c.code,type:'discount',percent:percent?c.discount_value:0,
+  fixedCents:percent?0:c.discount_value,personal:c.personal===true,
+  expires:c.ends_at||'9999-12-31',starts:c.starts_at||'0000-01-01',
+  min:(c.min_order_cents||0)/100,title:'Um carinho de '+label,discountLabel:label,
+  condition:(c.min_order_cents?'Para pedidos a partir de '+money(c.min_order_cents/100)+'. ':'')+
+   (percent&&c.discount_value===100?'Produtos e frete grátis.':'Desconto nos produtos. Frete normal.')};
+}
+const KAIA_COUPONS=(window.KAIA_ACTIVE_COUPONS||[]).map(couponModel);
+async function fetchCustomerCoupon(code){
+ if(KAIA_COUPONS.some(x=>x.code===code))return true;
+ const api=window.KAIA_PUBLIC_API;if(!api||!window.supabase)return false;
+ if(!preorderClient)preorderClient=window.supabase.createClient(api.projectUrl,api.publicKey,{
+  auth:{storageKey:'kaia-glow-auth-v1',persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}
+ });
+ const {data:{user},error:userError}=await preorderClient.auth.getUser();
+ if(userError||!user)return false;
+ const {data,error}=await preorderClient.rpc('kaia_customer_coupon_lookup',{p_code:code});
+ if(error||!data)return false;
+ if(!KAIA_COUPONS.some(x=>x.code===code))KAIA_COUPONS.push(couponModel(data));
+ return true;
+}
 function couponToday(){const parts=new Intl.DateTimeFormat('en-CA',{timeZone:'America/Campo_Grande',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());return ['year','month','day'].map(key=>parts.find(p=>p.type===key).value).join('-')}
 function calculateCoupon(code,items,today=couponToday()){
  const c=KAIA_COUPONS.find(c=>c.code===code);
@@ -26,7 +42,9 @@ function calculateCoupon(code,items,today=couponToday()){
  const eligible=items.filter(item=>!c.category||item.category===c.category).reduce((sum,item)=>sum+item.price*item.qty,0);
  if(eligible<=0)return {...result,message:c.category?'Adicione produtos de '+c.category+' para usar este cupom.':'Adicione produtos à sacola para usar este cupom.'};
  const discount=c.percent>0?Math.round(eligible*c.percent)/100:Math.min(eligible,c.fixedCents/100);
- return {valid:true,discount,gift:c.percent===100,message:c.percent===100?'Produtos com 100% de desconto e frete grátis.':'Este cupom ainda não está disponível no checkout.'};
+ return {valid:true,discount,gift:c.percent===100,message:c.percent===100?
+  'Produtos com 100% de desconto e frete grátis.':
+  'Desconto de '+money(discount)+' aplicado aos produtos. Frete cobrado normalmente.'};
 }
 function couponItems(){return cart.map(r=>{const p=catalog.find(p=>p.id===r.id);return {category:p.category,price:variantFor(p,r.variantId).price,qty:r.qty}})}
 
@@ -46,23 +64,28 @@ function checkoutEligibility(){
   chosenShipping.postalCode===postalDigits($('#shippingPostalCode')?.value));
  const subtotal=cart.reduce((sum,r)=>sum+variantFor(catalog.find(p=>p.id===r.id),r.variantId).price*r.qty,0);
  const shipping=shippingValid?chosenShipping.amountCents/100:0;
- const isFree=fullCoupon();
+ const applied=coupon?calculateCoupon(coupon,couponItems()):{valid:true,discount:0,gift:false};
+ const discount=applied.valid?applied.discount:0;
+ const isFree=!!(coupon&&applied.valid&&applied.gift);
  if($('#kcShippingAmount'))$('#kcShippingAmount').textContent=shippingValid?money(shipping):'A calcular';
- if($('#kcProductDiscount'))$('#kcProductDiscount').textContent=money(isFree?subtotal:0);
+ if($('#kcProductDiscount'))$('#kcProductDiscount').textContent=money(discount);
  if($('#kcShippingDiscount'))$('#kcShippingDiscount').textContent=money(isFree?shipping:0);
- if($('#kcCouponSavings'))$('#kcCouponSavings').hidden=!isFree;
+ if($('#kcShippingDiscountRow'))$('#kcShippingDiscountRow').hidden=!isFree;
+ if($('#kcCouponSavings'))$('#kcCouponSavings').hidden=!(coupon&&applied.valid);
  if($('#kcPaymentProvider'))$('#kcPaymentProvider').textContent=isFree?'Cupom integral':'Mercado Pago';
- if($('#kcTotal'))$('#kcTotal').textContent=money(isFree?0:subtotal+shipping);
+ if($('#kcTotal'))$('#kcTotal').textContent=money(Math.max(0,subtotal-discount+(isFree?0:shipping)));
  const prepared=!!($('#commercePaymentOptions')||$('#commercePendingOrder'));
- btn.hidden=prepared;btn.disabled=!eligible||!shippingValid||(!!coupon&&!isFree)||prepared;
- btn.textContent=!eligible?'Produto indisponível':!shippingValid?'Escolha o frete':isFree?'Confirmar pedido grátis':'Continuar para pagamento';
+ btn.hidden=prepared;btn.disabled=!eligible||!shippingValid||!applied.valid||prepared;
+ btn.textContent=!eligible?'Produto indisponível':!shippingValid?'Escolha o frete':
+  !applied.valid?'Verifique seu cupom':isFree?'Confirmar pedido grátis':'Continuar para pagamento';
  const note=$('#commerceEligibility');if(!note||prepared)return;
  note.hidden=false;note.style.color='';note.style.fontWeight='';
  note.textContent=!eligible?'Um ou mais itens ainda não estão liberados para compra.':
   !shippingValid?'Selecione o frete para continuar.':
-  coupon&&!isFree?'Este cupom não pode ser usado nesta sacola.':
-  isFree?'100% de desconto e frete grátis. O pedido será confirmado sem cobrar pagamento.':'';
- note.hidden=!!(eligible&&shippingValid&&(!coupon||isFree));
+  !applied.valid?'O cupom aplicado não é válido para esta sacola.':
+  isFree?'100% de desconto e frete grátis. O pedido será confirmado sem cobrar pagamento.':
+  coupon?'Cupom '+coupon+': desconto de '+money(discount)+' nos produtos. Frete normal.':'';
+ note.hidden=!!(eligible&&shippingValid&&applied.valid&&!coupon);
 }
 async function fetchEligible(){
  const version=++commerceFetchVersion;
@@ -209,7 +232,7 @@ async function commercialCheckout(){
   btn.textContent=isFree?'Confirmando pedido grátis…':'Preparando pedido…';
   const r=await fetch(isFree?'/api/kaia/comercial/gratis':'/api/kaia/comercial/pedido',{method:'POST',headers:{
    Authorization:'Bearer '+token,'content-type':'application/json',Accept:'application/json'},
-   body:JSON.stringify({items:cartItems(),serviceId:chosenShipping.serviceId,postalCode:currentPostal,requestKey:savedRequest.key,...(isFree?{coupon}:{})})});
+   body:JSON.stringify({items:cartItems(),serviceId:chosenShipping.serviceId,postalCode:currentPostal,requestKey:savedRequest.key,...(coupon?{coupon}:{})})});
   const result=await r.json();
   if(!r.ok)throw Error(({
    CEP_DIFERENTE_DO_CADASTRO:'O CEP da sacola está diferente do endereço cadastrado. Atualize Minha conta e consulte o frete novamente.',
