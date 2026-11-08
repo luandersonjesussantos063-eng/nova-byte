@@ -258,7 +258,7 @@ async function adminOlistRequest(endpoint,method='GET'){
 function olistAutoCanEnable(){
  const verifiedAt=Date.parse(olistStatus?.lastVerifiedAt||'');
  const valid=Number.isFinite(verifiedAt)&&Date.now()-verifiedAt<30*60*1000&&
-   olistStatus?.verifiedSkus===51;
+   Number(olistStatus?.verifiedSkus)>=30;
  return valid&&$('#mpTiktokOrdersConfirmed').checked&&
   $('#mpOlistStockRuleConfirmed').checked;
 }
@@ -282,11 +282,11 @@ function syncOlistAutoControls(){
  }else{
   const verifiedAt=Date.parse(olistStatus?.lastVerifiedAt||'');
   const canEnable=Number.isFinite(verifiedAt)&&Date.now()-verifiedAt<30*60*1000&&
-   olistStatus.verifiedSkus===51;
+   Number(olistStatus.verifiedSkus)>=30;
   status.textContent=canEnable?
-   'Prévia de 51 produtos validada em '+date(olistStatus.lastVerifiedAt)+
+   'Prévia de '+olistStatus.verifiedSkus+' produtos validada em '+date(olistStatus.lastVerifiedAt)+
     '. Confirme os dois itens para ativar a consulta automática.':
-   'Sincronização pausada. Primeiro confira os 51 SKUs na Olist; a prévia precisa ser validada nos últimos 30 minutos.';
+   'Sincronização pausada. Confira todos os produtos ativos na Olist; a prévia precisa ser validada nos últimos 30 minutos.';
  }
 }
 async function toggleOlistAuto(){
@@ -368,13 +368,13 @@ async function compareOlistStock(){
  const pane=$('#mpOlistPreview'),summary=$('#mpOlistPreviewSummary');
  const body=$('#mpOlistPreviewBody'),note=$('#mpOlistPreviewNote');
  button.disabled=true;pane.hidden=true;
- status.textContent='Conferindo os 51 SKUs e as reservas locais com a Olist (somente leitura)…';
+ status.textContent='Conferindo os produtos ativos e reservas locais com a Olist (somente leitura)…';
  try{
   const data=await adminOlistRequest('/api/kaia/olist/stock-preview','POST');
   if(data.mode!=='preview_only'||!Array.isArray(data.rows))
    throw Error('Resposta de conferência incompleta.');
   const s=data.summary;
-  if(!s||typeof s.different!=='number'||data.siteSkuCount!==51)
+  if(!s||typeof s.different!=='number'||data.siteSkuCount<30)
    throw Error('A quantidade de produtos não corresponde ao catálogo esperado.');
   summary.textContent=data.siteSkuCount+' SKUs no site · '+s.matched+
    ' encontrados na Olist · '+s.different+' saldos divergentes · '+
