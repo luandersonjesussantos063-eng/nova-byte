@@ -240,11 +240,13 @@ let toastTimer;function toast(msg){$('#toast').textContent=msg;$('#toast').class
 function counts(){$('#favoriteCount').textContent=favorites.size;const n=cart.reduce((a,b)=>a+b.qty,0);$('#bagCount').textContent=n;$('#drawerCount').textContent=`(${n})`;all('[data-wish]').forEach(b=>{const active=favorites.has(b.dataset.wish);b.classList.toggle('active',active);b.textContent=active?'♥':'♡';b.setAttribute('aria-pressed',active)})}
 // Encomendas não reservam estoque nem cobram antecipadamente.
 function purchaseState(p,v=null){
- if(!p?.sku)return 'error';
+ if(!p)return 'error';
  const variant=v||variantFor(p);
- // Products known to be out of stock can request a preorder immediately.
- // The server rechecks inventory and never charges for a preorder.
- if(!variant?.available)return 'preorder';
+ // Historical catalogue entries do not have a commercial SKU. They are
+ // registered as non-paying legacy preorders by their validated product ID.
+ if(!p.sku)return /^\d{1,15}$/.test(String(p.id))?'preorder':'error';
+ // Known out-of-stock items never depend on the checkout-status request.
+ if(!p.available||!variant?.available)return 'preorder';
  if(!(commerceAllowed instanceof Map))return commerceFetchState==='error'?'error':'loading';
  return commerceAllowed.has(p.sku)?'buy':'preorder';
 }
@@ -273,7 +275,7 @@ async function submitPreorder(p,quantity){
    return;
   }
   const {data,error}=await preorderClient.rpc('kaia_submit_preorder',{
-   p_sku:p.sku,p_quantity:Math.min(5,Math.max(1,Number(quantity)||1))
+   p_sku:p.sku||'legacy:'+String(p.id),p_quantity:Math.min(5,Math.max(1,Number(quantity)||1))
   });
   if(error){
    const friendly={

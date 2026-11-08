@@ -32,14 +32,18 @@ export async function loadKaiaPreorders(){
    const form=element('div','kaia-preorder-review');
    const label=element('label','','Mensagem ou justificativa para a cliente');
    const note=element('textarea');note.maxLength=1000;note.rows=2;
-   note.placeholder='Opcional ao confirmar; obrigatória para recusar (mín. 8 caracteres)';
+   const legacy=String(r.sku||'').startsWith('legacy:');
+   note.placeholder=legacy&&r.status==='confirmed'?'Descreva a conferência física do produto recebido (obrigatório para marcar disponível)':
+    'Opcional ao confirmar; obrigatória para recusar (mín. 8 caracteres)';
    label.append(note);form.append(label);
    const actions=element('div','kaia-preorder-actions');
    async function move(next){
     const msg=note.value.trim();
     if(next==='declined'&&msg.length<8){alert('Informe o motivo da recusa (pelo menos 8 caracteres).');return}
+    if(next==='ready'&&legacy&&msg.length<8){alert('Registre a conferência do recebimento físico antes de marcar este produto como disponível.');return}
     const descriptions={confirmed:'Confirmar solicitação de encomenda? Ainda não haverá cobrança.',
-     ready:'Marcar o produto como disponível? Confirme primeiro que existe estoque suficiente no painel.',
+     ready:legacy?'Confirmar que o produto antigo foi recebido fisicamente, conforme a observação registrada?':
+      'Marcar o produto como disponível? Confirme primeiro que existe estoque suficiente no painel.',
      declined:'Informar à cliente que a encomenda não poderá ser atendida?',
      closed:'Encerrar a solicitação? Isso não cria uma venda nem recebe pagamento.'};
     if(!confirm(descriptions[next]))return;
