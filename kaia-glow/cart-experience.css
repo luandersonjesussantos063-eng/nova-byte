@@ -167,3 +167,5 @@
 .kg-address-form .kg-address-status{margin:15px 0 10px;font-size:12px;color:#684158}
 .kg-address-form button{width:100%;min-height:46px}
 @media(max-width:500px){.kg-address-form{padding:15px}.kg-address-grid{gap:10px}.kg-address-grid label{grid-column:1/-1}}
+
+.kc-checkout .kc-payment-section[hidden]{display:none!important}
