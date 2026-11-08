@@ -185,22 +185,29 @@ function cancellationContents(order,kind){
 }
 function personalCouponContents(c){
  const name=textValue(c.name,110),code=textValue(c.code,24);
- const expiration=c.expires?'Válido até '+textValue(c.expires,16)+'.':'Confira a disponibilidade do cupom na loja.';
+ const kind=c.kind, value=Number(c.value),minimum=Number(c.minCents||0);
+ if(!['percent','fixed'].includes(kind)||!Number.isSafeInteger(value)||value<1||
+  (kind==='percent'&&value>100)||!Number.isSafeInteger(minimum)||minimum<0)
+  throw new PaymentError('EMAIL_CUPOM_INVALIDO',422);
+ const amount=kind==='percent'?value+'% no valor dos produtos':brl(value)+' de desconto nos produtos';
+ const full=kind==='percent'&&value===100;
+ const expiration=c.expires?'Válido até '+textValue(c.expires,16)+'.':'Consulte a validade no site.';
  const lines=[
   'Olá, '+name+'!',
-  'A Kaia Glow reservou uma oferta para você.',
+  c.personal?'A Kaia Glow criou uma oferta exclusiva para a sua conta.':'A Kaia Glow separou uma oferta especial para você.',
   'Seu cupom: '+code,
-  'Desconto: 100% no valor dos produtos e frete grátis.',
-  'A oferta é válida para produtos disponíveis, conforme as condições do site, e somente uma utilização por conta.',
+  'Desconto: '+amount+(full?' e frete grátis.':'. Frete cobrado normalmente.'),
+  ...(minimum>0?['Pedido mínimo de '+brl(minimum)+'.']:[]),
+  c.personal?'O código funciona somente na conta que recebeu este e-mail. Uma utilização por cliente.':
+   'Válido para produtos participantes, conforme as condições da loja.',
   expiration,
-  'Use seu código na sacola: https://usekaiaglow.com.br/',
+  'Entre na sua conta antes de aplicar o código na sacola: https://usekaiaglow.com.br/',
   'Você recebeu este e-mail porque autorizou ofertas na sua conta.',
-  'Para deixar de receber mensagens promocionais, desative a opção em https://usekaiaglow.com.br/conta.html?aba=dados',
+  'Para parar de receber promoções, desative a opção em https://usekaiaglow.com.br/conta.html?aba=dados',
   'Com carinho, equipe Kaia Glow.'
  ];
- const subject='Kaia Glow • Seu cupom de cuidado '+code;
  return {
-  subject,text:lines.join('\n'),
+  subject:'Kaia Glow • Seu cupom de cuidado '+code,text:lines.join('\n'),
   html:'<div style="max-width:640px;margin:auto;background:#fff;border:1px solid #eddee5;border-radius:16px;padding:28px;font:15px/1.7 Arial,sans-serif;color:#3a2c34">'+
   '<p style="letter-spacing:3px;color:#783e5d">KAIA GLOW</p>'+
   '<h1 style="font:500 27px Georgia,serif;color:#54233d">Uma surpresa para seu cuidado</h1>'+
@@ -346,7 +353,7 @@ export async function onRequestPost({request,env}){
       if(!uuid.test(job.id)||!uuid.test(job.lease_id))
        throw new PaymentError('EMAIL_ITEM_FILA_INVALIDO',503);
       const details=await db(env,'rpc/kaia_coupon_mail_details','POST',{p_id:job.id});
-      if(!details||!safeMail(details.email)||details.value!==100)
+      if(!details||!safeMail(details.email)||!['percent','fixed'].includes(details.kind))
        throw new PaymentError('EMAIL_SEM_AUTORIZACAO',422);
       messageId=await send(env,details.email,personalCouponContents(details),
        'kaia-target-coupon-'+job.id);
