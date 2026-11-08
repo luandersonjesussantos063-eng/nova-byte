@@ -394,8 +394,8 @@ $('#products').innerHTML=list.slice(0,limit).map(p=>`<article class="product"><d
   b.classList.toggle('active',selected);
   b.setAttribute('aria-pressed',String(selected));
  });
- const brandMenu=$('#kaiaNavBrandsMenu');
- if(brandMenu)brandMenu.classList.toggle('has-selection',!!brand);
+ const brandToggle=$('#kaiaBrandsToggle');
+ if(brandToggle)brandToggle.classList.toggle('has-selection',!!brand);
  all('[data-brand-nav]').forEach(b=>{
   const selected=b.dataset.brandNav===brand&&!favOnly;
   b.classList.toggle('active',selected);
@@ -409,6 +409,24 @@ const availableBrands=[...new Set(catalog.map(p=>String(p.brand||'').trim()).fil
  .sort((a,b)=>a.localeCompare(b,'pt-BR'));
 $('#brand').innerHTML+=availableBrands.map(b=>`<option value="${esc(b)}">${esc(b)}</option>`).join('');
 const brandsRail=$('#kaiaNavBrandChoices');
+const brandPopup=$('#kaiaNavBrandPanel'),brandTrigger=$('#kaiaBrandsToggle');
+function closeBrandPopup(){
+ if(brandPopup)brandPopup.hidden=true;
+ if(brandTrigger)brandTrigger.setAttribute('aria-expanded','false');
+}
+if(brandTrigger&&brandPopup){
+ brandTrigger.onclick=()=>{
+  brandPopup.hidden=!brandPopup.hidden;
+  brandTrigger.setAttribute('aria-expanded',String(!brandPopup.hidden));
+ };
+ document.addEventListener('click',event=>{
+  if(!event.target.closest('#kaiaBrandsToggle')&&!event.target.closest('#kaiaNavBrandPanel'))
+   closeBrandPopup();
+ });
+ document.addEventListener('keydown',event=>{
+  if(event.key==='Escape'&&!brandPopup.hidden){closeBrandPopup();brandTrigger.focus();}
+ });
+}
 if(brandsRail){
  brandsRail.replaceChildren();
  for(const name of availableBrands){
@@ -562,14 +580,14 @@ $('#productDialog').addEventListener('close',()=>{window.kaiaMarketing?.productC
 document.addEventListener('click',e=>{
  const c=e.target.closest('[data-cat]');if(c){
   setCategory(c.dataset.cat);
-  if($('#kaiaNavBrandsMenu'))$('#kaiaNavBrandsMenu').open=false;
+  closeBrandPopup();
  }
  const brandChoice=e.target.closest('[data-brand-nav]');
  if(brandChoice){
   const name=brandChoice.dataset.brandNav;
   if(availableBrands.includes(name)){
    reset();$('#brand').value=name;render();
-   if($('#kaiaNavBrandsMenu'))$('#kaiaNavBrandsMenu').open=false;
+   closeBrandPopup();
    $('#colecao').scrollIntoView({behavior:'smooth',block:'start'});
   }
  }const p=e.target.closest('[data-product]');if(p){e.preventDefault();openProduct(p.dataset.product)}const w=e.target.closest('[data-wish]');if(w){favorites.has(w.dataset.wish)?favorites.delete(w.dataset.wish):favorites.add(w.dataset.wish);save('kaia-demo-favorites',[...favorites]);if(favOnly)render();else counts()}const pre=e.target.closest('[data-preorder]');if(pre){openProduct(pre.dataset.preorder);const button=$('#addDetail');if(button&&!button.disabled)button.focus();}const retry=e.target.closest('[data-retry-availability]');if(retry)fetchEligible();const q=e.target.closest('[data-quick]');if(q){const product=catalog.find(p=>p.id===q.dataset.quick);if(product.variants.length>1)openProduct(product.id);else addCart(product.id)}const i=e.target.closest('[data-info]');if(i)info(i.dataset.info)});
