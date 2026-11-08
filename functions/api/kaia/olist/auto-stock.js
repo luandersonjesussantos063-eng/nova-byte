@@ -10,7 +10,7 @@ const SCHEDULE_KEY_SHA256='675b3806647ad3c91cd34fd9462643df28faf1832af657cb1a9e7
 const asUnits=x=>typeof x==='number'&&Number.isSafeInteger(x)&&x>=0&&x<=100000;
 async function authorize(request){
  const token=request.headers.get('X-Kaia-Cron-Key')||'';
- if(!/^[a-f0-9]{64}$/.test(token))
+ if(token.length!==64)
   throw new PaymentError('OLIST_AUTO_NAO_AUTORIZADO',401);
  const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(token));
  const digest=Array.from(new Uint8Array(buf),x=>x.toString(16).padStart(2,'0')).join('');
