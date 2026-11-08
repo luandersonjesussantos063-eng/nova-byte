@@ -240,7 +240,11 @@ async function commercialCheckout(){
    ENTRE_NA_CONTA:'É necessário entrar na sua conta para pagar.',
    PRODUTO_SEM_LIBERACAO_OU_ESTOQUE:'Produto indisponível ou estoque insuficiente.',
    CUPOM_INVALIDO:'Cupom inativo ou expirado.',
-   CUPOM_JA_UTILIZADO:'Este cupom integral já foi utilizado por esta conta.'
+   CUPOM_JA_UTILIZADO:'Este cupom já foi utilizado por esta conta.',
+    CUPOM_RESERVADO_PARA_OUTRA_CONTA:'Este cupom foi criado exclusivamente para outra cliente.',
+    CUPOM_PESSOAL_JA_USADO:'Este cupom pessoal já foi utilizado.',
+    CUPOM_INATIVO_OU_EXPIRADO:'Este cupom está inativo ou expirado.',
+    CUPOM_REQUER_PEDIDO_GRATIS:'Este cupom deve ser processado como pedido grátis.'
   })[result.code]||result.code||'Não foi possível iniciar seu pedido.');
   if(isFree){
    if(result.status!=='approved'||result.totalCents!==0||!result.freeOrder||
@@ -338,11 +342,11 @@ $('#bagContent').innerHTML=`<div class="bag-body kc-checkout"><section class="kc
 <label for="kcCouponCode">Cupom de desconto</label><input id="kcCouponCode" type="text" maxlength="24" placeholder="Ex.: KAIA100" autocomplete="off" value="${esc(coupon)}">
 <button id="kcCouponApply" type="submit">Aplicar cupom</button></form>
 <p id="kcCouponStatus" class="kc-inline-hint" role="status"></p>
-<div id="kcCouponSavings" hidden><div class="kc-amount-line"><span>Desconto em produtos</span><strong>− <span id="kcProductDiscount">R$ 0,00</span></strong></div><div class="kc-amount-line"><span>Frete grátis</span><strong>− <span id="kcShippingDiscount">R$ 0,00</span></strong></div></div>
+<div id="kcCouponSavings" hidden><div class="kc-amount-line"><span>Desconto em produtos</span><strong>− <span id="kcProductDiscount">R$ 0,00</span></strong></div><div class="kc-amount-line" id="kcShippingDiscountRow" hidden><span>Frete grátis</span><strong>− <span id="kcShippingDiscount">R$ 0,00</span></strong></div></div>
 <div class="kc-total-line"><span>Total</span><strong id="kcTotal">${money(subtotal)}</strong></div><p class="kc-inline-hint" id="commerceEligibility" role="status">Escolha o frete para continuar.</p><div id="kcPaymentArea"><button class="button" id="checkout" disabled>Escolher frete</button></div><p class="kc-secure-note">Pedidos pagos usam Mercado Pago. Pedidos grátis são registrados sem cobrança.</p></section></div>`;
 const couponStatus=$('#kcCouponStatus');
-couponStatus.textContent=fullCoupon()?'Cupom '+coupon+' aplicado: produtos e frete grátis.':'';
-$('#kcCouponForm').onsubmit=e=>{
+couponStatus.textContent=coupon?calculateCoupon(coupon,couponItems()).message:'';
+$('#kcCouponForm').onsubmit=async e=>{
  e.preventDefault();
  const entry=$('#kcCouponCode').value.trim().toUpperCase();
  if(!entry){
@@ -352,15 +356,21 @@ $('#kcCouponForm').onsubmit=e=>{
   couponStatus.textContent='Cupom removido.';
   checkoutEligibility();return;
  }
+ if(!KAIA_COUPONS.some(x=>x.code===entry)){
+  couponStatus.textContent='Verificando cupom individual…';
+  if(!await fetchCustomerCoupon(entry)){
+   couponStatus.textContent='Cupom não disponível para esta conta. Confira o código e o login.';return;
+  }
+ }
  const result=calculateCoupon(entry,couponItems());
- if(!result.valid||!result.gift){couponStatus.textContent=result.message||'Cupom indisponível para esta compra.';return;}
+ if(!result.valid){couponStatus.textContent=result.message||'Cupom indisponível para esta compra.';return;}
  coupon=entry;sessionStorage.removeItem('kaia_order_request_v1');
  const hadOldCheckout=!!($('#commercePaymentOptions')||$('#commercePendingOrder'));
- // Don't leave a payable old Mercado Pago link visible after a free coupon was chosen.
+ // A new discount invalidates any previously prepared payment link.
  $('#commercePaymentOptions')?.remove();
  $('#commercePendingOrder')?.remove();
- couponStatus.textContent='Cupom '+entry+' aplicado: 100% em produtos e frete grátis.'+
-  (hadOldCheckout?' O pagamento anterior não deve ser usado. Confirme o novo pedido abaixo.':'');
+ couponStatus.textContent='Cupom '+entry+' aplicado. '+result.message+
+  (hadOldCheckout?' Não utilize o pagamento anterior; confirme o novo pedido abaixo.':'');
  checkoutEligibility();
 };
 all('[data-step]').forEach(b=>b.onclick=()=>{const r=cart.find(x=>x.key===b.dataset.key);r.qty=Math.max(1,Math.min(10,r.qty+Number(b.dataset.step)));shippingReset();renderBag()});all('[data-remove]').forEach(b=>b.onclick=()=>{cart=cart.filter(r=>r.key!==b.dataset.remove);shippingReset();renderBag()});$('#shippingQuoteForm').onsubmit=async e=>{
