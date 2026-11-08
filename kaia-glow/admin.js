@@ -1,6 +1,7 @@
 import {KAIA_AUTH} from './auth-config.js';
 import {setupKaiaCoupons} from './admin-coupons.js?v=2';
 import {setupKaiaTeam,loadKaiaTeam} from './admin-team.js';
+import {setupKaiaSellers,loadKaiaSellers} from './admin-sellers.js?v=1';
 import {setupKaiaCustomers,loadKaiaCustomers} from './admin-customers.js?v=3';
 import {setupKaiaCancellations,loadKaiaCancellations} from './admin-cancellations.js';
 import {setupKaiaPreorders,loadKaiaPreorders} from './admin-preorders.js?v=2';
@@ -65,7 +66,7 @@ async function loadAdmin(){
     available:!!edit.available,variants:[{id:Number(row.id),label:'Única',
     price:edit.price_cents/100,available:!!edit.available,sku:row.sku}],isNew:true});
  }
- initKaiaAnalytics(sb);setupKaiaCustomers(sb);
+ initKaiaAnalytics(sb);setupKaiaCustomers(sb);setupKaiaSellers(sb);
  initKaiaMarketplaces(sb,{onStockChanged:()=>loadAdmin()});
  initKaiaPayments(sb);setupKaiaCancellations(sb);setupKaiaPreorders(sb);
  $('#productCount').textContent=catalog.filter(p=>!productData(p).archived).length;
@@ -401,7 +402,8 @@ const panelMeta={
  customers:['RELACIONAMENTO · CLIENTES','Clientes','Consulte cadastros, preferências e ofertas autorizadas.'],
  coupons:['RELACIONAMENTO · CAMPANHAS','Cupons','Organize suas promoções e acompanhe os códigos cadastrados.'],
  analytics:['RELACIONAMENTO · MÉTRICAS','Estatísticas','Veja estatísticas autorizadas e dados agregados de navegação.'],
- team:['ADMINISTRAÇÃO · ACESSOS','Usuários e permissões','Gerencie as pessoas autorizadas a administrar a loja.']
+ team:['ADMINISTRAÇÃO · ACESSOS','Usuários e permissões','Gerencie as pessoas autorizadas a administrar a loja.'],
+ sellers:['COMERCIAL · REDE DE VENDAS','Vendedores','Acompanhe vendedores, links de divulgação e comissões após pagamentos confirmados.']
 };
 function closeAdminMenu(){
  $('#adminSidebar').classList.remove('is-open');
@@ -440,6 +442,7 @@ function openAdminTab(current,updateHash=true){
  if(current==='cancellations')loadKaiaCancellations();
  if(current==='preorders')loadKaiaPreorders();
  if(current==='team')loadKaiaTeam();
+ if(current==='sellers')loadKaiaSellers();
  if(current==='customers')loadKaiaCustomers();
  if(current==='analytics')loadKaiaAnalytics();
  if(current==='marketplaces')loadKaiaMarketplaces();

@@ -5,6 +5,27 @@ const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 const whatsappUrl=message=>'https://wa.me/5511965677152?text='+encodeURIComponent(message);
 const money=n=>n.toLocaleString('pt-BR',{style:'currency',currency:'BRL'}),normalize=s=>s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
 function read(k,f){try{return JSON.parse(localStorage.getItem(k))??f}catch{return f}}function save(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch{}}
+const SELLER_ATTRIBUTION_KEY='kaia-seller-referral-v1';
+const SELLER_ATTRIBUTION_LIFETIME=7*24*60*60*1000;
+// Seller commissions are recorded only for verified purchases. Never use
+// seller codes as authorization, pricing or billing information.
+(()=>{
+ const code=String(new URLSearchParams(location.search).get('vendedor')||'').trim().toUpperCase();
+ if(!/^KGV[A-F0-9]{12}$/.test(code))return;
+ try{localStorage.setItem(SELLER_ATTRIBUTION_KEY,JSON.stringify({code,at:Date.now()}))}catch{}
+})();
+function sellerForCheckout(){
+ try{
+  const value=JSON.parse(localStorage.getItem(SELLER_ATTRIBUTION_KEY)||'null');
+  if(!value||!/^KGV[A-F0-9]{12}$/.test(value.code)||
+    !Number.isFinite(value.at)||value.at>Date.now()+60_000||
+    Date.now()-value.at>SELLER_ATTRIBUTION_LIFETIME){
+    localStorage.removeItem(SELLER_ATTRIBUTION_KEY);return null;
+  }
+  return value.code;
+ }catch{return null}
+}
+
 // Only merchant-activated coupons retrieved from Supabase; no demo codes.
 function couponModel(c){
  const percent=c.discount_type==='percent',label=percent?c.discount_value+'% OFF':money(c.discount_value/100)+' OFF';
@@ -221,7 +242,7 @@ async function commercialCheckout(){
   }
   if(!/^[0-9]{8}$/.test(currentPostal)||pending.registeredPostalCode!==currentPostal)
    throw Error('O CEP usado no frete é diferente do CEP salvo na sua conta ('+(pending.registeredPostalCode||'não cadastrado')+'). Atualize seu endereço em Minha conta e calcule o frete novamente antes de pagar.');
-  const fingerprint=cartSignature()+'|'+chosenShipping.serviceId+'|'+currentPostal+'|'+(coupon||'');
+  const fingerprint=cartSignature()+'|'+chosenShipping.serviceId+'|'+currentPostal+'|'+(coupon||'')+'|'+(sellerForCheckout()||'');
   let savedRequest;try{savedRequest=JSON.parse(sessionStorage.getItem('kaia_order_request_v1')||'null');}catch{}
   if(!savedRequest||savedRequest.fingerprint!==fingerprint||
      !savedRequest.createdAt||Date.now()-savedRequest.createdAt>60_000){
@@ -232,7 +253,7 @@ async function commercialCheckout(){
   btn.textContent=isFree?'Confirmando pedido grátis…':'Preparando pedido…';
   const r=await fetch(isFree?'/api/kaia/comercial/gratis':'/api/kaia/comercial/pedido',{method:'POST',headers:{
    Authorization:'Bearer '+token,'content-type':'application/json',Accept:'application/json'},
-   body:JSON.stringify({items:cartItems(),serviceId:chosenShipping.serviceId,postalCode:currentPostal,requestKey:savedRequest.key,...(coupon?{coupon}:{})})});
+   body:JSON.stringify({items:cartItems(),serviceId:chosenShipping.serviceId,postalCode:currentPostal,requestKey:savedRequest.key,sellerCode:sellerForCheckout(),...(coupon?{coupon}:{})})});
   const result=await r.json();
   if(!r.ok)throw Error(({
    CEP_DIFERENTE_DO_CADASTRO:'O CEP da sacola está diferente do endereço cadastrado. Atualize Minha conta e consulte o frete novamente.',
@@ -577,7 +598,7 @@ if(location.hash==='#cupons')openCoupons();
  document.querySelectorAll('[data-open-referral]').forEach(b=>b.addEventListener('click',openReferral));
  dialog.addEventListener('close',()=>{if(returnFocus&&returnFocus.isConnected)returnFocus.focus()});
  function invite(){if(shown)return;if(document.hidden||document.querySelector('dialog[open]')){setTimeout(invite,2000);return}openReferral()}
- if(!shown)setTimeout(invite,8000);
+ if(!shown&&!sellerForCheckout())setTimeout(invite,8000);
  share.addEventListener('click',()=>{const code=new URLSearchParams(location.search).get('indicacao');location.href='conta.html?aba=indicacoes'+(/^[a-f0-9]{20}$/.test(code||'')?'&modo=cadastro&indicacao='+encodeURIComponent(code):'')});
 })();
 

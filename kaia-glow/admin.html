@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow"><meta name="referrer" content="strict-origin-when-cross-origin">
-<title>Painel administrativo · Kaia Glow</title><link rel="stylesheet" href="admin.css?v=8"><link rel="stylesheet" href="admin-analytics.css?v=1"><link rel="stylesheet" href="admin-marketplaces.css?v=4"><link rel="stylesheet" href="admin-payments.css?v=1"></head>
+<title>Painel administrativo · Kaia Glow</title><link rel="stylesheet" href="admin.css?v=8"><link rel="stylesheet" href="admin-sellers.css?v=1"><link rel="stylesheet" href="admin-sellers.css?v=1"><link rel="stylesheet" href="admin-analytics.css?v=1"><link rel="stylesheet" href="admin-marketplaces.css?v=4"><link rel="stylesheet" href="admin-payments.css?v=1"></head>
 <body>
 <header class="admin-top"><div class="admin-brand"><span class="brand-mark" aria-hidden="true">K</span><div><strong class="kg-wordmark">kaia <em>glow</em></strong><small>PAINEL DE GESTÃO</small></div></div><form id="adminGlobalForm" class="kg-global-search" hidden><label for="adminGlobalSearch">Buscar no painel</label><input id="adminGlobalSearch" type="search" autocomplete="off" maxlength="100" placeholder="Produtos, clientes ou pedidos…"><button type="submit" aria-label="Buscar no painel">⌕</button></form><div class="admin-top-actions"><button type="button" id="adminNavToggle" class="admin-menu-toggle" aria-label="Abrir menu de gestão" aria-controls="adminSidebar" aria-expanded="false" hidden><span aria-hidden="true">☰</span> Menu</button><a href="/" target="_blank" rel="noopener noreferrer">Ver loja <span aria-hidden="true">↗</span></a><button type="button" id="logoutButton" hidden>Sair</button></div></header>
 <main class="admin-shell">
@@ -43,6 +43,7 @@
     <button type="button" role="tab" id="nav-coupons" data-tab="coupons" aria-controls="couponsTab" aria-selected="false" tabindex="-1"><svg class="admin-nav-icon" aria-hidden="true"><use href="#kg-tag"></use></svg><span>Cupons</span><span class="admin-nav-chevron" aria-hidden="true">›</span></button>
     <button type="button" role="tab" id="nav-analytics" data-tab="analytics" aria-controls="analyticsTab" aria-selected="false" tabindex="-1"><svg class="admin-nav-icon" aria-hidden="true"><use href="#kg-chart"></use></svg><span>Estatísticas</span><span class="admin-nav-chevron" aria-hidden="true">›</span></button>
     <span class="admin-nav-group">ADMINISTRAÇÃO</span>
+    <button type="button" role="tab" id="nav-sellers" data-tab="sellers" aria-controls="sellersTab" aria-selected="false" tabindex="-1"><svg class="admin-nav-icon" aria-hidden="true"><use href="#kg-users"></use></svg><span>Vendedores</span><span class="admin-nav-chevron" aria-hidden="true">›</span></button>
     <button type="button" role="tab" id="nav-team" data-tab="team" aria-controls="teamTab" aria-selected="false" tabindex="-1" hidden><svg class="admin-nav-icon" aria-hidden="true"><use href="#kg-shield"></use></svg><span>Usuários</span><span class="admin-nav-chevron" aria-hidden="true">›</span></button>
     <button type="button" role="tab" id="nav-settings" data-tab="settings" aria-controls="settingsTab" aria-selected="false" tabindex="-1"><svg class="admin-nav-icon" aria-hidden="true"><use href="#kg-shield"></use></svg><span>Configurações</span><span class="admin-nav-chevron" aria-hidden="true">›</span></button>
     <button type="button" role="tab" id="nav-alerts" data-tab="alerts" aria-controls="alertsTab" aria-selected="false" tabindex="-1"><svg class="admin-nav-icon" aria-hidden="true"><use href="#kg-rotate"></use></svg><span>Alertas</span><span class="admin-nav-chevron" aria-hidden="true">›</span></button>
@@ -95,6 +96,7 @@
 <article class="editor"><span class="eyebrow">ACESSO</span><h3>Equipe e permissões</h3><p>O proprietário autoriza administradores com conta e e-mail confirmados.</p><button type="button" class="ghost-button" id="settingsTeam">Gerenciar usuários →</button><p id="settingsTeamHint" class="muted"></p></article>
 <article class="editor"><span class="eyebrow">PAGAMENTOS</span><h3>Mercado Pago</h3><p>Consulte a configuração protegida e os registros de pagamento da loja.</p><button type="button" class="ghost-button" data-open-panel="payments">Ver pagamentos →</button></article>
 <article class="editor"><span class="eyebrow">OPERAÇÃO</span><h3>Estoque e marketplaces</h3><p>Confira os vínculos e os controles existentes da Olist, Shopee e TikTok Shop.</p><button type="button" class="ghost-button" data-open-panel="marketplaces">Gerenciar estoque →</button></article>
+<article class="editor"><span class="eyebrow">COMERCIAL</span><h3>Vendedores e comissões</h3><p>Cadastre vendedores, gere links exclusivos e acompanhe as comissões por vendas aprovadas.</p><button type="button" class="ghost-button" data-open-panel="sellers">Gerenciar vendedores →</button></article>
 <article class="editor"><span class="eyebrow">RELACIONAMENTO</span><h3>Cupons e consentimentos</h3><p>Prepare benefícios e consulte as autorizações para ofertas e navegação identificada.</p><button type="button" class="ghost-button" data-open-panel="customers">Ver clientes e ofertas →</button></article>
 </div></section>
 <section id="alertsTab" class="admin-section" role="tabpanel" aria-labelledby="nav-alerts" hidden>
@@ -192,6 +194,31 @@
 <p class="muted">Produtos visualizados e tempo de atenção só aparecem depois do consentimento expresso na conta. O histórico anônimo anterior não é vinculado ao cliente.</p>
 </div>
 <div id="customerAdminList" class="kaia-customer-admin-list"></div>
+</section>
+<section id="sellersTab" class="admin-section" hidden>
+ <div class="section-header"><div><span class="eyebrow">REDE DE VENDAS · KAIA GLOW</span>
+ <h2>Vendedores e comissões</h2>
+ <p>Cadastre vendedores com conta confirmada. Cada um tem um link exclusivo, acesso separado e ganha 10% sobre produtos pagos, após descontos e sem frete.</p></div>
+ <button type="button" class="ghost-button" id="sellerAdminRefresh">Atualizar</button></div>
+ <div class="seller-admin-top">
+  <form id="sellerAdminForm" class="editor">
+   <span class="eyebrow">NOVO VENDEDOR</span><h3>Autorizar um vendedor</h3>
+   <label for="sellerAdminEmail">E-mail cadastrado e confirmado na Kaia Glow</label>
+   <input id="sellerAdminEmail" type="email" autocomplete="off" required maxlength="200" placeholder="vendedor@email.com">
+   <p class="muted">O vendedor utiliza a própria senha. Se ainda não possui cadastro, faça o registro em <a href="/conta.html?modo=cadastro" target="_blank" rel="noopener">Criar conta</a> e confirme o e-mail antes de ativar.</p>
+   <button type="submit" class="primary-button" id="sellerAdminAdd">Autorizar vendedor e gerar link</button>
+   <p class="muted">Você não precisa enviar senhas. A página de acesso é <a href="/vendedor.html" target="_blank" rel="noopener">Painel do vendedor ↗</a>.</p>
+  </form>
+  <div class="editor seller-admin-rules">
+   <span class="eyebrow">REGRA DE COMISSÃO</span><h3>10% sobre as vendas confirmadas</h3>
+   <p>A comissão incide sobre o valor pago pelos produtos, após descontos, sem incluir frete. Pedidos aguardando pagamento não geram saldo liberado.</p>
+   <p>Solicitações de cancelamento suspendem as comissões até a análise; cancelamento ou reembolso aprovado retira a comissão.</p>
+   <p><strong>Repasses:</strong> o painel registra pagamentos efetuados manualmente. Ele não envia Pix nem transfere dinheiro automaticamente.</p>
+  </div>
+ </div>
+ <p id="sellerAdminStatus" role="status" aria-live="polite"></p>
+ <div class="seller-admin-summary" id="sellerAdminSummary"></div>
+ <div id="sellerAdminList" class="seller-admin-list"></div>
 </section>
 <section id="teamTab" class="admin-section" hidden>
  <div class="section-header"><div><span class="eyebrow">CONTROLE DO PROPRIETÁRIO</span><h2>Usuários e permissões</h2>
@@ -388,5 +415,5 @@
 <footer class="admin-footer">© 2026 Kaia Glow · Gestão com cuidado <span>Nova Byte · Painel administrativo</span></footer>
 <script src="catalog.js?v=1"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js" integrity="sha384-TcHRA3zBbn+Lexh5n+Oil4guNPOS3rjNDpGRAN46u/s/mB2IZ50ceC6TYDU2yvgK" crossorigin="anonymous"></script>
-<script type="module" src="admin.js?v=15"></script>
+<script type="module" src="admin.js?v=16"></script>
 </body></html>
