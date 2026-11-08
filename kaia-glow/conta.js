@@ -61,6 +61,7 @@ function activateTab(tab){
 all('[data-account-tab]').forEach(b=>b.addEventListener('click',()=>activateTab(b.dataset.accountTab)));
 const referralLabels={registered:'Cadastro confirmado · em análise',validated:'Indicação validada',reward_ready:'Brinde liberado',reward_sent:'Brinde enviado'};
 const orderLabels={received:'Recebido',confirmed:'Confirmado',preparing:'Em preparação',shipped:'Enviado',delivered:'Entregue',cancelled:'Cancelado'};
+const preorderLabels={requested:'Aguardando confirmação',confirmed:'Encomenda confirmada',ready:'Produto disponível · aguarde instruções',declined:'Encomenda não atendida',cancelled:'Cancelada',closed:'Concluída'};
 const cancelLabels={requested:'Solicitação em análise',approved:'Pedido cancelado',
  approved_refund_pending:'Cancelamento aprovado · reembolso pendente',denied:'Solicitação não aceita'};
 const date=s=>new Intl.DateTimeFormat('pt-BR',{dateStyle:'medium'}).format(new Date(s));
@@ -113,10 +114,11 @@ async function loadAccount(){
   if(result.error){claimMessage='Seu cadastro está pronto. Não foi possível registrar a indicação agora; tente atualizar a página.';}
   else {claimMessage=({registered:'Indicação registrada! A equipe vai validar a participação e o brinde.',self:'Seu próprio link não conta como indicação.',invalid:'Este convite não está disponível. Confira o link com quem indicou você.'})[result.data]||'';pendingCode=null;try{localStorage.removeItem(REF_KEY)}catch{}}
  }
- const [referrals,orders,cancellations]=await Promise.all([
+ const [referrals,orders,cancellations,preorders]=await Promise.all([
   supa.from('kaia_referrals').select('id,status,created_at').order('created_at',{ascending:false}).limit(100),
   supa.from('kaia_orders').select('id,order_number,status,total_cents,items,created_at').order('created_at',{ascending:false}).limit(100),
-  supa.from('kaia_cancellation_requests').select('id,order_number,status,reason,decision_note').order('requested_at',{ascending:false}).limit(100)
+  supa.from('kaia_cancellation_requests').select('id,order_number,status,reason,decision_note').order('requested_at',{ascending:false}).limit(100),
+  supa.from('kaia_preorder_requests').select('id,sku,product_name,quantity,status,requested_at,estimated_available_at,admin_note').order('requested_at',{ascending:false}).limit(100)
  ]);
  if(seq!==sequence)return;
  $('#memberName').textContent=profile.full_name;$('#memberEmail').textContent=user.email;
@@ -152,9 +154,29 @@ async function loadAccount(){
     </article>`;
   }).join(''):'<div class="account-empty"><h3>Você ainda não tem pedidos por aqui.</h3></div>';
  }
+ if(preorders.error)$('#preorderList').textContent='Não foi possível consultar suas encomendas agora. Tente atualizar.';
+ else{
+  const rows=preorders.data||[];
+  $('#preorderList').innerHTML=rows.length?rows.map(r=>`<article class="account-record">
+   <h3>${esc(r.product_name)} · ${esc(r.quantity)} unidade(s)</h3>
+   <time datetime="${esc(r.requested_at)}">Solicitada em ${date(r.requested_at)}</time>
+   <span class="account-badge">${esc(preorderLabels[r.status]||r.status)}</span>
+   <p class="account-small">Previsão de disponibilidade: ${date(r.estimated_available_at)} (sujeita à confirmação da loja). O frete e o pagamento serão acertados depois.</p>
+   ${r.admin_note?`<p class="account-small">Resposta da loja: ${esc(r.admin_note)}</p>`:''}
+   ${['requested','confirmed','ready'].includes(r.status)?`<button type="button" class="account-text-button" data-preorder-cancel="${esc(r.id)}">Cancelar esta encomenda</button>`:''}
+  </article>`).join(''):'<div class="account-empty"><h3>Você ainda não tem encomendas.</h3><p>Produtos indisponíveis podem ser solicitados pela vitrine, com previsão de 7 dias para disponibilidade.</p></div>';
+ }
  $('#authPanel').hidden=true;$('#memberPanel').hidden=false;
  activateTab(new URLSearchParams(location.search).get('aba')||'dados');status((profileRequired?'Confirme seus dados abaixo para concluir o cadastro. ':'' )+ (claimMessage||((referrals.error||orders.error)?'Algumas informações não carregaram. Tente atualizar.':'')));
 }
+$('#preorderList').addEventListener('click',async event=>{
+ const btn=event.target.closest('[data-preorder-cancel]');if(!btn||!supa||!user)return;
+ if(!confirm('Cancelar esta encomenda? Nenhum pagamento foi realizado.'))return;
+ btn.disabled=true;status('Cancelando a encomenda…');
+ const {error}=await supa.rpc('kaia_cancel_my_preorder',{p_id:btn.dataset.preorderCancel});
+ if(error){status('Não foi possível cancelar: '+error.message,true);btn.disabled=false;return;}
+ await loadAccount();status('Encomenda cancelada. A Kaia Glow será avisada.');
+});
 $('#ordersList').addEventListener('click',event=>{
  const button=event.target.closest('[data-cancel-open]');if(!button)return;
  const form=all('[data-cancel-form]').find(f=>f.dataset.cancelForm===button.dataset.cancelOpen);
