@@ -10,6 +10,14 @@
 .kaia-consent-minimal{border:1px solid #b68fa3;background:#fff;color:#582c42}
 .kaia-consent-accept{background:#582840;color:#fff}
 .kaia-consent-minimal:hover,.kaia-consent-accept:hover{filter:brightness(.93)}
-.kaia-consent-manage{position:fixed;z-index:90;bottom:15px;left:15px;padding:9px 13px;border-radius:50px;background:#f7eef2;color:#632c49;border:1px solid #d9bdcb;box-shadow:0 2px 12px #4f263217;font-size:10px}
+.kaia-consent-manage{position:static;display:inline-block;max-width:100%;padding:6px 0;border:0;border-radius:0;background:transparent;color:inherit;box-shadow:none;font:inherit;line-height:1.55;text-decoration:underline;text-underline-offset:3px;cursor:pointer}
 body:has(#kaiaCookieBanner:not([hidden])) .kaia-consent-manage{display:none}
-@media(max-width:620px){.kaia-consent-banner{left:10px;bottom:12px;width:calc(100% - 20px);display:block;padding:18px 18px 16px;border-radius:13px;max-height:85dvh;overflow-y:auto}.kaia-consent-copy h2{font-size:23px}.kaia-consent-actions{display:grid;grid-template-columns:1fr 1fr;margin-top:14px;gap:7px}.kaia-consent-actions button{font-size:10px;padding:10px 6px}.kaia-consent-manage{bottom:8px;left:9px;font-size:9px}}
+@media(max-width:620px){.kaia-consent-banner{left:10px;bottom:12px;width:calc(100% - 20px);display:block;padding:18px 18px 16px;border-radius:13px;max-height:85dvh;overflow-y:auto}.kaia-consent-copy h2{font-size:23px}.kaia-consent-actions{display:grid;grid-template-columns:1fr 1fr;margin-top:14px;gap:7px}.kaia-consent-actions button{font-size:10px;padding:10px 6px}.kaia-consent-manage{font-size:inherit}}
+
+/* Footer control is never floating; keep Nova Byte attribution fully visible. */
+.kaia-footer-compact .kg-footer-cookie-control{margin:8px 0 0;font-size:10px;line-height:1.5}
+.kaia-footer-compact #kaiaCookieManage{appearance:none;position:static!important;inset:auto!important;z-index:auto;
+ display:inline-flex;align-items:center;min-height:34px;max-width:100%;padding:3px 0;
+ border:0;background:transparent;box-shadow:none;color:#e6cfda;text-align:left}
+.kaia-footer-compact #kaiaCookieManage:hover{text-decoration-thickness:2px}
+.kaia-footer-compact #kaiaCookieManage:focus-visible{outline:2px solid #f2d5b3;outline-offset:3px}
