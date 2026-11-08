@@ -29,7 +29,7 @@ export async function onRequestPost({request,env}){
   if(!Array.isArray(rows)||rows.length!==1)throw new PaymentError('OLIST_SYNC_SEM_CONFIGURACAO',503);
   enabled=rows[0].enabled===true;
   if(!enabled)return noStoreJson({ok:true,mode:'paused',changedSkus:0});
-  const local=await db(env,'kaia_sale_inventory?select=sku,available_units&order=sku&limit=1000');
+  const local=await db(env,'rpc/kaia_olist_auto_stock_skus','POST',{});
   if(!Array.isArray(local)||local.length<30||local.length>=1000)
    throw new PaymentError('OLIST_CATALOGO_LOCAL_INVALIDO',409);
   const bySku=new Map(local.map(x=>[x.sku,x]));
