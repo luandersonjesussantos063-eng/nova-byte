@@ -33,7 +33,7 @@ async function readOlistStockPage(token,offset){
   throw new PaymentError('OLIST_ESTOQUE_RESPOSTA_INVALIDA',502);
  return payload;
 }
-async function readFullStock(token){
+export async function readFullStock(token){
  const items=[];
  let finished=false;
  let sourceTotal=null;
