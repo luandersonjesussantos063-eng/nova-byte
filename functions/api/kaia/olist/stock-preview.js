@@ -114,15 +114,27 @@ export async function onRequestPost({request,env}){
     olistPhysical:physical,olistReserved:held,reservation,
     suggested,delta:suggested-local,state:suggested===local?'equal':'different'};
   });
+  // Persist readiness metadata, never stock, after a complete verified pull.
+  const complete=missing===0&&ambiguous===0&&invalid===0&&matched===stock.length;
+  let verifiedForAutomatic=false;
+  if(complete){
+   try{
+    await db(env,'rpc/kaia_olist_record_valid_preview','POST',{
+     p_site_rows:stock.length,p_source_rows:total
+    });
+    verifiedForAutomatic=true;
+   }catch{/* Activation remains blocked if the validation cannot be recorded. */}
+  }
   return noStoreJson({
    mode:'preview_only',autoSync:false,pricesUntouched:true,
+   verifiedForAutomatic,
    source:'olist_erp_v3',stockBasis:'disponivel',
    checkedAt:new Date().toISOString(),
    olistInventoryRows:total,siteSkuCount:stock.length,
    summary:{matched,different:changed,missing,duplicate:ambiguous,
     invalid,reservedSiteUnits:Array.from(pending.values()).reduce((a,b)=>a+b,0)},
    safeForAutomaticApplication:false,
-   notice:'A consulta não altera estoque. Pedidos locais aprovados ainda não são exportados para a Olist; a sincronização automática requer validação dos fluxos de pedidos e reservas.',
+   notice:'A comparação não altera estoque. A ativação depende de confirmar que o TikTok Shop já importa pedidos e aplica o saldo na Olist. O sincronismo da Kaia será somente de reduções.',
    rows
   });
  }catch(e){return errorJson(e);}
