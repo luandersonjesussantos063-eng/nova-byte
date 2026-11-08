@@ -230,3 +230,21 @@ body{background:var(--admin-bg);color:var(--admin-ink)}
 .kaia-preorder-review textarea{min-height:80px;resize:vertical}
 .kaia-preorder-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
 @media(max-width:600px){.kaia-preorder-record{padding:15px}.kaia-preorder-actions button{flex:1;min-width:165px}}
+
+
+/* Personal customer offers: nested editing form, responsive and explicit scope. */
+.customer-coupon-send{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:end;gap:12px;margin-top:18px}
+.customer-coupon-send>label{min-width:0;width:100%}
+.customer-coupon-send>button{min-height:45px}
+.customer-coupon-send>p{grid-column:1/-1;line-height:1.55;font-size:12px}
+.customer-personal-coupon{grid-column:1/-1;min-width:0;margin-top:13px;padding:20px;border:1px solid #e7d6df;border-radius:12px;background:#fcf8fa}
+.customer-personal-coupon h4{margin:0 0 6px;color:#5d2e48;font:600 17px/1.35 'DM Sans',Arial,sans-serif}
+.customer-personal-coupon>p{font-size:12px;line-height:1.65;margin-bottom:15px}
+.customer-personal-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px;margin:16px 0}
+.customer-personal-fields label{display:flex;flex-direction:column;gap:7px;font-size:12px;font-weight:650;color:#604056;min-width:0}
+.customer-personal-fields :is(input,select){width:100%;min-width:0;min-height:43px;padding:10px 12px;border:1px solid #d7c3ce;border-radius:10px;background:#fff;color:#48283a;font:500 14px 'DM Sans',Arial,sans-serif}
+.customer-personal-fields :is(input,select):focus-visible{outline:2px solid #925b79;outline-offset:2px}
+.customer-personal-coupon>.primary-button{min-height:46px}
+.customer-personal-coupon>.primary-button:disabled{opacity:.55;cursor:not-allowed}
+@media(max-width:680px){.customer-coupon-send{grid-template-columns:1fr}.customer-personal-coupon{padding:14px}.customer-personal-fields{gap:10px}.customer-personal-coupon>.primary-button{width:100%}}
+@media(max-width:390px){.customer-personal-fields{grid-template-columns:1fr}}
