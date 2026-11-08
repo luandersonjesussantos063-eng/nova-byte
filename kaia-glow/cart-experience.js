@@ -115,7 +115,10 @@ function afterBagRender({cart,eligible,onAdd}){
   const action=el('div','kg-dock-action');
   const enter=el('button','kg-checkout-identify-button','Ir para pagamento  →');
   enter.type='button';enter.id='kgCheckoutIdentify';
-  enter.onclick=()=>window.kaiaCheckoutGate?.promptLogin();
+  enter.onclick=()=>{
+   if(window.kaiaCheckoutGate?.promptLogin)window.kaiaCheckoutGate.promptLogin();
+   else location.assign('/conta.html?voltar=sacola');
+  };
   action.append(enter);row.append(total,action);dock.append(row);
   dock.append(el('small','kg-dock-note','Primeiro confirme sua conta. Nenhum pagamento será iniciado agora.'));
   return;
