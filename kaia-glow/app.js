@@ -68,8 +68,10 @@ async function fetchEligible(){
  const version=++commerceFetchVersion;
  commerceFetchState='loading';
  if(commerceAllowed===null){render();syncDetailPurchase();}
+ const controller=new AbortController();
+ const timeout=setTimeout(()=>controller.abort(),8000);
  try{
-  const r=await fetch('/api/kaia/comercial/catalogo',{cache:'no-store'});
+  const r=await fetch('/api/kaia/comercial/catalogo',{cache:'no-store',signal:controller.signal});
   if(!r.ok)throw Error('Checkout ainda não liberado');
   const data=await r.json();
   if(version!==commerceFetchVersion)return;
@@ -79,7 +81,7 @@ async function fetchEligible(){
  }catch{
   if(version!==commerceFetchVersion)return;
   commerceAllowed=null;commerceFetchState='error';checkoutEligibility();render();syncDetailPurchase();
- }
+ }finally{clearTimeout(timeout);}
 }
 function postalDigits(v){return String(v||'').replace(/\D/g,'');}
 function checkoutNotice(message,isError=false){
