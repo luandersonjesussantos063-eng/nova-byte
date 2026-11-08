@@ -52,7 +52,11 @@ function render(){
   }else content.append(el('p','muted','O cliente não autorizou associar suas visualizações à conta.'));
   card.append(content);
   const offer=el('section','customer-coupon-send');
-  const available=coupons.filter(x=>!x.customer_user_id||x.customer_user_id===c.userId);
+  const dateParts=new Intl.DateTimeFormat('en-CA',{timeZone:'America/Cuiaba',
+   year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());
+  const today=['year','month','day'].map(k=>dateParts.find(p=>p.type===k).value).join('-');
+  const available=coupons.filter(x=>(!x.customer_user_id||x.customer_user_id===c.userId)&&
+   (!x.starts_at||x.starts_at<=today)&&(!x.ends_at||x.ends_at>=today));
   const label=el('label','','Enviar cupom ativo para esta cliente');
   const select=el('select','');
   const placeholder=el('option','','Selecione um cupom');placeholder.value='';select.append(placeholder);
@@ -145,7 +149,7 @@ export async function loadKaiaCustomers(){
  const term=$('customerSearch').value.trim();
  const [result,active]=await Promise.all([
   client.rpc('kaia_admin_customer_insights',{p_search:term}),
-  client.from('kaia_admin_coupons').select('code,active,discount_type,discount_value,min_order_cents,ends_at,customer_user_id')
+  client.from('kaia_admin_coupons').select('code,active,discount_type,discount_value,min_order_cents,starts_at,ends_at,customer_user_id')
    .eq('active',true)
  ]);
  if(result.error){customerNote('Não foi possível carregar os clientes. Confira as permissões.',true);return;}
