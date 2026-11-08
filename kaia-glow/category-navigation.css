@@ -113,76 +113,83 @@
  .kaia-category-nav .kaia-category-rail>button{transition:none}
 }
 
-
-/* Kaia Glow — faixa premium arredondada (08/11/2026) */
+/* Kaia Glow — navegação editorial discreta (08/11/2026) */
 .campaign-stage .retail-header nav.kaia-category-nav.wrap{
  width:min(1320px,calc(100% - 40px))!important;
- min-height:54px;height:54px;
- border:1px solid #ead8d9;border-radius:999px;
- background:linear-gradient(100deg,#fff9f5 0%,#faeded 58%,#fff7f4 100%);
- color:#3c2634;box-shadow:0 9px 25px #2b122322,0 1px 3px #4b213015;
+ height:45px;min-height:45px;
+ border:0;border-top:1px solid #f2e9e91c;border-bottom:1px solid #f2e9e92b;
+ border-radius:0;
+ background:transparent;
+ color:#f0e3e7;
+ box-shadow:none;
+ font:500 10px/1.2 'DM Sans',Arial,sans-serif;
+ letter-spacing:.065em;
 }
 .kaia-category-nav .kaia-category-rail{
- align-items:center;overflow-x:auto;overflow-y:hidden;border-radius:999px;
+ align-items:center;gap:0;border-radius:0;
+ overflow-x:auto;overflow-y:hidden;
  scrollbar-width:none;
 }
 .kaia-category-nav .kaia-category-rail::-webkit-scrollbar{display:none}
 .campaign-stage .retail-header nav.kaia-category-nav .kaia-category-rail>button{
- align-self:center;height:calc(100% - 8px);min-height:42px;
- border:0;border-radius:999px;
- padding:0 clamp(9px,.8vw,16px);
- background:transparent;color:#382b32;
- font-size:11px;font-weight:650;letter-spacing:.045em;
- transition:color .18s ease,background .18s ease,box-shadow .18s ease;
+ position:relative;align-self:center;
+ height:42px;min-height:42px;min-width:0;
+ border:0!important;border-radius:0!important;
+ flex:1 0 auto;
+ padding:0 clamp(8px,.9vw,16px);
+ color:#e9dfe4;
+ background:transparent!important;
+ box-shadow:none!important;
+ font-size:10px;font-weight:550;
+ letter-spacing:.055em;
+ opacity:.86;
+ transition:opacity .18s ease,color .18s ease;
 }
-.campaign-stage .retail-header nav.kaia-category-nav .kaia-category-rail>button+button::before{
- content:"";position:absolute;left:0;top:25%;height:50%;width:1px;
- background:#d5aeb5;pointer-events:none;
-}
-.campaign-stage .retail-header nav.kaia-category-nav .kaia-category-rail>button:is(:hover,:focus-visible){
- background:#f1dce3;color:#65344e;
+.campaign-stage .retail-header nav.kaia-category-nav .kaia-category-rail>button+button::before{content:none}
+.campaign-stage .retail-header nav.kaia-category-nav .kaia-category-rail>button:hover,
+.campaign-stage .retail-header nav.kaia-category-nav .kaia-category-rail>button:focus-visible{
+ color:#fff;opacity:1;background:transparent!important;
 }
 .campaign-stage .retail-header nav.kaia-category-nav .kaia-category-rail>button.active{
- background:#f3dfe7;color:#63354d;border-bottom:0;
+ color:#fff;opacity:1;background:transparent!important;border:0!important;
+}
+.campaign-stage .retail-header nav.kaia-category-nav .kaia-category-rail>button.active::after{
+ content:"";position:absolute;bottom:4px;left:28%;right:28%;
+ height:1px;background:#d8ae9c;
 }
 .campaign-stage .retail-header nav.kaia-category-nav .kaia-category-rail>.kaia-nav-selection,
-.campaign-stage .retail-header nav.kaia-category-nav .kaia-category-rail>.kaia-nav-promotions{
- background:linear-gradient(180deg,#f9e6ec,#f3dce3);color:#61354c;font-weight:750;margin:0;
-}
-.campaign-stage .retail-header nav.kaia-category-nav .kaia-category-rail>.kaia-nav-featured-brand{
- flex:1.1 0 auto;
- background:linear-gradient(150deg,#6c2e4e,#3c192e);color:#fff;
- border:1px solid #cba37b;border-radius:999px;
- box-shadow:0 3px 11px #4b18374d;font-weight:800;
-}
-.campaign-stage .retail-header nav.kaia-category-nav .kaia-category-rail>.kaia-nav-featured-brand:is(:hover,.active){
- background:linear-gradient(150deg,#793a58,#4a2039);color:#fff;
-}
-.campaign-stage .retail-header nav.kaia-category-nav .kaia-category-rail>.kaia-nav-featured-soft{
- background:transparent;color:#3d3035;
-}
-.campaign-stage .retail-header nav.kaia-category-nav .kaia-category-rail>.kaia-nav-featured-soft:is(:hover,.active){
- background:#f3dfe7;color:#5d2a44;
-}
-.campaign-stage .retail-header nav.kaia-category-nav .kaia-category-rail>.kaia-nav-brands-trigger{
- background:transparent;color:#382b32;font-weight:750;
-}
-.campaign-stage .retail-header nav.kaia-category-nav .kaia-category-rail>.kaia-nav-brands-trigger:is(:hover,[aria-expanded=true],.has-selection){
- background:#f3dfe7;color:#5d2a44;
-}
+.campaign-stage .retail-header nav.kaia-category-nav .kaia-category-rail>.kaia-nav-promotions,
+.campaign-stage .retail-header nav.kaia-category-nav .kaia-category-rail>.kaia-nav-featured-brand,
+.campaign-stage .retail-header nav.kaia-category-nav .kaia-category-rail>.kaia-nav-featured-soft,
+.campaign-stage .retail-header nav.kaia-category-nav .kaia-category-rail>.kaia-nav-brands-trigger,
 .campaign-stage .retail-header nav.kaia-category-nav .kaia-category-rail>.kaia-nav-all{
- color:#70435b;font-size:10px;
+ flex:1 0 auto;
+ color:#e9dfe4;background:transparent!important;
+ font-size:10px;font-weight:550;letter-spacing:.055em;
+ border:0!important;box-shadow:none!important;
+}
+.campaign-stage .retail-header nav.kaia-category-nav .kaia-category-rail>:is(.kaia-nav-selection,.kaia-nav-promotions,.kaia-nav-featured-brand,.kaia-nav-featured-soft,.kaia-nav-brands-trigger,.kaia-nav-all):is(:hover,.active,[aria-expanded=true],.has-selection){
+ background:transparent!important;color:#fff;opacity:1;
+}
+.kaia-category-nav .kaia-nav-brand-popup{
+ background:#fffaf9;color:#422d37;
+ border:1px solid #eddde4;border-radius:12px;
+ box-shadow:0 16px 35px #210b1733;
+}
+@media(max-width:1150px){
+ .campaign-stage .retail-header nav.kaia-category-nav .kaia-category-rail>button{
+  flex:0 0 auto;padding:0 15px;font-size:10px;
+ }
 }
 @media(max-width:650px){
  .campaign-stage .retail-header nav.kaia-category-nav.wrap{
-  width:calc(100% - 24px)!important;min-height:48px;height:48px;
-  border:1px solid #ead8d9;border-radius:999px;
-  box-shadow:0 5px 16px #2b12231c;
+  width:100%!important;height:43px;min-height:43px;
+  padding:0 6px!important;border-inline:0;border-radius:0;box-shadow:none;
  }
  .campaign-stage .retail-header nav.kaia-category-nav .kaia-category-rail>button{
-  flex:0 0 auto;min-height:38px;height:calc(100% - 6px);
-  padding:0 15px;font-size:10px;
+  flex:0 0 auto;height:40px;min-height:40px;padding:0 13px;font-size:10px;
  }
+ .campaign-stage .retail-header nav.kaia-category-nav .kaia-category-rail>button.active::after{bottom:3px}
 }
 @media(prefers-reduced-motion:reduce){
  .campaign-stage .retail-header nav.kaia-category-nav .kaia-category-rail>button{transition:none}
