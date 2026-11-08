@@ -33,7 +33,7 @@ async function readOlistStockPage(token,offset){
   throw new PaymentError('OLIST_ESTOQUE_RESPOSTA_INVALIDA',502);
  return payload;
 }
-async function readFullStock(token){
+export async function readFullStock(token){
  const items=[];
  let finished=false;
  let sourceTotal=null;
@@ -68,10 +68,10 @@ export async function onRequestPost({request,env}){
   const token=await validAccessToken(env);
   // No PII: read SKU and pending item quantities only.
   const [stock,openPayments]=await Promise.all([
-   db(env,'kaia_sale_inventory?select=sku,available_units&order=sku&limit=1000'),
+   db(env,'rpc/kaia_olist_auto_stock_skus','POST',{}),
    db(env,'kaia_commercial_payments?select=status,items&status=in.(created,pending,review_required)&limit=1000')
   ]);
-  if(!Array.isArray(stock)||stock.length!==51)
+  if(!Array.isArray(stock)||stock.length<30||stock.length>=1000)
    throw new PaymentError('CATALOGO_LOCAL_INESPERADO',409);
   if(!Array.isArray(openPayments)||openPayments.length>=1000)
    throw new PaymentError('RESERVAS_NAO_CONFERIDAS',409);
@@ -114,15 +114,27 @@ export async function onRequestPost({request,env}){
     olistPhysical:physical,olistReserved:held,reservation,
     suggested,delta:suggested-local,state:suggested===local?'equal':'different'};
   });
+  // Persist readiness metadata, never stock, after a complete verified pull.
+  const complete=missing===0&&ambiguous===0&&invalid===0&&matched===stock.length;
+  let verifiedForAutomatic=false;
+  if(complete){
+   try{
+    await db(env,'rpc/kaia_olist_record_valid_preview','POST',{
+     p_site_rows:stock.length,p_source_rows:total
+    });
+    verifiedForAutomatic=true;
+   }catch{/* Activation remains blocked if the validation cannot be recorded. */}
+  }
   return noStoreJson({
    mode:'preview_only',autoSync:false,pricesUntouched:true,
+   verifiedForAutomatic,
    source:'olist_erp_v3',stockBasis:'disponivel',
    checkedAt:new Date().toISOString(),
    olistInventoryRows:total,siteSkuCount:stock.length,
    summary:{matched,different:changed,missing,duplicate:ambiguous,
     invalid,reservedSiteUnits:Array.from(pending.values()).reduce((a,b)=>a+b,0)},
    safeForAutomaticApplication:false,
-   notice:'A consulta não altera estoque. Pedidos locais aprovados ainda não são exportados para a Olist; a sincronização automática requer validação dos fluxos de pedidos e reservas.',
+   notice:'A comparação não altera estoque. A ativação depende de confirmar que o TikTok Shop já importa pedidos e aplica o saldo na Olist. O sincronismo da Kaia será somente de reduções.',
    rows
   });
  }catch(e){return errorJson(e);}

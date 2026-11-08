@@ -1,6 +1,6 @@
 // Kaia Glow multichannel command center.
 // No marketplace tokens in browser. All writes call admin-only RPCs and never issue external sync.
-let sb=null,afterStockChange=null,stockRows=[],links=[],overview=null,initialized=false,readiness=null;
+let sb=null,afterStockChange=null,stockRows=[],links=[],overview=null,initialized=false,readiness=null,olistStatus=null,olistOwner=false;
 const $=s=>document.querySelector(s);
 const labelChannel=channel=>channel==='shopee'?'Shopee':'TikTok Shop';
 const labelStatus=s=>({
@@ -255,23 +255,90 @@ async function adminOlistRequest(endpoint,method='GET'){
  if(!r.ok)throw Error(body.code||'Não foi possível acessar a Olist.');
  return body;
 }
+function olistAutoCanEnable(){
+ const verifiedAt=Date.parse(olistStatus?.lastVerifiedAt||'');
+ const valid=Number.isFinite(verifiedAt)&&Date.now()-verifiedAt<30*60*1000&&
+   Number(olistStatus?.verifiedSkus)>=30;
+ return valid&&$('#mpTiktokOrdersConfirmed').checked&&
+  $('#mpOlistStockRuleConfirmed').checked;
+}
+function syncOlistAutoControls(){
+ const panel=$('#mpOlistAutoPanel'),button=$('#mpOlistAutoToggle'),
+  status=$('#mpOlistAutoStatus'),preconditions=$('#mpOlistAutoPreconditions');
+ if(!panel||!button)return;
+ panel.hidden=!olistOwner;
+ if(!olistOwner)return;
+ const enabled=olistStatus?.autoSync===true;
+ const allowed=olistStatus?.authorized===true;
+ button.textContent=enabled?'Pausar sincronização':'Ativar sincronização';
+ button.disabled=!allowed||(!enabled&&!olistAutoCanEnable());
+ preconditions.hidden=enabled;
+ if(enabled){
+  status.textContent='Sincronização ativa · a cada '+(olistStatus.everyMinutes||5)+
+   ' minutos · somente reduções. Último sucesso: '+date(olistStatus.lastSuccessAt)+
+   (olistStatus.lastError?' · Alerta: '+olistStatus.lastError:'')+'.';
+ }else if(!allowed){
+  status.textContent='Aguardando autorização da Olist. Nenhuma baixa automática será aplicada.';
+ }else{
+  const verifiedAt=Date.parse(olistStatus?.lastVerifiedAt||'');
+  const canEnable=Number.isFinite(verifiedAt)&&Date.now()-verifiedAt<30*60*1000&&
+   Number(olistStatus.verifiedSkus)>=30;
+  status.textContent=canEnable?
+   'Prévia de '+olistStatus.verifiedSkus+' produtos validada em '+date(olistStatus.lastVerifiedAt)+
+    '. Confirme os dois itens para ativar a consulta automática.':
+   'Sincronização pausada. Confira todos os produtos ativos na Olist; a prévia precisa ser validada nos últimos 30 minutos.';
+ }
+}
+async function toggleOlistAuto(){
+ if(!sb||!olistOwner)return;
+ const button=$('#mpOlistAutoToggle'),enabled=olistStatus?.autoSync===true;
+ if(!enabled&&!olistAutoCanEnable())return;
+ const prompt=enabled?
+  'Pausar a atualização automática de estoque da Olist? As vendas continuarão nas plataformas.':
+  'Ativar consulta à Olist a cada 5 minutos? Somente reduções confirmadas no saldo da Olist serão aplicadas. Nenhum pedido será abatido duas vezes e estoques não serão aumentados automaticamente.';
+ if(!confirm(prompt))return;
+ button.disabled=true;
+ const {data,error}=await sb.rpc('kaia_owner_set_olist_auto_stock',{
+  p_enabled:!enabled,
+  p_tiktok_imports_confirmed:!enabled&&$('#mpTiktokOrdersConfirmed').checked,
+  p_olist_stock_rule_confirmed:!enabled&&$('#mpOlistStockRuleConfirmed').checked
+ });
+ if(error){
+  $('#mpOlistAutoStatus').textContent='Não foi possível alterar: '+error.message;
+  syncOlistAutoControls();return;
+ }
+ $('#mpOlistAutoStatus').textContent=data.enabled?'Ativada. Próxima verificação agendada.':'Sincronização pausada.';
+ await loadOlistConnection();
+}
 async function loadOlistConnection(){
  const node=$('#mpOlistStatus'),button=$('#mpOlistAuthorize'),
   test=$('#mpOlistTest'),compare=$('#mpOlistCompare');
  if(!node||!button||!test||!compare)return;
  node.textContent='Conferindo o acesso protegido à Olist…';
  try{
-  const info=await adminOlistRequest('/api/kaia/olist/status');
+  const [info,owner]=await Promise.all([
+   adminOlistRequest('/api/kaia/olist/status'),
+   sb.rpc('kaia_is_store_owner')
+  ]);
+  olistStatus=info;olistOwner=owner.data===true&&!owner.error;
   button.disabled=!info.configured;
-  if(!info.configured){node.textContent='As credenciais da Olist ainda não estão completas no Cloudflare.';test.hidden=true;compare.hidden=true;return;}
+  if(!info.configured){
+   node.textContent='As credenciais da Olist ainda não estão completas na Cloudflare.';
+   test.hidden=true;compare.hidden=true;syncOlistAutoControls();return;
+  }
   if(info.authorized){
-   node.textContent='Olist autorizada em '+date(info.authorizedAt)+'. A sincronização automática ainda está desligada.';
+   node.textContent='Olist autorizada em '+date(info.authorizedAt)+
+    '. Atualização de estoque na Kaia: '+(info.autoSync?'automática, somente reduções.':'pausada.');
    button.textContent='Reautorizar Olist';test.hidden=false;compare.hidden=false;
   }else{
    node.textContent='Credenciais cadastradas. Falta a autorização da conta Olist para consultar os produtos.';
    button.textContent='Conectar Olist';test.hidden=true;compare.hidden=true;
   }
- }catch(e){node.textContent='Não foi possível verificar a Olist: '+e.message;test.hidden=true;compare.hidden=true;}
+  syncOlistAutoControls();
+ }catch(e){
+  olistStatus=null;node.textContent='Não foi possível verificar a Olist: '+e.message;
+  test.hidden=true;compare.hidden=true;syncOlistAutoControls();
+ }
 }
 async function startOlistAuthorization(){
  const button=$('#mpOlistAuthorize'),node=$('#mpOlistStatus');
@@ -301,13 +368,13 @@ async function compareOlistStock(){
  const pane=$('#mpOlistPreview'),summary=$('#mpOlistPreviewSummary');
  const body=$('#mpOlistPreviewBody'),note=$('#mpOlistPreviewNote');
  button.disabled=true;pane.hidden=true;
- status.textContent='Conferindo os 51 SKUs e as reservas locais com a Olist (somente leitura)…';
+ status.textContent='Conferindo os produtos ativos e reservas locais com a Olist (somente leitura)…';
  try{
   const data=await adminOlistRequest('/api/kaia/olist/stock-preview','POST');
   if(data.mode!=='preview_only'||!Array.isArray(data.rows))
    throw Error('Resposta de conferência incompleta.');
   const s=data.summary;
-  if(!s||typeof s.different!=='number'||data.siteSkuCount!==51)
+  if(!s||typeof s.different!=='number'||data.siteSkuCount<30)
    throw Error('A quantidade de produtos não corresponde ao catálogo esperado.');
   summary.textContent=data.siteSkuCount+' SKUs no site · '+s.matched+
    ' encontrados na Olist · '+s.different+' saldos divergentes · '+
@@ -329,7 +396,10 @@ async function compareOlistStock(){
   note.textContent='Prévia consultada em '+date(data.checkedAt)+
    '. Nenhuma alteração foi realizada. A quantidade proposta considera o disponível na Olist menos reservas locais ainda não enviadas para a Olist. O próximo passo é validar como registrar pedidos aprovados antes de ativar alterações automáticas.';
   pane.hidden=false;
-  status.textContent='Conferência de estoque concluída. Olist segue como referência; nenhuma quantidade, preço ou pedido foi modificado.';
+  status.textContent=data.verifiedForAutomatic?
+   'Conferência completa validada. Siga as confirmações de integração TikTok → Olist para ativar o sincronismo.':
+   'Conferência concluída com pendências. Resolva produtos ausentes, duplicados ou inválidos antes da ativação.';
+  await loadOlistConnection();
  }catch(e){status.textContent='A conferência não foi concluída: '+e.message;}
  finally{button.disabled=false;}
 }
@@ -342,6 +412,9 @@ export function initKaiaMarketplaces(client,options={}){
  $('#mpOlistAuthorize').onclick=startOlistAuthorization;
  $('#mpOlistTest').onclick=testOlistProducts;
  $('#mpOlistCompare').onclick=compareOlistStock;
+ $('#mpOlistAutoToggle').onclick=toggleOlistAuto;
+ $('#mpTiktokOrdersConfirmed').onchange=syncOlistAutoControls;
+ $('#mpOlistStockRuleConfirmed').onchange=syncOlistAutoControls;
  $('#mpStockSku').onchange=renderCurrent;
  $('#mpStockForm').onsubmit=saveStock;
  $('#mpMappingForm').onsubmit=saveMapping;
