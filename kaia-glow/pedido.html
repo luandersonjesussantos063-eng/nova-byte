@@ -71,6 +71,7 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:12px}
    <div><span>Data do pedido</span><strong id="orderDate">—</strong></div>
    <div><span>Forma de pagamento</span><strong id="paymentMethod">—</strong></div>
    <div><span>Entrega</span><strong id="delivery">—</strong></div>
+   <div id="giftOrderDetail" hidden><span>Embalagem para presente</span><strong id="giftOrderValue">—</strong></div>
    <div><span>Endereço cadastrado na compra</span><strong id="address">—</strong></div>
   </div>
  </section>
@@ -166,6 +167,8 @@ async function refresh(){
   setText('orderId','Número do pedido: '+code.toUpperCase());
   setText('orderDate',date(o.createdAt));
   setText('paymentMethod',free?'Cortesia com cupom · sem pagamento':'Mercado Pago');
+  $('giftOrderDetail').hidden=!['box','bag'].includes(o.giftPackaging);
+  setText('giftOrderValue',o.giftPackaging==='box'?'Caixa (sujeita à confirmação)':o.giftPackaging==='bag'?'Sacola (sujeita à confirmação)':'Sem embalagem extra');
   setText('subtotal',brl(o.listProductsCents??o.productsCents));
   setText('shipping',free?'Grátis ('+brl(o.listShippingCents||0)+')':brl(o.shippingCents));
   const discount=(Number(o.listProductsCents??o.productsCents)-Number(o.productsCents));

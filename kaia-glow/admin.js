@@ -515,6 +515,7 @@ function renderStoreOrders(){
   const list=orderEl('ul','kg-order-items');for(const item of o.items)list.append(orderEl('li','',item.quantity+' × '+item.name));
   card.append(list,orderEl('strong','kg-order-total',money(o.totalCents/100)));
   if(o.coupon)card.append(orderEl('p','muted','Cupom: '+o.coupon));
+  if(['box','bag'].includes(o.giftPackaging))card.append(orderEl('p','kg-order-gift','🎁 Embalagem solicitada: '+(o.giftPackaging==='box'?'caixa':'sacola')+' · confirmar disponibilidade antes do envio.'));
   card.append(orderEl('p','muted',o.source==='payment'?'Registro de pagamento da loja · '+(o.totalCents===0?'Pedido gratuito':'Valor pago registrado: '+money(o.paidCents/100)):'Pedido do histórico da loja'));
   root.append(card);
  }
