@@ -126,16 +126,27 @@ export async function generateKaiaSeoPages(source,output){
   description:'Conheça a Kaia Glow, loja online de skincare e cosméticos com endereço cadastral na Vila Monumento, em São Paulo. Explore marcas, produtos e frete.',
   pathname:localPath,body:localBody,data:localData}));
  urls.push(localPath);
- // Append a visible HTML link hub to the homepage (without replacing the storefront).
+ // Keep a short, useful collection guide on the homepage instead of dumping
+ // the entire product index as bare links. Individual product landing pages and
+ // all catalog URLs remain discoverable through category pages and sitemap.xml.
  const homePath=path.join(output,'index.html');let home=await readFile(homePath,'utf8');
+ const featuredCategories=[
+  {path:'/categoria/skincare/',title:'Rosto e skincare',description:'Séruns, máscaras e cuidados faciais.'},
+  {path:'/categoria/cabelos/',title:'Cabelos',description:'Tratamentos e cuidados capilares.'},
+  {path:'/categoria/corpo-e-spa/',title:'Corpo e spa',description:'Autocuidado para diferentes momentos.'},
+  {path:'/skincare-coreano/',title:'Skincare coreano',description:'Descubra marcas e rotinas K-beauty.'}
+ ];
+ const categoryCards=featuredCategories.map(g=>
+  '<a class="kaia-seo-category" href="'+html(g.path)+'"><span class="kaia-seo-category-label">EXPLORE</span>'+
+  '<strong>'+html(g.title)+'</strong><span>'+html(g.description)+'</span>'+
+  '<span class="kaia-seo-category-arrow" aria-hidden="true">→</span></a>'
+ ).join('');
  const hub='<section id="explore-seo" class="kaia-seo-hub" aria-labelledby="kaia-seo-title"><div class="wrap">'
-  +'<p class="kaia-seo-eyebrow">ENCONTRE SEU PRÓXIMO CUIDADO</p>'
-  +'<h2 id="kaia-seo-title">Explore cosméticos, skincare e produtos por marca</h2>'
-  +'<p>Conheça séruns, máscaras, produtos para cabelos e uma seleção de skincare coreano. Veja as informações de cada item e explore a coleção da Kaia Glow online.</p>'
-  +'<div class="kaia-seo-links">'+linkToCategory+'<a class="pill" href="'+localPath+'">Cosméticos em São Paulo</a></div>'
-  +'<h3>Catálogo de produtos</h3><div class="kaia-seo-product-links">'
-  +products.map(p=>'<a href="'+html(productPath(p))+'">'+html(p.name)+'</a>').join('')
-  +'</div></div></section>';
+  +'<p class="kaia-seo-eyebrow">CONTINUE EXPLORANDO</p>'
+  +'<h2 id="kaia-seo-title">Encontre seu próximo cuidado</h2>'
+  +'<p>Descubra nossas seleções por categoria e escolha os produtos que combinam com sua rotina.</p>'
+  +'<nav class="kaia-seo-category-grid" aria-label="Categorias da Kaia Glow">'+categoryCards+'</nav>'
+  +'</div></section>';
  if(!home.includes('id="explore-seo"')){
   const marker='<footer';const idx=home.indexOf(marker);
   if(idx<0)throw Error('Rodapé da vitrine não encontrado; recusa inserir hubs SEO');
