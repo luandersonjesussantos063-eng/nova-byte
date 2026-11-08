@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow"><meta name="referrer" content="strict-origin-when-cross-origin">
-<title>Painel administrativo · Kaia Glow</title><link rel="stylesheet" href="admin.css?v=6"><link rel="stylesheet" href="admin-analytics.css?v=1"><link rel="stylesheet" href="admin-marketplaces.css?v=4"><link rel="stylesheet" href="admin-payments.css?v=1"></head>
+<title>Painel administrativo · Kaia Glow</title><link rel="stylesheet" href="admin.css?v=7"><link rel="stylesheet" href="admin-analytics.css?v=1"><link rel="stylesheet" href="admin-marketplaces.css?v=4"><link rel="stylesheet" href="admin-payments.css?v=1"></head>
 <body>
 <header class="admin-top"><div class="admin-brand"><span class="brand-mark" aria-hidden="true">K</span><div><strong>KAIA GLOW</strong><small>PAINEL DE GESTÃO</small></div></div><div class="admin-top-actions"><button type="button" id="adminNavToggle" class="admin-menu-toggle" aria-label="Abrir menu de gestão" aria-controls="adminSidebar" aria-expanded="false" hidden><span aria-hidden="true">☰</span> Menu</button><a href="/" target="_blank" rel="noopener noreferrer">Ver loja <span aria-hidden="true">↗</span></a><button type="button" id="logoutButton" hidden>Sair</button></div></header>
 <main class="admin-shell">
@@ -114,7 +114,7 @@
 <label class="check-label"><input type="checkbox" id="confirmPackageRelease"> Confirmei pessoalmente o estoque, o preço de venda e o peso e as medidas reais da embalagem pronta para envio. Autorizo que este produto seja comprado com pagamento real.</label>
 <div class="editor-actions"><button id="releaseOnlineButton" type="button" class="primary-button">Liberar compra online</button><button id="pauseOnlineButton" type="button" class="ghost-button">Pausar compra online</button></div>
 <p id="commerceActionStatus" role="status" aria-live="polite"></p></fieldset></form></div></section>
-<section id="couponsTab" class="admin-section" hidden><div class="section-header"><div><h2>Cupons de desconto</h2><p>Cupons percentuais de 100% concedem desconto integral nos produtos e frete grátis. São aceitos uma vez por conta para evitar uso repetido.</p></div></div>
+<section id="couponsTab" class="admin-section" hidden><div class="section-header"><div><h2>Cupons de desconto</h2><p>Crie campanhas públicas de percentual ou valor fixo. Cupons de 100% incluem frete grátis. Para criar um cupom que só uma pessoa possa usar, abra a ficha dela na aba Clientes e ofertas.</p></div></div>
 <div class="coupon-layout"><form id="couponForm" class="editor"><span class="eyebrow">CAMPANHA</span><h3>Criar ou editar cupom</h3>
 <div class="form-grid"><label class="full">Código do cupom<input id="couponCode" type="text" maxlength="24" pattern="[A-Za-z0-9_-]{3,24}" required placeholder="EX: BEMVINDA10" autocapitalize="characters"></label>
 <label>Tipo<select id="couponType"><option value="percent">Porcentagem (%)</option><option value="fixed">Valor fixo (R$)</option></select></label>
@@ -362,5 +362,5 @@
 <footer class="admin-footer">Kaia Glow · Painel restrito de gestão. O acesso é controlado pelo Supabase Auth.</footer>
 <script src="catalog.js?v=1"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js" integrity="sha384-TcHRA3zBbn+Lexh5n+Oil4guNPOS3rjNDpGRAN46u/s/mB2IZ50ceC6TYDU2yvgK" crossorigin="anonymous"></script>
-<script type="module" src="admin.js?v=13"></script>
+<script type="module" src="admin.js?v=14"></script>
 </body></html>
