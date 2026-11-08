@@ -215,44 +215,71 @@ button:focus-visible,a:focus-visible,input:focus-visible,summary:focus-visible{o
  .retail-benefits{padding-block:14px}
 }
 
-
-/* Instagram Reels — compact horizontal shopping rail, isolated from the checkout */
-.kg-reels-section{padding-block:36px 44px;scroll-margin-top:100px;border-top:1px solid var(--kg-border,#e9e1df)}
-.kg-reels-heading{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;margin-bottom:21px}
-.kg-reels-heading h2{margin:8px 0 9px;color:#4c293d;font:400 clamp(30px,3.4vw,43px)/1.13 'Libre Caslon Display',Georgia,serif;letter-spacing:-.025em}
-.kg-reels-heading p{margin:0;color:#7e6976;font:400 13px/1.6 'DM Sans',Arial,sans-serif}
-.kg-reels-profile-link{flex-shrink:0;font-size:12px;color:#613750;text-underline-offset:4px;padding-bottom:5px}
-.kg-reels-track{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(324px,calc((100% - 36px)/3));gap:18px;max-width:100%;
- overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x mandatory;scroll-padding-inline:1px;
- padding:2px 2px 15px;scrollbar-color:#c9abbc transparent;scrollbar-width:thin
+/* Instagram Reels — vertical posts sized to fit their 9:16 media without side gutters.
+   The native Instagram embed and attribution remain intact, including its controls. */
+.kg-reels-section{
+ padding-block:28px 40px;scroll-margin-top:94px;
+ border-top:1px solid var(--kg-border,#e9e1df)
 }
-.kg-reel-card{scroll-snap-align:start;min-width:0;overflow:hidden;border:1px solid #eadfe3;border-radius:14px;background:#fff;box-shadow:0 6px 20px #58374d0b}
-.kg-reel-embed{width:100%;height:615px;max-height:70dvh;min-height:480px;overflow:hidden;background:#faf7f8}
-.kg-reel-embed iframe{width:100%;height:100%;border:0;display:block;background:#fff}
-.kg-reel-foot{padding:15px 16px 17px}
-.kg-reel-tag{font:700 9px/1.5 'DM Sans',Arial,sans-serif;letter-spacing:.1em;color:#956d82;margin:0 0 10px}
-.kg-reel-product{min-height:87px;display:grid;gap:8px;align-content:start}
-.kg-reel-product>p{font:500 13px/1.45 'DM Sans',Arial,sans-serif;color:#4e3342;margin:0}
-.kg-reel-shopping-link,.kg-reel-buy{
- display:inline-flex;align-items:center;justify-content:center;min-height:44px;width:100%;
- background:#572940;color:#fff!important;border:0;border-radius:7px;padding:10px 12px;
- font:700 12px/1.4 'DM Sans',Arial,sans-serif;text-decoration:none;cursor:pointer;text-align:center
+.kg-reels-heading{
+ display:flex;align-items:flex-end;justify-content:space-between;
+ gap:16px;margin-bottom:17px
 }
-.kg-reel-shopping-link:hover,.kg-reel-buy:hover{background:#432236;color:#fff}
-.kg-reel-shopping-link:focus-visible,.kg-reel-buy:focus-visible{outline:2px solid #ab688c;outline-offset:3px}
-.kg-reel-original{font:500 11px/1.5 'DM Sans',Arial,sans-serif;color:#785365;text-decoration:underline;text-underline-offset:3px;display:inline-block;margin-top:13px}
-.kg-reel-product-match{display:flex;align-items:center;gap:10px;min-height:59px}
-.kg-reel-product-match img{width:53px;height:55px;flex:none;object-fit:contain;border-radius:8px;background:#faf3f5}
-.kg-reel-product-match h3{font:600 12px/1.35 'DM Sans',Arial,sans-serif;color:#452738;margin:0 0 4px}
-.kg-reel-product-price{font:700 12px/1.3 'DM Sans',Arial,sans-serif;color:#5d334a}
-.kg-reels-note{color:#897883;font-size:10px;line-height:1.6;margin:9px 0 0}
+.kg-reels-heading h2{
+ font:400 clamp(29px,3.2vw,40px)/1.13 'Libre Caslon Display',Georgia,serif;
+ color:#4c293d;margin:7px 0 7px;letter-spacing:-.025em
+}
+.kg-reels-heading p{
+ font:400 12px/1.6 'DM Sans',Arial,sans-serif;
+ margin:0;color:#7e6976
+}
+.kg-reels-profile-link{
+ color:#6a3c54;font:600 12px/1.4 'DM Sans',Arial,sans-serif;
+ flex-shrink:0;text-decoration:underline;text-underline-offset:4px
+}
+.kg-reels-track{
+ display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,310px);
+ gap:15px;max-width:100%;overflow-x:auto;
+ scroll-snap-type:x mandatory;scroll-padding-inline:1px;
+ overscroll-behavior-x:contain;padding:1px 1px 14px;
+ scrollbar-width:thin;scrollbar-color:#ceb4c1 transparent
+}
+.kg-reel-card{
+ scroll-snap-align:start;min-width:0;
+ border:1px solid #e8dbe0;background:#fff;
+ border-radius:13px;overflow:hidden;
+ box-shadow:0 4px 16px rgba(67,34,51,.045)
+}
+.kg-reel-embed{
+ position:relative;width:100%;
+ height:790px;max-width:100%;
+ background:#fff;overflow:hidden
+}
+.kg-reel-embed iframe{
+ width:100%;height:100%;border:0;display:block;
+ background:#fff
+}
+.kg-reel-original{
+ display:block;padding:12px 12px 13px;
+ text-align:center;border-top:1px solid #f0e5e9;
+ color:#684057;font:600 12px/1.5 'DM Sans',Arial,sans-serif;
+ text-decoration:underline;text-underline-offset:3px
+}
+.kg-reel-original:focus-visible,.kg-reels-profile-link:focus-visible{
+ outline:2px solid #9f6581;outline-offset:-3px
+}
 @media(max-width:740px){
- .kg-reels-section{padding-block:28px 34px}
- .kg-reels-heading{align-items:start;flex-direction:column;gap:10px;margin-bottom:17px}
- .kg-reels-heading h2{font-size:31px}
- .kg-reels-track{grid-auto-columns:minmax(324px,86%);gap:12px;padding-bottom:12px}
- .kg-reel-embed{height:570px;max-height:75dvh;min-height:465px}
- .kg-reel-foot{padding:13px 15px 16px}
+ .kg-reels-section{padding-block:24px 32px}
+ .kg-reels-heading{align-items:flex-start;flex-direction:column;gap:9px}
+ .kg-reels-heading h2{font-size:30px}
+ .kg-reels-track{
+  grid-auto-columns:minmax(0,min(310px,calc(100vw - 62px)));
+  gap:12px;padding-bottom:13px
+ }
+ .kg-reel-embed{height:790px}
 }
-@media(max-width:375px){.kg-reels-track{grid-auto-columns:minmax(290px,94%)}}
+@media(max-width:360px){
+ .kg-reels-track{grid-auto-columns:minmax(0,min(276px,calc(100vw - 52px)))}
+ .kg-reel-embed{height:730px}
+}
 @media(prefers-reduced-motion:reduce){.kg-reels-track{scroll-behavior:auto}}
