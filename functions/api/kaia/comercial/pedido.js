@@ -133,7 +133,7 @@ export async function onRequestGet({request,env}){
     createdAt:row.created_at,productsCents:row.products_cents,
     shippingCents:row.shipping_cents,totalCents:row.total_cents,
     freeOrder:row.status==='approved'&&row.total_cents===0&&!!row.coupon_code&&!row.provider_order_id,
-    couponCode:row.coupon_code||null,
+    couponCode:row.coupon_code||null,giftPackaging:row.gift_packaging||'none',
     listProductsCents:row.list_products_cents??row.products_cents,
     listShippingCents:row.list_shipping_cents??row.shipping_cents,
     discountCents:row.discount_cents||0,
