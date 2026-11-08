@@ -4,7 +4,7 @@
  'use strict';
  const $=id=>document.getElementById(id);
  const RESUME_KEY='kaia-checkout-resume-v1';
- let client=null,config=null,active=false,postal='',callback=null,seq=0;
+ let client=null,config=null,active=false,needsProfile=false,postal='',callback=null,seq=0;
  const mail=$('kgLoginEmail'),password=$('kgLoginPassword'),message=$('kgLoginStatus');
  const modal=$('kgCheckoutLoginDialog'),form=$('kgLoginForm');
  function status(text='',failure=false){
@@ -38,19 +38,19 @@
    const {data,error}=await sb.auth.getUser();
    if(error||!data?.user||data.user.is_anonymous||!data.user.email_confirmed_at){
     if(current!==seq)return false;
-    active=false;postal='';notify();return false;
+    active=false;needsProfile=false;postal='';notify();return false;
    }
    const {data:details,error:profileError}=await sb.from('kaia_customer_details')
     .select('postal_code').eq('user_id',data.user.id).maybeSingle();
    if(current!==seq)return false;
-   if(profileError){active=false;status('Não conseguimos confirmar seus dados de entrega. Tente novamente.',true);notify();return false;}
+   if(profileError){active=false;needsProfile=false;status('Não conseguimos confirmar seus dados de entrega. Tente novamente.',true);notify();return false;}
    if(!details){
-    active=false;postal='';
+    active=false;needsProfile=true;postal='';
     if(modal?.open){status('Falta concluir seus dados de entrega. Vamos abrir seu cadastro.');accountRedirect('details');}
     notify();return false;
    }
    postal=String(details.postal_code||'').replace(/\D/g,'');
-   active=true;
+   active=true;needsProfile=false;
    if(modal?.open){modal.close();password.value='';}
    notify();
    return true;
@@ -71,6 +71,7 @@
  async function promptLogin(){
   const ready=await refresh();
   if(ready)return;
+  if(needsProfile){accountRedirect('details');return;}
   showLogin();
  }
  function closeLogin(){if(modal?.open)modal.close();}
