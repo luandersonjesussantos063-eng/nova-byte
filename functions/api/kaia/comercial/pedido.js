@@ -2,6 +2,13 @@ import {CheckoutError,json,fail,gate,identity,accountAddress,parseItems,verified
 import {synchronizeAndExpire,expirationTimestamp} from './_expiry.js';
 const ORIGIN='https://usekaiaglow.com.br';
 function itemsWithShipping(row){
+ if(row.coupon_code&&Number(row.discount_cents)>0){
+  // Provider item totals must match the discounted server-side snapshot.
+  return [
+   ...(row.products_cents>0?[{title:'Produtos Kaia Glow (após desconto '+row.coupon_code+')',quantity:1,unit_price:money(row.products_cents)}]:[]),
+   {title:'Entrega - SuperFrete',quantity:1,unit_price:money(row.shipping_cents)}
+  ];
+ }
  return [...row.items.map(i=>({title:i.name.slice(0,110),quantity:i.quantity,unit_price:money(i.unit_cents)})),
   {title:'Entrega - SuperFrete',quantity:1,unit_price:money(row.shipping_cents)}];
 }
@@ -17,6 +24,9 @@ export async function onRequestPost({request,env}){
   let input;try{input=JSON.parse(raw);}catch{throw new CheckoutError('JSON_INVALIDO',422);}
   if(!/^[0-9a-f]{8}-[0-9a-f-]{27,40}$/.test(input?.requestKey||''))throw new CheckoutError('CHAVE_PEDIDO_INVALIDA',422);
   const items=parseItems(input);
+  const coupon=String(input?.coupon||'').trim().toUpperCase();
+  if(coupon&&!/^[A-Z0-9_-]{3,24}$/.test(coupon))
+   throw new CheckoutError('CUPOM_INVALIDO',422);
   const {postalCode}=await accountAddress(env,user.id);
   if(!/^[0-9]{8}$/.test(String(input.postalCode||''))||input.postalCode!==postalCode)
    throw new CheckoutError('CEP_DIFERENTE_DO_CADASTRO',422);
@@ -27,10 +37,22 @@ export async function onRequestPost({request,env}){
   if(!row){
    const verified=await verifiedInventory(env,items);
    const shipping=await quote(env,verified,postalCode,serviceId);
-   const reserved=await database(env,'rpc/kaia_commercial_reserve',{method:'POST',body:{
-    p_user_id:user.id,p_request_key:input.requestKey,p_items:items,
-    p_shipping_cents:shipping.cents,p_shipping_service:shipping.serviceId,p_postal_code:postalCode
-   }});
+   if(coupon){
+    const available=await database(env,'kaia_admin_coupons?code=eq.'+encodeURIComponent(coupon)+
+     '&select=discount_type,discount_value&limit=1');
+    if(available[0]?.discount_type==='percent'&&available[0]?.discount_value===100)
+     throw new CheckoutError('CUPOM_REQUER_PEDIDO_GRATIS',409);
+   }
+   const reserved=await database(env,coupon?
+    'rpc/kaia_commercial_reserve_discounted':'rpc/kaia_commercial_reserve',{
+     method:'POST',body:{
+      p_user_id:user.id,p_request_key:input.requestKey,p_items:items,
+      p_shipping_cents:shipping.cents,p_shipping_service:shipping.serviceId,
+      p_postal_code:postalCode,...(coupon?{
+       p_coupon_code:coupon,p_delivery_days:shipping.estimatedDays
+      }:{})
+     }
+   });
    row=await orderRow(env,reserved.id);
    // Keep the carrier's estimate alongside the immutable order snapshot for
    // confirmation emails. Failure to save optional ETA must not create a second
@@ -48,6 +70,9 @@ export async function onRequestPost({request,env}){
    }
   }
   if(row.user_id!==user.id)throw new CheckoutError('PEDIDO_NAO_AUTORIZADO',403);
+  if((row.coupon_code||'')!==coupon)
+   throw new CheckoutError('REQUISICAO_CUPOM_DIVERGENTE',409);
+  if(row.total_cents<1)throw new CheckoutError('CUPOM_REQUER_PEDIDO_GRATIS',409);
   if(row.shipping_service!==serviceId||row.postal_code!==postalCode||
     row.items.length!==items.length||items.some(i=>!row.items.some(x=>x.sku===i.sku&&x.quantity===i.quantity)))
     throw new CheckoutError('SOLICITACAO_JA_USADA_EM_OUTRA_SACOLA',409);
