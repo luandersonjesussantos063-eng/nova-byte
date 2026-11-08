@@ -11,13 +11,13 @@ function render(){
   const item=document.createElement('article');item.className='coupon-entry';
   const head=document.createElement('div');head.className='head';
   const strong=document.createElement('strong');strong.textContent=c.code;
-  const label=document.createElement('span');label.className='status';label.textContent=c.active?'Ativo':'Pausado';
+  const label=document.createElement('span');label.className='status';label.textContent=(c.active?'Ativo':'Pausado')+(c.customer_user_id?' · Exclusivo':' · Público');
   head.append(strong,label);
   const caption=document.createElement('small');caption.textContent=(c.discount_type==='percent'?c.discount_value+'%':money(c.discount_value/100))+' de desconto'+(c.discount_type==='percent'&&c.discount_value===100?' + frete grátis':'')
    +(c.min_order_cents>0?' · pedido acima de '+money(c.min_order_cents/100):'')
    +(c.ends_at?' · até '+c.ends_at.split('-').reverse().join('/'):'');
   const buttons=document.createElement('div');
-  const edit=document.createElement('button');edit.type='button';edit.textContent='Editar';edit.onclick=()=>fill(c);
+  const edit=document.createElement('button');edit.type='button';edit.textContent='Editar';edit.disabled=!!c.customer_user_id;edit.title=c.customer_user_id?'Cupons exclusivos são criados na ficha do cliente. Para alterar, exclua e crie outro.':'';edit.onclick=()=>fill(c);
   const del=document.createElement('button');del.type='button';del.textContent='Excluir';del.onclick=()=>remove(c.code);
   buttons.append(edit,del);item.append(head,caption,buttons);root.append(item);
  }
@@ -56,7 +56,7 @@ export async function setupKaiaCoupons(sb){
    p_starts_at:$('#couponStart').value||null,p_ends_at:$('#couponEnd').value||null,p_active:$('#couponActive').checked};
   const btn=$('#saveCouponButton');btn.disabled=true;state('Salvando…');
   try{const {error}=await client.rpc('kaia_admin_upsert_coupon',params);if(error)throw error;
-   state('Cupom salvo! Os cupons ativos aparecem no site.');await reload();}
+   state('Cupom público salvo. Os cupons exclusivos são criados e enviados na ficha do cliente.');await reload();}
   catch(err){state('Não foi possível salvar: '+(err.message||'erro de permissão'),true);}
   finally{btn.disabled=false;}
  };
