@@ -112,7 +112,7 @@ begin
  on conflict(order_number) do nothing;
  return jsonb_build_object('id',v_id,'status','approved','total_cents',0,'existing',false);
 end;
-$function$
+$function$;
 
 
 CREATE OR REPLACE FUNCTION public.kaia_commercial_reserve_discounted(p_user_id uuid, p_request_key uuid, p_items jsonb, p_shipping_cents integer, p_shipping_service text, p_postal_code text, p_coupon_code text, p_delivery_days integer DEFAULT NULL::integer)
@@ -235,7 +235,7 @@ begin
  return jsonb_build_object('id',v_id,'status',
   case when v_is_free then 'approved' else 'created' end,
   'existing',false,'complimentary',v_is_free,'total_cents',v_total);
-end $function$
+end $function$;
 
 revoke all on function public.kaia_commercial_redeem_free_coupon(uuid,uuid,jsonb,text,text,integer,text,integer) from public,anon,authenticated;
 grant execute on function public.kaia_commercial_redeem_free_coupon(uuid,uuid,jsonb,text,text,integer,text,integer) to service_role;
