@@ -75,7 +75,7 @@ async function fetchEligible(){
   checkoutEligibility();render();syncDetailPurchase();
  }catch{
   if(version!==commerceFetchVersion)return;
-  commerceAllowed=new Map();checkoutEligibility();render();syncDetailPurchase();
+  commerceAllowed=null;checkoutEligibility();render();syncDetailPurchase();
  }
 }
 function postalDigits(v){return String(v||'').replace(/\D/g,'');}
