@@ -115,7 +115,7 @@
 <div class="form-grid">
 <label class="full">Nome do produto<input id="editName" type="text" maxlength="200" required placeholder="Ex.: Sérum facial de niacinamida 30 ml"></label>
 <label>Marca<input id="editBrand" type="text" maxlength="100" minlength="2" required placeholder="Ex.: Medicube"></label>
-<label>Categoria<select id="editCategory" required><option value="Skincare">Skincare</option><option value="Cabelos">Cabelos</option><option value="Corpo e spa">Corpo e spa</option></select></label>
+<label>Categoria principal<select id="editCategory" required><option value="Skincare">Skincare</option><option value="Maquiagem">Maquiagem</option><option value="Perfumaria">Perfumes</option><option value="Cabelos">Cabelos</option><option value="Corpo e spa">Corpo e spa</option></select><small class="muted">A marca é usada no filtro Marcas. Produtos da linha Kaia Selection também aparecem na curadoria Só na Kaia.</small></label>
 <label>Preço de venda (R$)<input id="editPrice" type="number" min="1" max="1000000" step="0.01" required></label>
 <label class="full check-label"><input type="checkbox" id="confirmSalePrice" required> Confirmo que conferi o preço de venda atual deste produto e autorizo utilizá-lo em pagamentos reais quando o checkout for liberado.</label>
 <label>Preço anterior (R$)<input id="editOldPrice" type="number" min="0" max="1000000" step="0.01"></label>
@@ -415,5 +415,5 @@
 <footer class="admin-footer">© 2026 Kaia Glow · Gestão com cuidado <span>Nova Byte · Painel administrativo</span></footer>
 <script src="catalog.js?v=1"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js" integrity="sha384-TcHRA3zBbn+Lexh5n+Oil4guNPOS3rjNDpGRAN46u/s/mB2IZ50ceC6TYDU2yvgK" crossorigin="anonymous"></script>
-<script type="module" src="admin.js?v=16"></script>
+<script type="module" src="admin.js?v=17"></script>
 </body></html>
