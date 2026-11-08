@@ -66,7 +66,7 @@ async function loadAdmin(){
  }
  initKaiaAnalytics(sb);setupKaiaCustomers(sb);
  initKaiaMarketplaces(sb,{onStockChanged:()=>loadAdmin()});
- initKaiaPayments();setupKaiaCancellations(sb);
+ initKaiaPayments(sb);setupKaiaCancellations(sb);
  $('#productCount').textContent=catalog.filter(p=>!productData(p).archived).length;
  renderProductList();await setupKaiaCoupons(sb);await refreshCommerce();await refreshOverview();
 }
