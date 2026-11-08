@@ -721,6 +721,49 @@ function addCart(id,variantId,quantity=1,options={}){
   });
  }else toast('Adicionado à sua sacola.');
 }
+// Associações dos Reels ao catálogo real: preencher cada SKU somente depois
+// de confirmar visualmente o produto do vídeo. Nunca atribuir um item por suposição.
+const KAIA_REEL_PRODUCT_SKUS=Object.freeze({
+ DfBC3_PovYq:null,
+ Da8QJwYID2_:null,
+ Db9Xn4qozex:null,
+ De7SDVAoExR:null
+});
+function renderReelShoppingCards(){
+ document.querySelectorAll('[data-reel-product]').forEach(container=>{
+  const id=container.getAttribute('data-reel-product');
+  const sku=KAIA_REEL_PRODUCT_SKUS[id];
+  if(!sku)return; // Reels remain viewable; the catalog link is a safe fallback.
+  const product=catalog.find(p=>String(p.sku)===String(sku));
+  if(!product||!product.images?.[0])return;
+  const holder=document.createElement('div');
+  holder.className='kg-reel-product-match';
+  const image=document.createElement('img');
+  image.src=product.images[0];image.alt=product.name;image.loading='lazy';
+  const details=document.createElement('div');
+  const title=document.createElement('h3');title.textContent=product.name;
+  const price=document.createElement('span');price.className='kg-reel-product-price';
+  price.textContent=money(Number(product.price));
+  details.append(title,price);holder.append(image,details);
+  const action=document.createElement('button');
+  action.type='button';action.className='kg-reel-buy';
+  const v=variantFor(product);
+  const multiple=product.variants?.filter(x=>x.available).length>1;
+  action.textContent=!product.available||!v?.available?'Ver disponibilidade':multiple?'Escolher opção':'Adicionar à sacola';
+  action.addEventListener('click',()=>{
+   const variant=variantFor(product);
+   if(!product.available||!variant?.available||multiple||
+      !(commerceAllowed instanceof Map)||!commerceAllowed.has(product.sku)){
+    openProduct(product.id);
+    return;
+   }
+   addCart(product.id,variant.id,1,{skipConfirmation:true});
+   openBagDrawer();
+  });
+  container.replaceChildren(holder,action);
+ });
+}
+renderReelShoppingCards();
 let renderedBagAuthState=null;
 function renderBag(){renderedBagAuthState=window.kaiaCheckoutGate?.isAuthenticated()===true;
  window.kaiaCartExperience?.beforeBagRender();counts();if(!cart.length){window.kaiaCartExperience?.closeBagIfEmpty();$('#bagContent').innerHTML='<div class="bag-body empty"><h2>Sua próxima descoberta<br>está te esperando.</h2><p>Explore a coleção e monte sua sacola.</p><button class="button" id="backShopping">Continuar explorando ↗</button></div>';$('#backShopping').onclick=()=>$('#bagDialog').close();return}
