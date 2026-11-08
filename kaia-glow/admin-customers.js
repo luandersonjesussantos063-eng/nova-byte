@@ -127,8 +127,8 @@ function render(){
      p_min_order_cents:min,p_ends_at:expiry.value||null
     });
     if(error)throw error;
-    customerNote('Cupom exclusivo '+data.code+' criado e colocado na fila de envio para '+c.email+'.');
     await loadKaiaCustomers();
+    customerNote('Cupom exclusivo '+data.code+' criado e colocado na fila de envio para '+c.email+'.');
    }catch(err){
     customerNote('Não foi possível criar o cupom: '+(err.message||'erro de permissão'),true);
     create.disabled=!c.offersEmail;
