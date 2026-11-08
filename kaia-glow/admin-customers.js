@@ -56,7 +56,7 @@ function render(){
   const label=el('label','','Enviar cupom ativo para esta cliente');
   const select=el('select','');
   const placeholder=el('option','','Selecione um cupom');placeholder.value='';select.append(placeholder);
-  const discountText=x=>x.discount_type==='percent'?x.discount_value+'% de desconto':brl(x.discount_value);
+  const discountText=x=>x.discount_type==='percent'?x.discount_value+'% de desconto':brl(x.discount_value/100);
   for(const cp of available){
    const personal=cp.customer_user_id?' · Exclusivo desta cliente':'';
    const option=el('option','',cp.code+' · '+discountText(cp)+(cp.discount_type==='percent'&&cp.discount_value===100?' + frete grátis':'')+personal);
@@ -118,7 +118,7 @@ function render(){
     !Number.isSafeInteger(min)||min<0){
     customerNote('Confira o tipo, o desconto e o pedido mínimo.',true);return;
    }
-   const label=type.value==='percent'?value+'%':brl(value);
+   const label=type.value==='percent'?value+'%':brl(value/100);
    if(!confirm('Criar e enviar um cupom exclusivo de '+label+' para '+c.name+' ('+c.email+')? Ninguém mais poderá utilizá-lo.'))return;
    create.disabled=true;customerNote('Criando o cupom individual e preparando o e-mail…');
    try{
