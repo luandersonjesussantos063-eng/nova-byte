@@ -13,3 +13,62 @@
 .kaia-about-copy h3{font:400 25px/1.3 Georgia,serif;margin:0 0 16px;color:#54233d}.kaia-about-copy p{font-size:13px;line-height:1.85;color:#785764;margin:0 0 14px}.kaia-about-copy>a{display:inline-flex;align-items:center;min-height:44px;font-size:13px;color:#68334f;text-decoration:underline;text-underline-offset:4px;gap:8px}
 
 .kaia-story-copy h2{margin:34px 0 18px}.kaia-story-copy p{margin:0 0 20px}.kaia-story-copy .kaia-story-signature{font:italic 24px/1.6 Georgia,serif;color:#54233d;margin-top:32px}.kaia-story>.kaia-info-button{margin-top:14px}
+
+
+/* Kaia Glow — Payment & factual trust indicators (footer) */
+.kaia-footer-compact .kg-footer-trust{
+ margin:15px 0 10px;padding:25px 24px 21px;border:1px solid #866b7a70;
+ border-radius:14px;background:linear-gradient(130deg,#50374a 0%,#402d3d 100%);
+ display:grid;grid-template-columns:1.15fr 1fr;gap:34px;color:#f3e8ee;
+}
+.kaia-footer-compact .kg-footer-trust-group{min-width:0}
+.kaia-footer-compact .kg-footer-trust h2{
+ font:500 19px/1.3 Georgia,serif;letter-spacing:.03em;color:#fff6f2;
+ margin:0 0 14px;text-align:left
+}
+.kaia-footer-compact .kg-footer-payment-brands{
+ display:flex;flex-wrap:wrap;align-items:center;gap:9px;
+}
+.kaia-footer-compact .kg-footer-pay-brand{
+ background:#fff;border:1px solid #f2e8eb;color:#24202b;
+ min-width:68px;height:40px;padding:5px 9px;
+ display:inline-flex;align-items:center;justify-content:center;gap:4px;
+ border-radius:7px;box-shadow:0 2px 7px #19081821;
+ font:750 14px/1 Arial,sans-serif;white-space:nowrap;
+}
+.kaia-footer-compact .kg-footer-pay-visa{font-size:17px;font-style:italic;letter-spacing:-.05em;color:#183989}
+.kaia-footer-compact .kg-footer-pay-master{flex-direction:column;gap:0;min-width:73px}
+.kaia-footer-compact .kg-footer-pay-master small{font:600 8px/1 Arial,sans-serif;letter-spacing:-.02em}
+.kaia-footer-compact .kg-master-symbol{display:flex;justify-content:center;position:relative;height:21px;width:36px}
+.kaia-footer-compact .kg-master-symbol i{width:22px;height:22px;border-radius:50%;display:block;background:#ea3e2a}
+.kaia-footer-compact .kg-master-symbol i+i{background:#f6aa21;margin-left:-8px;opacity:.90}
+.kaia-footer-compact .kg-footer-pay-amex{background:#1374ae;color:white;font-size:13px;letter-spacing:-.04em}
+.kaia-footer-compact .kg-footer-pay-elo{background:#272b31;color:white;font-size:20px;letter-spacing:-.08em}
+.kaia-footer-compact .kg-footer-pay-diners{gap:2px;min-width:73px;color:#0c69a5}
+.kaia-footer-compact .kg-diners-symbol{font-size:23px;line-height:1}
+.kaia-footer-compact .kg-footer-pay-diners small{font-size:9px;font-weight:700}
+.kaia-footer-compact .kg-footer-pay-pix{color:#328b7f;font-size:19px;font-weight:600;letter-spacing:-.04em}
+.kaia-footer-compact .kg-pix-symbol{font-size:18px;transform:rotate(45deg);color:#2cafa3}
+.kaia-footer-compact .kg-footer-trust-note{
+ font-size:10px;line-height:1.6;margin:11px 0 0;color:#d9c5d0;max-width:420px;
+}
+.kaia-footer-compact .kg-footer-security-items{display:flex;flex-wrap:wrap;gap:12px 18px}
+.kaia-footer-compact .kg-footer-security-item{display:flex;align-items:center;gap:9px;min-width:140px;flex:1 1 160px}
+.kaia-footer-compact .kg-footer-security-item svg{
+ width:27px;height:27px;flex-shrink:0;fill:none;stroke:#dec59d;stroke-width:1.5;
+ stroke-linecap:round;stroke-linejoin:round;
+}
+.kaia-footer-compact .kg-footer-security-item span{display:flex;flex-direction:column;gap:3px}
+.kaia-footer-compact .kg-footer-security-item strong{font-size:11px;line-height:1.2;font-weight:650;color:#f9eef1}
+.kaia-footer-compact .kg-footer-security-item small{font-size:10px;line-height:1.4;color:#decfd7}
+.kaia-footer-compact .kg-footer-security-item a{color:inherit;text-decoration:underline;text-underline-offset:2px}
+@media(max-width:780px){
+ .kaia-footer-compact .kg-footer-trust{grid-template-columns:1fr;gap:22px;padding:19px 16px}
+ .kaia-footer-compact .kg-footer-trust h2{font-size:18px;margin-bottom:11px}
+ .kaia-footer-compact .kg-footer-payment-brands{gap:7px}
+ .kaia-footer-compact .kg-footer-pay-brand{min-width:60px;height:37px}
+}
+@media(max-width:480px){
+ .kaia-footer-compact .kg-footer-security-items{gap:14px}
+ .kaia-footer-compact .kg-footer-security-item{flex-basis:100%}
+}
