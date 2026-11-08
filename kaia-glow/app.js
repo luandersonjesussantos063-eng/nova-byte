@@ -233,6 +233,55 @@ async function commercialCheckout(){
 }
 let toastTimer;function toast(msg){$('#toast').textContent=msg;$('#toast').classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('#toast').classList.remove('show'),3000)}
 function counts(){$('#favoriteCount').textContent=favorites.size;const n=cart.reduce((a,b)=>a+b.qty,0);$('#bagCount').textContent=n;$('#drawerCount').textContent=`(${n})`;all('[data-wish]').forEach(b=>{const active=favorites.has(b.dataset.wish);b.classList.toggle('active',active);b.textContent=active?'♥':'♡';b.setAttribute('aria-pressed',active)})}
+// Encomendas não reservam estoque nem cobram antecipadamente.
+function purchaseState(p,v=null){
+ if(!p?.sku||!(commerceAllowed instanceof Map))return 'loading';
+ const variant=v||variantFor(p);
+ return variant?.available&&commerceAllowed.has(p.sku)?'buy':'preorder';
+}
+let preorderClient=null,preorderBusy=false;
+function syncDetailPurchase(){
+ if(!current||!$('#addDetail'))return;
+ const state=purchaseState(current,currentVariant),button=$('#addDetail');
+ button.disabled=state==='loading'||preorderBusy;
+ button.textContent=state==='buy'?'Adicionar à sacola':state==='preorder'?'Encomendar · 7 dias':'Consultando disponibilidade';
+ const terms=$('#preorderTerms');if(terms)terms.hidden=state!=='preorder';
+}
+async function submitPreorder(p,quantity){
+ if(preorderBusy)return;
+ const output=$('#preorderFeedback');
+ const message=t=>{if(output)output.textContent=t;};
+ const api=window.KAIA_PUBLIC_API;
+ if(!window.supabase||!api){message('Não foi possível iniciar sua solicitação. Atualize a página e tente novamente.');return;}
+ preorderBusy=true;syncDetailPurchase();message('Registrando sua encomenda…');
+ try{
+  if(!preorderClient)preorderClient=window.supabase.createClient(api.projectUrl,api.publicKey,{
+   auth:{storageKey:'kaia-glow-auth-v1',persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}
+  });
+  const {data:{user},error:authError}=await preorderClient.auth.getUser();
+  if(authError||!user||!user.email_confirmed_at){
+   message('Entre em Minha conta e confirme seu e-mail para solicitar a encomenda. Nenhuma cobrança foi realizada.');
+   return;
+  }
+  const {data,error}=await preorderClient.rpc('kaia_submit_preorder',{
+   p_sku:p.sku,p_quantity:Math.min(5,Math.max(1,Number(quantity)||1))
+  });
+  if(error){
+   const friendly={
+    PRODUTO_JA_DISPONIVEL_PARA_COMPRA:'Este produto já está liberado para compra. Atualize a loja e adicione à sacola.',
+    PRODUTO_FORA_DA_LOJA:'O produto foi retirado da loja.',
+    LIMITE_DE_ENCOMENDAS:'Você atingiu o limite de solicitações. Consulte suas encomendas em Minha conta.'
+   };
+   throw Error(friendly[error.message]||'Não foi possível registrar: '+error.message);
+  }
+  const date=new Date(data.estimatedAvailableAt);
+  const when=Number.isFinite(date.getTime())?date.toLocaleDateString('pt-BR'):'em até 7 dias';
+  message((data.existing?'Você já possui uma encomenda aberta.':'Encomenda solicitada com sucesso!')+
+   ' Previsão de disponibilidade: '+when+'. A equipe confirmará sua solicitação por e-mail. Não houve cobrança.');
+  toast('Encomenda registrada! Acompanhe em Minha conta.');
+ }catch(e){message(e.message||'Não foi possível registrar a encomenda.');}
+ finally{preorderBusy=false;syncDetailPurchase();}
+}
 function render(){const term=normalize($('#search').value.trim()),cat=$('#category').value,brand=$('#brand').value,max=+$('#price').value;let list=catalog.filter(p=>(cat==='Todos'||p.category===cat)&&(!brand||p.brand===brand)&&(!max||p.price<=max)&&(!$('#available').checked||p.available)&&(!$('#onSale').checked||p.oldPrice>p.price)&&(!favOnly||favorites.has(p.id))&&(!term||normalize(p.name+' '+p.brand+' '+p.category).includes(term)));
 const sort=$('#sort').value;if(sort==='low')list.sort((a,b)=>a.price-b.price);if(sort==='high')list.sort((a,b)=>b.price-a.price);if(sort==='name')list.sort((a,b)=>a.name.localeCompare(b.name,'pt-BR'));
 $('#resultCount').textContent=list.length+' '+(favOnly?'favoritos':list.length===1?'produto':'produtos')+(cat==='Todos'?'':' · '+cat);$('#collectionTitle').textContent=favOnly?'Seus favoritos, em um só lugar.':cat==='Todos'?'Todos os produtos.':cat==='Corpo e spa'?'Seu momento de pausa.':cat==='Skincare'?'Um novo ritual para sua pele.':cat==='Cabelos'?'Cuidado da raiz às pontas.':'Seu toque final.';
