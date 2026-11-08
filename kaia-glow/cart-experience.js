@@ -89,7 +89,46 @@ function afterBagRender({cart,eligible,onAdd}){
   const step=el('span','',no+' · '+title);step.dataset.stage=no;steps.append(step);
  }
  root.prepend(steps);
- const cep=$('#shippingPostalCode');if(cep&&postal)cep.value=postal;
+ const authenticated=window.kaiaCheckoutGate?.isAuthenticated()===true;
+ if(!authenticated){
+  const delivery=$('.kc-delivery-section'),payment=$('.kc-payment-section');
+  if(delivery)delivery.hidden=true;
+  if(payment)payment.hidden=true;
+  steps.replaceChildren();
+  for(const [number,label] of [['1','Sacola'],['2','Identificação'],['3','Entrega'],['4','Pagamento']]){
+   const item=el('span',number==='2'?'kg-current':'',number+' · '+label);
+   item.dataset.stage=number;steps.append(item);
+  }
+  const intro=el('section','kg-checkout-identification');
+  intro.append(el('span','kg-identification-kicker','FALTA POUCO PARA O SEU CUIDADO'));
+  intro.append(el('h3','','Entre para continuar sua compra'));
+  intro.append(el('p','','Seus produtos já estão na sacola. Identifique-se para escolher a entrega e seguir para o pagamento protegido.'));
+  const list=root.querySelector('.kc-cart-section');
+  if(list)list.after(intro);
+  let dock=$('#kgCartDock');
+  if(!dock){dock=el('div','kg-cart-dock');dock.id='kgCartDock';dialog.append(dock);}
+  dock.replaceChildren();
+  const row=el('div','kg-dock-row'),total=el('div','kg-dock-total');
+  const label=el('small','','Subtotal · frete depois do login');label.id='kgDockLabel';
+  const amount=el('strong','','A calcular');amount.id='kgDockValue';
+  total.append(label,amount);
+  const action=el('div','kg-dock-action');
+  const enter=el('button','kg-checkout-identify-button','Ir para pagamento  →');
+  enter.type='button';enter.id='kgCheckoutIdentify';
+  enter.onclick=()=>{
+   if(window.kaiaCheckoutGate?.promptLogin)window.kaiaCheckoutGate.promptLogin();
+   else location.assign('/conta.html?voltar=sacola');
+  };
+  action.append(enter);row.append(total,action);dock.append(row);
+  dock.append(el('small','kg-dock-note','Primeiro confirme sua conta. Nenhum pagamento será iniciado agora.'));
+  return;
+ }
+ const cep=$('#shippingPostalCode');
+ const storedPostal=postal||window.kaiaCheckoutGate?.postal()||'';
+ if(cep&&storedPostal){
+  const digits=storedPostal.replace(/\D/g,'');
+  cep.value=digits.length===8?digits.slice(0,5)+'-'+digits.slice(5):storedPostal;
+ }
  const delivery=$('.kc-delivery-section');
  if(delivery)delivery.insertBefore(el('p','kg-cep-note',
   'Calcule o frete com seu CEP para conferir valores e prazos reais.'),$('#shippingQuoteForm'));
@@ -141,10 +180,12 @@ function afterBagRender({cart,eligible,onAdd}){
 function updateTotals({subtotal,shipping,discount,isFree,shippingValid}){
  const total=$('#kgDockValue'),label=$('#kgDockLabel');
  if(total)total.textContent=money(Math.max(0,subtotal-discount+(isFree?0:shipping)));
- if(label)label.textContent=shippingValid?'Total do pedido':'Subtotal · frete a calcular';
- for(const step of document.querySelectorAll('.kg-cart-steps [data-stage]')){
-  step.classList.toggle('kg-current',Number(step.dataset.stage)===(shippingValid?3:2));
- }
+ if(label)label.textContent=window.kaiaCheckoutGate?.isAuthenticated()===true?
+  (shippingValid?'Total do pedido':'Subtotal · frete a calcular'):'Subtotal · frete depois do login';
+ if(window.kaiaCheckoutGate?.isAuthenticated()===true)
+  for(const step of document.querySelectorAll('.kg-cart-steps [data-stage]')){
+   step.classList.toggle('kg-current',Number(step.dataset.stage)===(shippingValid?3:2));
+  }
 }
 function closeBagIfEmpty(){const dock=$('#kgCartDock');if(dock)dock.remove();}
 window.kaiaCartExperience={showAdded,beforeBagRender,afterBagRender,updateTotals,closeBagIfEmpty,

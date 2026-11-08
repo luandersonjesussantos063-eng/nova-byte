@@ -4,6 +4,23 @@ const $ = s => document.querySelector(s);
 const all = s => [...document.querySelectorAll(s)];
 const esc = v => String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const params = new URLSearchParams(location.search);
+const KAIA_CART_RETURN='kaia-checkout-resume-v1';
+function shouldResumeCart(){
+ if(params.get('voltar')==='sacola')return true;
+ try{
+  const marker=JSON.parse(localStorage.getItem(KAIA_CART_RETURN)||'null');
+  if(!marker||!Number.isFinite(marker.created))return false;
+  if(marker.created>Date.now()+60_000||Date.now()-marker.created>48*60*60*1000){
+   localStorage.removeItem(KAIA_CART_RETURN);return false;
+  }
+  return true;
+ }catch{return false;}
+}
+function returnToCheckout(){
+ if(!user||profileRequired||recovery||!shouldResumeCart())return false;
+ try{localStorage.removeItem(KAIA_CART_RETURN);}catch{}
+ location.replace('/?sacola=1');return true;
+}
 const validCode = code => /^[a-f0-9]{20}$/.test(code||'');
 const REF_KEY = 'kaia-pending-referral-v1';
 let pendingCode = params.get('indicacao');
@@ -96,6 +113,7 @@ async function loadAccount(){
  if(detailResult.error){setMode('login',false);status('Não foi possível carregar seu cadastro. Tente entrar novamente.',true);return;}
  const details=detailResult.data;profileRequired=!details;
  fillCustomerDetails(details);
+ if(returnToCheckout())return;
  const preferences=await supa.from('kaia_customer_marketing_preferences')
   .select('offers_email,named_analytics').eq('user_id',user.id).maybeSingle();
  if(seq!==sequence)return;
@@ -256,6 +274,7 @@ $('#profileForm').addEventListener('submit',async event=>{
   $('#profileSetupNote').textContent='Seu cadastro está completo. Você pode atualizar seus dados aqui quando precisar.';
   feedback.textContent='Cadastro completo salvo! Você pode conferir ou atualizar seus dados antes de comprar.';
   status('Seu cadastro foi concluído.');
+  if(returnToCheckout())return;
  }catch{feedback.textContent='Não foi possível salvar. Confira os dados e sua conexão e tente novamente.';}
  finally{b.disabled=false;}
 });
