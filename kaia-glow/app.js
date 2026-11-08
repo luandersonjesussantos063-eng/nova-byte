@@ -9,7 +9,8 @@
  const ids={street:'kgAddressStreet',street_number:'kgAddressNumber',complement:'kgAddressComplement',
   neighborhood:'kgAddressNeighborhood',city:'kgAddressCity',state:'kgAddressState'};
  const onlyDigits=v=>String(v||'').replace(/\D/g,'');
- let saved=null,confirmed=null,signature=()=>'',onChange=()=>{},serial=0,loading=false;
+ let saved=null,confirmed=null,signature=()=>'',onChange=()=>{},serial=0,loading=false,edited=false,mountGeneration=0;
+ const pendingInput=()=>keys.some(k=>$(ids[k])?.value.trim());
  const getPostal=()=>onlyDigits($('shippingPostalCode')?.value);
  const formData=()=>Object.fromEntries(keys.map(k=>[k,$(ids[k])?.value.trim()||'']));
  const stamp=()=>JSON.stringify({postal:getPostal(),...formData(),cart:signature()});
@@ -23,8 +24,12 @@
  function invalidate(text='Confira o endereço e clique em Confirmar endereço.'){
   confirmed=null;status(text);recalc();
  }
- function fill(info){
-  for(const k of keys){const input=$(ids[k]);if(input)input.value=String(info?.[k]||'');}
+ function fill(info,{emptyOnly=false}={}){
+  for(const k of keys){
+   const input=$(ids[k]);if(!input)continue;
+   if(emptyOnly&&input.value.trim())continue;
+   input.value=String(info?.[k]||'');
+  }
  }
  async function client(){
   const {KAIA_AUTH}=await import('./auth-config.js');
@@ -44,16 +49,17 @@
    if(version!==serial||cep!==getPostal())return;
    const data={street:v.logradouro||'',street_number:'',complement:'',
     neighborhood:v.bairro||'',city:v.localidade||'',state:v.uf||''};
-   fill(data);
-   status('Endereço preenchido pelo CEP. Confira a rua, informe o número e o complemento, se houver.');
+   fill(data,{emptyOnly:true});
+   status('Confira os dados do CEP e o número do imóvel antes de confirmar.');
   }catch{
    if(version===serial&&cep===getPostal())status('Não conseguimos completar o CEP automaticamente. Preencha o endereço manualmente.');
   }finally{clearTimeout(timer);}
  }
  async function load(){
-  const version=++serial;
+  const version=serial,generation=mountGeneration;
   if(!$('kgDeliveryAddressMount')||loading)return;
-  loading=true;status('Carregando o endereço da sua conta…');
+  loading=true;
+  if(!edited&&!pendingInput())status('Carregando o endereço da sua conta…');
   try{
    const sb=await client();
    const {data:auth,error:authError}=await sb.auth.getUser();
@@ -62,13 +68,16 @@
     .select('cpf,birth_date,phone,postal_code,street,street_number,complement,neighborhood,city,state')
     .eq('user_id',auth.user.id).maybeSingle();
    if(error||!details)throw Error('Complete seu cadastro em Minha conta para continuar.');
-   if(version!==serial||!$('kgDeliveryAddressMount'))return;
+   if(generation!==mountGeneration||!$('kgDeliveryAddressMount'))return;
    saved=details;
    const cep=getPostal();
-   if(cep&&cep!==onlyDigits(details.postal_code)){fill(null);await lookup(cep,version);}
-   else{
-    fill(details);
-    status('Confira seu endereço cadastrado. Número e complemento podem ser alterados aqui.');
+   if(cep&&cep!==onlyDigits(details.postal_code)){
+    if(!edited&&!pendingInput())fill(null);
+    await lookup(cep,serial);
+   }else{
+    fill(details,{emptyOnly:true});
+    if(!edited)status('Endereço cadastrado carregado. Confira os dados antes de confirmar.');
+    if(cep.length===8)lookup(cep,serial);
    }
    recalc();
   }catch(e){
@@ -79,10 +88,13 @@
   const version=++serial,cep=getPostal();
   confirmed=null;
   if(!$('kgDeliveryAddressMount'))return;
-  if(cep.length!==8){fill(null);invalidate('Informe os 8 números do CEP para preencher seu endereço.');return;}
+  if(cep.length!==8){edited=false;fill(null);invalidate('Informe os 8 números do CEP para preencher seu endereço.');return;}
+  edited=false;fill(null);
   if(saved&&cep===onlyDigits(saved.postal_code)){
-   fill(saved);invalidate('Endereço do cadastro recuperado. Confirme número e complemento.');
-  }else{fill(null);invalidate('Consultando CEP…');lookup(cep,version);}
+   fill(saved,{emptyOnly:true});
+   invalidate('Endereço do cadastro recuperado. Confira número e complemento.');
+  }else invalidate('Consultando CEP…');
+  lookup(cep,version);
  }
  async function confirm(event){
   event.preventDefault();
@@ -120,7 +132,12 @@
  function mount(options={}){
   const root=$('kgDeliveryAddressMount');
   if(!root)return;
-  serial++;saved=null;confirmed=null;loading=false;
+  const previous=$('kgAddressForm');
+  const existingDraft=previous?formData():null;
+  const previousPostal=getPostal();
+  mountGeneration++;serial++;
+  confirmed=null;edited=!!existingDraft&&Object.values(existingDraft).some(v=>v);
+  loading=false;
   signature=options.cartSignature||(()=> '');
   onChange=options.onChange||(()=>{});
   root.innerHTML=`<form id="kgAddressForm" class="kg-address-form">
@@ -137,13 +154,16 @@
    <p class="kg-address-status" id="kgAddressStatus" role="status" aria-live="polite"></p>
    <button type="submit" id="kgAddressConfirm" class="button">Confirmar endereço</button>
    </form>`;
+  if(existingDraft&&previousPostal===getPostal())fill(existingDraft);
   $('kgAddressForm').addEventListener('submit',confirm);
-  $('kgAddressForm').querySelectorAll('input').forEach(input=>input.addEventListener('input',()=>invalidate()));
+  $('kgAddressForm').querySelectorAll('input').forEach(input=>input.addEventListener('input',()=>{
+   edited=true;invalidate();
+  }));
   recalc();
   load();
  }
  window.kaiaDeliveryAddress={mount,postalChanged,isConfirmed,reset(){
-  serial++;confirmed=null;saved=null;recalc();
+  serial++;mountGeneration++;confirmed=null;saved=null;edited=false;recalc();
  }};
 })();
 
