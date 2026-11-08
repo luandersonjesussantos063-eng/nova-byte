@@ -16,6 +16,8 @@ export async function onRequestPost({request,env}){
     !/^[0-9a-f]{8}-[0-9a-f-]{27,40}$/.test(data?.requestKey||''))
    throw new CheckoutError('CUPOM_OU_SOLICITACAO_INVALIDA',422);
   const items=parseItems({items:data.items});
+  const giftPackaging=String(data?.giftPackaging||'none');
+  if(!['none','box','bag'].includes(giftPackaging))throw new CheckoutError('EMBALAGEM_INVALIDA',422);
   const coupons=await database(env,'kaia_admin_coupons?code=eq.'+encodeURIComponent(code)+
    '&select=code,active,discount_type,discount_value,min_order_cents,starts_at,ends_at&limit=1');
   const configured=coupons[0];
@@ -35,13 +37,13 @@ export async function onRequestPost({request,env}){
   // Price, stock and carrier cost are re-read on the server, never trusted from the browser.
   const verified=await verifiedInventory(env,items);
   const shipping=await quote(env,verified,postalCode,String(data.serviceId||''));
-  const response=await database(env,'rpc/kaia_checkout_free_attributed',{
+  const response=await database(env,'rpc/kaia_checkout_free_with_gift',{
    method:'POST',
    body:{p_user_id:user.id,p_request_key:data.requestKey,p_items:items,
      p_coupon_code:code,p_shipping_service:shipping.serviceId,
      p_list_shipping_cents:shipping.cents,p_postal_code:postalCode,
      p_shipping_estimated_days:shipping.estimatedDays,
-     p_seller_code:String(data.sellerCode||'').slice(0,36)}
+     p_seller_code:String(data.sellerCode||'').slice(0,36),p_gift_packaging:giftPackaging}
   });
   if(!response?.id||response.status!=='approved')throw new CheckoutError('PEDIDO_NAO_CONFIRMADO',503);
   return json({id:response.id,status:'approved',freeOrder:true,totalCents:0,
