@@ -1,7 +1,7 @@
 import {KAIA_AUTH} from './auth-config.js';
 import {setupKaiaCoupons} from './admin-coupons.js';
 import {setupKaiaTeam,loadKaiaTeam} from './admin-team.js';
-import {setupKaiaCustomers,loadKaiaCustomers} from './admin-customers.js';
+import {setupKaiaCustomers,loadKaiaCustomers} from './admin-customers.js?v=2';
 import {setupKaiaCancellations,loadKaiaCancellations} from './admin-cancellations.js';
 import {setupKaiaPreorders,loadKaiaPreorders} from './admin-preorders.js?v=2';
 import {initKaiaAnalytics,loadKaiaAnalytics} from './admin-analytics.js';
@@ -30,7 +30,7 @@ function productData(p){const e=edits.get(keyOf(p)),stock=inventory.get(p.sku),l
 };}
 function setSignedIn(ok,email=''){
  signedIn=ok;$('#loginPanel').hidden=ok;$('#adminPanel').hidden=!ok;$('#logoutButton').hidden=!ok;
- $('#adminNavToggle').hidden=!ok;if(!ok)closeAdminMenu();
+ $('#adminNavToggle').hidden=!ok;$('#adminGlobalForm').hidden=!ok;document.body.classList.toggle('admin-ready',ok);if(!ok)closeAdminMenu();
  if(ok)$('#adminIdentity').textContent=email;
 }
 async function authorize(){
@@ -41,9 +41,9 @@ async function authorize(){
  if(result.error||result.data!==true){setSignedIn(false);status('#loginStatus','Esta conta ainda não tem autorização administrativa. O e-mail precisa estar confirmado e aprovado.',true);return;}
  setSignedIn(true,user.email);
  const own=await sb.rpc('kaia_is_store_owner');isOwner=own.data===true&&!own.error;
- await setupKaiaTeam(sb,isOwner);await loadAdmin();
+ await setupKaiaTeam(sb,isOwner);$('#settingsTeam').disabled=!isOwner;$('#settingsTeamHint').textContent=isOwner?'':'Somente o proprietário pode gerenciar acessos.';await loadAdmin();
  const requested=location.hash.replace(/^#/,'');
- if(['overview','products','coupons','cancellations','preorders','analytics','marketplaces','payments','team','customers'].includes(requested))openAdminTab(requested,false);
+ if(Object.hasOwn(panelMeta,requested))openAdminTab(requested,false);
  else openAdminTab('overview',false);
 }
 async function loadAdmin(){
@@ -69,7 +69,7 @@ async function loadAdmin(){
  initKaiaMarketplaces(sb,{onStockChanged:()=>loadAdmin()});
  initKaiaPayments(sb);setupKaiaCancellations(sb);setupKaiaPreorders(sb);
  $('#productCount').textContent=catalog.filter(p=>!productData(p).archived).length;
- renderProductList();await setupKaiaCoupons(sb);await refreshCommerce();await refreshOverview();
+ renderProductList();await setupKaiaCoupons(sb);await refreshCommerce();await refreshOverview();await loadStoreOrders();
 }
 async function refreshCommerce(){
  try{
@@ -154,13 +154,14 @@ async function refreshOverview(){
   $('#overviewUpdated').textContent='Resumo consultado em '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
  }catch{
   $('#overviewUpdated').textContent='Não foi possível atualizar todos os indicadores. Tente novamente.';
- }finally{overviewBusy=false;update.disabled=false;}
+ }finally{overviewBusy=false;update.disabled=false;syncAdminAlerts();}
 }
 function renderProductList(){
  const term=$('#productSearch').value.trim().toLocaleLowerCase('pt-BR');const parent=$('#productList');parent.replaceChildren();
  const showArchived=$('#showArchivedProducts').checked;
  const matched=catalog.filter(p=>{const d=productData(p);
-  return d.archived===showArchived&&(d.name+' '+d.brand+' '+(p.sku||'')).toLocaleLowerCase('pt-BR').includes(term);
+  const filter=$('#productStateFilter').value;const matches=filter==='all'||filter==='available'&&d.stock>0||filter==='low'&&d.stock!==null&&d.stock<=5||filter==='unavailable'&&(d.stock===null||d.stock===0)||filter==='hidden'&&!d.visible;
+  return d.archived===showArchived&&matches&&(d.name+' '+d.brand+' '+(p.sku||'')).toLocaleLowerCase('pt-BR').includes(term);
  });
  for(const p of matched){
   const d=productData(p),btn=document.createElement('button');btn.type='button';btn.className='product-option'+(selected===d.key?' active':'');
@@ -388,16 +389,19 @@ async function changeCommercialRelease(enable){
 $('#releaseOnlineButton').onclick=()=>changeCommercialRelease(true);
 $('#pauseOnlineButton').onclick=()=>changeCommercialRelease(false);
 const panelMeta={
+ orders:['LOJA · PEDIDOS','Pedidos','Acompanhe as compras e o histórico registrado da loja.'],
+ settings:['ADMINISTRAÇÃO · PREFERÊNCIAS','Configurações','Acesse os controles de gestão por assunto.'],
+ alerts:['ADMINISTRAÇÃO · ACOMPANHAMENTO','Alertas','Confira os pontos que precisam da sua atenção.'],
  overview:['INÍCIO · PAINEL ADMINISTRATIVO','Visão geral','Acompanhe os pontos importantes da sua operação em um só lugar.'],
- products:['OPERAÇÃO · CATÁLOGO','Produtos e fotos','Organize sua vitrine, preços, descrições e imagens dos produtos.'],
+ products:['LOJA · CATÁLOGO','Produtos','Organize sua vitrine, preços, descrições e imagens dos produtos.'],
  marketplaces:['OPERAÇÃO · ESTOQUE','Estoque e marketplaces','Acompanhe saldos e integrações de venda.'],
  payments:['OPERAÇÃO · FINANCEIRO','Pagamentos','Confira a configuração do checkout e dos serviços de pagamento.'],
- preorders:['OPERAÇÃO · ENCOMENDAS','Encomendas · 7 dias','Confirme e acompanhe solicitações de produtos indisponíveis.'],
+ preorders:['OPERAÇÃO · ENCOMENDAS','Encomendas','Confirme e acompanhe solicitações de produtos indisponíveis.'],
  cancellations:['OPERAÇÃO · PÓS-VENDA','Cancelamentos','Analise solicitações e acompanhe reembolsos.'],
- customers:['RELACIONAMENTO · CLIENTES','Clientes e ofertas','Consulte cadastros, preferências e ofertas autorizadas.'],
+ customers:['RELACIONAMENTO · CLIENTES','Clientes','Consulte cadastros, preferências e ofertas autorizadas.'],
  coupons:['RELACIONAMENTO · CAMPANHAS','Cupons','Organize suas promoções e acompanhe os códigos cadastrados.'],
- analytics:['RELACIONAMENTO · MÉTRICAS','Visitas e interesse','Veja estatísticas autorizadas e dados agregados de navegação.'],
- team:['ADMINISTRAÇÃO · ACESSOS','Equipe e permissões','Gerencie as pessoas autorizadas a administrar a loja.']
+ analytics:['RELACIONAMENTO · MÉTRICAS','Estatísticas','Veja estatísticas autorizadas e dados agregados de navegação.'],
+ team:['ADMINISTRAÇÃO · ACESSOS','Usuários e permissões','Gerencie as pessoas autorizadas a administrar a loja.']
 };
 function closeAdminMenu(){
  $('#adminSidebar').classList.remove('is-open');
@@ -431,6 +435,8 @@ function openAdminTab(current,updateHash=true){
   if(section)section.hidden=current!==name;
  }
  if(current==='overview')refreshOverview();
+ if(current==='orders')loadStoreOrders();
+ if(current==='alerts')refreshOverview();
  if(current==='cancellations')loadKaiaCancellations();
  if(current==='preorders')loadKaiaPreorders();
  if(current==='team')loadKaiaTeam();
@@ -442,7 +448,7 @@ function openAdminTab(current,updateHash=true){
  closeAdminMenu();
  if(updateHash)window.scrollTo({top:0,behavior:'auto'});
 }
-all('.admin-tabs [data-tab]').forEach(button=>button.onclick=()=>openAdminTab(button.dataset.tab));
+all('.admin-tabs [data-tab]').forEach(button=>button.onclick=()=>{if(button.dataset.tab==='orders'){ordersCustomer=null;$('#ordersSearch').value='';$('#ordersFilter').value='all';}openAdminTab(button.dataset.tab);});
 $('.admin-tabs').addEventListener('keydown',event=>{
  if(!['ArrowDown','ArrowUp','Home','End'].includes(event.key))return;
  const tabs=all('.admin-tabs [data-tab]').filter(tab=>!tab.hidden);
@@ -456,7 +462,7 @@ $('.admin-tabs').addEventListener('keydown',event=>{
  event.preventDefault();
  const next=tabs[idx];openAdminTab(next.dataset.tab);next.focus();
 });
-$('#overviewTab').addEventListener('click',event=>{
+$('#adminPanel').addEventListener('click',event=>{
  const target=event.target.closest('[data-open-panel]');
  if(target)openAdminTab(target.dataset.openPanel);
 });
@@ -480,5 +486,84 @@ $('#loginForm').onsubmit=async e=>{
   await authorize();
  }catch{status('#loginStatus','Não foi possível entrar. Confira as credenciais, a confirmação do e-mail e a autorização.',true);}
  finally{btn.disabled=false;}
+};
+
+
+
+// Management presentation only. New data access is authenticated and read-only.
+let storeOrders=[],storeOrdersLoaded=false,storeOrdersBusy=false,ordersLimited=false,ordersCustomer=null,customerOrders=[];
+const orderStates={approved:'Pagamento aprovado',pending:'Aguardando pagamento',created:'Aguardando pagamento',cancelled:'Cancelado',rejected:'Recusado',refunded:'Reembolsado',review_required:'Em análise',confirmed:'Confirmado',shipped:'Enviado',delivered:'Entregue'};
+const orderEl=(tag,cls,text)=>{const n=document.createElement(tag);if(cls)n.className=cls;if(text!==undefined)n.textContent=text;return n;};
+function syncAdminAlerts(){
+ const root=$('#allAdminAlerts');root.replaceChildren();
+ for(const node of $('#overviewAlerts').children)root.append(node.cloneNode(true));
+ $('#alertsUpdated').textContent=$('#overviewUpdated').textContent;
+}
+function renderStoreOrders(){
+ const term=$('#ordersSearch').value.trim().toLocaleLowerCase('pt-BR'),filter=$('#ordersFilter').value;
+ const rows=(ordersCustomer?customerOrders:storeOrders).filter(o=>(!ordersCustomer||o.userId===ordersCustomer)&&(filter==='all'||o.status===filter||filter==='pending'&&o.status==='created')&&[o.number,o.customer,...o.items.map(i=>i.name)].join(' ').toLocaleLowerCase('pt-BR').includes(term));
+ const root=$('#ordersList');root.replaceChildren();
+ if(!rows.length)root.append(orderEl('p','editor muted',storeOrdersLoaded?'Nenhum pedido corresponde aos filtros.':'Os pedidos não foram consultados. Tente atualizar.'));
+ for(const o of rows){
+  const card=orderEl('article','editor kg-order-card');
+  const head=orderEl('div','kg-order-heading'),details=orderEl('div');
+  details.append(orderEl('strong','kg-order-number',o.number),orderEl('p','muted',o.customer+' · '+new Date(o.createdAt).toLocaleString('pt-BR')));
+  const mark=orderEl('span','kg-status',orderStates[o.status]||o.status);mark.dataset.state=o.status;head.append(details,mark);card.append(head);
+  const list=orderEl('ul','kg-order-items');for(const item of o.items)list.append(orderEl('li','',item.quantity+' × '+item.name));
+  card.append(list,orderEl('strong','kg-order-total',money(o.totalCents/100)));
+  if(o.coupon)card.append(orderEl('p','muted','Cupom: '+o.coupon));
+  card.append(orderEl('p','muted',o.source==='payment'?'Registro de pagamento da loja · '+(o.totalCents===0?'Pedido gratuito':'Valor pago registrado: '+money(o.paidCents/100)):'Pedido do histórico da loja'));
+  root.append(card);
+ }
+ $('#ordersStatus').textContent=(ordersCustomer?'Histórico do cliente selecionado · ':'')+rows.length+' pedido(s) exibido(s). '+(ordersLimited?'Exibindo os registros mais recentes; limite da consulta atingido. ':'')+'Consulta somente de leitura.';
+ if(ordersCustomer)return;
+ const recent=$('#recentOrdersList');recent.replaceChildren();
+ if(!storeOrdersLoaded)recent.append(orderEl('p','muted','Não foi possível consultar os pedidos. Use a seção Pedidos para tentar novamente.'));
+ else if(!storeOrders.length)recent.append(orderEl('p','muted','Ainda não há pedidos registrados.'));
+ else for(const o of storeOrders.slice(0,4)){
+  const row=orderEl('button','kg-recent-order');row.type='button';
+  row.append(orderEl('span','',o.customer),orderEl('span','muted',orderStates[o.status]||o.status),orderEl('strong','',money(o.totalCents/100)));
+  row.onclick=()=>{ordersCustomer=null;$('#ordersSearch').value=o.number;$('#ordersFilter').value='all';openAdminTab('orders');};recent.append(row);
+ }
+}
+async function loadStoreOrders(){
+ if(!signedIn||storeOrdersBusy)return;
+ storeOrdersBusy=true;$('#ordersRefresh').disabled=true;$('#ordersStatus').textContent='Consultando pedidos registrados…';
+ try{
+  const {data,error}=await sb.auth.getSession();const token=data?.session?.access_token;
+  if(error||!token)throw Error('Entre novamente para consultar os pedidos.');
+  const scope=ordersCustomer;
+  const r=await fetch('/api/kaia/admin-orders'+(scope?'?customer='+encodeURIComponent(scope):''),{headers:{Authorization:'Bearer '+token,Accept:'application/json'},cache:'no-store'});
+  if(!r.ok)throw Error('Não foi possível consultar os pedidos. Confira a sessão e tente novamente.');
+  const body=await r.json();if(!Array.isArray(body.orders))throw Error('Resposta dos pedidos indisponível.');
+  if(scope!==ordersCustomer)return;
+  if(scope)customerOrders=body.orders;else storeOrders=body.orders;storeOrdersLoaded=true;ordersLimited=body.limited===true;renderStoreOrders();
+ }catch(e){storeOrders=[];storeOrdersLoaded=false;renderStoreOrders();$('#ordersStatus').textContent=e.message;}
+ finally{storeOrdersBusy=false;$('#ordersRefresh').disabled=false;}
+}
+$('#ordersRefresh').onclick=()=>{ordersCustomer=null;loadStoreOrders();};
+$('#ordersSearch').oninput=()=>{ordersCustomer=null;renderStoreOrders();};
+$('#ordersFilter').onchange=renderStoreOrders;
+$('#productStateFilter').onchange=renderProductList;
+$('#alertsRefresh').onclick=refreshOverview;
+$('#settingsTeam').onclick=()=>{if(isOwner)openAdminTab('team');};
+$('#teamCopyInvite').onclick=async()=>{
+ const text='Olá! Você foi convidada para a equipe da Kaia Glow. Cadastre sua conta em https://usekaiaglow.com.br/conta.html?modo=cadastro e confirme seu e-mail. Depois, avise a proprietária para autorizar seu acesso ao painel. Não compartilhe sua senha.';
+ try{await navigator.clipboard.writeText(text);$('#teamStatus').textContent='Convite copiado. Envie à pessoa desejada; o acesso depende da autorização do proprietário.';}
+ catch{$('#teamStatus').textContent=text;}
+};
+document.addEventListener('kaia:customer-orders',event=>{
+ const id=event.detail?.userId;if(!/^[0-9a-f-]{36}$/i.test(id||''))return;
+ ordersCustomer=id;customerOrders=[];$('#ordersSearch').value='';$('#ordersFilter').value='all';openAdminTab('orders');
+});
+$('#adminGlobalForm').onsubmit=async event=>{
+ event.preventDefault();if(!signedIn)return;const term=$('#adminGlobalSearch').value.trim();if(!term)return;
+ const p=catalog.find(x=>{const d=productData(x);return !d.archived&&(d.name+' '+d.brand+' '+(x.sku||'')).toLocaleLowerCase('pt-BR').includes(term.toLocaleLowerCase('pt-BR'));});
+ if(p){$('#productSearch').value=term;$('#showArchivedProducts').checked=false;$('#productStateFilter').value='all';openAdminTab('products');renderProductList();selectProduct(p);return;}
+ const tab=all('.admin-tabs [data-tab]').find(b=>!b.hidden&&b.textContent.toLocaleLowerCase('pt-BR').includes(term.toLocaleLowerCase('pt-BR')));
+ if(tab){openAdminTab(tab.dataset.tab);return;}
+ const order=storeOrders.find(o=>(o.number+' '+o.customer).toLocaleLowerCase('pt-BR').includes(term.toLocaleLowerCase('pt-BR')));
+ if(order){ordersCustomer=null;$('#ordersSearch').value=term;$('#ordersFilter').value='all';openAdminTab('orders');renderStoreOrders();return;}
+ $('#customerSearch').value=term;openAdminTab('customers');
 };
 authorize().catch(()=>{setSignedIn(false);status('#loginStatus','Não foi possível verificar o acesso no momento.',true);});

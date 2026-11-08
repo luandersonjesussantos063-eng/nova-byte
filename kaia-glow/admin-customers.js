@@ -28,15 +28,17 @@ function render(){
   const main=el('div');main.append(el('h3','',c.name||'Cliente'),el('p','muted',c.email));
   const marker=el('span','customer-status',c.offersEmail?'Aceita ofertas':'Sem autorização para e-mail');
   head.append(main,marker);card.append(head);
+  card.append(el('p','muted','Cadastro em '+(c.createdAt?new Date(c.createdAt).toLocaleDateString('pt-BR'):'Data não informada')));
   const stats=el('div','customer-insight-stats');
   for(const [text,value] of [
    ['Pedidos',String(c.orders||0)],
-   ['Total em pedidos',brl(c.totalCents||0)],
+   ['Total em pedidos',brl(Number(c.totalCents||0)/100)],
    ['Visitas identificadas',c.namedAnalytics?String(c.visits||0):'Sem autorização'],
    ['Tempo nos produtos',c.namedAnalytics?time(c.attentionSeconds):'Sem autorização']
   ]){
    const item=el('div','');item.append(el('span','muted',text),el('strong','',value));stats.append(item);
   }card.append(stats);
+  const history=el('button','ghost-button','Ver histórico de pedidos');history.type='button';history.onclick=()=>document.dispatchEvent(new CustomEvent('kaia:customer-orders',{detail:{userId:c.userId}}));card.append(history);
   const content=el('div','customer-insight-products');
   if(c.namedAnalytics){
    const strong=el('strong','','Produtos observados com autorização');
@@ -101,3 +103,4 @@ export function setupKaiaCustomers(sb){
   pending=setTimeout(()=>loadKaiaCustomers(),350);
  };
 }
+
