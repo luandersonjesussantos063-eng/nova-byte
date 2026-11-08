@@ -115,6 +115,7 @@ function checkoutEligibility(){
  if($('#kcShippingDiscountRow'))$('#kcShippingDiscountRow').hidden=!isFree;
  if($('#kcCouponSavings'))$('#kcCouponSavings').hidden=!(coupon&&applied.valid);
  if($('#kcPaymentProvider'))$('#kcPaymentProvider').textContent=isFree?'Cupom integral':'Mercado Pago';
+ const paymentMethods=$('#kgPaymentMethods');if(paymentMethods)paymentMethods.hidden=isFree;
  if($('#kcTotal'))$('#kcTotal').textContent=money(Math.max(0,subtotal-discount+(isFree?0:shipping)));
  window.kaiaCartExperience?.updateTotals({subtotal,shipping,discount,isFree,shippingValid});
  const prepared=!!($('#commercePaymentOptions')||$('#commercePendingOrder'));
@@ -174,7 +175,13 @@ function paymentBrowserOptions(raw,total,{previous=false}={}){
  info.append(label);
  const link=document.createElement('a');link.href=url;link.target='_blank';
  link.rel='noopener noreferrer';link.className='button kc-pay-action';
- link.textContent='Pagar com Mercado Pago ↗';
+ const preferredPayment=document.querySelector('input[name="kgPaymentMethod"]:checked')?.value;
+ link.textContent=preferredPayment==='pix'?'Continuar e escolher Pix no Mercado Pago ↗':'Pagar com Mercado Pago ↗';
+ const paymentHint=document.createElement('p');
+ paymentHint.className='kg-payment-method-note';
+ paymentHint.textContent=preferredPayment==='pix'
+  ?'Na próxima tela, selecione Pix para gerar o QR Code ou código copia e cola. A opção depende de estar habilitada na conta Mercado Pago da loja.'
+  :'Escolha uma das formas disponibilizadas pelo Mercado Pago na próxima tela.';
  const help=document.createElement('details');help.className='kc-payment-help';
  const summary=document.createElement('summary');summary.textContent='Problemas para abrir?';
  const copy=document.createElement('button');copy.type='button';copy.className='kc-text-action';
@@ -192,7 +199,7 @@ function paymentBrowserOptions(raw,total,{previous=false}={}){
  };
  const tip=document.createElement('p');tip.textContent='Se o aplicativo apresentar erro, use o link copiado no Chrome. Evite pagar duas vezes pelo mesmo pedido.';
  help.append(summary,copy,fallback,tip);
- box.append(info,link,help);
+ box.append(info,link,paymentHint,help);
  ($('#kcPaymentArea')||$('#checkout')).append(box);
  const btn=$('#checkout');if(btn)btn.hidden=true;
  const note=$('#commerceEligibility');if(note)note.hidden=true;
@@ -478,12 +485,24 @@ $('#bagContent').innerHTML=`<div class="bag-body kc-checkout"><section class="kc
 <button id="kcCouponApply" type="submit">Aplicar cupom</button></form>
 <p id="kcCouponStatus" class="kc-inline-hint" role="status"></p>
 <div id="kcCouponSavings" hidden><div class="kc-amount-line"><span>Desconto em produtos</span><strong>− <span id="kcProductDiscount">R$ 0,00</span></strong></div><div class="kc-amount-line" id="kcShippingDiscountRow" hidden><span>Frete grátis</span><strong>− <span id="kcShippingDiscount">R$ 0,00</span></strong></div></div>
-<div class="kc-total-line"><span>Total</span><strong id="kcTotal">${money(subtotal)}</strong></div><p class="kc-inline-hint" id="commerceEligibility" role="status">Escolha o frete para continuar.</p><div id="kcPaymentArea"><button class="button" id="checkout" disabled>Escolher frete</button></div><p class="kc-secure-note">Pedidos pagos usam Mercado Pago. Pedidos grátis são registrados sem cobrança.</p></section></div>`;
+<div class="kc-total-line"><span>Total</span><strong id="kcTotal">${money(subtotal)}</strong></div>
+<fieldset class="kg-payment-methods" id="kgPaymentMethods"><legend>Como deseja pagar?</legend>
+<label class="kg-payment-option"><input type="radio" name="kgPaymentMethod" value="pix"><span class="kg-payment-option-copy"><strong>Pix</strong><small>Pagamento no Mercado Pago · QR Code ou copia e cola, se disponível</small></span></label>
+<label class="kg-payment-option"><input type="radio" name="kgPaymentMethod" value="mercadopago" checked><span class="kg-payment-option-copy"><strong>Cartão e outras formas</strong><small>Escolha as opções disponíveis no Mercado Pago</small></span></label>
+<p class="kg-payment-method-note">O Mercado Pago confirma as formas de pagamento disponíveis antes da cobrança. Nenhum Pix será cobrado diretamente neste site.</p>
+</fieldset>
+<p class="kc-inline-hint" id="commerceEligibility" role="status">Escolha o frete para continuar.</p><div id="kcPaymentArea"><button class="button" id="checkout" disabled>Escolher frete</button></div><p class="kc-secure-note">Pedidos pagos usam Mercado Pago. Pedidos grátis são registrados sem cobrança.</p></section></div>`;
 window.kaiaCartExperience?.afterBagRender({
  cart,eligible:catalog.filter(p=>p.sku&&p.available&&variantFor(p).available&&
   commerceAllowed instanceof Map&&commerceAllowed.get(p.sku)===Math.round(p.price*100)),
  onAdd:p=>addCart(p.id,variantFor(p).id,1,{skipConfirmation:true})
 });
+const methodChoices=all('input[name="kgPaymentMethod"]');
+methodChoices.forEach(choice=>choice.onchange=()=>{if(choice.checked){
+ try{sessionStorage.setItem('kaia_preferred_payment_v1',choice.value);}catch{}
+ checkoutEligibility();
+}});
+try{const savedMethod=sessionStorage.getItem('kaia_preferred_payment_v1');const found=methodChoices.find(x=>x.value===savedMethod);if(found){found.checked=true;checkoutEligibility();}}catch{}
 const couponStatus=$('#kcCouponStatus');
 couponStatus.textContent=coupon?calculateCoupon(coupon,couponItems()).message:'';
 $('#kcCouponForm').onsubmit=async e=>{
