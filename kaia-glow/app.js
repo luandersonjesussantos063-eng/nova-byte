@@ -702,6 +702,9 @@ if(location.hash==='#exclusivos'){kaiaMenuDialog.showModal();history.replaceStat
 
 // A retail offer shelf uses only the real catalogue prices, without generated ratings or stock claims.
 const shelfProducts=catalog.filter(p=>p.available&&p.oldPrice>p.price).slice(0,6);
+// Avoid an orphan promotional heading and blank space when no genuine discounts exist.
+const offersSection=$('#offerShelf')?.closest('.retail-offers');
+if(offersSection)offersSection.hidden=shelfProducts.length===0;
 $('#offerShelf').innerHTML=shelfProducts.map(p=>`<article class="product retail-offer-product"><div class="product-photo"><a href="#produto-${p.id}" data-product="${p.id}" aria-label="Ver ${esc(p.name)}"><img src="${esc(p.images[0])}" alt="${esc(p.name)}" loading="lazy" referrerpolicy="no-referrer"></a><span class="badge">${Math.round((1-p.price/p.oldPrice)*100)}% OFF</span><button class="wish" data-wish="${p.id}" aria-label="Favoritar ${esc(p.name)}">♡</button></div><span class="product-brand">${esc(p.brand)}</span><h3><a href="#produto-${p.id}" data-product="${p.id}">${esc(p.name)}</a></h3><div class="product-price"><del>${money(p.oldPrice)}</del><span>${money(p.price)}</span></div><button class="quick-add" data-quick="${p.id}">Adicionar à sacola <span>+</span></button></article>`).join('');
 $('#shelfOffers').onclick=()=>$('#offers').click();
 $('#retailEnquiries').onclick=()=>kaiaMenuDialog.showModal();
