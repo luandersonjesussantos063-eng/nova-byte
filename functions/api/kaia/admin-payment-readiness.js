@@ -15,7 +15,7 @@ export async function onRequestGet({request,env}){
   };
   const shippingReady=env.KAIA_SHIPPING_PROVIDER==='superfrete'&&
    env.KAIA_SF_MODE==='production'&&!!env.KAIA_SF_ACCESS_TOKEN&&
-   /^\\d{8}$/.test(String(env.KAIA_SHIP_FROM_CEP||''))&&
+   /^\d{8}$/.test(String(env.KAIA_SHIP_FROM_CEP||''))&&
    !!env.KAIA_SHIPPING_TECH_CONTACT;
   if(!secrets.secureDatabase) return response({
    configuration:secrets,shippingReady,checkedAt:new Date().toISOString(),
