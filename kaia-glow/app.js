@@ -69,7 +69,28 @@ function calculateCoupon(code,items,today=couponToday()){
 }
 function couponItems(){return cart.map(r=>{const p=catalog.find(p=>p.id===r.id);return {category:p.category,price:variantFor(p,r.variantId).price,qty:r.qty}})}
 
-let saved=read('kaia-demo-favorites',[]),favorites=new Set(Array.isArray(saved)?saved.filter(id=>catalog.some(p=>p.id===id)):[]),cart=[],favOnly=false,limit=12,current=null,currentVariant=null,qty=1,coupon='';
+const CART_KEY='kaia-essential-checkout-cart-v1';
+function restoreCart(){
+ const data=read(CART_KEY,null);
+ if(!data||!Array.isArray(data.items)||!Number.isFinite(data.at)||
+  data.at>Date.now()+60_000||Date.now()-data.at>7*86400000)return [];
+ const items=[],seen=new Set();
+ for(const raw of data.items.slice(0,30)){
+  const p=catalog.find(x=>String(x.id)===String(raw?.id));
+  if(!p||!p.available||!p.sku)continue;
+  const v=p.variants?.find(x=>String(x.id)===String(raw.variantId));
+  if(!v||!v.available||!Number.isInteger(raw.qty)||raw.qty<1)continue;
+  const key=p.id+'-'+v.id;
+  if(seen.has(key))continue;
+  seen.add(key);items.push({key,id:p.id,variantId:v.id,qty:Math.min(10,raw.qty)});
+  if(items.length>=20)break;
+ }
+ return items;
+}
+function persistCart(){
+ save(CART_KEY,{at:Date.now(),items:cart.map(r=>({id:r.id,variantId:r.variantId,qty:r.qty}))});
+}
+let saved=read('kaia-demo-favorites',[]),favorites=new Set(Array.isArray(saved)?saved.filter(id=>catalog.some(p=>p.id===id)):[]),cart=restoreCart(),favOnly=false,limit=12,current=null,currentVariant=null,qty=1,coupon='';
 let commerceAllowed=null,chosenShipping=null,commerceFetchVersion=0,commerceFetchState='loading';
 const cartItems=()=>cart.map(r=>({sku:catalog.find(p=>p.id===r.id)?.sku,quantity:r.qty}));
 function cartSignature(){return JSON.stringify(cartItems().slice().sort((a,b)=>String(a.sku).localeCompare(String(b.sku))));}
@@ -271,7 +292,7 @@ async function commercialCheckout(){
   if(isFree){
    if(result.status!=='approved'||result.totalCents!==0||!result.freeOrder||
       !/^[0-9a-f-]{36}$/.test(result.id||''))throw Error('O pedido grátis não foi confirmado.');
-   cart=[];coupon='';shippingReset();window.kaiaCartExperience?.clearGift();sessionStorage.removeItem('kaia_order_request_v1');
+   cart=[];persistCart();coupon='';shippingReset();window.kaiaCartExperience?.clearGift();sessionStorage.removeItem('kaia_order_request_v1');
    location.assign('/pedido.html?pedido='+encodeURIComponent(result.id));return;
   }
   const u=new URL(result.checkoutUrl);
@@ -364,7 +385,7 @@ function addCart(id,variantId,quantity=1,options={}){
  const key=id+'-'+v.id,row=cart.find(x=>x.key===key);
  if(row)row.qty=Math.min(10,row.qty+quantity);
  else cart.push({key,id,variantId:v.id,qty:Math.min(10,quantity)});
- shippingReset();counts();
+ persistCart();shippingReset();counts();
  if($('#bagDialog').open){renderBag();return;}
  if(options.skipConfirmation){toast('Produto adicionado à sacola.');return;}
  const eligible=catalog.filter(x=>x.sku&&x.available&&variantFor(x).available&&
@@ -422,7 +443,7 @@ $('#kcCouponForm').onsubmit=async e=>{
   (hadOldCheckout?' Não utilize o pagamento anterior; confirme o novo pedido abaixo.':'');
  checkoutEligibility();
 };
-all('[data-step]').forEach(b=>b.onclick=()=>{const r=cart.find(x=>x.key===b.dataset.key);r.qty=Math.max(1,Math.min(10,r.qty+Number(b.dataset.step)));shippingReset();renderBag()});all('[data-remove]').forEach(b=>b.onclick=()=>{cart=cart.filter(r=>r.key!==b.dataset.remove);shippingReset();renderBag()});$('#shippingQuoteForm').onsubmit=async e=>{
+all('[data-step]').forEach(b=>b.onclick=()=>{const r=cart.find(x=>x.key===b.dataset.key);r.qty=Math.max(1,Math.min(10,r.qty+Number(b.dataset.step)));persistCart();shippingReset();renderBag()});all('[data-remove]').forEach(b=>b.onclick=()=>{cart=cart.filter(r=>r.key!==b.dataset.remove);persistCart();shippingReset();renderBag()});$('#shippingQuoteForm').onsubmit=async e=>{
  e.preventDefault();
  const status=$('#shippingQuoteResult'),cep=postalDigits($('#shippingPostalCode').value);
  if(!/^[0-9]{8}$/.test(cep)){status.textContent='Informe um CEP válido de 8 números.';return;}
@@ -470,8 +491,16 @@ all('[data-step]').forEach(b=>b.onclick=()=>{const r=cart.find(x=>x.key===b.data
   if(!list.children.length)status.textContent='Nenhuma modalidade disponível para este CEP.';
  }catch{status.textContent='Não foi possível consultar o frete agora. Confira sua conexão e tente novamente.';}
 };$('#shippingPostalCode').oninput=()=>{chosenShipping=null;$('#kcShippingChoices')?.replaceChildren();if($('#shippingQuoteResult'))$('#shippingQuoteResult').textContent='Calcule o frete para este CEP.';checkoutEligibility();};$('#checkout').onclick=commercialCheckout;fetchEligible();checkoutEligibility();}
-function openBagDrawer(){renderBag();if(!$('#bagDialog').open)$('#bagDialog').showModal();}
+function openBagDrawer(){renderBag();if(!$('#bagDialog').open)$('#bagDialog').showModal();window.kaiaCheckoutGate?.refresh();}
 $('#bagButton').onclick=openBagDrawer;
+window.kaiaCheckoutGate?.onChange(()=>{
+ if($('#bagDialog').open)renderBag();
+});
+if(new URLSearchParams(location.search).get('sacola')==='1'){
+ const clean=new URL(location.href);clean.searchParams.delete('sacola');
+ history.replaceState(null,'',clean.pathname+clean.search+clean.hash);
+ if(cart.length)setTimeout(openBagDrawer,80);
+}
 function info(type){let html='';if(type==='checkout')html='<h2>Finalização indisponível no momento</h2><p>Não foi possível iniciar a finalização online. Fale com a Kaia Glow para receber atendimento. Nenhum pagamento foi iniciado.</p><a class="button" href="'+esc(whatsappUrl('Olá! Preciso de ajuda para finalizar uma compra na Kaia Glow.'))+'" target="_blank" rel="noopener noreferrer">Falar com a equipe</a>';
 if(type==='privacy')html='<h2>Sua privacidade na Kaia Glow</h2><p>A conta utiliza dados reais: nome, e-mail, CPF, nascimento, telefone e endereço. Saiba como tratamos seus dados de navegação, cadastro e atendimento. Consulte as finalidades, os provedores, os dados locais e seus direitos na política completa.</p><a class="button" href="privacidade.html">Ler Política de privacidade ↗</a>';
 if(type==='contact')html=`<span class="eyebrow">ATENDIMENTO KAIA GLOW</span><h2>Vamos conversar<br>sobre o seu cuidado?</h2><p>Fale com a equipe pelo WhatsApp para tirar dúvidas sobre os produtos e consultar disponibilidade.</p><a class="button" href="${esc(whatsappUrl('Olá! Vim pelo site da Kaia Glow e gostaria de saber mais sobre os produtos.'))}" target="_blank" rel="noopener noreferrer">Conversar no WhatsApp ↗</a><p class="detail-note">(11) 96567-7152 · A mensagem fica preenchida para você revisar e enviar.</p>`;
