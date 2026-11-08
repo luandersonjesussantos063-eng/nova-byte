@@ -4,6 +4,8 @@ on:
     paths:
       - 'kaia-glow/**'
       - 'scripts/tests/kaia-navigation.test.mjs'
+      - 'scripts/tests/kaia-admin-management.test.mjs'
+      - 'functions/api/kaia/admin-orders.js'
       - '.github/workflows/kaia-quality.yml'
   workflow_dispatch:
 permissions:
@@ -17,4 +19,5 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - run: node --test scripts/tests/kaia-navigation.test.mjs
+      - run: node --test scripts/tests/kaia-navigation.test.mjs scripts/tests/kaia-admin-management.test.mjs
+

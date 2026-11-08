@@ -13,7 +13,7 @@ test('all Kaia pages connect to privacy, terms and support and have real local d
  }
 });
 test('published privacy copy covers actual personal data and providers; commercial copy is consistent',()=>{
- const privacy=read('privacidade.html'),terms=read('termos-de-uso.html');for(const text of ['CPF','nascimento','telefone','endereço','Supabase','GitHub Pages','30 dias','WhatsApp','correção','exclusão'])assert(privacy.includes(text),text);
+ const privacy=read('privacidade.html'),terms=read('termos-de-uso.html');for(const text of ['CPF','nascimento','telefone','endereço','Supabase','Cloudflare','30 dias','WhatsApp','correção','exclusão'])assert(privacy.includes(text),text);
  assert(terms.includes('Adicionar itens à sacola não conclui a compra'));assert(terms.includes('Direitos autorais'));assert(terms.includes('sete dias'));assert(!read('index.html').includes('sem vendas reais'));assert(read('conta.html').includes('termsAccepted'));assert(read('conta.js').includes("kaia_terms_version:'2026-11-05'"));
 });
 test('clearing public preferences preserves authentication and other projects',()=>{
@@ -22,3 +22,4 @@ test('clearing public preferences preserves authentication and other projects',(
  vm.runInNewContext(read('institucional.js'),context);handler();assert(!local.has('kaia-demo-favorites'));assert(!local.has('kaia-pending-referral-v1'));assert.equal(local.get('kaia-glow-auth-v1'),'session');assert.equal(local.get('other-project'),'preserve');assert.equal(session.get('other-session'),'preserve');assert.match(status.textContent,/não foram alterados/);
 });
 test('changed browser scripts have valid JavaScript syntax',()=>{for(const file of ['app.js','conta.js','institucional.js'])execFileSync(process.execPath,['--check',join(root,file)],{stdio:'pipe'});});
+
