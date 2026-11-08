@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow"><meta name="theme-color" content="#fbf8f6">
+<title>Meu painel de vendas | Kaia Glow</title>
+<meta name="description" content="Área do vendedor autorizado da Kaia Glow. Acompanhe suas vendas e comissões de forma segura.">
+<link rel="stylesheet" href="vendedor.css?v=1">
+</head><body>
+<header class="seller-topbar">
+ <a class="seller-brand" href="/" aria-label="Kaia Glow, início"><span class="seller-monogram">K</span><span><strong>kaia <em>glow</em></strong><small>ESPAÇO DE VENDAS</small></span></a>
+ <div class="seller-top-actions"><a href="/" target="_blank" rel="noopener">Ver loja ↗</a><button id="sellerLogout" type="button" hidden>Sair</button></div>
+</header>
+<main class="seller-main">
+<section id="sellerLogin" class="seller-auth" aria-labelledby="sellerLoginTitle">
+ <span class="eyebrow">ÁREA DE VENDEDOR · KAIA GLOW</span>
+ <h1 id="sellerLoginTitle">Seu espaço para crescer.</h1>
+ <p>Entre com seu e-mail cadastrado na Kaia Glow. O acesso às comissões é liberado pela administração.</p>
+ <form id="sellerAuthForm" class="seller-auth-form">
+  <label>E-mail<input id="sellerEmail" type="email" autocomplete="username" required placeholder="seu@email.com"></label>
+  <label>Senha<input id="sellerPassword" type="password" autocomplete="current-password" required placeholder="Sua senha"></label>
+  <button class="seller-primary" type="submit" id="sellerLoginButton">Entrar no meu painel</button>
+ </form>
+ <p class="seller-subtle">Primeira vez? <a href="/conta.html?modo=cadastro">Crie sua conta e confirme seu e-mail</a>. Depois, peça à equipe Kaia Glow para liberar seu perfil de vendedor.</p>
+ <p id="sellerAuthStatus" class="seller-message" role="status" aria-live="polite"></p>
+</section>
+<section id="sellerDashboard" hidden>
+ <div class="seller-hero">
+  <div><span class="eyebrow">MINHA JORNADA KAIA</span><h1>Suas vendas, com carinho.</h1>
+   <p id="sellerGreeting">Acompanhe os resultados das suas indicações e saiba o valor a receber.</p></div>
+  <span class="seller-active" id="sellerActiveBadge">Vendedor autorizado</span>
+ </div>
+ <div class="seller-block seller-link-card">
+  <div><span class="eyebrow">SEU LINK EXCLUSIVO</span><h2>Divulgue sua vitrine</h2>
+   <p>Compartilhe este link. Pedidos realizados a partir dele ficam associados ao seu código de vendedor.</p></div>
+  <div class="seller-link-tools"><input id="sellerLink" aria-label="Seu link pessoal" readonly>
+   <button id="sellerCopy" class="seller-primary" type="button">Copiar link</button>
+   <button id="sellerWhatsApp" type="button" class="seller-secondary">Compartilhar no WhatsApp</button></div>
+  <small id="sellerCodeLabel" class="seller-subtle"></small>
+ </div>
+ <div class="seller-stats" aria-label="Minhas estatísticas">
+  <article class="seller-stat"><span>Vendas aprovadas</span><strong id="sellerApproved">0</strong><small>Com pagamento confirmado</small></article>
+  <article class="seller-stat"><span>Vendas pendentes</span><strong id="sellerPending">0</strong><small>Aguardando confirmação</small></article>
+  <article class="seller-stat"><span>Comissões confirmadas</span><strong id="sellerEarned">R$ 0,00</strong><small>10% sobre produtos pagos</small></article>
+  <article class="seller-stat seller-stat-special"><span>Saldo a receber</span><strong id="sellerDue">R$ 0,00</strong><small>Depois dos repasses registrados</small></article>
+ </div>
+ <div class="seller-details">
+  <section class="seller-block">
+   <div class="seller-section-heading"><div><span class="eyebrow">MOVIMENTAÇÃO</span><h2>Minhas vendas</h2></div><button type="button" id="sellerRefresh" class="seller-secondary">Atualizar</button></div>
+   <div class="seller-minor-stats"><div><small>Vendido em produtos</small><strong id="sellerVolume">R$ 0,00</strong></div><div><small>Comissão em análise</small><strong id="sellerEstimated">R$ 0,00</strong></div><div><small>Repasses registrados</small><strong id="sellerPaid">R$ 0,00</strong></div></div>
+   <div id="sellerSales" class="seller-sales-list"><p>Buscando vendas confirmadas…</p></div>
+  </section>
+  <section class="seller-block seller-how">
+   <span class="eyebrow">COMO FUNCIONA</span><h2>Regras simples e claras</h2>
+   <ol><li>Copie seu link e compartilhe com os clientes.</li><li>O cliente entra na loja, escolhe os produtos e realiza o pagamento.</li><li>Após a aprovação, você ganha 10% sobre os produtos, já com descontos e sem frete.</li><li>Cancelamentos e reembolsos suspendem ou anulam a comissão. O repasse financeiro é realizado pela loja, não automaticamente pela plataforma.</li></ol>
+   <p>Por segurança, o histórico mostra valores e status, mas não revela CPF, endereço ou dados pessoais dos compradores.</p>
+  </section>
+ </div>
+ <section class="seller-block seller-catalog"><div class="seller-section-heading"><div><span class="eyebrow">CONHEÇA A COLEÇÃO</span><h2>Produtos para compartilhar</h2></div><a href="/" target="_blank" rel="noopener">Visitar a loja ↗</a></div><div id="sellerProducts" class="seller-products"><p>Carregando produtos…</p></div></section>
+ <p id="sellerDashboardStatus" class="seller-message" role="status" aria-live="polite"></p>
+</section>
+</main><footer class="seller-footer">© Kaia Glow · Área comercial protegida <span>Desenvolvido por Nova Byte</span></footer>
+<script src="catalog.js?v=1"></script>
+<script src="catalog-overrides.js?v=4"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js" integrity="sha384-TcHRA3zBbn+Lexh5n+Oil4guNPOS3rjNDpGRAN46u/s/mB2IZ50ceC6TYDU2yvgK" crossorigin="anonymous"></script>
+<script type="module" src="vendedor.js?v=1"></script>
+</body></html>
