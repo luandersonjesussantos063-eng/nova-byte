@@ -1,4 +1,4 @@
-import {buyerAdmin} from '../checkout-validacao/_core.js';
+import {buyerAdmin,db} from '../checkout-validacao/_core.js';
 import {guardOrigin,credentials,connection,noStoreJson,errorJson,validAccessToken,API_URL} from './_oauth.js';
 export async function onRequestGet({request,env}){
  try{
@@ -7,10 +7,19 @@ export async function onRequestGet({request,env}){
   if(!configured)return noStoreJson({configured:false,authorized:false,autoSync:false});
   credentials(env);
   const current=await connection(env);
+  const controls=await db(env,'kaia_olist_sync_control?slot=eq.1&select=enabled,interval_minutes,last_run_at,last_success_at,last_changed,last_error,last_source_count,last_verified_snapshot_at,last_verified_snapshot_rows');
+  const control=controls[0]||{};
   return noStoreJson({configured:true,authorized:!!current.token_ciphertext,
    authorizedAt:current.last_authorized_at,
    tokenNeedsRenewal:!!current.token_ciphertext&&new Date(current.expires_at).getTime()<Date.now(),
-   autoSync:false});
+   autoSync:control.enabled===true,
+   syncMode:'olist_decrease_only',
+   everyMinutes:control.interval_minutes||5,
+   lastRunAt:control.last_run_at,lastSuccessAt:control.last_success_at,
+   lastChanged:control.last_changed,lastError:control.last_error,
+   lastSourceCount:control.last_source_count,
+   lastVerifiedAt:control.last_verified_snapshot_at,
+   verifiedSkus:control.last_verified_snapshot_rows});
  }catch(e){return errorJson(e);}
 }
 // Performs exactly one read-only test; never updates stock or creates orders.
