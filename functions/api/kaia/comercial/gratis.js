@@ -35,12 +35,13 @@ export async function onRequestPost({request,env}){
   // Price, stock and carrier cost are re-read on the server, never trusted from the browser.
   const verified=await verifiedInventory(env,items);
   const shipping=await quote(env,verified,postalCode,String(data.serviceId||''));
-  const response=await database(env,'rpc/kaia_commercial_redeem_free_coupon',{
+  const response=await database(env,'rpc/kaia_checkout_free_attributed',{
    method:'POST',
    body:{p_user_id:user.id,p_request_key:data.requestKey,p_items:items,
      p_coupon_code:code,p_shipping_service:shipping.serviceId,
      p_list_shipping_cents:shipping.cents,p_postal_code:postalCode,
-     p_shipping_estimated_days:shipping.estimatedDays}
+     p_shipping_estimated_days:shipping.estimatedDays,
+     p_seller_code:String(data.sellerCode||'').slice(0,36)}
   });
   if(!response?.id||response.status!=='approved')throw new CheckoutError('PEDIDO_NAO_CONFIRMADO',503);
   return json({id:response.id,status:'approved',freeOrder:true,totalCents:0,
