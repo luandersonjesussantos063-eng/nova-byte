@@ -68,10 +68,10 @@ export async function onRequestPost({request,env}){
   const token=await validAccessToken(env);
   // No PII: read SKU and pending item quantities only.
   const [stock,openPayments]=await Promise.all([
-   db(env,'kaia_sale_inventory?select=sku,available_units&order=sku&limit=1000'),
+   db(env,'rpc/kaia_olist_auto_stock_skus','POST',{}),
    db(env,'kaia_commercial_payments?select=status,items&status=in.(created,pending,review_required)&limit=1000')
   ]);
-  if(!Array.isArray(stock)||stock.length!==51)
+  if(!Array.isArray(stock)||stock.length<30||stock.length>=1000)
    throw new PaymentError('CATALOGO_LOCAL_INESPERADO',409);
   if(!Array.isArray(openPayments)||openPayments.length>=1000)
    throw new PaymentError('RESERVAS_NAO_CONFERIDAS',409);
