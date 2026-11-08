@@ -1,0 +1,29 @@
+.seller-admin-top{display:grid;grid-template-columns:minmax(0,1fr) minmax(280px,.85fr);gap:18px;margin-bottom:20px}
+.seller-admin-top .editor{padding:23px}.seller-admin-top .editor h3{margin:5px 0 17px;font-size:18px}
+.seller-admin-top input{width:100%;min-height:45px;padding:11px 13px;border:1px solid #dac9d2;border-radius:9px;margin:7px 0 13px}
+.seller-admin-top form .primary-button{min-height:44px;margin:4px 0 8px}
+.seller-admin-top .muted{font-size:12px;line-height:1.65}
+.seller-admin-rules p{font-size:13px;line-height:1.8;color:#766671;margin:9px 0}
+.seller-admin-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin:0 0 20px}
+.seller-admin-summary-card{border:1px solid #eadce3;border-radius:12px;background:#fff;padding:17px 20px}
+.seller-admin-summary-card small,.seller-admin-summary-card strong{display:block}
+.seller-admin-summary-card small{color:#7d6873;font-size:12px}.seller-admin-summary-card strong{font-size:25px;color:#602f4a;margin-top:8px}
+.seller-admin-list{display:grid;gap:17px}.seller-admin-card{background:#fff;border:1px solid #eadce3;border-radius:14px;padding:23px}
+.seller-admin-card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:15px}
+.seller-admin-card-head h3{font-size:18px;color:#5a2e48;margin:0 0 4px;overflow-wrap:anywhere}
+.seller-admin-card-head p{font-size:12px;margin:0}
+.seller-admin-badge{border-radius:8px;background:#e9f5ed;color:#2e7855;font-size:12px;font-weight:700;padding:6px 12px}
+.seller-admin-badge[data-active=false]{background:#fdf0e9;color:#a46e43}
+.seller-admin-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:19px 0}
+.seller-admin-metrics>div{background:#fbf7f9;border-radius:10px;padding:13px}
+.seller-admin-metrics small{display:block;color:#786873;font-size:11px;line-height:1.4}
+.seller-admin-metrics strong{display:block;color:#542940;font-size:19px;margin-top:6px}
+.seller-admin-referral{display:flex;align-items:center;gap:10px}
+.seller-admin-referral input{flex:1;min-width:0;padding:11px;background:#faf8f9;color:#5c364c;border:1px solid #e5d3dd;border-radius:8px;font-size:13px}
+.seller-admin-actions{display:flex;align-items:flex-end;gap:10px;flex-wrap:wrap;margin-top:14px}
+.seller-admin-payout{display:flex;align-items:flex-end;gap:10px;flex:1 1 300px}
+.seller-admin-payout label{display:grid;gap:5px;min-width:140px;flex:1;font-size:11px;color:#644256}
+.seller-admin-payout input{width:100%;padding:10px;border:1px solid #decbd4;border-radius:8px}
+.seller-admin-payout button{flex:0 1 auto}
+@media(max-width:900px){.seller-admin-top{grid-template-columns:1fr}.seller-admin-summary{grid-template-columns:1fr 1fr}.seller-admin-metrics{grid-template-columns:1fr 1fr}}
+@media(max-width:520px){.seller-admin-card{padding:15px}.seller-admin-metrics{gap:8px}.seller-admin-referral{align-items:stretch;flex-direction:column}.seller-admin-referral input{width:100%}.seller-admin-actions button{flex:1}.seller-admin-payout{flex-direction:column;align-items:stretch}.seller-admin-payout label{width:100%}.seller-admin-summary-card{padding:13px}.seller-admin-summary-card strong{font-size:19px}}
