@@ -24,6 +24,8 @@ export async function onRequestPost({request,env}){
   let input;try{input=JSON.parse(raw);}catch{throw new CheckoutError('JSON_INVALIDO',422);}
   if(!/^[0-9a-f]{8}-[0-9a-f-]{27,40}$/.test(input?.requestKey||''))throw new CheckoutError('CHAVE_PEDIDO_INVALIDA',422);
   const items=parseItems(input);
+  const giftPackaging=String(input?.giftPackaging||'none');
+  if(!['none','box','bag'].includes(giftPackaging))throw new CheckoutError('EMBALAGEM_INVALIDA',422);
   const coupon=String(input?.coupon||'').trim().toUpperCase();
   if(coupon&&!/^[A-Z0-9_-]{3,24}$/.test(coupon))
    throw new CheckoutError('CUPOM_INVALIDO',422);
@@ -43,13 +45,13 @@ export async function onRequestPost({request,env}){
     if(available[0]?.discount_type==='percent'&&available[0]?.discount_value===100)
      throw new CheckoutError('CUPOM_REQUER_PEDIDO_GRATIS',409);
    }
-   const reserved=await database(env,'rpc/kaia_checkout_reserve_attributed',{
+   const reserved=await database(env,'rpc/kaia_checkout_reserve_with_gift',{
      method:'POST',body:{
       p_user_id:user.id,p_request_key:input.requestKey,p_items:items,
       p_shipping_cents:shipping.cents,p_shipping_service:shipping.serviceId,
       p_postal_code:postalCode,p_coupon_code:coupon||null,
       p_delivery_days:shipping.estimatedDays,
-      p_seller_code:String(input.sellerCode||'').slice(0,36)
+      p_seller_code:String(input.sellerCode||'').slice(0,36),p_gift_packaging:giftPackaging
      }
    });
    row=await orderRow(env,reserved.id);
