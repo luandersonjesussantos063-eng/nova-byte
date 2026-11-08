@@ -87,6 +87,8 @@ function contents(order,kind,paymentMethod){
  const shipping=Number(order.shipping_cents||0);
  const subtotal=Number(order.list_products_cents??order.products_cents)||0;
  const shippingList=Number(order.list_shipping_cents??order.shipping_cents)||0;
+ const gift=order.gift_packaging==='box'?'caixa para presente':
+  order.gift_packaging==='bag'?'sacola para presente':null;
  const orderLines=products.map(x=>{
   const n=textValue(x.name,120),q=Number(x.quantity),u=Number(x.unit_cents);
   const quantity=Number.isSafeInteger(q)&&q>0&&q<=100?q:0;
@@ -103,6 +105,7 @@ function contents(order,kind,paymentMethod){
   'Entrega: '+(free?'Grátis (cortesia da Kaia Glow)':brl(shipping)),
   'Total: '+brl(order.total_cents),
   'Forma de pagamento: '+payment,
+  ...(gift?['Embalagem solicitada: '+gift+' (sujeita à confirmação pela loja).']:[]),
   estimated,
   'Endereço de entrega: '+location,
   'Acompanhe pelo site: https://usekaiaglow.com.br/conta.html?aba=pedidos',
@@ -125,6 +128,7 @@ function contents(order,kind,paymentMethod){
   'Total cobrado: '+brl(order.total_cents),
   'Pagamento: '+payment,
   'Cupom: '+textValue(order.coupon_code||'Nenhum',24),
+  ...(gift?['SOLICITAÇÃO DE EMBALAGEM: '+gift+'. Verificar disponibilidade antes de preparar o pedido.']:[]),
   estimated,
   'Acompanhe e prepare o envio no painel administrativo da Kaia Glow.',
   'https://usekaiaglow.com.br/admin.html'
