@@ -136,3 +136,13 @@ html{scroll-padding-top:88px}.campaign-stage{z-index:20}.campaign-stage>.retail-
 .demo.kaia-benefits-topbar .kaia-preview-full{display:none}
 .demo.kaia-benefits-topbar .kaia-preview-short{display:inline;color:inherit}
 }
+
+
+/* Kaia Glow: made-to-order care requests, kept separate from instant checkout. */
+.kaia-preorder-badge{background:#ede0e8!important;color:#673b53!important;font-weight:800}
+.kaia-preorder-quick{color:#63374e!important;font-weight:750!important;border-bottom-color:#b28ca3!important}
+.kaia-preorder-quick:hover{color:#8f4e6f!important}
+.kaia-preorder-terms{border:1px solid #e9d7e1;border-radius:11px;background:#fcf5f9;padding:14px 16px;margin-top:12px;line-height:1.65}
+.kaia-preorder-terms strong{display:block;color:#5c2946;font-size:12px}
+.kaia-preorder-terms p{margin:5px 0 0;font-size:11px;color:#7a5a6d}
+.kaia-preorder-feedback{margin:11px 0 0;font-size:12px;color:#653951;line-height:1.65}

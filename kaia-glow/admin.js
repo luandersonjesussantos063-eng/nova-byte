@@ -3,6 +3,7 @@ import {setupKaiaCoupons} from './admin-coupons.js';
 import {setupKaiaTeam,loadKaiaTeam} from './admin-team.js';
 import {setupKaiaCustomers,loadKaiaCustomers} from './admin-customers.js';
 import {setupKaiaCancellations,loadKaiaCancellations} from './admin-cancellations.js';
+import {setupKaiaPreorders,loadKaiaPreorders} from './admin-preorders.js?v=1';
 import {initKaiaAnalytics,loadKaiaAnalytics} from './admin-analytics.js';
 import {initKaiaMarketplaces,loadKaiaMarketplaces} from './admin-marketplaces.js?v=4';
 import {initKaiaPayments,loadKaiaPayments} from './admin-payments.js?v=2';
@@ -42,7 +43,7 @@ async function authorize(){
  const own=await sb.rpc('kaia_is_store_owner');isOwner=own.data===true&&!own.error;
  await setupKaiaTeam(sb,isOwner);await loadAdmin();
  const requested=location.hash.replace(/^#/,'');
- if(['overview','products','coupons','cancellations','analytics','marketplaces','payments','team','customers'].includes(requested))openAdminTab(requested,false);
+ if(['overview','products','coupons','cancellations','preorders','analytics','marketplaces','payments','team','customers'].includes(requested))openAdminTab(requested,false);
  else openAdminTab('overview',false);
 }
 async function loadAdmin(){
@@ -66,7 +67,7 @@ async function loadAdmin(){
  }
  initKaiaAnalytics(sb);setupKaiaCustomers(sb);
  initKaiaMarketplaces(sb,{onStockChanged:()=>loadAdmin()});
- initKaiaPayments(sb);setupKaiaCancellations(sb);
+ initKaiaPayments(sb);setupKaiaCancellations(sb);setupKaiaPreorders(sb);
  $('#productCount').textContent=catalog.filter(p=>!productData(p).archived).length;
  renderProductList();await setupKaiaCoupons(sb);await refreshCommerce();await refreshOverview();
 }
@@ -391,6 +392,7 @@ const panelMeta={
  products:['OPERAÇÃO · CATÁLOGO','Produtos e fotos','Organize sua vitrine, preços, descrições e imagens dos produtos.'],
  marketplaces:['OPERAÇÃO · ESTOQUE','Estoque e marketplaces','Acompanhe saldos e integrações de venda.'],
  payments:['OPERAÇÃO · FINANCEIRO','Pagamentos','Confira a configuração do checkout e dos serviços de pagamento.'],
+ preorders:['OPERAÇÃO · ENCOMENDAS','Encomendas · 7 dias','Confirme e acompanhe solicitações de produtos indisponíveis.'],
  cancellations:['OPERAÇÃO · PÓS-VENDA','Cancelamentos','Analise solicitações e acompanhe reembolsos.'],
  customers:['RELACIONAMENTO · CLIENTES','Clientes e ofertas','Consulte cadastros, preferências e ofertas autorizadas.'],
  coupons:['RELACIONAMENTO · CAMPANHAS','Cupons','Organize suas promoções e acompanhe os códigos cadastrados.'],
@@ -430,6 +432,7 @@ function openAdminTab(current,updateHash=true){
  }
  if(current==='overview')refreshOverview();
  if(current==='cancellations')loadKaiaCancellations();
+ if(current==='preorders')loadKaiaPreorders();
  if(current==='team')loadKaiaTeam();
  if(current==='customers')loadKaiaCustomers();
  if(current==='analytics')loadKaiaAnalytics();

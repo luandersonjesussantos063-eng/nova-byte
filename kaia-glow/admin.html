@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow"><meta name="referrer" content="strict-origin-when-cross-origin">
-<title>Painel administrativo · Kaia Glow</title><link rel="stylesheet" href="admin.css?v=5"><link rel="stylesheet" href="admin-analytics.css?v=1"><link rel="stylesheet" href="admin-marketplaces.css?v=4"><link rel="stylesheet" href="admin-payments.css?v=1"></head>
+<title>Painel administrativo · Kaia Glow</title><link rel="stylesheet" href="admin.css?v=6"><link rel="stylesheet" href="admin-analytics.css?v=1"><link rel="stylesheet" href="admin-marketplaces.css?v=4"><link rel="stylesheet" href="admin-payments.css?v=1"></head>
 <body>
 <header class="admin-top"><div class="admin-brand"><span class="brand-mark" aria-hidden="true">K</span><div><strong>KAIA GLOW</strong><small>PAINEL DE GESTÃO</small></div></div><div class="admin-top-actions"><button type="button" id="adminNavToggle" class="admin-menu-toggle" aria-label="Abrir menu de gestão" aria-controls="adminSidebar" aria-expanded="false" hidden><span aria-hidden="true">☰</span> Menu</button><a href="/" target="_blank" rel="noopener noreferrer">Ver loja <span aria-hidden="true">↗</span></a><button type="button" id="logoutButton" hidden>Sair</button></div></header>
 <main class="admin-shell">
@@ -35,6 +35,7 @@
     <button type="button" role="tab" id="nav-products" data-tab="products" aria-controls="productsTab" aria-selected="false" tabindex="-1"><svg class="admin-nav-icon" aria-hidden="true"><use href="#kg-box"></use></svg><span>Produtos e fotos</span><span class="admin-nav-chevron" aria-hidden="true">›</span></button>
     <button type="button" role="tab" id="nav-marketplaces" data-tab="marketplaces" aria-controls="marketplacesTab" aria-selected="false" tabindex="-1"><svg class="admin-nav-icon" aria-hidden="true"><use href="#kg-layers"></use></svg><span>Estoque e marketplaces</span><span class="admin-nav-chevron" aria-hidden="true">›</span></button>
     <button type="button" role="tab" id="nav-payments" data-tab="payments" aria-controls="paymentsTab" aria-selected="false" tabindex="-1"><svg class="admin-nav-icon" aria-hidden="true"><use href="#kg-credit"></use></svg><span>Pagamentos</span><span class="admin-nav-chevron" aria-hidden="true">›</span></button>
+    <button type="button" role="tab" id="nav-preorders" data-tab="preorders" aria-controls="preordersTab" aria-selected="false" tabindex="-1"><svg class="admin-nav-icon" aria-hidden="true"><use href="#kg-box"></use></svg><span>Encomendas · 7 dias</span><span class="admin-nav-chevron" aria-hidden="true">›</span></button>
     <button type="button" role="tab" id="nav-cancellations" data-tab="cancellations" aria-controls="cancellationsTab" aria-selected="false" tabindex="-1"><svg class="admin-nav-icon" aria-hidden="true"><use href="#kg-rotate"></use></svg><span>Cancelamentos</span><span class="admin-nav-chevron" aria-hidden="true">›</span></button>
     <span class="admin-nav-group">RELACIONAMENTO</span>
     <button type="button" role="tab" id="nav-customers" data-tab="customers" aria-controls="customersTab" aria-selected="false" tabindex="-1"><svg class="admin-nav-icon" aria-hidden="true"><use href="#kg-users"></use></svg><span>Clientes e ofertas</span><span class="admin-nav-chevron" aria-hidden="true">›</span></button>
@@ -125,6 +126,22 @@
 <div class="editor-actions"><button type="submit" class="primary-button" id="saveCouponButton">Salvar cupom</button><button type="reset" class="ghost-button">Limpar</button></div><p id="couponStatus" role="status" aria-live="polite"></p></form>
 <div class="coupon-admin-list"><div class="coupon-list-heading"><h3>Cupons cadastrados</h3><span class="coupon-total"><strong id="couponCount">—</strong> cadastrados</span></div><div id="couponList" class="coupons-list"></div></div></div></section>
 
+<section id="preordersTab" class="admin-section" role="tabpanel" aria-labelledby="nav-preorders" hidden>
+<div class="section-header"><div><span class="eyebrow">KAIA GLOW · PRÉ-VENDA</span>
+<h2>Encomendas de produtos indisponíveis</h2>
+<p>Solicitações de itens sem disponibilidade imediata. Previsão de até 7 dias corridos para reposição, sujeita à confirmação da loja. Nenhuma encomenda cobra ou reserva estoque automaticamente.</p></div>
+<button type="button" class="ghost-button" id="preorderRefresh">Atualizar encomendas</button></div>
+<div class="editor kaia-preorder-filter">
+<label>Visualizar solicitações
+<select id="preorderAdminFilter">
+<option value="active">Em andamento</option><option value="requested">Aguardando confirmação</option>
+<option value="history">Histórico encerrado</option><option value="all">Todas</option>
+</select></label>
+<p id="preorderAdminStatus" role="status" aria-live="polite">Consultando encomendas…</p>
+</div>
+<div id="preorderAdminList" class="kaia-preorders-list" aria-live="polite"></div>
+<p class="muted">Ao confirmar a encomenda, o cliente recebe um e-mail com a previsão de disponibilidade. Marque como disponível somente após registrar o estoque físico. O pagamento e o frete são combinados posteriormente.</p>
+</section>
 <section id="cancellationsTab" class="admin-section" hidden>
 <div class="section-header"><div><span class="eyebrow">KAIA GLOW · PÓS-VENDA</span>
 <h2>Solicitações de cancelamento</h2><p>Veja o motivo do cliente, decida e envie uma resposta por e-mail. Solicitações de arrependimento legal devem ser respeitadas.</p>
@@ -331,5 +348,5 @@
 <footer class="admin-footer">Kaia Glow · Painel restrito de gestão. O acesso é controlado pelo Supabase Auth.</footer>
 <script src="catalog.js?v=1"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js" integrity="sha384-TcHRA3zBbn+Lexh5n+Oil4guNPOS3rjNDpGRAN46u/s/mB2IZ50ceC6TYDU2yvgK" crossorigin="anonymous"></script>
-<script type="module" src="admin.js?v=11"></script>
+<script type="module" src="admin.js?v=12"></script>
 </body></html>

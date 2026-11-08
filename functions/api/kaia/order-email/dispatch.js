@@ -207,6 +207,59 @@ function personalCouponContents(c){
   lines.map(x=>'<p>'+html(x)+'</p>').join('')+'</div>'
  };
 }
+function preorderContents(p){
+ const kind=p.kind;
+ const merchant=kind.endsWith('_merchant');
+ const name=textValue(p.name,100),item=textValue(p.product,150);
+ const sku=textValue(p.sku,110),qty=Number(p.quantity)||1,note=textValue(p.note,1000);
+ let eta='até 7 dias corridos após a solicitação';
+ if(p.estimatedAvailableAt){
+  const d=new Date(p.estimatedAvailableAt);
+  if(Number.isFinite(d.getTime()))eta='até '+new Intl.DateTimeFormat('pt-BR',
+   {dateStyle:'long',timeZone:'America/Cuiaba'}).format(d);
+ }
+ const labels={
+  requested_buyer:'Recebemos sua encomenda',
+  requested_merchant:'Nova encomenda para análise',
+  confirmed_buyer:'Sua encomenda foi confirmada',
+  ready_buyer:'Seu produto está disponível',
+  declined_buyer:'Resposta sobre sua encomenda',
+  cancelled_buyer:'Sua encomenda foi cancelada',
+  cancelled_merchant:'Encomenda cancelada pela cliente'
+ };
+ const title=labels[kind]||'Atualização da encomenda';
+ const messages={
+  requested_buyer:'Recebemos sua solicitação. A previsão de disponibilização é '+eta+', sujeita à confirmação pela Kaia Glow.',
+  requested_merchant:'Uma cliente solicitou um produto indisponível. Confirme a viabilidade e o prazo pelo painel.',
+  confirmed_buyer:'A Kaia Glow confirmou a encomenda. Previsão de disponibilidade: '+eta+'. O frete e a entrega serão combinados depois.',
+  ready_buyer:'A loja registrou que o produto chegou. Entre em contato para combinar o valor final, o frete e a compra.',
+  declined_buyer:'A loja não poderá atender esta encomenda. Veja a justificativa e consulte outras opções com a equipe.',
+  cancelled_buyer:'Sua solicitação de encomenda foi cancelada. Nenhum pagamento foi realizado.',
+  cancelled_merchant:'A cliente cancelou a encomenda. Confira as providências no painel.'
+ };
+ const lines=[
+  merchant?'Nova atualização da encomenda de '+name:'Olá, '+name+'!',
+  title,messages[kind]||'Confira a situação em sua conta.',
+  'Produto: '+item,'SKU: '+sku,'Quantidade: '+qty,
+  'Encomenda: '+textValue(p.reference,60),
+  'Previsão de disponibilidade: '+eta,
+  'Esta solicitação não é compra paga nem reserva automática de estoque.',
+  'Frete e tempo de transporte não estão incluídos nos 7 dias.',
+  ...(note?['Mensagem da loja: '+note]:[]),
+  ...(merchant?['Cliente: '+name,'E-mail: '+textValue(p.email,180)]:[]),
+  merchant?'Painel: https://usekaiaglow.com.br/admin.html#preorders':
+   'Minha conta: https://usekaiaglow.com.br/conta.html?aba=pedidos',
+  'Kaia Glow'
+ ];
+ return {
+  subject:'Kaia Glow • '+title,
+  text:lines.join('\n'),
+  html:'<div style="max-width:640px;margin:auto;background:#fff;border:1px solid #eadce4;border-radius:14px;padding:26px;font:15px/1.7 Arial,sans-serif;color:#3b2b35">'+
+   '<p style="letter-spacing:3px;color:#754a63">KAIA GLOW</p><h1 style="color:#552942;font:500 26px Georgia,serif">'+html(title)+'</h1>'+
+   lines.map(l=>'<p style="overflow-wrap:anywhere">'+html(l)+'</p>').join('')+
+   '</div>'
+ };
+}
 async function send(env,to,content,key){
  const rawFrom=env.KAIA_ORDER_EMAIL_FROM||DEFAULT_SENDER;
  if(!safeMail(rawFrom)||!rawFrom.toLowerCase().endsWith('@usekaiaglow.com.br')||
@@ -308,6 +361,30 @@ export async function onRequestPost({request,env}){
     }
    }
   }catch{/* Transactional mail remains unaffected by the marketing queue. */}
+  // Dedicated preorder notification outbox; never interrupts order receipts.
+  try{
+   const jobs=await db(env,'rpc/kaia_preorder_mail_claim_batch','POST',{});
+   if(Array.isArray(jobs))for(const job of jobs){
+    stats.attempted++;
+    let success=false,providerId=null,errorCode=null;
+    try{
+     if(!uuid.test(job.id)||!uuid.test(job.lease_id))
+      throw new PaymentError('EMAIL_ITEM_FILA_INVALIDO',503);
+     const details=await db(env,'rpc/kaia_preorder_mail_details','POST',{p_id:job.id});
+     if(!details||!safeMail(details.email)||!details.kind)
+      throw new PaymentError('EMAIL_ENCOMENDA_INCOMPLETA',422);
+     const recipient=details.kind.endsWith('_merchant')?MERCHANT_EMAIL:details.email;
+     providerId=await send(env,recipient,preorderContents(details),'kaia-preorder-'+details.id);
+     success=true;stats.accepted++;
+    }catch(e){
+     errorCode=e instanceof PaymentError?e.code:'EMAIL_ERRO_INTERNO';stats.failed++;
+    }
+    try{await db(env,'rpc/kaia_preorder_mail_mark','POST',{
+     p_id:job.id,p_lease:job.lease_id,p_success:success,
+     p_message_id:providerId,p_code:errorCode
+    });}catch{/* Preserve the idempotent retry lease. */}
+   }
+  }catch{/* Do not disrupt transactional order email. */}
   return json({ok:true,providerAccepted:stats.accepted,attempted:stats.attempted,
    failed:stats.failed});
  }catch(e){

@@ -15,3 +15,7 @@
 .marketing-pref-check{display:flex;align-items:flex-start;gap:11px;border:1px solid #e7d7de;background:#fbf8f9;border-radius:12px;padding:14px;margin:12px 0}
 .marketing-pref-check input{flex:0 0 auto;width:19px;height:19px;accent-color:#562a42;margin-top:2px}
 #marketingPreferenceStatus{color:#562a42;font-weight:600}
+
+
+.kaia-preorder-heading{margin-top:31px;padding-top:18px;border-top:1px solid #eee0e7}
+.kaia-preorder-heading .account-small{font-size:11px}
