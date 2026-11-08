@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow"><meta name="referrer" content="strict-origin-when-cross-origin">
-<title>Painel administrativo · Kaia Glow</title><link rel="stylesheet" href="admin.css?v=4"><link rel="stylesheet" href="admin-analytics.css?v=1"><link rel="stylesheet" href="admin-marketplaces.css?v=4"><link rel="stylesheet" href="admin-payments.css?v=1"></head>
+<title>Painel administrativo · Kaia Glow</title><link rel="stylesheet" href="admin.css?v=5"><link rel="stylesheet" href="admin-analytics.css?v=1"><link rel="stylesheet" href="admin-marketplaces.css?v=4"><link rel="stylesheet" href="admin-payments.css?v=1"></head>
 <body>
 <header class="admin-top"><div class="admin-brand"><span class="brand-mark" aria-hidden="true">K</span><div><strong>KAIA GLOW</strong><small>PAINEL DE GESTÃO</small></div></div><div class="admin-top-actions"><button type="button" id="adminNavToggle" class="admin-menu-toggle" aria-label="Abrir menu de gestão" aria-controls="adminSidebar" aria-expanded="false" hidden><span aria-hidden="true">☰</span> Menu</button><a href="/" target="_blank" rel="noopener noreferrer">Ver loja <span aria-hidden="true">↗</span></a><button type="button" id="logoutButton" hidden>Sair</button></div></header>
 <main class="admin-shell">
@@ -293,43 +293,43 @@
 </section>
 
 <section id="paymentsTab" class="admin-section" hidden>
- <div class="section-header"><div><span class="eyebrow">KAIA GLOW · PAGAMENTOS</span><h2>Integração Mercado Pago</h2>
- <p>Prepare o recebimento de Pix e cartões pela conta da titular da loja. Nenhum pagamento é realizado até a integração ser homologada.</p>
+ <div class="section-header"><div><span class="eyebrow">KAIA GLOW · FINANCEIRO</span>
+  <h2>Pagamentos e Mercado Pago</h2>
+  <p>Acompanhe a configuração de produção, os testes realizados e a liberação dos produtos para compra. As informações vêm do servidor e dos registros da loja.</p>
  </div><button type="button" class="ghost-button" id="mpPaymentRefresh">Verificar integração</button></div>
- <div class="payment-stage-warning"><strong>Pagamentos desativados</strong><p>A finalização da compra permanece bloqueada até conectar as credenciais autorizadas, validar os pedidos e testar os Webhooks. Não configure os tokens diretamente nesta página.</p></div>
+ <div id="mpReadinessBanner" class="payment-readiness-banner" data-state="loading" role="status" aria-live="polite">
+  <span class="payment-readiness-mark" aria-hidden="true">●</span>
+  <div><strong id="mpReadinessHeadline">Conferindo o Mercado Pago…</strong>
+   <p id="mpReadinessExplanation">Consultando a configuração protegida e os pedidos registrados.</p></div>
+ </div>
  <div class="payment-stages">
-  <article class="metric"><small>Credencial de teste no servidor</small><strong id="mpPaymentTestCredential" class="payment-state">Verificando</strong></article>
-  <article class="metric"><small>Assinatura de Webhooks</small><strong id="mpPaymentWebhook" class="payment-state">Verificando</strong></article>
-  <article class="metric"><small>Pedidos e checkout</small><strong id="mpPaymentCheckout" class="payment-state">Desativado</strong></article>
+  <article class="metric"><small>Credenciais de produção</small><strong id="mpPaymentProduction" class="payment-state">Verificando</strong><span>Integração protegida na Cloudflare</span></article>
+  <article class="metric"><small>Assinatura do webhook</small><strong id="mpPaymentWebhook" class="payment-state">Verificando</strong><span>Configuração para validar notificações</span></article>
+  <article class="metric"><small>Teste pago de R$ 5,00</small><strong id="mpPaymentPilot" class="payment-state">Verificando</strong><span>Resultado registrado do teste-piloto</span></article>
+  <article class="metric"><small>Venda paga na loja</small><strong id="mpPaymentRealOrders" class="payment-state">Verificando</strong><span>Pedido comercial aprovado com valor pago</span></article>
  </div>
  <div class="payment-columns">
- <div class="editor"><span class="eyebrow">PRIMEIRO PASSO</span><h3>Criar a aplicação na conta da cliente</h3>
-  <p>A conta que receberá as vendas precisa ser a titular da aplicação. O convite de colaborador não significa que uma aplicação foi criada automaticamente.</p>
-  <ol class="payment-steps">
-   <li>Acesse o painel de integrações autenticado na conta da titular.</li>
-   <li>Selecione <strong>Criar aplicação</strong>.</li>
-   <li>Informe <strong>Kaia Glow</strong> e selecione <strong>Pagamentos online → Checkout Pro (Orders API)</strong>, se a interface apresentar essa opção.</li>
-   <li>Conclua a criação e confira a identificação da conta recebedora.</li>
-   <li>Abra <strong>Credenciais de teste</strong> e o menu <strong>Webhooks</strong>; não copie tokens para conversas ou arquivos.</li>
-  </ol>
-  <a class="payment-main-link" target="_blank" rel="noopener noreferrer" href="https://www.mercadopago.com.br/developers/panel/app">Abrir Mercado Pago Developers ↗</a>
+  <div class="editor"><span class="eyebrow">ESTADO ATUAL</span><h3>Recebimentos e pedidos</h3>
+    <div class="payment-facts">
+     <div><span>Checkout e frete configurados</span><strong id="mpPaymentCheckout">Verificando</strong></div>
+     <div><span>Produtos liberados na primeira etapa</span><strong id="mpReleasedProducts">—</strong></div>
+     <div><span>Produtos elegíveis para compra</span><strong id="mpEligibleProducts">—</strong></div>
+     <div><span>Pedido grátis confirmado</span><strong id="mpFreeOrder">Verificando</strong></div>
+    </div>
+    <p class="muted payment-hint">O pedido gratuito confirma o fluxo de pedidos e notificações, mas não testa uma cobrança. A compra-piloto paga e as vendas normais são acompanhadas separadamente.</p>
+  </div>
+  <div class="editor"><span class="eyebrow">SEGURANÇA DA OPERAÇÃO</span><h3>Próximas verificações</h3>
+   <div id="mpNextChecks" class="payment-next-checks" aria-live="polite"><p>Carregando as recomendações…</p></div>
+   <p class="muted payment-hint">Consultar este painel não gera cobranças, não altera valores e não libera novos produtos. Credenciais privadas nunca aparecem nesta página.</p>
+   <a class="payment-main-link" href="https://www.mercadopago.com.br/developers/panel/app" target="_blank" rel="noopener noreferrer">Abrir Mercado Pago Developers ↗</a>
+  </div>
  </div>
- <div class="editor"><span class="eyebrow">IMPLEMENTAÇÃO SEGURA</span><h3>O que falta conectar</h3>
-  <p>As credenciais privadas pertencem à conta da titular e serão armazenadas somente nos segredos da Cloudflare, nunca no frontend.</p>
-  <dl class="payment-config">
-   <dt>Access Token de teste</dt><dd><code>KAIA_MP_TEST_ACCESS_TOKEN</code></dd>
-   <dt>Assinatura secreta do Webhook</dt><dd><code>KAIA_MP_WEBHOOK_SECRET</code></dd>
-   <dt>Retorno dos clientes</dt><dd>Site oficial: <a href="/" target="_blank" rel="noopener noreferrer">usekaiaglow.com.br</a></dd>
-   <dt>Confirmação de vendas</dt><dd>Somente após consulta ao Mercado Pago, autenticação da notificação e conciliação do pedido.</dd>
-  </dl>
-  <p>Próximas etapas: validar carrinho, preço e cupom no servidor; confirmar frete e estoque; reservar unidades; criar a order com chave de idempotência; processar Webhook de forma segura; testar antes de ativar.</p>
- </div></div>
- <p><a class="payment-main-link" href="/liberacao-vendas.html">Ver relatório de liberação: preços, estoque e embalagens por produto ↗</a></p>
- <p id="mpPaymentStatus" role="status" class="payment-status">Consultando o servidor da Kaia Glow...</p>
+ <p class="payment-updated" id="mpPaymentLastCheck">—</p>
+ <p id="mpPaymentStatus" role="status" class="payment-status">Consultando o servidor da Kaia Glow…</p>
 </section>
 </div></div></section></main>
 <footer class="admin-footer">Kaia Glow · Painel restrito de gestão. O acesso é controlado pelo Supabase Auth.</footer>
 <script src="catalog.js?v=1"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js" integrity="sha384-TcHRA3zBbn+Lexh5n+Oil4guNPOS3rjNDpGRAN46u/s/mB2IZ50ceC6TYDU2yvgK" crossorigin="anonymous"></script>
-<script type="module" src="admin.js?v=10"></script>
+<script type="module" src="admin.js?v=11"></script>
 </body></html>

@@ -5,7 +5,7 @@ import {setupKaiaCustomers,loadKaiaCustomers} from './admin-customers.js';
 import {setupKaiaCancellations,loadKaiaCancellations} from './admin-cancellations.js';
 import {initKaiaAnalytics,loadKaiaAnalytics} from './admin-analytics.js';
 import {initKaiaMarketplaces,loadKaiaMarketplaces} from './admin-marketplaces.js?v=4';
-import {initKaiaPayments,loadKaiaPayments} from './admin-payments.js';
+import {initKaiaPayments,loadKaiaPayments} from './admin-payments.js?v=2';
 const $=s=>document.querySelector(s),all=s=>Array.from(document.querySelectorAll(s));
 const sb=window.supabase?.createClient(KAIA_AUTH.url,KAIA_AUTH.publishableKey,{auth:{storageKey:'kaia-glow-auth-v1',persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
 const catalog=window.KAIA_CATALOG||[];let edits=new Map(),inventory=new Map(),selected=null,images=[],signedIn=false,commercialSkus=null,isOwner=false;
@@ -66,7 +66,7 @@ async function loadAdmin(){
  }
  initKaiaAnalytics(sb);setupKaiaCustomers(sb);
  initKaiaMarketplaces(sb,{onStockChanged:()=>loadAdmin()});
- initKaiaPayments();setupKaiaCancellations(sb);
+ initKaiaPayments(sb);setupKaiaCancellations(sb);
  $('#productCount').textContent=catalog.filter(p=>!productData(p).archived).length;
  renderProductList();await setupKaiaCoupons(sb);await refreshCommerce();await refreshOverview();
 }
