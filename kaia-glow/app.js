@@ -243,7 +243,7 @@ async function commercialCheckout(){
   }
   if(!/^[0-9]{8}$/.test(currentPostal)||pending.registeredPostalCode!==currentPostal)
    throw Error('O CEP usado no frete é diferente do CEP salvo na sua conta ('+(pending.registeredPostalCode||'não cadastrado')+'). Atualize seu endereço em Minha conta e calcule o frete novamente antes de pagar.');
-  const fingerprint=cartSignature()+'|'+chosenShipping.serviceId+'|'+currentPostal+'|'+(coupon||'')+'|'+(sellerForCheckout()||'');
+  const fingerprint=cartSignature()+'|'+chosenShipping.serviceId+'|'+currentPostal+'|'+(coupon||'')+'|'+(sellerForCheckout()||'')+'|'+(window.kaiaCartExperience?.giftChoice()||'none');
   let savedRequest;try{savedRequest=JSON.parse(sessionStorage.getItem('kaia_order_request_v1')||'null');}catch{}
   if(!savedRequest||savedRequest.fingerprint!==fingerprint||
      !savedRequest.createdAt||Date.now()-savedRequest.createdAt>60_000){
