@@ -652,7 +652,9 @@ function addCart(id,variantId,quantity=1,options={}){
   });
  }else toast('Adicionado à sua sacola.');
 }
-function renderBag(){window.kaiaCartExperience?.beforeBagRender();counts();if(!cart.length){window.kaiaCartExperience?.closeBagIfEmpty();$('#bagContent').innerHTML='<div class="bag-body empty"><h2>Sua próxima descoberta<br>está te esperando.</h2><p>Explore a coleção e monte sua sacola.</p><button class="button" id="backShopping">Continuar explorando ↗</button></div>';$('#backShopping').onclick=()=>$('#bagDialog').close();return}
+let renderedBagAuthState=null;
+function renderBag(){renderedBagAuthState=window.kaiaCheckoutGate?.isAuthenticated()===true;
+ window.kaiaCartExperience?.beforeBagRender();counts();if(!cart.length){window.kaiaCartExperience?.closeBagIfEmpty();$('#bagContent').innerHTML='<div class="bag-body empty"><h2>Sua próxima descoberta<br>está te esperando.</h2><p>Explore a coleção e monte sua sacola.</p><button class="button" id="backShopping">Continuar explorando ↗</button></div>';$('#backShopping').onclick=()=>$('#bagDialog').close();return}
 const subtotal=cart.reduce((a,r)=>a+variantFor(catalog.find(p=>p.id===r.id),r.variantId).price*r.qty,0);
 $('#bagContent').innerHTML=`<div class="bag-body kc-checkout"><section class="kc-cart-section"><div class="kc-section-title"><h3>Seu pedido</h3><span>${cart.length} ${cart.length===1?'item':'itens'}</span></div>${cart.map(r=>{const p=catalog.find(p=>p.id===r.id),v=variantFor(p,r.variantId);return `<div class="bag-item"><img src="${esc(p.images[0])}" alt="${esc(p.name)}"><div><h3>${esc(p.name)}</h3>${p.variants.length>1?`<small>${esc(v.label)}</small>`:''}<small>${money(v.price)}</small><div class="quantity"><button data-step="-1" data-key="${r.key}" aria-label="Diminuir ${esc(p.name)}">−</button><output>${r.qty}</output><button data-step="1" data-key="${r.key}" aria-label="Aumentar ${esc(p.name)}">+</button></div><button class="remove" data-remove="${r.key}">Remover</button></div></div>`}).join('')}</section><section class="kc-delivery-section"><div class="kc-section-title"><h3>Entrega</h3><a class="kc-account-link" href="/conta.html?aba=dados" target="_blank" rel="noopener noreferrer">Meu endereço ↗</a></div><form id="shippingQuoteForm" class="kc-cep-form" aria-label="Calcular frete"><label for="shippingPostalCode">CEP</label><input id="shippingPostalCode" name="cep" inputmode="numeric" autocomplete="postal-code" maxlength="9" placeholder="00000-000" aria-label="CEP de entrega" required><button type="submit">Calcular</button></form><p class="kc-inline-hint" id="shippingQuoteResult" role="status" aria-live="polite">Informe seu CEP para ver as opções de entrega.</p><div id="kgDeliveryAddressMount"></div><div id="kcShippingChoices" class="kc-shipping-choices" aria-label="Modalidades de entrega"></div></section><section class="kc-payment-section"><div class="kc-section-title"><h3>Pagamento</h3><span id="kcPaymentProvider">Mercado Pago</span></div>
 <div class="kc-amount-line"><span>Produtos</span><strong>${money(subtotal)}</strong></div>
@@ -761,7 +763,11 @@ all('[data-step]').forEach(b=>b.onclick=()=>{const r=cart.find(x=>x.key===b.data
 function openBagDrawer(){renderBag();if(!$('#bagDialog').open)$('#bagDialog').showModal();window.kaiaCheckoutGate?.refresh();}
 $('#bagButton').onclick=openBagDrawer;
 window.addEventListener('kaia:checkout-auth-changed',()=>{
- if($('#bagDialog').open)renderBag();
+ // Background auth refreshes must not destroy an address form being edited.
+ // Rebuild only when the visitor actually changes between signed-in/out.
+ if(!$('#bagDialog').open)return;
+ const currentAuthState=window.kaiaCheckoutGate?.isAuthenticated()===true;
+ if(currentAuthState!==renderedBagAuthState)renderBag();
 });
 if(new URLSearchParams(location.search).get('sacola')==='1'){
  const clean=new URL(location.href);clean.searchParams.delete('sacola');
