@@ -9,7 +9,7 @@
  const ids={street:'kgAddressStreet',street_number:'kgAddressNumber',complement:'kgAddressComplement',
   neighborhood:'kgAddressNeighborhood',city:'kgAddressCity',state:'kgAddressState'};
  const onlyDigits=v=>String(v||'').replace(/\D/g,'');
- let saved=null,confirmed=null,signature=()=>'',onChange=()=>{},serial=0,loading=false,edited=false,mountGeneration=0,postalReference=null,lastPostal='',lookupActive=null,lookupCEP='';
+ let saved=null,confirmed=null,signature=()=>'',onChange=()=>{},onConfirmed=()=>{},onEditing=()=>{},serial=0,loading=false,edited=false,mountGeneration=0,postalReference=null,lastPostal='',lookupActive=null,lookupCEP='';
  const dirtyFields=new Set();
  const pendingInput=()=>keys.some(k=>$(ids[k])?.value.trim());
  const getPostal=()=>onlyDigits($('shippingPostalCode')?.value);
@@ -17,8 +17,13 @@
  const stamp=()=>JSON.stringify({postal:getPostal(),...formData(),cart:signature()});
  const status=text=>{if($('kgAddressStatus'))$('kgAddressStatus').textContent=text;};
  function recalc(){
+  const ready=isConfirmed();
   const payment=document.querySelector('.kc-payment-section');
-  if(payment)payment.hidden=!isConfirmed();
+  if(payment)payment.hidden=!ready;
+  const form=$('kgAddressForm'),summary=$('kgAddressSummary'),cepForm=$('shippingQuoteForm');
+  if(form)form.hidden=ready;
+  if(summary)summary.hidden=!ready;
+  if(cepForm)cepForm.hidden=ready;
   onChange();
  }
  function isConfirmed(){return !!confirmed&&confirmed===stamp();}
@@ -166,8 +171,14 @@
    saved={...saved,...data,postal_code:cep};
    if(original!==stamp())throw Error('O endereço mudou durante a confirmação. Confira e confirme novamente.');
    confirmed=stamp();
+   const formattedCep=cep.slice(0,5)+'-'+cep.slice(5);
+   const summary=$('kgAddressSummaryText');
+   if(summary)summary.textContent=data.street+', '+data.street_number+
+    (data.complement?', '+data.complement:'')+' · '+data.neighborhood+
+    ' · '+data.city+'/'+data.state+' · CEP '+formattedCep;
    status('Endereço confirmado e salvo! Escolha o frete para continuar.');
    recalc();
+   onConfirmed();
   }catch(e){invalidate(e.message);}
   finally{if(document.contains(button))button.disabled=false;}
  }
@@ -183,6 +194,8 @@
   loading=false;
   signature=options.cartSignature||(()=> '');
   onChange=options.onChange||(()=>{});
+  onConfirmed=options.onConfirmed||(()=>{});
+  onEditing=options.onEditing||(()=>{});
   root.innerHTML=`<form id="kgAddressForm" class="kg-address-form">
    <h4>Confirme seu endereço de entrega</h4>
    <p>O CEP preenche os dados disponíveis. Confira e complete antes do pagamento.</p>
@@ -196,9 +209,24 @@
    </div>
    <p class="kg-address-status" id="kgAddressStatus" role="status" aria-live="polite"></p>
    <button type="submit" id="kgAddressConfirm" class="button">Confirmar endereço</button>
-   </form>`;
+   </form>
+   <section class="kg-address-summary" id="kgAddressSummary" aria-label="Endereço de entrega confirmado" hidden>
+    <div class="kg-address-summary-details">
+     <strong>✓ Endereço confirmado</strong>
+     <p id="kgAddressSummaryText"></p>
+    </div>
+    <button type="button" id="kgAddressEdit">Alterar endereço</button>
+   </section>`;
   if(existingDraft&&previousPostal===getPostal())fill(existingDraft);
   $('kgAddressForm').addEventListener('submit',confirm);
+  $('kgAddressEdit').addEventListener('click',()=>{
+   confirmed=null;
+   status('Confira ou altere os dados e confirme o endereço novamente.');
+   recalc();
+   onEditing();
+   $('kgAddressForm')?.scrollIntoView?.({block:'start',behavior:'smooth'});
+   $('kgAddressNumber')?.focus?.({preventScroll:true});
+  });
   $('kgAddressForm').querySelectorAll('input').forEach(input=>input.addEventListener('input',()=>{
    edited=true;
    const key=keys.find(k=>ids[k]===input.id);
@@ -717,7 +745,24 @@ window.kaiaCartExperience?.afterBagRender({
   commerceAllowed instanceof Map&&commerceAllowed.get(p.sku)===Math.round(p.price*100)),
  onAdd:p=>addCart(p.id,variantFor(p).id,1,{skipConfirmation:true})
 });
-window.kaiaDeliveryAddress?.mount({onChange:checkoutEligibility,cartSignature});
+window.kaiaDeliveryAddress?.mount({
+ onChange:checkoutEligibility,cartSignature,
+ onConfirmed:()=>{
+  const area=$('#kcShippingChoices');
+  const quote=$('#shippingQuoteForm');
+  if(!area||!quote)return;
+  area.replaceChildren();
+  $('#shippingQuoteResult').textContent='Buscando opções de entrega para o endereço confirmado…';
+  quote.requestSubmit();
+ },
+ onEditing:()=>{
+  chosenShipping=null;
+  $('#kcShippingChoices')?.replaceChildren();
+  const quoteStatus=$('#shippingQuoteResult');
+  if(quoteStatus)quoteStatus.textContent='Confirme novamente o endereço para escolher o frete.';
+  checkoutEligibility();
+ }
+});
 const methodChoices=all('input[name="kgPaymentMethod"]');
 methodChoices.forEach(choice=>choice.onchange=()=>{if(choice.checked){
  try{sessionStorage.setItem('kaia_preferred_payment_v1',choice.value);}catch{}
@@ -766,7 +811,7 @@ all('[data-step]').forEach(b=>b.onclick=()=>{const r=cart.find(x=>x.key===b.data
   const r=await fetch('/api/kaia/frete',{method:'POST',headers:{'content-type':'application/json'},
    body:JSON.stringify({destinoCep:cep,items})});
   const info=await r.json();
-  if(cep!==postalDigits($('#shippingPostalCode').value)||requestedCart!==cartSignature())return;
+  if(cep!==postalDigits($('#shippingPostalCode').value)||requestedCart!==cartSignature()||!window.kaiaDeliveryAddress?.isConfirmed())return;
   if(!r.ok){
    const missing=(info.skusPendentes||[]).map(sku=>catalog.find(p=>p.sku===sku)?.name||sku);
    status.textContent=(info.message||'O frete ainda não está disponível para esta sacola.')
@@ -799,6 +844,10 @@ all('[data-step]').forEach(b=>b.onclick=()=>{const r=cart.find(x=>x.key===b.data
    list.append(button);
   }
   if(!list.children.length)status.textContent='Nenhuma modalidade disponível para este CEP.';
+  else {
+   list.setAttribute('aria-label','Escolha sua modalidade de entrega');
+   list.scrollIntoView({block:'start',behavior:'smooth'});
+  }
  }catch{status.textContent='Não foi possível consultar o frete agora. Confira sua conexão e tente novamente.';}
 };$('#shippingPostalCode').oninput=()=>{chosenShipping=null;window.kaiaDeliveryAddress?.postalChanged();$('#kcShippingChoices')?.replaceChildren();if($('#shippingQuoteResult'))$('#shippingQuoteResult').textContent='Calcule o frete para este CEP.';checkoutEligibility();};$('#checkout').onclick=commercialCheckout;fetchEligible();checkoutEligibility();}
 function openBagDrawer(){renderBag();if(!$('#bagDialog').open)$('#bagDialog').showModal();window.kaiaCheckoutGate?.refresh();}
