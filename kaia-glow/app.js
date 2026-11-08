@@ -9,7 +9,7 @@
  const ids={street:'kgAddressStreet',street_number:'kgAddressNumber',complement:'kgAddressComplement',
   neighborhood:'kgAddressNeighborhood',city:'kgAddressCity',state:'kgAddressState'};
  const onlyDigits=v=>String(v||'').replace(/\D/g,'');
- let saved=null,confirmed=null,signature=()=>'',onChange=()=>{},serial=0,loading=false,edited=false,mountGeneration=0;
+ let saved=null,confirmed=null,signature=()=>'',onChange=()=>{},serial=0,loading=false,edited=false,mountGeneration=0,postalReference=null;
  const pendingInput=()=>keys.some(k=>$(ids[k])?.value.trim());
  const getPostal=()=>onlyDigits($('shippingPostalCode')?.value);
  const formData=()=>Object.fromEntries(keys.map(k=>[k,$(ids[k])?.value.trim()||'']));
@@ -47,6 +47,7 @@
    const v=await r.json();
    if(!r.ok||v.erro)throw Error('CEP não encontrado');
    if(version!==serial||cep!==getPostal())return;
+   postalReference={postal:cep,city:String(v.localidade||'').trim(),state:String(v.uf||'').trim()};
    const data={street:v.logradouro||'',street_number:'',complement:'',
     neighborhood:v.bairro||'',city:v.localidade||'',state:v.uf||''};
    fill(data,{emptyOnly:true});
@@ -86,7 +87,7 @@
  }
  function postalChanged(){
   const version=++serial,cep=getPostal();
-  confirmed=null;
+  confirmed=null;postalReference=null;
   if(!$('kgDeliveryAddressMount'))return;
   if(cep.length!==8){edited=false;fill(null);invalidate('Informe os 8 números do CEP para preencher seu endereço.');return;}
   edited=false;fill(null);
@@ -109,6 +110,11 @@
    invalidate('Confira CEP, rua, número, bairro, cidade e UF. Complemento é opcional.');return;
   }
   if(!saved){invalidate('Complete seu cadastro em Minha conta antes de confirmar.');return;}
+  if(postalReference&&postalReference.postal===cep&&
+   ((postalReference.city&&postalReference.city.toLocaleLowerCase('pt-BR')!==data.city.toLocaleLowerCase('pt-BR'))||
+    (postalReference.state&&postalReference.state!==data.state))){
+   invalidate('A cidade ou UF não corresponde ao CEP consultado. Confira o endereço antes de continuar.');return;
+  }
   const original=stamp();
   button.disabled=true;status('Salvando endereço de entrega…');
   try{
@@ -136,7 +142,7 @@
   const existingDraft=previous?formData():null;
   const previousPostal=getPostal();
   mountGeneration++;serial++;
-  confirmed=null;edited=!!existingDraft&&Object.values(existingDraft).some(v=>v);
+  confirmed=null;postalReference=null;edited=!!existingDraft&&Object.values(existingDraft).some(v=>v);
   loading=false;
   signature=options.cartSignature||(()=> '');
   onChange=options.onChange||(()=>{});
@@ -163,7 +169,7 @@
   load();
  }
  window.kaiaDeliveryAddress={mount,postalChanged,isConfirmed,reset(){
-  serial++;mountGeneration++;confirmed=null;saved=null;edited=false;recalc();
+  serial++;mountGeneration++;confirmed=null;saved=null;edited=false;postalReference=null;recalc();
  }};
 })();
 
