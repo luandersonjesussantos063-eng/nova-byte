@@ -169,3 +169,24 @@
 @media(max-width:500px){.kg-address-form{padding:15px}.kg-address-grid{gap:10px}.kg-address-grid label{grid-column:1/-1}}
 
 .kc-checkout .kc-payment-section[hidden]{display:none!important}
+
+/* Endereço confirmado — resumo compacto no lugar dos campos */
+.kg-address-form[hidden],.kg-address-summary[hidden],.kc-delivery-section #shippingQuoteForm[hidden]{display:none!important}
+.kg-address-summary{
+ margin:16px 0 18px;padding:15px 16px;
+ display:flex;align-items:center;justify-content:space-between;gap:14px;
+ border:1px solid #dbc8d1;background:#fcf6f8;border-radius:12px;
+}
+.kg-address-summary-details{min-width:0}
+.kg-address-summary-details strong{display:block;color:#4c2b3c;font-size:13px;margin-bottom:5px}
+.kg-address-summary-details p{font-size:12px;line-height:1.55;color:#6b5261;margin:0;overflow-wrap:anywhere}
+.kg-address-summary button{
+ flex-shrink:0;padding:8px 10px;border:1px solid #cdaebf;border-radius:8px;
+ color:#673a54;background:#fff;font-size:12px;font-weight:650;
+}
+.kg-address-summary button:focus-visible{outline:2px solid #8c5475;outline-offset:2px}
+.kc-shipping-choices{scroll-margin-top:20px}
+@media(max-width:520px){
+ .kg-address-summary{align-items:flex-start;flex-direction:column;gap:9px}
+ .kg-address-summary button{align-self:flex-start}
+}
