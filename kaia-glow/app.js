@@ -363,16 +363,68 @@ async function submitPreorder(p,quantity){
  }catch(e){message(e.message||'Não foi possível registrar a encomenda.');}
  finally{preorderBusy=false;syncDetailPurchase();}
 }
-function render(){const term=normalize($('#search').value.trim()),cat=$('#category').value,brand=$('#brand').value,max=+$('#price').value;let list=catalog.filter(p=>(cat==='Todos'||p.category===cat)&&(!brand||p.brand===brand)&&(!max||p.price<=max)&&(!$('#available').checked||p.available)&&(!$('#onSale').checked||p.oldPrice>p.price)&&(!favOnly||favorites.has(p.id))&&(!term||normalize(p.name+' '+p.brand+' '+p.category).includes(term)));
+function matchesShopCategory(p,category){
+ if(category==='Todos')return true;
+ // 'Só na Kaia' is the store's curated Kaia Selection, not a claim that
+ // third-party products are unavailable anywhere else.
+ if(category==='Só na Kaia')return normalize(p.brand||'')===normalize('Kaia Selection');
+ return p.category===category;
+}
+function render(){const term=normalize($('#search').value.trim()),cat=$('#category').value,brand=$('#brand').value,max=+$('#price').value;let list=catalog.filter(p=>matchesShopCategory(p,cat)&&(!brand||p.brand===brand)&&(!max||p.price<=max)&&(!$('#available').checked||p.available)&&(!$('#onSale').checked||p.oldPrice>p.price)&&(!favOnly||favorites.has(p.id))&&(!term||normalize(p.name+' '+p.brand+' '+p.category).includes(term)));
 const sort=$('#sort').value;if(sort==='low')list.sort((a,b)=>a.price-b.price);if(sort==='high')list.sort((a,b)=>b.price-a.price);if(sort==='name')list.sort((a,b)=>a.name.localeCompare(b.name,'pt-BR'));
-$('#resultCount').textContent=list.length+' '+(favOnly?'favoritos':list.length===1?'produto':'produtos')+(cat==='Todos'?'':' · '+cat);$('#collectionTitle').textContent=favOnly?'Seus favoritos, em um só lugar.':cat==='Todos'?'Todos os produtos.':cat==='Corpo e spa'?'Seu momento de pausa.':cat==='Skincare'?'Um novo ritual para sua pele.':cat==='Cabelos'?'Cuidado da raiz às pontas.':'Seu toque final.';
-$('#products').innerHTML=list.slice(0,limit).map(p=>`<article class="product"><div class="product-photo"><a href="#produto-${p.id}" data-product="${p.id}" aria-label="Ver ${esc(p.name)}"><img src="${esc(p.images[0])}" alt="${esc(p.name)}" loading="lazy" referrerpolicy="no-referrer"></a>${!p.available?'<span class="badge sold kaia-preorder-badge">ENCOMENDA · 7 DIAS</span>':p.oldPrice>p.price?`<span class="badge">${Math.round((1-p.price/p.oldPrice)*100)}% OFF</span>`:''}<button class="wish" data-wish="${p.id}" aria-label="Favoritar ${esc(p.name)}">♡</button></div><span class="product-brand">${esc(p.brand.toUpperCase())}</span><h3><a href="#produto-${p.id}" data-product="${p.id}">${esc(p.name)}</a></h3><div class="product-price">${p.oldPrice>p.price?`<del>${money(p.oldPrice)}</del>`:''}<span>${money(p.price)}</span></div><button class="quick-add ${purchaseState(p)==='preorder'?'kaia-preorder-quick':''}" data-${purchaseState(p)==='preorder'?'preorder':purchaseState(p)==='error'?'retry-availability':'quick'}="${p.id}" ${purchaseState(p)==='loading'?'disabled':''}>${purchaseState(p)==='buy'?'Adicionar à sacola':purchaseState(p)==='preorder'?'Encomendar':purchaseState(p)==='error'?'Tentar novamente':'Verificando disponibilidade'}<span>${purchaseState(p)==='buy'?'+':'↗'}</span></button><a class="kaia-product-page-link" href="${esc(new URL(p.url).pathname)}">Ver página e características ↗</a></article>`).join('');$('#empty').hidden=!!list.length;$('#loadMore').hidden=list.length<=limit;all('nav [data-cat]').forEach(b=>b.classList.toggle('active',b.dataset.cat===cat&&!favOnly));counts()}
+$('#resultCount').textContent=list.length+' '+(favOnly?'favoritos':list.length===1?'produto':'produtos')+(cat==='Todos'?'':' · '+(cat==='Perfumaria'?'Perfumes':cat));
+ $('#collectionTitle').textContent=favOnly?'Seus favoritos, em um só lugar.':
+  brand?'Descubra '+brand+'.':cat==='Todos'?'Todos os produtos.':
+  cat==='Corpo e spa'?'Seu momento de pausa.':cat==='Skincare'?'Um novo ritual para sua pele.':
+  cat==='Cabelos'?'Cuidado da raiz às pontas.':cat==='Só na Kaia'?'A seleção especial da Kaia.':
+  cat==='Perfumaria'?'Perfumes para descobrir.':cat==='Maquiagem'?'Seu toque final.':'Seu próximo cuidado.';
+ const emptySection=$('#empty');
+ if(emptySection){
+  const emptyTitle=emptySection.querySelector('h3'),emptyNote=emptySection.querySelector('p');
+  const categoryEmpty=cat!=='Todos'&&!catalog.some(p=>matchesShopCategory(p,cat));
+  if(emptyTitle)emptyTitle.textContent=categoryEmpty?
+   (cat==='Perfumaria'?'Perfumes em breve na Kaia Glow.':cat+' em breve na Kaia Glow.'):
+   'Seu próximo favorito ainda está por aqui.';
+  if(emptyNote)emptyNote.textContent=categoryEmpty?
+   'Estamos preparando essa seleção. Explore os produtos já disponíveis na loja.':
+   'Tente outro termo ou remova os filtros.';
+ }
+$('#products').innerHTML=list.slice(0,limit).map(p=>`<article class="product"><div class="product-photo"><a href="#produto-${p.id}" data-product="${p.id}" aria-label="Ver ${esc(p.name)}"><img src="${esc(p.images[0])}" alt="${esc(p.name)}" loading="lazy" referrerpolicy="no-referrer"></a>${!p.available?'<span class="badge sold kaia-preorder-badge">ENCOMENDA · 7 DIAS</span>':p.oldPrice>p.price?`<span class="badge">${Math.round((1-p.price/p.oldPrice)*100)}% OFF</span>`:''}<button class="wish" data-wish="${p.id}" aria-label="Favoritar ${esc(p.name)}">♡</button></div><span class="product-brand">${esc(p.brand.toUpperCase())}</span><h3><a href="#produto-${p.id}" data-product="${p.id}">${esc(p.name)}</a></h3><div class="product-price">${p.oldPrice>p.price?`<del>${money(p.oldPrice)}</del>`:''}<span>${money(p.price)}</span></div><button class="quick-add ${purchaseState(p)==='preorder'?'kaia-preorder-quick':''}" data-${purchaseState(p)==='preorder'?'preorder':purchaseState(p)==='error'?'retry-availability':'quick'}="${p.id}" ${purchaseState(p)==='loading'?'disabled':''}>${purchaseState(p)==='buy'?'Adicionar à sacola':purchaseState(p)==='preorder'?'Encomendar':purchaseState(p)==='error'?'Tentar novamente':'Verificando disponibilidade'}<span>${purchaseState(p)==='buy'?'+':'↗'}</span></button><a class="kaia-product-page-link" href="${esc(new URL(p.url).pathname)}">Ver página e características ↗</a></article>`).join('');$('#empty').hidden=!!list.length;$('#loadMore').hidden=list.length<=limit;all('nav [data-cat]').forEach(b=>{
+  const selected=b.dataset.cat===cat&&!favOnly&&!brand;
+  b.classList.toggle('active',selected);
+  b.setAttribute('aria-pressed',String(selected));
+ });
+ const brandMenu=$('#kaiaNavBrandsMenu');
+ if(brandMenu)brandMenu.classList.toggle('has-selection',!!brand);
+ all('[data-brand-nav]').forEach(b=>{
+  const selected=b.dataset.brandNav===brand&&!favOnly;
+  b.classList.toggle('active',selected);
+  b.setAttribute('aria-pressed',String(selected));
+ });
+ counts()}
 function reset(){favOnly=false;limit=12;$('#search').value='';$('#category').value='Todos';$('#brand').value='';$('#price').value='0';$('#available').checked=false;$('#onSale').checked=false;$('#sort').value='featured';render()}
 function setCategory(cat){reset();$('#category').value=cat;render();$('#colecao').scrollIntoView()}
 $('#searchForm').onsubmit=e=>{e.preventDefault();limit=12;render();$('#colecao').scrollIntoView()};$('#search').oninput=()=>{limit=12;render()};for(const id of ['category','brand','price','available','onSale','sort'])$('#'+id).onchange=()=>{limit=12;render()};$('#clearFilters').onclick=reset;$('#resetEmpty').onclick=reset;$('#loadMore').onclick=()=>{limit+=12;render()};$('#favorites').onclick=()=>{reset();favOnly=true;render();$('#colecao').scrollIntoView()};$('#offers').onclick=()=>{reset();$('#onSale').checked=true;render();$('#colecao').scrollIntoView()};
-$('#brand').innerHTML+=[...new Set(catalog.map(p=>p.brand))].sort().map(b=>`<option>${esc(b)}</option>`).join('');
+const availableBrands=[...new Set(catalog.map(p=>String(p.brand||'').trim()).filter(Boolean))]
+ .sort((a,b)=>a.localeCompare(b,'pt-BR'));
+$('#brand').innerHTML+=availableBrands.map(b=>`<option value="${esc(b)}">${esc(b)}</option>`).join('');
+const brandsRail=$('#kaiaNavBrandChoices');
+if(brandsRail){
+ brandsRail.replaceChildren();
+ for(const name of availableBrands){
+  const button=document.createElement('button');
+  button.type='button';button.dataset.brandNav=name;button.textContent=name;
+  brandsRail.append(button);
+ }
+}
 const hero=catalog.find(p=>p.available&&p.name.includes('PDRN Pink Collagen Gel Mask'))||catalog.find(p=>p.available);$('#heroImage').src=hero.images[0];$('#heroName').textContent=hero.name;$('#heroProduct').onclick=()=>openProduct(hero.id);
-const tileNames=['Todos','Skincare','Cabelos','Corpo e spa'];$('#categoryGrid').innerHTML=tileNames.map(cat=>{const p=cat==='Todos'?hero:(catalog.find(x=>x.category===cat&&x.available)||catalog.find(x=>x.category===cat));return `<button class="category-tile" data-cat="${cat}"><div class="category-img"><img src="${esc(p.images[0])}" alt="${cat==='Todos'?'Seleção Kaia Glow':'Seleção de '+cat}" loading="lazy"></div><span>${cat==='Todos'?'Todos os produtos':cat==='Corpo e spa'?'Corpo & spa':cat}<small>↗</small></span></button>`}).join('');
+const tileNames=['Skincare','Cabelos','Só na Kaia','Corpo e spa'];
+$('#categoryGrid').innerHTML=tileNames.map(cat=>{
+ const p=catalog.find(x=>matchesShopCategory(x,cat)&&x.available)||
+  catalog.find(x=>matchesShopCategory(x,cat))||hero;
+ const label=cat==='Corpo e spa'?'Corpo & spa':cat;
+ return `<button class="category-tile" data-cat="${cat}"><div class="category-img"><img src="${esc(p.images[0])}" alt="Seleção de ${esc(label)}" loading="lazy"></div><span>${esc(label)}<small>↗</small></span></button>`;
+}).join('');
 function variantFor(p,id){return p.variants.find(v=>String(v.id)===String(id))||p.variants.find(v=>v.available)||p.variants[0]}
 function openProduct(id){const p=catalog.find(x=>x.id===id);if(!p)return;current=p;currentVariant=variantFor(p);qty=1;$('#productContent').innerHTML=`<div class="product-detail"><div class="detail-images"><img id="detailImage" class="main-photo" src="${esc(p.images[0])}" alt="${esc(p.name)}"><div class="thumbs">${p.images.map((im,i)=>`<button data-photo="${i}" aria-label="Ver foto ${i+1}"><img src="${esc(im)}" alt="Foto ${i+1}" loading="lazy"></button>`).join('')}</div></div><div class="detail-info"><span class="eyebrow">${esc(p.brand)} · ${esc(p.category)}</span><h2>${esc(p.name)}</h2><div class="product-price" id="detailPrice">${money(currentVariant.price)}</div><p class="detail-note">${purchaseState(p,currentVariant)==='preorder'?'Disponível por encomenda · previsão de até 7 dias corridos para reposição, sujeita à confirmação da loja.':'Consulte a disponibilidade.'}</p>${p.variants.length>1?`<label>Opção<select id="variant">${p.variants.map(v=>`<option value="${v.id}" ${v.id===currentVariant.id?'selected':''}>${esc(v.label)}${v.available?'':' · esgotado'}</option>`).join('')}</select></label>`:''}<div class="quantity"><button id="qtyDown" aria-label="Diminuir quantidade">−</button><output id="detailQty">1</output><button id="qtyUp" aria-label="Aumentar quantidade">+</button></div><button class="button" id="addDetail" ${purchaseState(p,currentVariant)==='loading'?'disabled':''}>${purchaseState(p,currentVariant)==='buy'?'Adicionar à sacola':purchaseState(p,currentVariant)==='preorder'?'Encomendar':purchaseState(p,currentVariant)==='error'?'Tentar novamente':'Verificando disponibilidade'}</button><div id="preorderTerms" class="kaia-preorder-terms" ${purchaseState(p,currentVariant)==='preorder'?'':'hidden'}><strong>Encomenda sem pagamento antecipado</strong><p>Previsão de até 7 dias corridos para disponibilização após a solicitação, sujeita à confirmação da loja. A entrega e o frete serão combinados depois. Você poderá cancelar a solicitação.</p></div><p id="preorderFeedback" class="kaia-preorder-feedback" role="status" aria-live="polite"></p><a class="button outline product-whatsapp" href="${esc(whatsappUrl('Olá! Vim pelo site da Kaia Glow e gostaria de saber mais sobre o produto: '+p.name+'.\n'+'https://usekaiaglow.com.br/#produto-'+p.id))}" target="_blank" rel="noopener noreferrer">Tirar dúvida no WhatsApp ↗</a><details class="kc-product-details"><summary>Detalhes e modo de uso</summary><div class="description">${esc(p.description||'Confira as informações deste produto no catálogo original da Kaia Glow. Para saber mais, fale com a equipe Kaia Glow.')}</div></details><p class="detail-note">Consulte as informações e recomendações da embalagem.</p></div></div>`;all('[data-photo]').forEach(b=>b.onclick=()=>{$('#detailImage').src=p.images[+b.dataset.photo]});$('#qtyDown').onclick=()=>{$('#detailQty').textContent=qty=Math.max(1,qty-1)};$('#qtyUp').onclick=()=>{$('#detailQty').textContent=qty=Math.min(10,qty+1)};$('#addDetail').onclick=()=>{const state=purchaseState(p,currentVariant);if(state==='preorder')submitPreorder(p,qty);else if(state==='buy')addCart(p.id,currentVariant.id,qty);else if(state==='error')fetchEligible();};if($('#variant'))$('#variant').onchange=e=>{currentVariant=variantFor(p,e.target.value);$('#detailPrice').textContent=money(currentVariant.price);syncDetailPurchase()};if(!$('#productDialog').open)$('#productDialog').showModal();$('#productDialog').scrollTop=0;window.kaiaMarketing?.productOpened(p);history.replaceState(null,'','#produto-'+id)}
 function addCart(id,variantId,quantity=1,options={}){
@@ -507,7 +559,20 @@ if(type==='contact')html=`<span class="eyebrow">ATENDIMENTO KAIA GLOW</span><h2>
 $('#infoContent').innerHTML=html;if(!$('#infoDialog').open)$('#infoDialog').showModal();if($('#clearData'))$('#clearData').onclick=()=>{favorites.clear();save('kaia-demo-favorites',[]);render();$('#infoDialog').close();toast('Favoritos apagados.')};}
 all('[data-close]').forEach(b=>b.onclick=()=>b.closest('dialog').close());all('dialog').forEach(d=>d.addEventListener('click',e=>{if(e.target!==d)return;const r=d.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)d.close()}));
 $('#productDialog').addEventListener('close',()=>{window.kaiaMarketing?.productClosed();if(location.hash.startsWith('#produto-'))history.replaceState(null,'',location.pathname+location.search+'#colecao')});
-document.addEventListener('click',e=>{const c=e.target.closest('[data-cat]');if(c)setCategory(c.dataset.cat);const p=e.target.closest('[data-product]');if(p){e.preventDefault();openProduct(p.dataset.product)}const w=e.target.closest('[data-wish]');if(w){favorites.has(w.dataset.wish)?favorites.delete(w.dataset.wish):favorites.add(w.dataset.wish);save('kaia-demo-favorites',[...favorites]);if(favOnly)render();else counts()}const pre=e.target.closest('[data-preorder]');if(pre){openProduct(pre.dataset.preorder);const button=$('#addDetail');if(button&&!button.disabled)button.focus();}const retry=e.target.closest('[data-retry-availability]');if(retry)fetchEligible();const q=e.target.closest('[data-quick]');if(q){const product=catalog.find(p=>p.id===q.dataset.quick);if(product.variants.length>1)openProduct(product.id);else addCart(product.id)}const i=e.target.closest('[data-info]');if(i)info(i.dataset.info)});
+document.addEventListener('click',e=>{
+ const c=e.target.closest('[data-cat]');if(c){
+  setCategory(c.dataset.cat);
+  if($('#kaiaNavBrandsMenu'))$('#kaiaNavBrandsMenu').open=false;
+ }
+ const brandChoice=e.target.closest('[data-brand-nav]');
+ if(brandChoice){
+  const name=brandChoice.dataset.brandNav;
+  if(availableBrands.includes(name)){
+   reset();$('#brand').value=name;render();
+   if($('#kaiaNavBrandsMenu'))$('#kaiaNavBrandsMenu').open=false;
+   $('#colecao').scrollIntoView({behavior:'smooth',block:'start'});
+  }
+ }const p=e.target.closest('[data-product]');if(p){e.preventDefault();openProduct(p.dataset.product)}const w=e.target.closest('[data-wish]');if(w){favorites.has(w.dataset.wish)?favorites.delete(w.dataset.wish):favorites.add(w.dataset.wish);save('kaia-demo-favorites',[...favorites]);if(favOnly)render();else counts()}const pre=e.target.closest('[data-preorder]');if(pre){openProduct(pre.dataset.preorder);const button=$('#addDetail');if(button&&!button.disabled)button.focus();}const retry=e.target.closest('[data-retry-availability]');if(retry)fetchEligible();const q=e.target.closest('[data-quick]');if(q){const product=catalog.find(p=>p.id===q.dataset.quick);if(product.variants.length>1)openProduct(product.id);else addCart(product.id)}const i=e.target.closest('[data-info]');if(i)info(i.dataset.info)});
 render();fetchEligible();const deepLink=location.hash.match(/^#produto-(\d+)$/);if(deepLink)openProduct(deepLink[1]);
 
 // Editorial selection uses the same real catalog and shopping actions.
