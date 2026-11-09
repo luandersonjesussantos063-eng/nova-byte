@@ -39,6 +39,7 @@ jobs:
           fi
           git config user.name "Lucas Atualiza Bot"
           git config user.email "actions@users.noreply.github.com"
+          node scripts/security-policy.mjs
           git add noticias-lucas-do-rio-verde.html sitemap.xml scripts/local-news/history.json 'lucas-*.html'
           git commit -m "Lucas Atualiza: publicação automática"
           git pull --rebase origin main

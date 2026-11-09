@@ -1,4 +1,4 @@
-import {sendContactEmail} from './contact-email.js';
+import {sendContactEmail} from './contact-email.js?v=security-20261109';
 /* No automatic transmission. The visitor chooses email or WhatsApp. */
 (()=>{
  'use strict';
@@ -18,8 +18,14 @@ import {sendContactEmail} from './contact-email.js';
    document.querySelector('.contact-notice').hidden=true;
    form.querySelector('[data-contact-note]').textContent='* Campos obrigatórios. Para enviar por e-mail, informe seu e-mail. O envio é processado pelo Web3Forms. Se preferir WhatsApp, confira a mensagem e confirme no aplicativo.';
   }
+  let lastSend=0;
   emailButton.addEventListener('click',async()=>{
    if(!emailEnabled)return;
+   emailStatus.hidden=false;
+   const captchaToken=form.querySelector('[name="h-captcha-response"]')?.value||'';
+   const honeypot=form.querySelector('[name="botcheck"]')?.value||'';
+   if(honeypot||!captchaToken){emailStatus.textContent='Confirme a verificação de segurança para enviar por e-mail. Se ela não carregar, você pode continuar pelo WhatsApp.';return;}
+   if(Date.now()-lastSend<30000){emailStatus.textContent='Aguarde alguns segundos antes de enviar outra solicitação.';return;}
    const email=form.querySelector('#contact-email');
    email.required=true;
    const valid=form.reportValidity();
@@ -32,17 +38,18 @@ import {sendContactEmail} from './contact-email.js';
    const timeout=setTimeout(()=>controller.abort(),15000);
    const value=id=>form.querySelector('#'+id).value.trim();
    try{
-    await sendContactEmail({accessKey:config.accessKey,signal:controller.signal,fields:{
+    await sendContactEmail({accessKey:config.accessKey,captchaToken,honeypot,signal:controller.signal,fields:{
      name:value('contact-name'),email:value('contact-email'),phone:value('contact-phone'),
      service:value('contact-service'),message:value('contact-message')
     }});
+    lastSend=Date.now();
     emailStatus.dataset.state='success';
     emailStatus.textContent='Solicitação recebida pelo serviço de envio. Obrigado! A NovaByte responderá pelo contato informado.';
    }catch{
     emailStatus.dataset.state='error';
     emailStatus.textContent='Não foi possível confirmar o envio por e-mail. Seus dados continuam aqui. Use “Preparar mensagem para o WhatsApp” para continuar.';
    }finally{
-    clearTimeout(timeout);emailButton.disabled=false;prepare.disabled=false;
+    clearTimeout(timeout);if(window.hcaptcha)window.hcaptcha.reset();emailButton.disabled=false;prepare.disabled=false;
     emailStatus.focus();
    }
   });

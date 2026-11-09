@@ -37,6 +37,7 @@ jobs:
           git config user.name "NovaByte Atualiza Bot"
           git config user.email "actions@users.noreply.github.com"
 
+          node scripts/security-policy.mjs
           git add index.html noticias-tecnologia.html sitemap.xml scripts/news/history.json assets/news/ '*.html'
 
           if git diff --cached --quiet; then

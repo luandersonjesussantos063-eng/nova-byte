@@ -1,0 +1,3 @@
+/* GitHub Pages fallback until HTTP frame-ancestors can be applied at the edge.
+   Same-origin previews remain supported; cross-origin framing is refused. */
+(()=>{if(window.top===window.self)return;let allowed=false;try{allowed=window.top.location.origin===location.origin}catch{}if(!allowed){document.documentElement.hidden=true;window.addEventListener('DOMContentLoaded',()=>{document.body.replaceChildren();const p=document.createElement('p');p.textContent='Abra a NovaByte diretamente para continuar com segurança.';const a=document.createElement('a');a.href=location.href;a.target='_top';a.textContent='Abrir NovaByte';document.body.append(p,a);document.documentElement.hidden=false;},{once:true});}})();
