@@ -5,6 +5,9 @@ const footer=document.querySelector('#footerAccountLabel');
 const exit=document.querySelector('#menuSignOut');
 const status=document.querySelector('#menuAccountStatus');
 const menu=document.querySelector('#kaiaMenuDialog');
+const menuLogin=document.querySelector('#kaiaMenuLogin');
+const menuSignup=document.querySelector('#kaiaMenuSignup');
+const menuProfile=document.querySelector('#kaiaMenuProfile');
 // Use precisely the same persisted session as the account page.
 const client=window.supabase?.createClient(KAIA_AUTH.url,KAIA_AUTH.publishableKey,{auth:{storageKey:'kaia-glow-auth-v1',persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});
 let revision=0;
@@ -14,6 +17,9 @@ function render(user,name=''){
  if(footer)footer.textContent=connected?'Acessar minha conta':'Minha conta · Entrar / Criar conta';
  greeting.textContent=connected?(name?'Olá, '+name.split(/\s+/)[0]+'. Sua conta está conectada.':'Sua conta está conectada.'):'Pedidos, perfil e indicações';
  exit.hidden=!connected;
+ if(menuLogin)menuLogin.hidden=connected;
+ if(menuSignup)menuSignup.hidden=connected;
+ if(menuProfile)menuProfile.hidden=!connected;
 }
 async function refresh(){
  const request=++revision;
