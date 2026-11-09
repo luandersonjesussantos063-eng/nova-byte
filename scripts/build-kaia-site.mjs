@@ -41,7 +41,7 @@ await writeFile(path.join(output,'_headers'),
 await writeFile(path.join(output,'robots.txt'),'User-agent: *\nDisallow: /api/\nSitemap: https://usekaiaglow.com.br/sitemap.xml\nSitemap: https://usekaiaglow.com.br/sitemap-novos.xml\n');
 await generateKaiaSeoPages(source,output);
 // Invoke only Kaia API routes with Pages Functions; all static assets stay static.
-await writeFile(path.join(output,'_routes.json'),JSON.stringify({version:1,include:['/api/kaia/*','/produtos/novo/*','/sitemap-novos.xml'],exclude:[]},null,2)+'\n');
+await writeFile(path.join(output,'_routes.json'),JSON.stringify({version:1,include:['/api/kaia/*','/api/novabyte/*','/produtos/novo/*','/sitemap-novos.xml'],exclude:[]},null,2)+'\n');
 await writeFile(path.join(output,'404.html'),'<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>Página não encontrada · Kaia Glow</title><link rel="stylesheet" href="/institucional.css"></head><body class="kaia-info-page"><main class="kaia-info-shell kaia-info-main"><p class="kaia-info-eyebrow">KAIA GLOW</p><h1>Página não encontrada</h1><p>O endereço pode ter mudado. Volte à loja ou fale com a nossa equipe.</p><a class="kaia-info-button" href="/">Voltar à Kaia Glow</a><p><a href="/atendimento.html">Atendimento</a></p></main></body></html>');
 // Authorize only shipped inline executable scripts; JSON-LD is inert structured data.
 const inlineHashes=new Set();
