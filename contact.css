@@ -4,4 +4,4 @@
 
 .contact-form [hidden]{display:none!important}.contact-email-status{padding:16px;border:1px solid var(--nb-line);border-radius:8px;line-height:1.7;color:var(--nb-text)!important}.contact-email-status[data-state="error"]{border-color:#f3986980}.contact-email-status[data-state="success"]{border-color:#79abf380}
 
-.contact-honeypot{position:absolute;left:-10000px;top:auto;width:1px;height:1px;overflow:hidden}#contact-captcha{min-height:150px;margin:12px 0;max-width:100%}
+.contact-honeypot{position:absolute;left:-10000px;top:auto;width:1px;height:1px;overflow:hidden}#contact-captcha{min-height:70px;margin:12px 0;max-width:100%}
