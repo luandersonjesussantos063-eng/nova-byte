@@ -44,3 +44,39 @@ body.nb-home{color:#eff3f9;background:#0b1526!important}.nb-home:not(.nb-inner) 
 .studio-brand>span{color:#79ABF3}.studio-brand b{color:#F39869}
 .nb-home #servicos .section-intro>p,.nb-home #servicos .service-note{color:#5b697d}
 .nb-home.nb-inner #servicos .service-card:before{display:none}
+
+
+/* Portfolio expansion (Nov 2026): real campaign photos or clearly labeled conceptual visuals. */
+.nb-home .site-preview-window.nb-kaia-showcase,
+.nb-home .site-preview-window.nb-morada-showcase{background:#e7dce5}
+.nb-home .nb-portfolio-photo{display:block;width:100%;height:100%;object-fit:cover;object-position:center;transition:transform .4s ease}
+.nb-home .site-scroll-preview:hover .nb-portfolio-photo{transform:scale(1.035)}
+.nb-home .nb-preview-label{position:absolute;left:18px;right:18px;bottom:17px;display:flex;flex-direction:column;align-items:flex-start;gap:4px;padding:15px 18px;background:#231522d9;color:#fff;border-radius:9px;max-width:82%;backdrop-filter:blur(6px)}
+.nb-home .nb-preview-label>span{font-size:10px;letter-spacing:.17em;font-weight:750}
+.nb-home .nb-preview-label strong{font:500 24px/1.2 Georgia,serif;color:#fff}
+.nb-home .nb-preview-label small{font-size:11px;color:#f2dde6}
+.nb-home .nb-preview-kaia{background:#4e233edc;border:1px solid #d4b9bc55}
+.nb-home .nb-preview-morada{background:#153c31e0;border:1px solid #b4d2b555}
+.nb-home .nb-divulga-showcase{background:linear-gradient(140deg,#0b1526,#183b62)}
+.nb-home .nb-preview-app{height:100%;display:flex;flex-direction:column;justify-content:center;align-items:flex-start;padding:30px 36px;gap:10px;color:#fff}
+.nb-home .nb-preview-app-badge{display:grid;place-items:center;width:54px;height:54px;border:1px solid #83b6f0aa;border-radius:16px;background:#3469ba;color:#f8fafc;font-weight:800;font-size:22px}
+.nb-home .nb-preview-app>small{font:700 10px/1.4 Arial,sans-serif;letter-spacing:.18em;color:#94bddb}
+.nb-home .nb-preview-app>strong{font:700 clamp(29px,3vw,40px)/1.12 Arial,sans-serif;letter-spacing:-.05em;color:#fff}
+.nb-home .nb-preview-app>span:not(.nb-preview-app-badge){font-size:12px;color:#d5e6f7}
+.nb-home .nb-preview-app-bars{display:flex;align-items:end;gap:9px;height:32px;opacity:.55;margin-top:7px}
+.nb-home .nb-preview-app-bars i{display:block;width:32px;height:12px;border:1px solid #7ba6de;border-radius:5px}
+.nb-home .nb-preview-app-bars i:nth-child(2){height:25px}.nb-home .nb-preview-app-bars i:nth-child(3){height:18px}.nb-home .nb-preview-app-bars i:nth-child(4){height:29px}
+.nb-home .nb-private-preview{display:flex;flex-direction:column;justify-content:center;align-items:flex-start;gap:14px;padding:30px 36px;background:radial-gradient(circle at 85% 20%,#3469ba45,transparent 50%),linear-gradient(145deg,#152a47,#0b1526);color:#f2f6fd}
+.nb-home .nb-private-eletrica{background:radial-gradient(circle at 75% 35%,#eeb26248,transparent 50%),linear-gradient(145deg,#16283e,#0b1526)}
+.nb-home .nb-private-android{background:radial-gradient(circle at 77% 35%,#59aaff48,transparent 50%),linear-gradient(145deg,#142648,#0b1526)}
+.nb-home .nb-private-prospect{background:radial-gradient(circle at 77% 35%,#5cc3a248,transparent 50%),linear-gradient(145deg,#12363d,#0b1526)}
+.nb-home .nb-private-label{font-size:10px;letter-spacing:.17em;color:#adc5e9;font-weight:700}
+.nb-home .nb-private-preview>strong{font-size:clamp(28px,3vw,38px);font-weight:750;letter-spacing:-.05em;line-height:1.12}
+.nb-home .nb-private-preview>span:not(.nb-private-label){font-size:13px;color:#bfd0e6}
+.nb-home .nb-private-preview .nb-private-foot{font-size:10px;line-height:1.6;color:#a0b5ca;margin-top:10px}
+.nb-home .project-visual-static{cursor:default}
+.nb-home .project-visual-static .site-preview-toolbar{color:#9db2cb}
+.nb-home .project-copy .project-note{font-size:11px;line-height:1.7;color:#6e8095;margin:12px 0}
+.nb-home .project-card[hidden]{display:none!important}
+@media(max-width:760px){.nb-home .nb-preview-label{left:12px;right:12px;bottom:12px;padding:13px;max-width:88%}.nb-home .nb-preview-app,.nb-home .nb-private-preview{padding:25px}.nb-home .nb-private-preview>strong{font-size:32px}}
+@media(prefers-reduced-motion:reduce){.nb-home .nb-portfolio-photo{transition:none}.nb-home .site-scroll-preview:hover .nb-portfolio-photo{transform:none}}
