@@ -982,7 +982,18 @@ if(offersSection)offersSection.hidden=shelfProducts.length===0;
 $('#offerShelf').innerHTML=shelfProducts.map(p=>`<article class="product retail-offer-product"><div class="product-photo"><a href="#produto-${p.id}" data-product="${p.id}" aria-label="Ver ${esc(p.name)}"><img src="${esc(p.images[0])}" alt="${esc(p.name)}" loading="lazy" referrerpolicy="no-referrer"></a><span class="badge">${Math.round((1-p.price/p.oldPrice)*100)}% OFF</span><button class="wish" data-wish="${p.id}" aria-label="Favoritar ${esc(p.name)}">♡</button></div><span class="product-brand">${esc(p.brand)}</span><h3><a href="#produto-${p.id}" data-product="${p.id}">${esc(p.name)}</a></h3><div class="product-price"><del>${money(p.oldPrice)}</del><span>${money(p.price)}</span></div><button class="quick-add" data-quick="${p.id}">Adicionar à sacola <span>+</span></button></article>`).join('');
 $('#shelfOffers').onclick=()=>$('#offers').click();
 $('#retailEnquiries').onclick=()=>kaiaMenuDialog.showModal();
-kaiaMenuDialog.addEventListener('click',event=>{if(event.target.closest('[data-cat]'))kaiaMenuDialog.close()});
+kaiaMenuDialog.addEventListener('click',event=>{
+ const category=event.target.closest('[data-cat]');
+ const brand=event.target.closest('[data-brand-nav]');
+ const favoritesLink=event.target.closest('[data-menu-favorites]');
+ const offersLink=event.target.closest('[data-menu-offers]');
+ const anchor=event.target.closest('[data-menu-anchor]');
+ if(category||brand||favoritesLink||offersLink||anchor){
+  if(kaiaMenuDialog.open)kaiaMenuDialog.close();
+  if(favoritesLink)$('#favorites').click();
+  if(offersLink)$('#offers').click();
+ }
+});
 counts();
 
 // Coupon catalogue stays behind its tab so the main product flow remains compact.
