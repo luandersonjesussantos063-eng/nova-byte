@@ -1,5 +1,5 @@
 import test from 'node:test';import assert from 'node:assert/strict';import {readFileSync,existsSync} from 'node:fs';import {resolve,dirname,join} from 'node:path';import vm from 'node:vm';import {execFileSync} from 'node:child_process';
-const root=resolve('kaia-glow');const files=['index.html','conta.html','privacidade.html','termos-de-uso.html','atendimento.html','sobre.html'];const read=f=>readFileSync(join(root,f),'utf8');
+const root=resolve('kaia-glow');const built=resolve('dist/kaia-glow');const files=['index.html','conta.html','privacidade.html','termos-de-uso.html','atendimento.html','sobre.html'];const read=f=>readFileSync(join(root,f),'utf8');
 test('all Kaia pages connect to privacy, terms and support and have real local destinations',()=>{
  for(const file of files){const html=read(file);for(const target of ['privacidade.html','termos-de-uso.html','atendimento.html'])assert(html.includes('href="'+target+'"'),file+': '+target);
   if(file==='conta.html'){assert(!html.includes('class="kaia-business-details"'));assert(html.includes('href="./#informacoes"'));assert(html.indexOf('class="kaia-account-site-footer"')>html.indexOf('</main>'));}else{assert.match(html,/KAIA GLOW COMERCIO DE COSMETICOS LTDA/);assert.match(html,/67\.706\.063\/0001-39/);assert.match(html,/usekaiaglow@gmail\.com/);}assert(!/href="[^"]*(?:CONTRATO|CNPJ)[^"]*\.pdf/i.test(html));
@@ -7,7 +7,7 @@ test('all Kaia pages connect to privacy, terms and support and have real local d
   if(file!=='conta.html'){assert.match(html,/© 2026 Kaia Glow/);assert.match(html,/terceiros pertencem aos respectivos titulares/);}assert.match(html,/<main[^>]*id="conteudo"/);
   const ids=[...html.matchAll(/\bid="([^"]+)"/g)].map(m=>m[1]);assert.equal(ids.length,new Set(ids).size,file+': repeated id');
   for(const m of html.matchAll(/(?:href|src)="([^"]+)"/g)){const url=new URL(m[1],'https://usekaiaglow.com.br/'+file);if(url.origin!=='https://usekaiaglow.com.br')continue;
-   let target=resolve(root,'.'+decodeURIComponent(url.pathname));if(url.pathname.endsWith('/'))target=join(target,'index.html');assert(existsSync(target),file+': '+m[1]);
+   let target=resolve(root,'.'+decodeURIComponent(url.pathname));if(url.pathname.endsWith('/'))target=join(target,'index.html');if(!existsSync(target)&&existsSync(resolve(built,'.'+decodeURIComponent(url.pathname),'index.html')))target=resolve(built,'.'+decodeURIComponent(url.pathname),'index.html');assert(existsSync(target),file+': '+m[1]);
    if(url.hash&&!/^#(?:produto-\d+|cupons|exclusivos)$/.test(url.hash)){const targetHtml=readFileSync(target,'utf8');assert(targetHtml.includes('id="'+decodeURIComponent(url.hash.slice(1))+'"'),file+': '+m[1]);}
   }
  }

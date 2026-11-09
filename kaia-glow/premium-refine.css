@@ -465,3 +465,15 @@ button:focus-visible,a:focus-visible,input:focus-visible,summary:focus-visible{o
  .kg-menu-v2 .kg-menu-heading h2{font-size:21px}
 }
 @media(prefers-reduced-motion:reduce){.kg-menu-v2 .kg-menu-cat>summary::after{transition:none}}
+/* Clear shopping paths and readable campaigns across screen sizes. */
+.campaign-hero .hero-copy h1{color:#fff3f6;text-shadow:0 2px 16px #1d081c66}
+.campaign-hero .hero-copy h1 em{color:#fff}
+.kaia-welcome{display:flex;align-items:center;justify-content:space-between;gap:24px;background:#fbf0f4;border:1px solid #e8d0dc;border-radius:16px;padding:24px 30px;margin-top:28px;margin-bottom:28px}
+.kaia-welcome[hidden],.kaia-ready[hidden],[data-cat][hidden]{display:none!important}
+.kaia-welcome h2{font-size:28px;margin:6px 0}.kaia-welcome p{font-size:13px;margin:0;color:#6a4c5c;max-width:630px}.kaia-welcome .button{flex-shrink:0}
+.kaia-discover{padding-block:26px 34px}.kaia-discover h2{font-size:32px;margin:9px 0 22px}.kaia-discover nav{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.kaia-discover nav a{display:flex;flex-direction:column;gap:9px;padding:22px 17px;border:1px solid #e7d9e0;border-radius:12px;background:#fffafc;color:#54233d;text-decoration:none}.kaia-discover nav a:hover{border-color:#9b6e85}.kaia-discover nav strong{font-size:15px}.kaia-discover nav span{font-size:12px;line-height:1.6;color:#725b68}
+.kaia-ready{padding-block:28px 34px}.kaia-ready .desire-card{padding:14px;display:flex;flex-direction:column;gap:10px;border:1px solid #eadbe3;border-radius:14px;min-width:0}.kaia-ready .desire-card a{color:#54233d;text-decoration:none}.kaia-ready .desire-card img{width:100%;height:225px;object-fit:contain;background:#faf6f7;border-radius:10px}.kaia-ready .desire-card h3{font-size:13px;line-height:1.6;min-height:42px;margin:8px 0}.kaia-ready .desire-card small{display:block;margin-top:10px;letter-spacing:1px;font-size:10px}.kaia-ready .desire-card>.button{margin-top:auto;width:100%}
+.kaia-product-brief{font-size:12px;line-height:1.6;color:#735c68;margin:7px 0 12px;min-height:36px}.kaia-ritual-more{padding-block:24px}.kaia-ritual-more>summary{cursor:pointer;font-weight:600;font-size:14px;color:#54233d;min-height:44px}.kaia-ritual-more .ritual-details{padding-block:20px}
+@media(max-width:760px){.kaia-welcome{padding:20px;align-items:flex-start;flex-direction:column;gap:16px}.kaia-welcome h2{font-size:25px}.kaia-discover nav{grid-template-columns:repeat(2,minmax(0,1fr))}.kaia-discover nav a{padding:17px 13px}.kaia-discover h2{font-size:28px}.kaia-ready .desire-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.kaia-ready .desire-card{padding:10px}.kaia-ready .desire-card img{height:170px}.kaia-ready .desire-card>.button{font-size:11px;padding:12px 7px}.kaia-ready .section-top{flex-wrap:wrap;gap:12px}.kaia-product-brief{font-size:11px}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}

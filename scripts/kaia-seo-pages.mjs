@@ -1,5 +1,8 @@
 import {readFile,writeFile,mkdir} from 'node:fs/promises';
 import path from 'node:path';
+import '../kaia-glow/catalog-presentation.js';
+const presentation=globalThis.KaiaCatalogPresentation;
+const money=n=>Number(n||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
 
 const SITE='https://usekaiaglow.com.br';
 const NOW=new Date().toISOString().slice(0,10);
@@ -32,11 +35,11 @@ const pageLayout=({title,description,pathname,body,data,photo})=>{
  +'<main class="shell" id="conteudo">'+body+'</main>'
  +'<footer class="bottom"><div class="shell"><strong>KAIA GLOW</strong><p>Seleção de skincare, cuidados capilares e autocuidado. Loja online com atendimento por canais digitais.</p><nav><a href="/sobre.html">Sobre</a><a href="/atendimento.html">Atendimento</a><a href="/privacidade.html">Privacidade</a><a href="/">Voltar à loja</a></nav>'
  +'<p class="fine">Endereço cadastral: Rua Eng. Prudente, 35, apto. 154, Vila Monumento, São Paulo, SP. Atendimento e condições de entrega pelo site.</p></div></footer>'
- +(pathname.startsWith('/produtos/')?'<script type="module" src="/seo-product-live.js"></script>':'')+'</body></html>';
+ +'<script src="/catalog.js"></script><script src="/catalog-presentation.js"></script><script src="/catalog-overrides.js"></script><script type="module" src="/seo-product-live.js"></script>'+'</body></html>';
 };
 const crumbs=(parts)=>'<nav class="crumbs" aria-label="Navegação estrutural">'+parts.map((p,i)=>i===parts.length-1?'<span aria-current="page">'+html(p.title)+'</span>':'<a href="'+html(p.path)+'">'+html(p.title)+'</a>').join('<span aria-hidden="true">›</span>')+'</nav>';
 const breadcrumbsData=(parts)=>({'@context':'https://schema.org','@type':'BreadcrumbList',itemListElement:parts.map((p,i)=>({'@type':'ListItem',position:i+1,name:p.title,item:SITE+p.path}))});
-const productCard=(p)=>'<article class="item"><a href="'+html(productPath(p))+'">'+(img(p)?'<img src="'+html('/'+img(p))+'" alt="Foto de '+html(p.name)+'" loading="lazy">':'<div class="photo-none">Foto em atualização</div>')+'<span class="brand-name">'+html(p.brand)+'</span><h3>'+html(p.name)+'</h3><span class="view">Ver detalhes e características ›</span></a></article>';
+const productCard=(p)=>'<article class="item" data-product-id="'+html(p.id)+'"><a href="'+html(productPath(p))+'">'+(img(p)?'<img src="'+html('/'+img(p))+'" alt="Foto de '+html(p.name)+'" loading="lazy">':'<div class="photo-none">Foto em atualização</div>')+'<span class="brand-name">'+html(p.brand)+'</span><h3>'+html(p.name)+'</h3><span class="landing-price">'+html(money(p.price))+'</span><span class="landing-stock">Consulte disponibilidade</span><span class="view">Ver produto e comprar →</span></a></article>';
 const cardGrid=(products)=>'<div class="grid">'+products.map(productCard).join('')+'</div>';
 const groups=[
  {path:'/categoria/skincare/',title:'Skincare e cuidados com a pele',search:'Skincare e cosméticos faciais online',intro:'Descubra séruns, cremes, máscaras e cuidados faciais de marcas selecionadas pela Kaia Glow. Compare as apresentações, veja fotos e conheça as características de cada produto.',select:p=>p.category==='Skincare'},
@@ -59,6 +62,8 @@ export async function generateKaiaSeoPages(source,output){
  if(!raw.startsWith(prefix))throw Error('Catálogo Kaia: formato inesperado');
  const products=JSON.parse(raw.slice(prefix.length).trim().replace(/;$/,''));
  if(products.length<50)throw Error('Catálogo insuficiente para geração SEO');
+ // Preserve existing canonical paths before cleaning public titles.
+ for(const product of products){product.url=SITE+productPath(product);presentation.normalize(product);}
  const used=new Set(),urls=[],byCategory=new Map();
  for(const product of products){
   const pathname=productPath(product);
@@ -75,14 +80,14 @@ export async function generateKaiaSeoPages(source,output){
    breadcrumbsData(crumbsList)
   ];
   const related=products.filter(p=>p.id!==product.id&&(p.brand===product.brand||p.category===product.category)).slice(0,4);
-  const paragraphs=description.length>1600?description.slice(0,1600).replace(/\s+\S*$/,'')+'…':description;
-  const body=crumbs(crumbsList)+'<article class="product-detail" data-product-key="'+html(product.sku||'legacy:'+product.id)+'"><div class="visual">'
+  const paragraphs=description;
+  const body=crumbs(crumbsList)+'<article class="product-detail" data-product-id="'+html(product.id)+'" data-product-key="'+html(product.sku||'legacy:'+product.id)+'"><div class="visual">'
    +(img(product)?'<img src="'+html('/'+img(product))+'" alt="'+html(product.name)+'" fetchpriority="high">':'<div class="photo-none large">Imagem do produto em atualização</div>')
    +'</div><div class="details"><span class="eyebrow">'+html(product.brand)+' · '+html(product.category)+'</span><h1>'+html(product.name)+'</h1>'
    +'<p class="intro">'+html(shorten(description,240))+'</p>'
    +(product.sku?'<p class="small">Referência do produto: '+html(product.sku)+'</p>':'')
-   +'<p class="callout">A compra pelo site ainda está em preparação. Valores, estoque e condições de entrega devem ser consultados na vitrine e com o atendimento.</p>'
-   +'<a class="button" href="/#produto-'+encodeURIComponent(product.id)+'">Abrir este produto na loja</a>'
+   +'<p class="landing-price" id="landingPrice">'+html(money(product.price))+'</p><p class="callout" id="landingAvailability" role="status">Confira a disponibilidade na sacola. Você verá o frete e o total antes de qualquer pagamento.</p>'
+   +'<a class="button" id="landingBuy" href="/#produto-'+encodeURIComponent(product.id)+'">Ver opções de compra</a>'
    +'<a class="button secondary" href="/atendimento.html">Consultar atendimento</a></div></article>'
    +'<section class="content"><h2>Descrição e características</h2><p>'+html(paragraphs)+'</p></section>'
    +(related.length?'<section class="content"><h2>Descubra produtos relacionados</h2>'+cardGrid(related)+'</section>':'')
@@ -103,7 +108,7 @@ export async function generateKaiaSeoPages(source,output){
   }];
   const body=crumbs(crumbsList)+'<p class="eyebrow">CURADORIA KAIA GLOW</p><h1>'+html(g.search)+'</h1>'
    +'<p class="intro wide">'+html(g.intro)+'</p>'
-   +'<p class="small">'+chosen.length+' produtos para conhecer. Consulte preços e condições de compra na vitrine.</p>'
+   +'<p class="small">'+chosen.length+' produtos para conhecer. Confira preços, apresentações e opções de compra.</p>'
    +cardGrid(chosen)+'<section class="content"><h2>Explore outras seleções</h2><div class="pills">'+linkToCategory+'</div></section>';
   await writePage(output,g.path,pageLayout({title:g.search+' | Kaia Glow',description:g.intro,pathname:g.path,body,data:schema}));
   urls.push(g.path);byCategory.set(g.path,chosen.length);
@@ -117,11 +122,11 @@ export async function generateKaiaSeoPages(source,output){
   email:'usekaiaglow@gmail.com',areaServed:{'@type':'AdministrativeArea',name:'São Paulo'}}];
  const localBody=crumbs(cr)+'<p class="eyebrow">KAIA GLOW · SÃO PAULO</p>'
   +'<h1>Skincare e cosméticos online em São Paulo</h1>'
-  +'<p class="intro wide">Conheça a curadoria de skincare, cosméticos e autocuidado da Kaia Glow. Nossa empresa tem endereço cadastral na Vila Monumento, em São Paulo (SP), e disponibiliza o catálogo para consultas online.</p>'
+  +'<p class="intro wide">Conheça a curadoria de skincare, cosméticos e autocuidado da Kaia Glow. Nossa empresa tem endereço cadastral na Vila Monumento, em São Paulo (SP), e oferece compras online de skincare e autocuidado.</p>'
   +'<section class="content"><h2>Encontre seus cuidados favoritos</h2><p>Buscando séruns faciais, máscaras, produtos capilares ou novidades de skincare coreano? Explore as categorias para comparar as marcas e conhecer cada apresentação.</p><div class="pills">'+linkToCategory+'</div></section>'
   +'<section class="content"><h2>Produtos para pesquisar</h2>'+cardGrid(products.filter(p=>img(p)).slice(0,16))+'</section>'
   +'<section class="content"><h2>Atendimento e entrega na região de São Paulo</h2><p>O endereço informado na loja é o endereço cadastral da empresa, localizado na região da Vila Monumento, próxima ao Ipiranga. O catálogo é online: informe seu CEP na sacola para consultar modalidades e estimativas de frete quando as medidas do produto estiverem disponíveis.</p>'
-  +'<p>Não há anúncio de atendimento presencial ou retirada nesse endereço. A finalização de compras está sendo preparada; confirme condições de atendimento e compra antes de realizar qualquer pedido.</p><a class="button" href="/atendimento.html">Falar com a Kaia Glow</a></section>';
+  +'<p>Não há anúncio de atendimento presencial ou retirada nesse endereço. Escolha os produtos na loja, consulte o frete pelo CEP e confirme o endereço e o valor total antes do pagamento.</p><a class="button" href="/atendimento.html">Falar com a Kaia Glow</a></section>';
  await writePage(output,localPath,pageLayout({title:'Skincare e cosméticos em São Paulo | Kaia Glow',
   description:'Conheça a Kaia Glow, loja online de skincare e cosméticos com endereço cadastral na Vila Monumento, em São Paulo. Explore marcas, produtos e frete.',
   pathname:localPath,body:localBody,data:localData}));

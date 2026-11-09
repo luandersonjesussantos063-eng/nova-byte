@@ -107,6 +107,6 @@ export async function onRequestPost({request,env}){
   cepOrigem:digits(env.KAIA_SHIP_FROM_CEP),cepDestino:cep,
   referenciasExternas:hasUnreviewed,
   opcoes:options,
-  aviso:'Estimativa da SuperFrete com as medidas cadastradas; valor final, seguro e embalagem serão conferidos antes da compra. Compras ainda indisponíveis.'
+  aviso:'Estimativa da SuperFrete com as medidas cadastradas. Frete e condições finais serão confirmados no fechamento do pedido.'
  });
 }

@@ -1,78 +1,74 @@
-// Keep static product landing pages consistent with edits made in the Kaia admin.
-// Static HTML remains readable by crawlers; published admin overrides enhance the visitor view.
-import {KAIA_AUTH} from '/auth-config.js';
-const article=document.querySelector('article.product-detail[data-product-key]');
+/* Product and collection pages use the same public catalogue as the storefront.
+   Transactional prices, eligibility and payment stay on the existing server. */
+await Promise.resolve(window.kaiaCatalogReady);
+const presentation=window.KaiaCatalogPresentation;
+const products=window.KAIA_CATALOG||[];
+const money=n=>Number(n||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+let eligible=null;
+try{
+ const response=await fetch('/api/kaia/comercial/catalogo',{cache:'no-store',signal:AbortSignal.timeout(8000)});
+ if(response.ok)eligible=new Map(((await response.json()).products||[]).map(p=>[p.sku,p.priceCents]));
+}catch{}
+const canBuy=p=>eligible instanceof Map&&p.sku&&p.available&&eligible.get(p.sku)===Math.round(p.price*100);
+const imageUrl=p=>{
+ const src=p.images?.find(s=>!s.includes('photo-pending'));
+ if(!src)return null;
+ const url=new URL(src,location.origin);
+ return url.protocol==='https:'||url.origin===location.origin?url.href:null;
+};
+for(const card of document.querySelectorAll('article.item[data-product-id]')){
+ const p=products.find(p=>String(p.id)===card.dataset.productId);
+ if(!p){card.hidden=true;continue;}
+ const h3=card.querySelector('h3');if(h3)h3.textContent=p.name;
+ const brand=card.querySelector('.brand-name');if(brand)brand.textContent=p.brand;
+ const price=card.querySelector('.landing-price');if(price)price.textContent=money(p.price);
+ const stock=card.querySelector('.landing-stock');if(stock)stock.textContent=canBuy(p)?'Pronta entrega':eligible instanceof Map?'Sob encomenda':'Confira disponibilidade na loja';
+ const photo=imageUrl(p);
+ if(photo){const img=document.createElement('img');img.src=photo;img.alt=p.name;img.loading='lazy';card.querySelector('img,.photo-none')?.replaceWith(img);}
+}
+const article=document.querySelector('article.product-detail[data-product-id]');
 if(article){
- const key=article.dataset.productKey;
- const params=new URLSearchParams({select:'product_key,name,description,images,visible,archived',product_key:'eq.'+key});
- const req=KAIA_AUTH.url+'/rest/v1/kaia_catalog_overrides?'+params;
- try{
-  const response=await fetch(req,{headers:{apikey:KAIA_AUTH.publishableKey,Authorization:'Bearer '+KAIA_AUTH.publishableKey,Accept:'application/json'},cache:'no-store'});
-  if(response.ok){
-   const data=await response.json(),updated=data?.[0];
-   if(updated){
-    if(updated.visible===false||updated.archived===true){
-     const archived=updated.archived===true;
-     if(archived){
-      const replacement=document.createElement('section');
-      replacement.className='content archived-product-message';
-      const h1=document.createElement('h1');h1.textContent='Produto retirado da loja';
-      const explanation=document.createElement('p');
-      explanation.textContent='Este produto não faz mais parte do catálogo disponível. Conheça os outros cuidados da Kaia Glow.';
-      const link=document.createElement('a');link.className='button';link.href='/';
-      link.textContent='Conhecer outros produtos';
-      replacement.append(h1,explanation,link);
-      const related=article.nextElementSibling;
-      article.replaceWith(replacement);
-      if(related?.matches('section.content'))related.remove();
-      document.querySelectorAll('script[type="application/ld+json"]').forEach(node=>node.remove());
-      document.title='Produto retirado da loja | Kaia Glow';
-     }else{
-      const notice=document.createElement('p');notice.className='callout';
-      notice.textContent='Este produto não está disponível na vitrine no momento. Consulte outras opções da Kaia Glow.';
-      article.querySelector('.details')?.append(notice);
+ const product=products.find(p=>String(p.id)===article.dataset.productId);
+ const buy=document.getElementById('landingBuy'),notice=document.getElementById('landingAvailability');
+ if(!product){
+  document.title='Produto indisponível | Kaia Glow';
+  document.querySelector('meta[name=robots]')?.setAttribute('content','noindex,follow');
+  article.replaceChildren();
+  const title=document.createElement('h1');title.textContent='Este produto não está disponível na vitrine.';
+  const link=document.createElement('a');link.className='button';link.href='/';link.textContent='Conhecer outros produtos';article.append(title,link);
+  document.querySelectorAll('script[type="application/ld+json"]').forEach(s=>s.remove());
+ }else{
+  presentation.normalize(product);
+  article.querySelector('h1').textContent=product.name;document.title=product.name+' | Kaia Glow';
+  article.querySelector('.details .intro').textContent=presentation.brief(product);
+  document.getElementById('landingPrice').textContent=money(product.price);
+  const description=article.nextElementSibling?.querySelector('p');if(description)description.textContent=product.description;
+  article.querySelector('.eyebrow').textContent=product.brand+' · '+product.category;
+  const photo=imageUrl(product);
+  if(photo){const img=document.createElement('img');img.src=photo;img.alt=product.name;img.fetchPriority='high';article.querySelector('.visual').replaceChildren(img);}
+  const available=canBuy(product);
+  buy.textContent=available?'Adicionar à sacola':eligible instanceof Map?'Solicitar encomenda':'Ver opções na loja';
+  const destination=new URL('/',location.origin);destination.hash='produto-'+product.id;
+  if(available)destination.searchParams.set('adicionar',product.id);
+  buy.href=destination.pathname+destination.search+destination.hash;
+  notice.textContent=available?'Pronta entrega. Consulte o frete pelo CEP na sacola. O pagamento é processado pelo Mercado Pago.':eligible instanceof Map?'Sob encomenda, sem pagamento antecipado. Previsão de disponibilização em até 7 dias corridos, sujeita à confirmação da loja. O transporte será combinado separadamente.':'Consulte a disponibilidade na loja. Confira o endereço, o frete e o total antes de pagar.';
+  for(const [selector,value] of [['meta[name=description]',product.description.slice(0,155)],['meta[property="og:title"]',document.title],['meta[property="og:description"]',product.description.slice(0,155)]])document.querySelector(selector)?.setAttribute('content',value);
+  if(photo)document.querySelector('meta[property="og:image"]')?.setAttribute('content',photo);
+  for(const script of document.querySelectorAll('script[type="application/ld+json"]')){
+   try{
+    const schemas=JSON.parse(script.textContent);
+    for(const schema of Array.isArray(schemas)?schemas:[schemas]){
+     if(schema['@type']==='Product'){
+      schema.name=product.name;schema.description=product.description;schema.brand={"@type":"Brand",name:product.brand};
+      if(photo)schema.image=[photo];
+      // Offer schema is published only after the commerce endpoint confirms the price.
+      if(available)schema.offers={"@type":"Offer",url:location.href,priceCurrency:'BRL',price:product.price.toFixed(2),availability:'https://schema.org/InStock'};
+      else delete schema.offers;
      }
-     const meta=document.querySelector('meta[name=robots]');if(meta)meta.content='noindex,follow';
-    }else{
-     const title=updated.name?.trim(),description=updated.description?.trim();
-     if(title){
-      const h1=article.querySelector('h1');if(h1)h1.textContent=title;
-      document.title=title+' | Kaia Glow';
-      const og=document.querySelector('meta[property="og:title"]');if(og)og.content=document.title;
-     }
-     if(description){
-      const p=article.querySelector('.details .intro');if(p)p.textContent=description.slice(0,240);
-      const body=article.nextElementSibling?.querySelector('p');if(body)body.textContent=description;
-      const desc=document.querySelector('meta[name=description]');if(desc)desc.content=description.slice(0,155);
-     }
-     let imageUrl=null;
-     if(Array.isArray(updated.images)&&updated.images.length){
-      const src=String(updated.images[0]);
-      if(/^assets\/catalog\/[A-Za-z0-9_-]+\.(webp|jpg|jpeg|png|avif)$/.test(src))imageUrl='/'+src;
-      if(/^https:\/\/vajlhodqxskozuxxlujv\.supabase\.co\/storage\/v1\/object\/public\/kaia-product-media\/products\/[A-Za-z0-9_-]+\.(jpg|jpeg|png|webp)$/.test(src))imageUrl=src;
-      if(imageUrl){
-       const old=article.querySelector('.visual img');
-       if(old){old.src=imageUrl;old.alt=title||old.alt;}
-       else{
-        const visual=article.querySelector('.visual');if(visual){visual.replaceChildren();const img=document.createElement('img');img.src=imageUrl;img.alt=title||'Foto atualizada do produto';visual.append(img);}
-       }
-       const ogImage=document.querySelector('meta[property="og:image"]');if(ogImage)ogImage.content=new URL(imageUrl,location.origin).href;
-      }
-     }
-     const dataScript=document.querySelector('script[type="application/ld+json"]');
-     if(dataScript){try{
-      const schemas=JSON.parse(dataScript.textContent);
-      const product=Array.isArray(schemas)?schemas.find(x=>x['@type']==='Product'):null;
-      if(product){
-       if(title)product.name=title;if(description)product.description=description.slice(0,1200);
-       if(imageUrl)product.image=[new URL(imageUrl,location.origin).href];
-       const crumb=schemas.find(x=>x['@type']==='BreadcrumbList');
-       if(crumb&&title)crumb.itemListElement.at(-1).name=title;
-       dataScript.textContent=JSON.stringify(schemas).replace(/</g,'\\u003c');
-      }
-     }catch{}}
+     if(schema['@type']==='BreadcrumbList')schema.itemListElement.at(-1).name=product.name;
     }
-   }
+    script.textContent=JSON.stringify(schemas).replace(/</g,'\\u003c');
+   }catch{}
   }
- }catch{}
+ }
 }

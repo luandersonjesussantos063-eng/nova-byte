@@ -390,7 +390,7 @@ async function fetchEligible(){
   if(version!==commerceFetchVersion)return;
   commerceAllowed=new Map((data.products||[]).map(p=>[p.sku,p.priceCents]));
   commerceFetchState='ready';
-  checkoutEligibility();render();syncDetailPurchase();
+  checkoutEligibility();render();syncDetailPurchase();resumeProductPurchase();
  }catch{
   if(version!==commerceFetchVersion)return;
   commerceAllowed=null;commerceFetchState='error';checkoutEligibility();render();syncDetailPurchase();
@@ -571,7 +571,7 @@ function purchaseState(p,v=null){
  // Known out-of-stock items never depend on the checkout-status request.
  if(!p.available||!variant?.available)return 'preorder';
  if(!(commerceAllowed instanceof Map))return commerceFetchState==='error'?'error':'loading';
- return commerceAllowed.has(p.sku)?'buy':'preorder';
+ return commerceAllowed.has(p.sku)?(commerceAllowed.get(p.sku)===Math.round(variant.price*100)?'buy':'error'):'preorder';
 }
 let preorderClient=null,preorderBusy=false;
 function syncDetailPurchase(){
@@ -616,6 +616,39 @@ async function submitPreorder(p,quantity){
  }catch(e){message(e.message||'Não foi possível registrar a encomenda.');}
  finally{preorderBusy=false;syncDetailPurchase();}
 }
+function refreshShoppingHighlights(){
+ const presentation=window.KaiaCatalogPresentation;
+ // Hide empty destinations, but automatically restore them when products are added.
+ all('[data-cat]').filter(b=>['Maquiagem','Perfumaria'].includes(b.dataset.cat)).forEach(b=>{
+  const populated=catalog.some(p=>matchesShopCategory(p,b.dataset.cat));
+  const group=b.closest('details.kaia-category-submenu,details.menu-subcategory,details.kg-menu-cat');
+  if(group)group.hidden=!populated;else b.hidden=!populated;
+ });
+ for(const option of $('#category').options)if(['Maquiagem','Perfumaria'].includes(option.value))
+  option.hidden=!catalog.some(p=>matchesShopCategory(p,option.value));
+ const today=couponToday(),c=KAIA_COUPONS.find(c=>!c.personal&&c.percent>0&&c.percent<100&&today>=c.starts&&today<=c.expires);
+ const welcome=$('#kaiaWelcome');
+ if(welcome){welcome.hidden=!c;if(c){
+  $('#kaiaWelcomeTitle').textContent=c.title;
+  $('#kaiaWelcomeTerms').textContent=c.condition;
+  const button=$('#kaiaWelcomeCoupon');button.textContent='Ver cupom '+c.code;
+  button.onclick=()=>openCoupons();
+ }}
+ const ready=catalog.filter(p=>presentation.hasPhoto(p)&&purchaseState(p)==='buy').slice(0,4);
+ const section=$('#kaiaReady');if(section){section.hidden=!ready.length;
+  $('#kaiaReadyGrid').innerHTML=ready.map(p=>`<article class="desire-card"><a href="#produto-${p.id}" data-product="${p.id}"><img src="${esc(p.images[0])}" alt="${esc(p.name)}" loading="lazy"><small>${esc(p.brand)}</small><h3>${esc(p.name)}</h3></a><p class="kaia-product-brief">${esc(presentation.brief(p))}</p><strong>${money(p.price)}</strong><button type="button" class="button" data-quick="${p.id}">Adicionar à sacola</button></article>`).join('');
+  $('#kaiaReadyAll').onclick=()=>{reset();$('#available').checked=true;render();$('#colecao').scrollIntoView()};
+ }
+}
+function resumeProductPurchase(){
+ const url=new URL(location.href),id=url.searchParams.get('adicionar');if(!id)return;
+ // Consume the intent to prevent a refresh from adding the product twice.
+ url.searchParams.delete('adicionar');history.replaceState(null,'',url.pathname+url.search+url.hash);
+ const p=catalog.find(p=>String(p.id)===id);
+ if(!p)return;
+ if(purchaseState(p)==='buy'&&p.variants.length===1)addCart(p.id,variantFor(p).id,1);
+ else openProduct(p.id);
+}
 function matchesShopCategory(p,category){
  if(category==='Todos')return true;
  // 'Só na Kaia' is the store's curated Kaia Selection, not a claim that
@@ -623,7 +656,7 @@ function matchesShopCategory(p,category){
  if(category==='Só na Kaia')return normalize(p.brand||'')===normalize('Kaia Selection');
  return p.category===category;
 }
-function render(){const term=normalize($('#search').value.trim()),cat=$('#category').value,brand=$('#brand').value,max=+$('#price').value;let list=catalog.filter(p=>matchesShopCategory(p,cat)&&(!brand||p.brand===brand)&&(!max||p.price<=max)&&(!$('#available').checked||p.available)&&(!$('#onSale').checked||p.oldPrice>p.price)&&(!favOnly||favorites.has(p.id))&&(!term||normalize(p.name+' '+p.brand+' '+p.category).includes(term)));
+function render(){refreshShoppingHighlights();const term=normalize($('#search').value.trim()),cat=$('#category').value,brand=$('#brand').value,max=+$('#price').value;let list=catalog.filter(p=>matchesShopCategory(p,cat)&&(!brand||p.brand===brand)&&(!max||p.price<=max)&&(!$('#available').checked||purchaseState(p)==='buy')&&(!$('#onSale').checked||p.oldPrice>p.price)&&(!favOnly||favorites.has(p.id))&&(!term||normalize(p.name+' '+p.brand+' '+p.category).includes(term)));
 const sort=$('#sort').value;if(sort==='low')list.sort((a,b)=>a.price-b.price);if(sort==='high')list.sort((a,b)=>b.price-a.price);if(sort==='name')list.sort((a,b)=>a.name.localeCompare(b.name,'pt-BR'));
 $('#resultCount').textContent=list.length+' '+(favOnly?'favoritos':list.length===1?'produto':'produtos')+(cat==='Todos'?'':' · '+(cat==='Perfumaria'?'Perfumes':cat));
  $('#collectionTitle').textContent=favOnly?'Seus favoritos, em um só lugar.':
@@ -642,7 +675,7 @@ $('#resultCount').textContent=list.length+' '+(favOnly?'favoritos':list.length==
    'Estamos preparando essa seleção. Explore os produtos já disponíveis na loja.':
    'Tente outro termo ou remova os filtros.';
  }
-$('#products').innerHTML=list.slice(0,limit).map(p=>`<article class="product"><div class="product-photo"><a href="#produto-${p.id}" data-product="${p.id}" aria-label="Ver ${esc(p.name)}"><img src="${esc(p.images[0])}" alt="${esc(p.name)}" loading="lazy" referrerpolicy="no-referrer"></a>${!p.available?'<span class="badge sold kaia-preorder-badge">ENCOMENDA · 7 DIAS</span>':p.oldPrice>p.price?`<span class="badge">${Math.round((1-p.price/p.oldPrice)*100)}% OFF</span>`:''}<button class="wish" data-wish="${p.id}" aria-label="Favoritar ${esc(p.name)}">♡</button></div><span class="product-brand">${esc(p.brand.toUpperCase())}</span><h3><a href="#produto-${p.id}" data-product="${p.id}">${esc(p.name)}</a></h3><div class="product-price">${p.oldPrice>p.price?`<del>${money(p.oldPrice)}</del>`:''}<span>${money(p.price)}</span></div><button class="quick-add ${purchaseState(p)==='preorder'?'kaia-preorder-quick':''}" data-${purchaseState(p)==='preorder'?'preorder':purchaseState(p)==='error'?'retry-availability':'quick'}="${p.id}" ${purchaseState(p)==='loading'?'disabled':''}>${purchaseState(p)==='buy'?'Adicionar à sacola':purchaseState(p)==='preorder'?'Encomendar':purchaseState(p)==='error'?'Tentar novamente':'Verificando disponibilidade'}<span>${purchaseState(p)==='buy'?'+':'↗'}</span></button><a class="kaia-product-page-link" href="${esc(new URL(p.url).pathname)}">Ver página e características ↗</a></article>`).join('');$('#empty').hidden=!!list.length;$('#loadMore').hidden=list.length<=limit;all('nav [data-cat]').forEach(b=>{
+$('#products').innerHTML=list.slice(0,limit).map(p=>`<article class="product"><div class="product-photo"><a href="#produto-${p.id}" data-product="${p.id}" aria-label="Ver ${esc(p.name)}"><img src="${esc(p.images[0])}" alt="${esc(p.name)}" loading="lazy" referrerpolicy="no-referrer"></a>${purchaseState(p)==='preorder'?'<span class="badge sold kaia-preorder-badge">SOB ENCOMENDA</span>':p.oldPrice>p.price?`<span class="badge">${Math.round((1-p.price/p.oldPrice)*100)}% OFF</span>`:''}<button class="wish" data-wish="${p.id}" aria-label="Favoritar ${esc(p.name)}">♡</button></div><span class="product-brand">${esc(p.brand.toUpperCase())}</span><h3><a href="#produto-${p.id}" data-product="${p.id}">${esc(p.name)}</a></h3><p class="kaia-product-brief">${esc(window.KaiaCatalogPresentation.brief(p))}</p><div class="product-price">${p.oldPrice>p.price?`<del>${money(p.oldPrice)}</del>`:''}<span>${money(p.price)}</span></div><button class="quick-add ${purchaseState(p)==='preorder'?'kaia-preorder-quick':''}" data-${purchaseState(p)==='preorder'?'preorder':purchaseState(p)==='error'?'retry-availability':'quick'}="${p.id}" ${purchaseState(p)==='loading'?'disabled':''}>${purchaseState(p)==='buy'?'Adicionar à sacola':purchaseState(p)==='preorder'?'Encomendar':purchaseState(p)==='error'?'Tentar novamente':'Verificando disponibilidade'}<span>${purchaseState(p)==='buy'?'+':'↗'}</span></button><a class="kaia-product-page-link" href="${esc(new URL(p.url).pathname)}">Ver página e características ↗</a></article>`).join('');$('#empty').hidden=!!list.length;$('#loadMore').hidden=list.length<=limit;all('nav [data-cat]').forEach(b=>{
   const selected=b.dataset.cat===cat&&!favOnly&&!brand;
   b.classList.toggle('active',selected);
   b.setAttribute('aria-pressed',String(selected));
@@ -884,7 +917,7 @@ document.addEventListener('click',e=>{
    $('#colecao').scrollIntoView({behavior:'smooth',block:'start'});
   }
  }const p=e.target.closest('[data-product]');if(p){e.preventDefault();openProduct(p.dataset.product)}const w=e.target.closest('[data-wish]');if(w){favorites.has(w.dataset.wish)?favorites.delete(w.dataset.wish):favorites.add(w.dataset.wish);save('kaia-demo-favorites',[...favorites]);if(favOnly)render();else counts()}const pre=e.target.closest('[data-preorder]');if(pre){openProduct(pre.dataset.preorder);const button=$('#addDetail');if(button&&!button.disabled)button.focus();}const retry=e.target.closest('[data-retry-availability]');if(retry)fetchEligible();const q=e.target.closest('[data-quick]');if(q){const product=catalog.find(p=>p.id===q.dataset.quick);if(product.variants.length>1)openProduct(product.id);else addCart(product.id)}const i=e.target.closest('[data-info]');if(i)info(i.dataset.info)});
-render();fetchEligible();const deepLink=location.hash.match(/^#produto-(\d+)$/);if(deepLink)openProduct(deepLink[1]);
+render();fetchEligible();const deepLink=location.hash.match(/^#produto-([A-Za-z0-9_-]+)$/);if(deepLink)openProduct(deepLink[1]);
 
 // Editorial selection uses the same real catalog and shopping actions.
 const featuredSkus=[
@@ -916,7 +949,7 @@ counts();
   $('#campaignPause').textContent=userPaused?'▶':'Ⅱ';
   $('#campaignPause').setAttribute('aria-label',userPaused?'Reproduzir carrossel':'Pausar carrossel');
   $('#campaignPause').setAttribute('aria-pressed',String(userPaused));
-  if(running)timer=setInterval(()=>show(index+1),3000);
+  if(running)timer=setInterval(()=>show(index+1),6000);
  }
  function show(next){
   index=(next+slides.length)%slides.length;const s=slides[index];
@@ -979,7 +1012,7 @@ const shelfProducts=catalog.filter(p=>p.available&&p.oldPrice>p.price).slice(0,6
 // Avoid an orphan promotional heading and blank space when no genuine discounts exist.
 const offersSection=$('#offerShelf')?.closest('.retail-offers');
 if(offersSection)offersSection.hidden=shelfProducts.length===0;
-$('#offerShelf').innerHTML=shelfProducts.map(p=>`<article class="product retail-offer-product"><div class="product-photo"><a href="#produto-${p.id}" data-product="${p.id}" aria-label="Ver ${esc(p.name)}"><img src="${esc(p.images[0])}" alt="${esc(p.name)}" loading="lazy" referrerpolicy="no-referrer"></a><span class="badge">${Math.round((1-p.price/p.oldPrice)*100)}% OFF</span><button class="wish" data-wish="${p.id}" aria-label="Favoritar ${esc(p.name)}">♡</button></div><span class="product-brand">${esc(p.brand)}</span><h3><a href="#produto-${p.id}" data-product="${p.id}">${esc(p.name)}</a></h3><div class="product-price"><del>${money(p.oldPrice)}</del><span>${money(p.price)}</span></div><button class="quick-add" data-quick="${p.id}">Adicionar à sacola <span>+</span></button></article>`).join('');
+$('#offerShelf').innerHTML=shelfProducts.map(p=>`<article class="product retail-offer-product"><div class="product-photo"><a href="#produto-${p.id}" data-product="${p.id}" aria-label="Ver ${esc(p.name)}"><img src="${esc(p.images[0])}" alt="${esc(p.name)}" loading="lazy" referrerpolicy="no-referrer"></a><span class="badge">${Math.round((1-p.price/p.oldPrice)*100)}% OFF</span><button class="wish" data-wish="${p.id}" aria-label="Favoritar ${esc(p.name)}">♡</button></div><span class="product-brand">${esc(p.brand)}</span><h3><a href="#produto-${p.id}" data-product="${p.id}">${esc(p.name)}</a></h3><p class="kaia-product-brief">${esc(window.KaiaCatalogPresentation.brief(p))}</p><div class="product-price"><del>${money(p.oldPrice)}</del><span>${money(p.price)}</span></div><button class="quick-add" data-quick="${p.id}">Adicionar à sacola <span>+</span></button></article>`).join('');
 $('#shelfOffers').onclick=()=>$('#offers').click();
 $('#retailEnquiries').onclick=()=>kaiaMenuDialog.showModal();
 kaiaMenuDialog.addEventListener('click',event=>{
@@ -999,7 +1032,7 @@ counts();
 // Coupon catalogue stays behind its tab so the main product flow remains compact.
 const couponsDialog=$('#couponsDialog');
 function openCoupons(){if(kaiaMenuDialog.open)kaiaMenuDialog.close();if(!couponsDialog.open)couponsDialog.showModal()}
-function renderCoupons(){if(!KAIA_COUPONS.length){$('#couponGrid').innerHTML='<p class="coupon-empty">Não há cupons disponíveis no momento. Consulte a equipe para conhecer as condições vigentes.</p>';return;}const type=$('#couponType').value,today=couponToday();$('#couponGrid').innerHTML=KAIA_COUPONS.filter(c=>type==='all'||c.type===type).map(c=>{const expired=today>c.expires;return `<article class="coupon-ticket"><span class="coupon-ticket-tag">${esc(c.discountLabel)}</span><h3>${esc(c.title)}</h3><p class="coupon-expiry">${c.expires==='9999-12-31'?'Sem data de expiração':(expired?'Expirado em ':'Válido até ')+c.expires.split('-').reverse().join('/')}</p><details class="coupon-conditions"><summary>Condições</summary><p>${esc(c.condition)} Válido até a data indicada, no horário de Mato Grosso. Consulte os critérios de uso desta oferta antes de concluir a compra.</p></details><div class="coupon-ticket-bottom"><button class="coupon-products" data-coupon-products="${c.code}">Ver produtos ↗</button><button class="coupon-copy" data-copy-coupon="${c.code}" aria-label="Copiar cupom ${c.code}" ${expired?'disabled':''}><span>${c.code}</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="3" stroke="currentColor" stroke-width="1.5"/><path d="M15 5V4a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h1" stroke="currentColor" stroke-width="1.5"/></svg></button></div></article>`}).join('')}
+function renderCoupons(){if(!KAIA_COUPONS.length){$('#couponGrid').innerHTML='<p class="coupon-empty">Não há cupons disponíveis no momento. Consulte a equipe para conhecer as condições vigentes.</p>';return;}const type=$('#couponType').value,today=couponToday();$('#couponGrid').innerHTML=KAIA_COUPONS.filter(c=>type==='all'||c.type===type).map(c=>{const expired=today>c.expires;return `<article class="coupon-ticket"><span class="coupon-ticket-tag">${esc(c.discountLabel)}</span><h3>${esc(c.title)}</h3><p class="coupon-expiry">${c.expires==='9999-12-31'?'Sem data de expiração':(expired?'Expirado em ':'Válido até ')+c.expires.split('-').reverse().join('/')}</p><details class="coupon-conditions"><summary>Condições</summary><p>${esc(c.condition)} ${c.expires==='9999-12-31'?'Sem prazo de expiração publicado.':'Validade conforme a data indicada.'} Consulte os critérios de uso desta oferta antes de concluir a compra.</p></details><div class="coupon-ticket-bottom"><button class="coupon-products" data-coupon-products="${c.code}">Ver produtos ↗</button><button class="coupon-copy" data-copy-coupon="${c.code}" aria-label="Copiar cupom ${c.code}" ${expired?'disabled':''}><span>${c.code}</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="3" stroke="currentColor" stroke-width="1.5"/><path d="M15 5V4a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h1" stroke="currentColor" stroke-width="1.5"/></svg></button></div></article>`}).join('')}
 all('[data-open-coupons]').forEach(button=>button.addEventListener('click',openCoupons));
 $('#couponType').onchange=renderCoupons;
 couponsDialog.addEventListener('click',async event=>{

@@ -33,3 +33,4 @@ body{background:#fffdfb;color:var(--ink);-webkit-font-smoothing:antialiased}
  .content{padding:23px 0}
  .grid{gap:10px}
 }
+.landing-price{display:block;color:#54233d;font-size:26px;font-weight:700;margin:16px 0 6px}.item .landing-price{font-size:17px;margin:12px 0 3px}.landing-stock{display:block;font-size:11px;color:#725567;margin-bottom:9px}.item[hidden]{display:none!important}.photo-none{color:#755365}.details .button{min-width:160px}.item .view{display:block;min-height:35px;padding-top:8px}

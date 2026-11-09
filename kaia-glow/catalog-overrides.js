@@ -42,7 +42,7 @@
     for(let i=list.length-1;i>=0;i--){
      const product=list[i],row=byKey.get(product.sku||'legacy:'+product.id);
      if(!row)continue;
-     if(!row.visible){list.splice(i,1);continue;}
+     if(!row.visible||row.archived===true){list.splice(i,1);continue;}
      product.name=row.name;product.description=row.description;
      product.brand=row.brand||product.brand;product.category=row.category||product.category;
      product.price=row.price_cents/100;product.oldPrice=row.old_price_cents/100;
@@ -57,7 +57,7 @@
     const newProducts=results[2].value||[];
     for(const p of newProducts){
      const edit=byKey.get(p.sku);
-     if(!edit||!edit.visible||list.some(original=>original.sku===p.sku))continue;
+     if(!edit||!edit.visible||edit.archived===true||list.some(original=>original.sku===p.sku))continue;
      const price=Number(edit.price_cents)/100;
      if(!Number.isFinite(price)||price<=0)continue;
      const variant={id:Number(p.id),label:'Única',price,available:!!edit.available,sku:p.sku};
@@ -92,6 +92,6 @@
     }catch{ /* Never claim stock is synchronized if the source is unreachable. */ }
    }
   }catch(e){console.warn('Kaia: não foi possível atualizar catálogo ao vivo.',e?.name);}
-  finally{clearTimeout(timer);}
+  finally{clearTimeout(timer);for(const product of window.KAIA_CATALOG||[])window.KaiaCatalogPresentation?.normalize(product);}
  })();
 })();

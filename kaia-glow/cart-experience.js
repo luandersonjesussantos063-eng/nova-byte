@@ -78,7 +78,7 @@ function showAdded({product,variant,eligible,cart,onAdd,onOpenBag}){
  dialog.showModal();
 }
 function beforeBagRender(){
- const cep=$('#shippingPostalCode');if(cep)postal=cep.value;
+ const cep=$('#shippingPostalCode');if(cep&&window.kaiaCheckoutGate?.isAuthenticated()===true)postal=cep.value;
  const fold=$('#kgCouponFold');if(fold)couponExpanded=fold.open;
 }
 function afterBagRender({cart,eligible,onAdd}){
@@ -99,6 +99,42 @@ function afterBagRender({cart,eligible,onAdd}){
    const item=el('span',number==='2'?'kg-current':'',number+' · '+label);
    item.dataset.stage=number;steps.append(item);
   }
+  {
+  const preview=el('section','kg-guest-freight');
+  preview.append(el('h3','','Quanto custa a entrega?'),el('p','','Consulte uma estimativa pelo CEP, sem precisar entrar na conta.'));
+  const quote=el('form'),label=el('label','','CEP para estimar o frete'),input=el('input');
+  input.name='cep';input.inputMode='numeric';input.autocomplete='postal-code';input.maxLength=9;
+  input.placeholder='00000-000';input.required=true;input.value=postal;
+  input.setAttribute('aria-label','CEP para estimar o frete');label.append(input);
+  const submit=el('button','','Calcular frete');submit.type='submit';quote.append(label,submit);
+  const output=el('p');output.setAttribute('role','status');output.setAttribute('aria-live','polite');
+  const results=el('ul');results.hidden=true;preview.append(quote,output,results);
+  const items=cart.map(row=>({sku:window.KAIA_CATALOG.find(p=>String(p.id)===String(row.id))?.sku,quantity:row.qty}));
+  const fingerprint=JSON.stringify(items);let requestVersion=0;
+  input.oninput=()=>{postal=input.value;requestVersion++;results.replaceChildren();results.hidden=true;output.textContent='';submit.disabled=false;};
+  quote.onsubmit=async event=>{
+   event.preventDefault();const cep=input.value.replace(/\D/g,'');
+   if(!/^[0-9]{8}$/.test(cep)){output.textContent='Informe os 8 números do CEP.';return;}
+   const version=++requestVersion;postal=cep;input.value=cep.slice(0,5)+'-'+cep.slice(5);
+   submit.disabled=true;results.replaceChildren();results.hidden=true;output.textContent='Consultando as transportadoras…';
+   const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),20000);
+   try{
+    const response=await fetch('/api/kaia/frete',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({destinoCep:cep,items}),signal:controller.signal});
+    const data=await response.json();
+    if(version!==requestVersion||!preview.isConnected||fingerprint!==JSON.stringify(items))return;
+    if(!response.ok)throw Error(data.message||'Não foi possível calcular o frete agora.');
+    for(const option of data.opcoes||[]){
+     if(!Number.isSafeInteger(option.freteCentavos)||option.freteCentavos<=0)continue;
+     const days=Number(option.previsaoDias);
+     results.append(el('li','',(option.servico||option.transportadora||'Entrega')+' · '+money(option.freteCentavos/100)+(Number.isFinite(days)&&days>=0?' · estimativa de '+days+' dia(s) úteis':'')));
+    }
+    results.hidden=!results.children.length;
+    output.textContent=results.children.length?'Estimativa de transporte. Após entrar, confirme o endereço para escolher o frete e conferir o total final.':'Não há modalidade disponível para este CEP. Fale com a equipe para consultar alternativas.';
+   }catch(error){if(version===requestVersion&&preview.isConnected)output.textContent=error.name==='AbortError'?'A consulta demorou mais que o esperado. Tente novamente.':error.message;}
+   finally{clearTimeout(timer);if(version===requestVersion&&preview.isConnected)submit.disabled=false;}
+  };
+  root.querySelector('.kc-cart-section')?.after(preview);
+  }
   const intro=el('section','kg-checkout-identification');
   intro.append(el('span','kg-identification-kicker','FALTA POUCO PARA O SEU CUIDADO'));
   intro.append(el('h3','','Entre para continuar sua compra'));
@@ -109,7 +145,7 @@ function afterBagRender({cart,eligible,onAdd}){
   if(!dock){dock=el('div','kg-cart-dock');dock.id='kgCartDock';dialog.append(dock);}
   dock.replaceChildren();
   const row=el('div','kg-dock-row'),total=el('div','kg-dock-total');
-  const label=el('small','','Subtotal · frete depois do login');label.id='kgDockLabel';
+  const label=el('small','','Subtotal · consulte o frete acima');label.id='kgDockLabel';
   const amount=el('strong','','A calcular');amount.id='kgDockValue';
   total.append(label,amount);
   const action=el('div','kg-dock-action');
@@ -181,7 +217,7 @@ function updateTotals({subtotal,shipping,discount,isFree,shippingValid}){
  const total=$('#kgDockValue'),label=$('#kgDockLabel');
  if(total)total.textContent=money(Math.max(0,subtotal-discount+(isFree?0:shipping)));
  if(label)label.textContent=window.kaiaCheckoutGate?.isAuthenticated()===true?
-  (shippingValid?'Total do pedido':'Subtotal · frete a calcular'):'Subtotal · frete depois do login';
+  (shippingValid?'Total do pedido':'Subtotal · frete a calcular'):'Subtotal · consulte o frete acima';
  if(window.kaiaCheckoutGate?.isAuthenticated()===true)
   for(const step of document.querySelectorAll('.kg-cart-steps [data-stage]')){
    step.classList.toggle('kg-current',Number(step.dataset.stage)===(shippingValid?3:2));
