@@ -34,3 +34,6 @@ body[data-nb-layout="nb-editor"] .modal-actions .primary{background:var(--nb-ora
 .nb-home.nb-inner .projects-section .portfolio-cta :is(span,h3){color:var(--nb-text)}
 @media(max-width:760px){.nb-site-nav{width:calc(100% - 40px);min-height:76px;gap:10px}.nb-brand-lockup img{width:38px;height:36px}.nb-brand-lockup>span{font-size:23px}.nb-site-footer{grid-template-columns:1fr;padding:32px 20px 42px;gap:24px}.nb-site-contact{font-size:11px}body[data-nb-layout="nb-utility"] .nav{flex-wrap:wrap;padding-block:14px}body[data-nb-layout="nb-utility"] .nav-actions{flex-wrap:wrap;gap:8px}}
 @media(max-width:380px){.nb-site-contact{display:none}.nb-site-nav{width:calc(100% - 32px)}}
+
+/* Decorative SVG icons have stable shapes on Android and desktop. */
+.nb-site-menu nav a,#studio-menu>a{display:flex!important;align-items:center;gap:13px}.nb-menu-icon{display:block!important;width:22px!important;height:22px!important;flex:0 0 22px;object-fit:contain}.nb-site-menu nav a::before,#studio-menu>a::before{content:none!important}

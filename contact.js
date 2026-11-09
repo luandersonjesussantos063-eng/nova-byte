@@ -1,4 +1,4 @@
-import {sendContactEmail} from './contact-email.js?v=security-20261109';
+import {sendContactEmail} from './contact-email.js?v=turnstile-20261109';
 /* No automatic transmission. The visitor chooses email or WhatsApp. */
 (()=>{
  'use strict';
@@ -10,21 +10,35 @@ import {sendContactEmail} from './contact-email.js?v=security-20261109';
   const emailButton=form.querySelector('[data-send-email]');
   const emailStatus=form.querySelector('[data-email-status]');
   const config=window.NovaByteContactConfig;
-  const emailEnabled=config?.emailEnabled===true&&Boolean(config.accessKey?.trim());
+  const emailEnabled=config?.emailEnabled===true&&Boolean(config.endpoint&&config.turnstileSitekey);
   if(emailEnabled){
    emailButton.hidden=false;
    emailButton.disabled=false;
    document.querySelector('[data-contact-intro]').textContent='Conte o que você precisa e escolha enviar por e-mail ou conversar pelo WhatsApp.';
    document.querySelector('.contact-notice').hidden=true;
-   form.querySelector('[data-contact-note]').textContent='* Campos obrigatórios. Para enviar por e-mail, informe seu e-mail. O envio é processado pelo Web3Forms. Se preferir WhatsApp, confira a mensagem e confirme no aplicativo.';
+   form.querySelector('[data-contact-note]').textContent='* Campos obrigatórios. Para enviar por e-mail, informe seu e-mail. A segurança é verificada automaticamente pela Cloudflare e o e-mail é enviado pelo Resend. Se preferir WhatsApp, confira a mensagem e confirme no aplicativo.';
+  }
+  let widgetId;
+  let requestKey=crypto.randomUUID();
+  if(emailEnabled){
+   const script=document.createElement('script');
+   script.src='https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
+   script.async=true;script.defer=true;
+   script.addEventListener('load',()=>{
+    try{widgetId=window.turnstile.render('#contact-captcha',{
+     sitekey:config.turnstileSitekey,action:'contact',language:'pt',theme:'auto',size:'flexible'
+    });}catch{emailStatus.hidden=false;emailStatus.textContent='Verificação temporariamente indisponível. Você pode continuar pelo WhatsApp.';}
+   });
+   script.addEventListener('error',()=>{emailStatus.hidden=false;emailStatus.textContent='Não foi possível carregar a verificação automática. Você pode continuar pelo WhatsApp.';});
+   document.head.append(script);
   }
   let lastSend=0;
   emailButton.addEventListener('click',async()=>{
    if(!emailEnabled)return;
    emailStatus.hidden=false;
-   const captchaToken=form.querySelector('[name="h-captcha-response"]')?.value||'';
+   const captchaToken=form.querySelector('[name="cf-turnstile-response"]')?.value||'';
    const honeypot=form.querySelector('[name="botcheck"]')?.value||'';
-   if(honeypot||!captchaToken){emailStatus.textContent='Confirme a verificação de segurança para enviar por e-mail. Se ela não carregar, você pode continuar pelo WhatsApp.';return;}
+   if(honeypot||!captchaToken){emailStatus.textContent='A verificação é automática. Aguarde um instante antes de enviar. Se ela não carregar, você pode continuar pelo WhatsApp.';return;}
    if(Date.now()-lastSend<30000){emailStatus.textContent='Aguarde alguns segundos antes de enviar outra solicitação.';return;}
    const email=form.querySelector('#contact-email');
    email.required=true;
@@ -38,18 +52,18 @@ import {sendContactEmail} from './contact-email.js?v=security-20261109';
    const timeout=setTimeout(()=>controller.abort(),15000);
    const value=id=>form.querySelector('#'+id).value.trim();
    try{
-    await sendContactEmail({accessKey:config.accessKey,captchaToken,honeypot,signal:controller.signal,fields:{
+    await sendContactEmail({endpoint:config.endpoint,captchaToken,honeypot,requestKey,signal:controller.signal,fields:{
      name:value('contact-name'),email:value('contact-email'),phone:value('contact-phone'),
      service:value('contact-service'),message:value('contact-message')
     }});
-    lastSend=Date.now();
+    lastSend=Date.now();requestKey=crypto.randomUUID();
     emailStatus.dataset.state='success';
     emailStatus.textContent='Solicitação recebida pelo serviço de envio. Obrigado! A NovaByte responderá pelo contato informado.';
    }catch{
     emailStatus.dataset.state='error';
     emailStatus.textContent='Não foi possível confirmar o envio por e-mail. Seus dados continuam aqui. Use “Preparar mensagem para o WhatsApp” para continuar.';
    }finally{
-    clearTimeout(timeout);if(window.hcaptcha)window.hcaptcha.reset();emailButton.disabled=false;prepare.disabled=false;
+    clearTimeout(timeout);if(widgetId!==undefined&&window.turnstile)window.turnstile.reset(widgetId);emailButton.disabled=false;prepare.disabled=false;
     emailStatus.focus();
    }
   });
