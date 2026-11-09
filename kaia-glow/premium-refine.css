@@ -286,3 +286,43 @@ button:focus-visible,a:focus-visible,input:focus-visible,summary:focus-visible{o
  .kg-reel-embed iframe{top:-69px;transform:scale(1.29)}
 }
 @media(prefers-reduced-motion:reduce){.kg-reels-track{scroll-behavior:auto}}
+
+
+/* Instagram identity in Reel section — distinctive but limited to this area */
+.kg-reels-heading .kg-instagram-badge{
+ display:inline-flex;align-items:center;gap:8px;
+ width:max-content;max-width:100%;padding:8px 13px;margin-bottom:12px;
+ color:#fff;border-radius:999px;
+ background:linear-gradient(110deg,#f58529 0%,#dd2a7b 38%,#a52e91 66%,#515bd4 100%);
+ box-shadow:0 5px 15px rgba(181,49,120,.16);
+ font:700 10px/1.3 'DM Sans',Arial,sans-serif;
+ letter-spacing:.045em;
+}
+.kg-reels-heading .kg-instagram-badge svg{
+ flex:0 0 auto;width:17px;height:17px;
+ fill:none;stroke:currentColor;stroke-width:1.8;
+ stroke-linecap:round;stroke-linejoin:round;
+}
+.kg-reels-heading .kg-reels-profile-link{
+ display:inline-flex;align-items:center;justify-content:center;
+ min-height:42px;padding:11px 17px;
+ border-radius:999px;text-decoration:none;color:#fff;
+ font:700 12px/1.25 'DM Sans',Arial,sans-serif;
+ text-align:center;
+ background:linear-gradient(100deg,#833ab4 0%,#c13584 35%,#e1306c 65%,#f77737 100%);
+ box-shadow:0 8px 17px rgba(193,53,132,.15);
+}
+.kg-reels-heading .kg-reels-profile-link:hover{
+ color:#fff;filter:brightness(.97);
+}
+.kg-reels-heading .kg-reels-profile-link:focus-visible{
+ outline:2px solid #ab688c;outline-offset:3px;
+}
+@media(max-width:740px){
+ .kg-reels-heading .kg-instagram-badge{
+  font-size:10px;padding:7px 11px;margin-bottom:10px;
+ }
+ .kg-reels-heading .kg-reels-profile-link{
+  max-width:100%;width:auto;min-height:40px;padding:10px 15px;
+ }
+}
