@@ -326,3 +326,142 @@ button:focus-visible,a:focus-visible,input:focus-visible,summary:focus-visible{o
   max-width:100%;width:auto;min-height:40px;padding:10px 15px;
  }
 }
+
+
+/* Kaia Glow — reorganized navigation drawer based on supplied mobile reference */
+.kaia-menu-dialog.kg-menu-v2{
+ position:fixed;inset:0 auto 0 0;margin:0;
+ width:min(392px,92vw);max-width:100%;height:100dvh;max-height:100dvh;
+ padding:0;border:0;border-right:1px solid #e5d8df;border-left:0;
+ background:#f9f7f7;color:#452d3d;
+ box-shadow:14px 0 42px #2b101e36;
+}
+.kaia-menu-dialog.kg-menu-v2::backdrop{background:#160a13a3}
+.kaia-menu-dialog.kg-menu-v2[open]{display:flex;flex-direction:column;overflow:hidden}
+.kg-menu-v2 .kaia-menu-top{
+ display:grid;grid-template-columns:minmax(0,1fr) 32px;
+ align-items:center;column-gap:10px;row-gap:13px;
+ flex:0 0 auto;padding:14px 15px 13px;border-bottom:1px solid #e8dee2;
+ background:linear-gradient(135deg,#51293e,#3b2030);
+ color:#fff;
+}
+.kg-menu-v2 .kg-menu-account-actions{
+ display:flex;align-items:center;gap:9px;min-width:0
+}
+.kg-menu-v2 .kg-menu-account-actions a{
+ display:flex;align-items:center;justify-content:center;
+ min-width:0;flex:1 1 0;min-height:37px;padding:7px 8px;
+ border:1px solid #ecd8e1b5;border-radius:5px;
+ color:#fff;font:600 12px/1.4 'DM Sans',Arial,sans-serif;text-decoration:none;
+}
+.kg-menu-v2 .kg-menu-account-actions a:first-child{background:#fff9fa;color:#562e44}
+.kg-menu-v2 .kg-menu-account-actions a[hidden]{display:none}
+.kg-menu-v2 .kg-menu-account-actions a#kaiaMenuProfile{flex-basis:auto}
+.kg-menu-v2 .kaia-menu-top .close{
+ color:#fff;background:#ffffff24;border:1px solid #ffffff54;
+ border-radius:6px;margin:0;min-width:31px;min-height:37px;
+ font:400 26px/1 Arial,sans-serif;display:grid;place-items:center;
+}
+.kg-menu-v2 .kg-menu-heading{grid-column:1/-1;padding:0 2px}
+.kg-menu-v2 .kg-menu-heading .eyebrow{color:#f2d7df;font-size:9px;letter-spacing:.17em}
+.kg-menu-v2 .kg-menu-heading h2{
+ margin:5px 0 0;color:#fff;font:400 23px/1.18 Georgia,serif;letter-spacing:-.02em
+}
+.kg-menu-v2 .kg-menu-heading p{margin:7px 0 0;color:#e9ccd9;font-size:11px;line-height:1.45}
+.kg-menu-v2 .kaia-menu-body{
+ flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;
+ padding:0;background:#f8f6f6;scrollbar-width:thin
+}
+.kg-menu-v2 .kg-menu-categories{padding:18px 14px 0}
+.kg-menu-v2 .kg-menu-categories>h3,.kg-menu-v2 .kg-menu-more>h3{
+ margin:0 0 10px;color:#4b3443;font:700 12px/1.4 'DM Sans',Arial,sans-serif
+}
+.kg-menu-v2 .kg-menu-feature{
+ display:grid;align-content:center;gap:7px;min-height:83px;
+ padding:14px 17px;margin-bottom:13px;text-decoration:none;
+ color:#fff;border:1px solid #cca8b8;border-radius:8px;
+ background:linear-gradient(112deg,#6b3852,#402139);
+}
+.kg-menu-v2 .kg-menu-feature-small{font:700 8px/1.4 Arial,sans-serif;letter-spacing:.18em;color:#f0cfdb}
+.kg-menu-v2 .kg-menu-feature strong{font:400 20px/1.3 Georgia,serif;color:#fff}
+.kg-menu-v2 .kg-menu-feature>span:last-child{font:600 10px/1.4 Arial,sans-serif;color:#f3dce4}
+.kg-menu-v2 .kg-menu-card-list{display:grid;gap:7px}
+.kg-menu-v2 .kg-menu-tile,.kg-menu-v2 .kg-menu-cat>summary{
+ display:flex;align-items:center;gap:10px;width:100%;
+ min-height:48px;padding:9px 11px;text-align:left;
+ border:1px solid #ebe4e6;border-radius:7px;
+ background:#fff;color:#4e3945;
+ font:600 12px/1.4 'DM Sans',Arial,sans-serif;
+ cursor:pointer;list-style:none;
+}
+.kg-menu-v2 .kg-menu-cat>summary::-webkit-details-marker{display:none}
+.kg-menu-v2 .kg-menu-tile-icon{
+ width:22px;min-width:22px;height:22px;display:grid;place-items:center;
+ color:#9b6b82
+}
+.kg-menu-v2 .kg-menu-chevron{margin-left:auto;font-size:20px;color:#92798a;line-height:1}
+.kg-menu-v2 .kg-menu-cat>summary::after{
+ content:'⌄';margin-left:auto;flex-shrink:0;
+ font-size:18px;color:#92798a;transition:transform .16s
+}
+.kg-menu-v2 .kg-menu-cat[open]>summary{border-radius:7px 7px 0 0;border-color:#e6d3de;background:#fff8fb}
+.kg-menu-v2 .kg-menu-cat[open]>summary::after{transform:rotate(180deg)}
+.kg-menu-v2 .kg-menu-sub{
+ display:grid;gap:5px;padding:8px 10px 10px;
+ border:1px solid #e6d3de;border-top:0;
+ border-radius:0 0 7px 7px;background:#fff8fb
+}
+.kg-menu-v2 .kg-menu-sub>button{
+ border:0;background:transparent;text-align:left;
+ min-height:42px;padding:10px 9px;
+ color:#664459;font:500 12px/1.5 'DM Sans',Arial,sans-serif;
+}
+.kg-menu-v2 .kg-menu-all-categories{
+ display:flex;justify-content:center;align-items:center;gap:8px;
+ width:100%;padding:12px 6px;margin:0 0 10px;min-height:41px;
+ border:0;background:transparent;color:#774662;
+ font:650 11px/1.3 'DM Sans',Arial,sans-serif
+}
+.kg-menu-v2 .kg-menu-quick{background:#fff;border-top:1px solid #ede4e7;border-bottom:1px solid #ede4e7;padding:7px 14px}
+.kg-menu-v2 .kg-menu-shortcut{
+ display:flex;align-items:center;gap:10px;min-height:48px;
+ padding:10px 1px;width:100%;text-align:left;
+ color:#4e3844;background:transparent;border:0;
+ border-bottom:1px solid #f1edef;text-decoration:none;
+ font:500 12px/1.4 'DM Sans',Arial,sans-serif;
+}
+.kg-menu-v2 .kg-menu-shortcut:last-child{border-bottom:0}
+.kg-menu-v2 .kg-menu-quick-icon{min-width:22px;display:grid;place-items:center;color:#8d657a}
+.kg-menu-v2 .kg-menu-quick-arrow{margin-left:auto;color:#99788a;font-size:20px}
+.kg-menu-v2 .kg-menu-more{padding:17px 14px 20px}
+.kg-menu-v2 .menu-group{
+ background:#fff;border:1px solid #ebe4e6;border-radius:7px;
+ margin:0 0 8px;overflow:hidden
+}
+.kg-menu-v2 .menu-group>summary{
+ min-height:50px;padding:10px 13px;
+ font-size:12px;align-items:center;gap:10px
+}
+.kg-menu-v2 .menu-group>summary::after{font-size:23px;color:#8d657a}
+.kg-menu-v2 .menu-group-copy strong{font:600 12px/1.4 'DM Sans',Arial,sans-serif;color:#4e3844}
+.kg-menu-v2 .menu-group-copy small{font:400 10px/1.45 'DM Sans',Arial,sans-serif;color:#977b89;margin-top:2px}
+.kg-menu-v2 .menu-group-content{padding:0 13px 13px}
+.kg-menu-v2 .menu-link-grid{gap:6px}
+.kg-menu-v2 .menu-link-grid>a,.kg-menu-v2 .menu-link-grid>button{
+ min-height:39px;padding:8px;font-size:11px
+}
+.kg-menu-v2 .kaia-menu-footer{
+ display:flex;align-items:center;justify-content:space-between;flex:0 0 auto;
+ background:#f1e8ed;border-top:1px solid #dfcdd7;
+ padding:8px 15px max(8px,env(safe-area-inset-bottom));
+ gap:10px
+}
+.kg-menu-v2 .kaia-menu-footer>a{font-size:11px;min-height:36px}
+.kg-menu-v2 a:focus-visible,.kg-menu-v2 button:focus-visible,.kg-menu-v2 summary:focus-visible{
+ outline:2px solid #ad7e94;outline-offset:2px
+}
+@media(max-width:420px){
+ .kaia-menu-dialog.kg-menu-v2{width:min(356px,94vw)}
+ .kg-menu-v2 .kg-menu-heading h2{font-size:21px}
+}
+@media(prefers-reduced-motion:reduce){.kg-menu-v2 .kg-menu-cat>summary::after{transition:none}}
