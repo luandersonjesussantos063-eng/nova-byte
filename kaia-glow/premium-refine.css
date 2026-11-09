@@ -251,13 +251,18 @@ button:focus-visible,a:focus-visible,input:focus-visible,summary:focus-visible{o
  box-shadow:0 4px 16px rgba(67,34,51,.045)
 }
 .kg-reel-embed{
- position:relative;width:100%;
- height:790px;max-width:100%;
- background:#fff;overflow:hidden
+ position:relative;width:100%;height:auto;
+ aspect-ratio:9 / 16;
+ max-width:100%;overflow:hidden;background:#271722
 }
+/* The native Instagram iframe letterboxes portrait video inside a square-ish media
+   slot. Crop the *outer* iframe viewport to the portrait video only; playback
+   remains served by Instagram. An uncropped original-post link stays underneath. */
 .kg-reel-embed iframe{
- width:100%;height:100%;border:0;display:block;
- background:#fff
+ position:absolute;left:0;top:-77px;
+ width:100%;height:790px;
+ border:0;display:block;background:#fff;
+ transform:scale(1.43);transform-origin:50% 0;
 }
 .kg-reel-original{
  display:block;padding:12px 12px 13px;
@@ -274,10 +279,10 @@ button:focus-visible,a:focus-visible,input:focus-visible,summary:focus-visible{o
  .kg-reels-heading h2{font-size:30px}
  .kg-reels-track{gap:12px;padding-bottom:13px}
  .kg-reel-card{flex:0 0 min(310px,calc(100vw - 62px));width:min(310px,calc(100vw - 62px))}
- .kg-reel-embed{height:790px}
+ .kg-reel-embed{aspect-ratio:9 / 16}
 }
 @media(max-width:360px){
  .kg-reel-card{flex-basis:min(276px,calc(100vw - 52px));width:min(276px,calc(100vw - 52px))}
- .kg-reel-embed{height:730px}
+ .kg-reel-embed iframe{top:-69px;transform:scale(1.29)}
 }
 @media(prefers-reduced-motion:reduce){.kg-reels-track{scroll-behavior:auto}}
