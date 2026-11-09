@@ -238,14 +238,14 @@ button:focus-visible,a:focus-visible,input:focus-visible,summary:focus-visible{o
  flex-shrink:0;text-decoration:underline;text-underline-offset:4px
 }
 .kg-reels-track{
- display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,310px);
- gap:15px;max-width:100%;overflow-x:auto;
+ display:flex;flex-flow:row nowrap;align-items:stretch;
+ gap:15px;max-width:100%;overflow-x:auto;overflow-y:hidden;
  scroll-snap-type:x mandatory;scroll-padding-inline:1px;
  overscroll-behavior-x:contain;padding:1px 1px 14px;
  scrollbar-width:thin;scrollbar-color:#ceb4c1 transparent
 }
 .kg-reel-card{
- scroll-snap-align:start;min-width:0;
+ scroll-snap-align:start;flex:0 0 310px;width:310px;min-width:0;
  border:1px solid #e8dbe0;background:#fff;
  border-radius:13px;overflow:hidden;
  box-shadow:0 4px 16px rgba(67,34,51,.045)
@@ -272,14 +272,12 @@ button:focus-visible,a:focus-visible,input:focus-visible,summary:focus-visible{o
  .kg-reels-section{padding-block:24px 32px}
  .kg-reels-heading{align-items:flex-start;flex-direction:column;gap:9px}
  .kg-reels-heading h2{font-size:30px}
- .kg-reels-track{
-  grid-auto-columns:minmax(0,min(310px,calc(100vw - 62px)));
-  gap:12px;padding-bottom:13px
- }
+ .kg-reels-track{gap:12px;padding-bottom:13px}
+ .kg-reel-card{flex:0 0 min(310px,calc(100vw - 62px));width:min(310px,calc(100vw - 62px))}
  .kg-reel-embed{height:790px}
 }
 @media(max-width:360px){
- .kg-reels-track{grid-auto-columns:minmax(0,min(276px,calc(100vw - 52px)))}
+ .kg-reel-card{flex-basis:min(276px,calc(100vw - 52px));width:min(276px,calc(100vw - 52px))}
  .kg-reel-embed{height:730px}
 }
 @media(prefers-reduced-motion:reduce){.kg-reels-track{scroll-behavior:auto}}
