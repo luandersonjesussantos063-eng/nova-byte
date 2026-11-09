@@ -1,5 +1,7 @@
 import {readFile,writeFile,mkdir} from 'node:fs/promises';
 import path from 'node:path';
+import {createHash} from 'node:crypto';
+const revisions=new Map();
 import '../kaia-glow/catalog-presentation.js';
 const presentation=globalThis.KaiaCatalogPresentation;
 const money=n=>Number(n||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
@@ -54,9 +56,11 @@ const linkToCategory=groups.map(g=>'<a class="pill" href="'+g.path+'">'+html(g.t
 async function writePage(output,pathname,content){
  const folder=path.join(output,pathname.replace(/^\//,''));
  await mkdir(folder,{recursive:true});
- await writeFile(path.join(folder,'index.html'),content);
+ const versioned=content.replace(/((?:src|href)=")\/([^"?]+)(?:\?v=[^"]+)?"/g,(match,prefix,file)=>revisions.has(file)?prefix+'/'+file+'?v='+revisions.get(file)+'"':match);
+ await writeFile(path.join(folder,'index.html'),versioned);
 }
 export async function generateKaiaSeoPages(source,output){
+ for(const file of ['catalog.js','catalog-presentation.js','catalog-overrides.js','seo-product-live.js','kaia-seo.css','premium-seo.css'])revisions.set(file,createHash('sha256').update(await readFile(path.join(source,file))).digest('hex').slice(0,12));
  const raw=await readFile(path.join(source,'catalog.js'),'utf8');
  const prefix='window.KAIA_CATALOG=';
  if(!raw.startsWith(prefix))throw Error('Catálogo Kaia: formato inesperado');
