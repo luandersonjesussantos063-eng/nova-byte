@@ -17,7 +17,7 @@ const robots = s => s.match(/<meta\b[^>]*name=["']robots["'][^>]*content=["']([^
 const route = p => p === 'index.html' ? '/' :
   p.endsWith('/index.html') ? '/' + p.slice(0, -'index.html'.length) : '/' + p;
 const localPath = (raw, page) => {
-  if (!raw || raw.startsWith('#') || /^(?:https?:|mailto:|tel:|data:|blob:|javascript:|\/\/)/i.test(raw)) return null;
+  if (!raw || raw.includes('${') || raw.startsWith('#') || /^(?:https?:|mailto:|tel:|data:|blob:|javascript:|\/\/)/i.test(raw)) return null;
   let u;
   try { u = new URL(raw, HOST + route(page)); } catch { return null; }
   if (u.origin !== HOST) return null;
