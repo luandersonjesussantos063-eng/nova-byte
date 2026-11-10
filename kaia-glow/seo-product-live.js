@@ -10,6 +10,8 @@ try{
  if(response.ok)eligible=new Map(((await response.json()).products||[]).map(p=>[p.sku,p.priceCents]));
 }catch{}
 const canBuy=p=>eligible instanceof Map&&p.sku&&p.available&&eligible.get(p.sku)===Math.round(p.price*100);
+const assistedSkus=new Set(['KG-MIS-PERFSER-ORI-80ML','KG-ABI-COL-EYE-JER-90G']);
+const assisted=p=>p.available&&assistedSkus.has(p.sku)&&!canBuy(p);
 const imageUrl=p=>{
  const src=p.images?.find(s=>!s.includes('photo-pending'));
  if(!src)return null;
@@ -22,7 +24,7 @@ for(const card of document.querySelectorAll('article.item[data-product-id]')){
  const h3=card.querySelector('h3');if(h3)h3.textContent=p.name;
  const brand=card.querySelector('.brand-name');if(brand)brand.textContent=p.brand;
  const price=card.querySelector('.landing-price');if(price)price.textContent=money(p.price);
- const stock=card.querySelector('.landing-stock');if(stock)stock.textContent=canBuy(p)?'Pronta entrega':eligible instanceof Map?'Sob encomenda':'Confira disponibilidade na loja';
+ const stock=card.querySelector('.landing-stock');if(stock)stock.textContent=canBuy(p)?'Pronta entrega':assisted(p)?'Em estoque · compra assistida':eligible instanceof Map?'Sob encomenda':'Confira disponibilidade na loja';
  const photo=imageUrl(p);
  if(photo){const img=document.createElement('img');img.src=photo;img.alt=p.name;img.loading='lazy';card.querySelector('img,.photo-none')?.replaceWith(img);}
 }
@@ -47,11 +49,11 @@ if(article){
   const photo=imageUrl(product);
   if(photo){const img=document.createElement('img');img.src=photo;img.alt=product.name;img.fetchPriority='high';article.querySelector('.visual').replaceChildren(img);}
   const available=canBuy(product);
-  buy.textContent=available?'Adicionar à sacola':eligible instanceof Map?'Solicitar encomenda':'Ver opções na loja';
+  buy.textContent=available?'Adicionar à sacola':assisted(product)?'Comprar pelo WhatsApp':eligible instanceof Map?'Solicitar encomenda':'Ver opções na loja';
   const destination=new URL('/',location.origin);destination.hash='produto-'+product.id;
   if(available)destination.searchParams.set('adicionar',product.id);
   buy.href=destination.pathname+destination.search+destination.hash;
-  notice.textContent=available?'Pronta entrega. Consulte o frete pelo CEP na sacola. O pagamento é processado pelo Mercado Pago.':eligible instanceof Map?'Sob encomenda, sem pagamento antecipado. Previsão de disponibilização em até 7 dias corridos, sujeita à confirmação da loja. O transporte será combinado separadamente.':'Consulte a disponibilidade na loja. Confira o endereço, o frete e o total antes de pagar.';
+  notice.textContent=available?'Pronta entrega. Consulte o frete pelo CEP na sacola. O pagamento é processado pelo Mercado Pago.':assisted(product)?'Em estoque. A compra é finalizada pela equipe no WhatsApp enquanto o frete do checkout online é configurado.':eligible instanceof Map?'Sob encomenda, sem pagamento antecipado. Previsão de disponibilização em até 7 dias corridos, sujeita à confirmação da loja. O transporte será combinado separadamente.':'Consulte a disponibilidade na loja. Confira o endereço, o frete e o total antes de pagar.';
   for(const [selector,value] of [['meta[name=description]',product.description.slice(0,155)],['meta[property="og:title"]',document.title],['meta[property="og:description"]',product.description.slice(0,155)]])document.querySelector(selector)?.setAttribute('content',value);
   if(photo)document.querySelector('meta[property="og:image"]')?.setAttribute('content',photo);
   for(const script of document.querySelectorAll('script[type="application/ld+json"]')){
