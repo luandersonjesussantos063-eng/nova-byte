@@ -52,7 +52,8 @@ if(article){
   buy.textContent=available?'Adicionar à sacola':assisted(product)?'Comprar pelo WhatsApp':eligible instanceof Map?'Solicitar encomenda':'Ver opções na loja';
   const destination=new URL('/',location.origin);destination.hash='produto-'+product.id;
   if(available)destination.searchParams.set('adicionar',product.id);
-  buy.href=destination.pathname+destination.search+destination.hash;
+  buy.href=assisted(product)?'https://wa.me/5511965677152?text='+encodeURIComponent('Olá! Vim pelo site da Kaia Glow e quero comprar '+product.name+'. Podem me orientar sobre entrega e pagamento?'):destination.pathname+destination.search+destination.hash;
+  if(assisted(product)){buy.target='_blank';buy.rel='noopener noreferrer';}
   notice.textContent=available?'Pronta entrega. Consulte o frete pelo CEP na sacola. O pagamento é processado pelo Mercado Pago.':assisted(product)?'Em estoque. A compra é finalizada pela equipe no WhatsApp enquanto o frete do checkout online é configurado.':eligible instanceof Map?'Sob encomenda, sem pagamento antecipado. Previsão de disponibilização em até 7 dias corridos, sujeita à confirmação da loja. O transporte será combinado separadamente.':'Consulte a disponibilidade na loja. Confira o endereço, o frete e o total antes de pagar.';
   for(const [selector,value] of [['meta[name=description]',product.description.slice(0,155)],['meta[property="og:title"]',document.title],['meta[property="og:description"]',product.description.slice(0,155)]])document.querySelector(selector)?.setAttribute('content',value);
   if(photo)document.querySelector('meta[property="og:image"]')?.setAttribute('content',photo);
