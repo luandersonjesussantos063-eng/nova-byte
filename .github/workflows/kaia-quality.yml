@@ -3,6 +3,8 @@ on:
   push:
     paths:
       - 'kaia-glow/**'
+      - 'scripts/build-kaia-site.mjs'
+      - 'scripts/kaia-seo-pages.mjs'
       - 'scripts/tests/kaia-navigation.test.mjs'
       - 'scripts/tests/kaia-admin-management.test.mjs'
       - 'functions/api/kaia/admin-orders.js'
@@ -19,5 +21,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      # Category and product destinations are generated, not checked into Git.
+      - name: Gerar páginas da Kaia Glow para validar navegação
+        run: node scripts/build-kaia-site.mjs
       - run: node --test scripts/tests/kaia-navigation.test.mjs scripts/tests/kaia-admin-management.test.mjs
 
