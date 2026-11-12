@@ -1,5 +1,5 @@
 "use strict";
-const CACHE="missao-farda-core-v1";
+const CACHE="missao-farda-core-v2-pmesp-only";
 const CORE=["./","./index.html","./app.js","./banco.js","./manifest.webmanifest","./icon.svg"];
 self.addEventListener("install",function(event){
   event.waitUntil(caches.open(CACHE).then(function(cache){return cache.addAll(CORE);}).then(function(){return self.skipWaiting();}));
@@ -17,5 +17,5 @@ self.addEventListener("fetch",function(event){
       const copy=response.clone();caches.open(CACHE).then(function(cache){return cache.put(request,copy);});
     }
     return response;
-  }).catch(function(){return caches.match(request).then(function(res){return res||caches.match("./index.html");});}));
+  }).catch(function(){return caches.match(request).then(function(res){return res||Response.error();});}));
 });
