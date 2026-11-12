@@ -11,7 +11,7 @@ function subjectGroup(q){const s=typeof q==="string"?q:q?.subject||"";return ["H
 function isReal(q){return q&&/^pmesp/.test(q.exam)&&Number.isInteger(q.number)&&q.number>=1&&q.number<=60;}
 function isValid(q){return isReal(q)&&!q.annulled&&"ABCDE".includes(q.key||"-");}
 function cleanHistory(state,ids){const out={};Object.keys(state||{}).forEach(id=>{if(!ids.has(id))return;const p=state[id];if(p&&typeof p==="object")out[id]={...p};});return out;}
-function reviewDue(p,now){return p&&p.correct===false||!!(p&&p.due&&p.due<=now);}
+function reviewDue(p,now){if(!p)return false;return p.due?String(p.due)<=now:p.correct===false;}
 function grade(q,choice,old,iso,reason=""){
   if(!isReal(q))throw new Error("Questão não pertence à PMESP");
   if(q.annulled)return {answer:choice||"",correct:null,annulled:true,at:Date.now(),day:iso,attempts:(old?.attempts||0)+1,due:null,successStreak:0,reason:""};
@@ -53,7 +53,7 @@ function choose(questions,progress={},options={}){
  let pool=(questions||[]).filter(q=>isReal(q)&&(!options.excludeAnnulled||!q.annulled)&&(!q.annulled||kind==="full"));
  if(exam!=="all")pool=pool.filter(q=>q.exam===exam);
  if(subject!=="all")pool=pool.filter(q=>subjectGroup(q)===subject||q.subject===subject);
- if(kind==="review")pool=pool.filter(q=>progress[q.id]&&(progress[q.id].correct===false||reviewDue(progress[q.id],now)));
+ if(kind==="review")pool=pool.filter(q=>progress[q.id]&&reviewDue(progress[q.id],now));
  if(kind==="new")pool=pool.filter(q=>!progress[q.id]);
  if(kind==="full")return pool.sort((a,b)=>a.number-b.number);
  pool.sort((a,b)=>{
