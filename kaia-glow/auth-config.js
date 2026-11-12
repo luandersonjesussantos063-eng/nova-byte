@@ -1,1 +1,0 @@
-export const KAIA_AUTH = {"url":"https://vajlhodqxskozuxxlujv.supabase.co","publishableKey":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZhamxob2RxeHNrb3p1eHhsdWp2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk5MDQ0ODIsImV4cCI6MjEwNTQ4MDQ4Mn0.2HfSpUNZZZAJ8xQWK6yuwAkxNa_-dtuFTfkYJzSPybk","accountUrl":"https://novabytesolucoes.com.br/kaia-glow/conta.html"};

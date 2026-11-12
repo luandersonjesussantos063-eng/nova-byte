@@ -80,3 +80,6 @@ body.nb-home{color:#eff3f9;background:#0b1526!important}.nb-home:not(.nb-inner) 
 .nb-home .project-card[hidden]{display:none!important}
 @media(max-width:760px){.nb-home .nb-preview-label{left:12px;right:12px;bottom:12px;padding:13px;max-width:88%}.nb-home .nb-preview-app,.nb-home .nb-private-preview{padding:25px}.nb-home .nb-private-preview>strong{font-size:32px}}
 @media(prefers-reduced-motion:reduce){.nb-home .nb-portfolio-photo{transition:none}.nb-home .site-scroll-preview:hover .nb-portfolio-photo{transform:none}}
+
+/* Portfolio link for Kaia Glow points exclusively to the official store; old demo removed. */
+.nb-home .nb-official-kaia-logo{object-fit:contain;background:#2c0e1e;padding:1.25rem}
