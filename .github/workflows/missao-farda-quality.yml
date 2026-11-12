@@ -4,6 +4,7 @@ on:
     paths:
       - 'questoes/**'
       - 'scripts/tests/missao-farda.test.mjs'
+      - 'scripts/tests/missao-farda-ui.test.mjs'
       - '.github/workflows/missao-farda-quality.yml'
   pull_request:
     paths:
@@ -27,5 +28,7 @@ jobs:
           node --check questoes/core.js
           node --check questoes/banco.js
           node --check questoes/sw.js
-      - name: Testar revisão, seleção e gabaritos
-        run: node --test scripts/tests/missao-farda.test.mjs
+      - name: Preparar teste de interface
+        run: npm install --no-save jsdom@26
+      - name: Testar revisão, seleção, gabaritos e navegação
+        run: node --test scripts/tests/missao-farda.test.mjs scripts/tests/missao-farda-ui.test.mjs
