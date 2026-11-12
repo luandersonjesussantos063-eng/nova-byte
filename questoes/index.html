@@ -8,11 +8,11 @@
 <meta name="robots" content="noindex,follow">
 <link rel="icon" type="image/svg+xml" href="./icon.svg">
 <link rel="manifest" href="./manifest.webmanifest">
-<link rel="stylesheet" href="./ui.css?v=4">
+<link rel="stylesheet" href="./ui.css?v=6">
 <title>Missão Farda | Do zero à prova da PMESP</title>
-<script src="./banco.js?v=4" defer></script>
-<script src="./core.js?v=4" defer></script>
-<script src="./app.js?v=4" defer></script>
+<script src="./banco-transcrito.js?v=6" defer></script>
+<script src="./core.js?v=6" defer></script>
+<script src="./app.js?v=6" defer></script>
 </head>
 <body>
 <a class="skip" href="#main">Pular para o conteúdo</a>
@@ -48,7 +48,7 @@
 <aside class="snapshot panel">
 <div class="snapshot-head"><span class="eyebrow">SEU PAINEL</span><span class="dot-label">LOCAL NO CELULAR</span></div>
 <div class="snapshot-row"><div><strong id="home-answered">0</strong><small>tentativas registradas</small></div><div><strong id="home-accuracy">—</strong><small>acertos até agora</small></div></div>
-<div class="mini-meter"><div class="mini-meter-top"><span>Conhecimento praticado</span><strong id="unique-done">0/180</strong></div><div class="meter"><span id="seen-meter"></span></div></div>
+<div class="mini-meter"><div class="mini-meter-top"><span>Conhecimento praticado</span><strong id="unique-done">0/300</strong></div><div class="meter"><span id="seen-meter"></span></div></div>
 <p class="dim small" id="home-review-text">Ainda não há revisões pendentes.</p>
 <button type="button" id="review-shortcut" class="text-button">Revisar pontos fracos <span aria-hidden="true">→</span></button>
 </aside>
@@ -87,7 +87,9 @@
 <div class="field"><label for="exam">Edição da PMESP</label><select id="exam">
 <option value="pmesp">2026 · VUNESP · 60 questões</option>
 <option value="pmesp25">2025 · FGV · Tipo 1</option>
-<option value="pmesp24">2024 · FGV · Tipo 1</option></select></div>
+<option value="pmesp24">2024 · FGV · Tipo 1</option>
+<option value="pmesp23">2023 · VUNESP · 60 questões</option>
+<option value="pmesp21">2021 · VUNESP · 60 questões</option></select></div>
 <div class="field"><label for="subject">Disciplina</label><select id="subject"><option value="all">Todas as disciplinas</option></select></div>
 <div class="field"><label for="mode">Tipo de treino</label><select id="mode">
 <option value="daily">Treino guiado</option><option value="diagnostic">Diagnóstico de nível</option><option value="review">Revisar questões erradas ou vencidas</option><option value="new">Questões ainda não respondidas</option><option value="full">Prova completa</option></select></div>
