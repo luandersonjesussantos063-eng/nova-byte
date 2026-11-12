@@ -190,7 +190,7 @@ function renderQuestion(){
  const reader=add(area,"div","embedded-reader");reader.id="reader-for-question";reader.hidden=true;
  const bar=add(reader,"div","reader-head");add(bar,"span","dim small","PDF da FGV — use o link externo se o navegador não exibir");
  bar.appendChild(link("Abrir no navegador ↗",info.source));
- const frame=add(reader,"iframe");frame.id="pdf-reader-frame";frame.title="Caderno oficial PMESP "+info.year;frame.setAttribute("loading","lazy");frame.setAttribute("referrerpolicy","no-referrer");frame.setAttribute("sandbox","allow-scripts allow-same-origin allow-downloads");
+ const frame=add(reader,"iframe");frame.id="pdf-reader-frame";frame.title="Caderno oficial PMESP "+info.year;frame.setAttribute("loading","lazy");frame.setAttribute("referrerpolicy","no-referrer");
  }
  if(q.annulled)add(area,"p","support-note","Questão oficialmente anulada. Ela não é contabilizada como acerto ou erro.");
  add(area,"h3","subheading",graded?"Alternativas e correção":"Marque sua resposta (A a E)");
