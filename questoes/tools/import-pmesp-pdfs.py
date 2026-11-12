@@ -286,6 +286,27 @@ def main():
             questions,contexts=fallback_2026_from_website(cfg)
         by={q["number"]:q for q in questions}
         if len(by)!=60:issues.append((year,"itens",len(by)));continue
+        # A prova enviada contém algumas alternativas como gráficos ou botões
+        # de software; nesses itens a imagem ORIGINAL acompanha as letras.
+        visualItems={"2023":{52:(19,0)},"2025":{53:(12,1),55:(12,1)}}
+        if year in visualItems:
+            for item in questions:
+                spec=visualItems[year].get(item["number"])
+                if not spec:continue
+                for letter in "ABCDE":
+                    if not item["options"].get(letter) or (year=="2025" and item["number"]==53):
+                        item["options"][letter]="Alternativa gráfica "+letter+" — veja o recorte original da prova logo abaixo."
+                page,side=spec
+                name=year+"-p"+str(page)+"-c"+str(side)+".webp"
+                if not (IMAGE_DIR/name).exists():
+                    from PIL import Image
+                    import io
+                    pageObj=fitz.open(pdf)[page-1]
+                    crop=fitz.Rect(23 if side==0 else 299,35,298 if side==0 else 576,794)
+                    pix=pageObj.get_pixmap(matrix=fitz.Matrix(1.9,1.9),clip=crop,alpha=False)
+                    im=Image.open(io.BytesIO(pix.tobytes("png"))).convert("RGB")
+                    im.save(IMAGE_DIR/name,"WEBP",quality=78,method=4)
+                item["visual"]="./figuras/"+name
         optsbad=[q["number"] for q in questions if set(q["options"])!=set("ABCDE") or len(q["text"])<7 or any(not v for v in q["options"].values())]
         if optsbad:issues.append((year,"alternativas",optsbad));continue
         meta=old["exams"].get(cfg["id"],{}).copy()
