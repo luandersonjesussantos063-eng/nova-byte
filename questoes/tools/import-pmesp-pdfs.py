@@ -218,9 +218,12 @@ def fallback_2026_from_website(cfg):
             from PIL import Image,ImageDraw
             import io
             items=[im.get("src") for im in main.select("img") if re.search(r"q\d{3}-alt-[a-e]\.png",im.get("src") or "",re.I)]
-            if len(items)<5: raise RuntimeError("Opções gráficas não localizadas Q"+str(n)+" urls "+repr(items))
+            if len(items)<5:
+                print("WARNING: imagens das alternativas não disponíveis no espelho web, Q",n,flush=True)
+                for letter in "ABCDE": opts[letter]="Alternativa "+letter+" exige conferência da figura na prova original."
+                items=[]
             panels=[]
-            for letter in "ABCDE":
+            for letter in ("ABCDE" if items else ""):
                 match=next((x for x in items if re.search(r"alt-"+letter.lower()+r"\.png",x,re.I)),None)
                 if not match: raise RuntimeError("Imagem não localizada, opção "+letter)
                 req=urllib.request.Request(match,headers={"User-Agent":"Mozilla/5.0"})
@@ -229,17 +232,19 @@ def fallback_2026_from_website(cfg):
                     panel.thumbnail((540,350))
                     panels.append((letter,panel))
                 opts[letter]="Alternativa gráfica "+letter+": confira a imagem original abaixo."
-            width=1100;height=1120
-            canvas=Image.new("RGB",(width,height),"white");paint=ImageDraw.Draw(canvas)
-            for i,(letter,panel) in enumerate(panels):
-                x=25+(i%2)*550;y=20+(i//2)*365
-                paint.text((x+8,y+8),"Alternativa "+letter,fill="black")
-                canvas.paste(panel,(x+10,y+43))
-            IMAGE_DIR.mkdir(parents=True,exist_ok=True)
-            name=f"2026-q{n:03d}-options.webp"
-            canvas.save(IMAGE_DIR/name,"WEBP",quality=85)
-            option_visual="./figuras/"+name
-            print("FIGURES 2026 Q",n,"alternativas gráficas salvas",flush=True)
+            if items:
+                width=1100;height=1120
+                canvas=Image.new("RGB",(width,height),"white");paint=ImageDraw.Draw(canvas)
+            if items:
+                for i,(letter,panel) in enumerate(panels):
+                    x=25+(i%2)*550;y=20+(i//2)*365
+                    paint.text((x+8,y+8),"Alternativa "+letter,fill="black")
+                    canvas.paste(panel,(x+10,y+43))
+                IMAGE_DIR.mkdir(parents=True,exist_ok=True)
+                name=f"2026-q{n:03d}-options.webp"
+                canvas.save(IMAGE_DIR/name,"WEBP",quality=85)
+                option_visual="./figuras/"+name
+                print("FIGURES 2026 Q",n,"alternativas gráficas salvas",flush=True)
 
         pg=[p for first,p in [(1,3),(6,4),(11,5),(13,6),(17,7),(21,8),(24,9),(27,10),(31,11),(32,12),(35,13),(37,14),(39,15),(41,16),(42,17),(47,18),(51,19),(54,20),(58,21)] if n>=first][-1]
         subject="Português" if n<=20 else "Matemática" if n<=35 else "Conhecimentos Gerais" if n<=50 else "Informática" if n<=55 else "Administração Pública"
