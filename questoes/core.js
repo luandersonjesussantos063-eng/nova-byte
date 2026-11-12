@@ -92,8 +92,10 @@ function progressCount(progress,qs,today){
  return {seen:entries.length,wrong:entries.filter(([id,p])=>p.correct===false).length,due:entries.filter(([id,p])=>reviewDue(p,today)).length};
 }
 function nextSubject(date){const weekday=new Date(date+"T12:00:00Z").getUTCDay();return {0:"Revisão leve",1:"Português",2:"Matemática",3:"Conhecimentos Gerais",4:"Português",5:"Matemática",6:"Informática e Administração Pública"}[weekday];}
-function phase(done){
- const d=Number(done)||0;return d<30?"Fundação":d<90?"Consolidação":"Reta final";
+function phase(done,daysLeft){
+ const d=Number(done)||0;
+ if(typeof daysLeft==="number"&&daysLeft>=0&&daysLeft<=21)return "Reta final";
+ return d<30?"Fundação":d<90?"Construção":"Revisão ativa";
 }
 function exportSafe(state){return JSON.stringify({app:"missao-farda",version:3,exportedAt:new Date().toISOString(),state},null,2);}
 const API={GROUPS,TARGETS,DEFAULT_EXAM_DATE,dayDate,dayShift,daysBetween,subjectGroup,isReal,isValid,cleanHistory,reviewDue,grade,score,statsBySubject,weakestSubject,choose,weeklyActivity,progressCount,nextSubject,phase,exportSafe};
