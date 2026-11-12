@@ -183,14 +183,66 @@ def extract(year,pdf,cfg):
     print("PARSED",year,len(output),"images",len(generated),"support",len(contexts),flush=True)
     return output,contexts
 
+
+def fallback_2026_from_website(cfg):
+    from bs4 import BeautifulSoup
+    original=json.loads((ROOT/"tools"/"2026-caderno-texto.json").read_text("utf-8"))["pages"]
+    output=[]
+    for n in range(1,61):
+        url="https://carreirapublica.com.br/questoes/Q"+str(208122+n)
+        req=urllib.request.Request(url,headers={"User-Agent":"Mozilla/5.0","Accept":"text/html"})
+        with urllib.request.urlopen(req,timeout=30) as r: body=r.read().decode("utf-8","replace")
+        soup=BeautifulSoup(body,"html.parser")
+        main=soup.find("main") or soup.find("article") or soup.body
+        title=main.find("h1") if main else None
+        if not title: raise RuntimeError("Questão 2026 "+str(n)+" sem enunciado")
+        heading=tidy(title.get_text(" ",strip=True))
+        raw=main.get_text("\n",strip=True).split("Texto associado",1)[-1].split("Responder",1)[0]
+        ls=[v.strip() for v in raw.splitlines() if v.strip()]
+        opts={}
+        markers={}
+        for i,v in enumerate(ls):
+            for k in "ABCDE":
+                if v==k+" "+k+"." or v==k+"." or (v==k and i+1<len(ls) and ls[i+1]==k+"."):
+                    markers.setdefault(k,i)
+        if set(markers)!={"A","B","C","D","E"}:raise RuntimeError("Alternativas incompletas Q"+str(n)+" markers="+str(markers))
+        for k in "ABCDE":
+            start=markers[k]+1
+            end=min([v for x,v in markers.items() if v>markers[k]] or [len(ls)])
+            val=" ".join(x for x in ls[start:end] if x not in (k,k+"."))
+            opts[k]=tidy(val)
+        if any(len(v)<2 for v in opts.values()):raise RuntimeError("Opção vazia Q"+str(n))
+        pg=[p for first,p in [(1,3),(6,4),(11,5),(13,6),(17,7),(21,8),(24,9),(27,10),(31,11),(32,12),(35,13),(37,14),(39,15),(41,16),(42,17),(47,18),(51,19),(54,20),(58,21)] if n>=first][-1]
+        subject="Português" if n<=20 else "Matemática" if n<=35 else "Conhecimentos Gerais" if n<=50 else "Informática" if n<=55 else "Administração Pública"
+        output.append({"id":f"pmesp-{n}","exam":"pmesp","number":n,"subject":subject,
+            "text":heading,"options":opts,"paperPage":pg,"kind":"inline","key":None,
+            "annulled":False,"needsVisual":bool(re.search(r"\b(?:tira|charge|mapa|figura|gráfico|imagem|tabela|quadro|fotografia)\b",heading,re.I)),
+            "visual":None,"support":None})
+    for first,last,page,col in [(1,8,3,0),(11,16,5,0),(17,20,7,0)]:
+        lines=original[page-1].splitlines()
+        text="\n".join(line[:86] if col==0 else line[86:] for line in lines)
+        cut=re.search(r"(?m)^\s*"+str(first).zfill(2)+r"\.\s",text)
+        if cut:text=text[:cut.start()]
+        text=tidy(text)
+        if len(text)>90:
+            for q in output:
+                if first<=q["number"]<=last:q["support"]={"id":f"2026-{first}-{last}","text":text}
+    print("PARSED 2026 (public question display + submitted original context)",len(output),flush=True)
+    return output,[]
+
 def main():
     old=json.loads((ROOT/"banco.js").read_text(encoding="utf-8").split("window.EXAM_BANK=")[1].rstrip().rstrip(";"))
     oldquestions={q["id"]:q for q in old["questions"]}
     newdb={"version":5,"updated":"2026-11-12","exams":{},"questions":[],"notes":["Transcrição dos cadernos reais enviados pelo usuário (mesmos cadernos públicos por ano).","A imagem da coluna da prova é mostrada nos itens com referência visual.","2023: gabarito definitivo não foi validado; sem correção automática nessa edição."]}
     issues=[]
     for year,cfg in SOURCES.items():
-        pdf=download(year,cfg)
-        questions,contexts=extract(year,pdf,cfg)
+        try:
+            pdf=download(year,cfg)
+            questions,contexts=extract(year,pdf,cfg)
+        except Exception as err:
+            if year!="2026": raise
+            print("PDF público de 2026 bloqueado; usando questões publicadas e texto do caderno fornecido: "+str(err),flush=True)
+            questions,contexts=fallback_2026_from_website(cfg)
         by={q["number"]:q for q in questions}
         if len(by)!=60:issues.append((year,"itens",len(by)));continue
         optsbad=[q["number"] for q in questions if set(q["options"])!=set("ABCDE") or len(q["text"])<7 or any(not v for v in q["options"].values())]
