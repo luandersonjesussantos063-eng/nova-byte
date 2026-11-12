@@ -13,3 +13,5 @@
 
 /* Beginner micro-lessons: no generated exam questions */
 .lesson-hub{margin:16px 0}.lesson-content{background:#0e293a;border:1px solid #315465;border-radius:14px;padding:17px 19px;margin:15px 0}.lesson-content h3{font-size:20px;color:#e7fff9;margin:0 0 8px}.lesson-steps{margin:12px 0;padding-left:20px;color:#d8eaf1}.lesson-steps li{margin:9px 0}.lesson-content .support-note{margin:15px 0 0}
+
+.registration-bar{display:flex;align-items:center;justify-content:space-between;gap:14px;border:1px solid #426958;border-radius:13px;padding:12px 16px;background:linear-gradient(90deg,#193d3d,#11283a);margin:0 0 18px}.registration-bar strong{display:block;font-size:13px;color:#d5fff3}.registration-bar span{display:block;color:#abc7ce;font-size:11px;margin-top:3px}.registration-bar a{white-space:nowrap;font-size:12px;font-weight:750;border:1px solid #4f9985;border-radius:10px;padding:10px 12px;text-decoration:none}@media(max-width:580px){.registration-bar{display:block}.registration-bar a{display:inline-block;margin-top:10px}}
