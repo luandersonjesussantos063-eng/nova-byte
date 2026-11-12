@@ -205,7 +205,9 @@ def fallback_2026_from_website(cfg):
             for k in "ABCDE":
                 if v==k+" "+k+"." or v==k+"." or (v==k and i+1<len(ls) and ls[i+1]==k+"."):
                     markers.setdefault(k,i)
-        if set(markers)!={"A","B","C","D","E"}:raise RuntimeError("Alternativas incompletas Q"+str(n)+" markers="+str(markers))
+        if set(markers)!={"A","B","C","D","E"}:
+            print("QUESTION HEAD",n,repr(heading[:180]),"LINES",repr(ls[:95]),flush=True)
+            raise RuntimeError("Alternativas incompletas Q"+str(n)+" markers="+str(markers))
         for k in "ABCDE":
             start=markers[k]+1
             end=min([v for x,v in markers.items() if v>markers[k]] or [len(ls)])
