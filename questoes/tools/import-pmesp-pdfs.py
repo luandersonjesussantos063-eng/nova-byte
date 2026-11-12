@@ -213,7 +213,9 @@ def fallback_2026_from_website(cfg):
             end=min([v for x,v in markers.items() if v>markers[k]] or [len(ls)])
             val=" ".join(x for x in ls[start:end] if x not in (k,k+"."))
             opts[k]=tidy(val)
-        if any(len(v)<2 for v in opts.values()):raise RuntimeError("Opção vazia Q"+str(n))
+        if any(len(v)<2 for v in opts.values()):
+            print("GRAPH QUESTION",n,"OPTIONS",repr(opts),"IMG",repr([im.get("src") for im in main.select("img")][:20]),flush=True)
+            raise RuntimeError("Opção vazia Q"+str(n))
         pg=[p for first,p in [(1,3),(6,4),(11,5),(13,6),(17,7),(21,8),(24,9),(27,10),(31,11),(32,12),(35,13),(37,14),(39,15),(41,16),(42,17),(47,18),(51,19),(54,20),(58,21)] if n>=first][-1]
         subject="Português" if n<=20 else "Matemática" if n<=35 else "Conhecimentos Gerais" if n<=50 else "Informática" if n<=55 else "Administração Pública"
         output.append({"id":f"pmesp-{n}","exam":"pmesp","number":n,"subject":subject,
