@@ -185,22 +185,45 @@ function renderQuestion(){
  meter("quiz-meter",percent(items.filter(x=>s.checked[x.id]).length,items.length));
  const title=add(area,"h2","question-title","Questão "+q.number+" — "+C.subjectGroup(q));
  const box=add(area,"div","q-source");
- add(box,"h3","","Enunciado 100% da prova original");
- add(box,"p","","Abra o caderno para ler o texto, imagens e alternativas. Depois marque a letra aqui. As perguntas não são inventadas nem reescritas.");
- const links=add(box,"div","source-links");
- if(q.exam==="pmesp")links.appendChild(link("Abrir esta questão real ↗",sourceURL(q)));
- links.appendChild(link(q.exam==="pmesp"?"Caderno na VUNESP ↗":"Abrir PDF oficial ↗",info.source));
- if(q.exam!=="pmesp"){
- links.appendChild(button("Ler o caderno nesta tela","small-button",()=>{
-  const wrap=$("reader-for-question");if(!wrap)return;
-  if(wrap.hidden){wrap.hidden=false;if(!$("pdf-reader-frame").src)$("pdf-reader-frame").src=info.source;window.setTimeout(()=>wrap.scrollIntoView({block:"nearest",behavior:"smooth"}),100);}
-  else wrap.hidden=true;
- }));
- const reader=add(area,"div","embedded-reader");reader.id="reader-for-question";reader.hidden=true;
- const bar=add(reader,"div","reader-head");add(bar,"span","dim small","PDF da FGV — use o link externo se o navegador não exibir");
- bar.appendChild(link("Abrir no navegador ↗",info.source));
- const frame=add(reader,"iframe");frame.id="pdf-reader-frame";frame.title="Caderno oficial PMESP "+info.year;frame.setAttribute("loading","lazy");frame.setAttribute("referrerpolicy","no-referrer");
- }
+ add(box,"h3","","Leia o enunciado original aqui mesmo");
+ add(box,"p","","A página da prova aparece abaixo, com texto, imagens e alternativas originais. Leia a questão "+q.number+" e marque A, B, C, D ou E nesta mesma tela.");
+ const reader=add(area,"div","embedded-reader");
+ reader.id="reader-for-question";
+ reader.dataset.question=q.id;
+ const bar=add(reader,"div","reader-head");
+ const row=add(bar,"div","reader-caption");
+ add(row,"strong","","Caderno "+info.year+" • questão "+q.number);
+ add(row,"span","dim small","Página "+(q.paperPage||"?")+" da prova • "+(info.type||"VUNESP"));
+ const controls=add(bar,"div","reader-controls");
+ const pdfURL=q.paperUrl||info.paperPdf||info.source;
+ const page=Number(q.paperPage)||1;
+ const srcNative=pdfURL+"#page="+page+"&zoom=page-width";
+ const srcAlt="https://docs.google.com/gview?embedded=1&url="+encodeURIComponent(pdfURL);
+ const frame=add(reader,"iframe");
+ frame.id="pdf-reader-frame";
+ frame.title="Página "+page+" do caderno PMESP "+info.year+" — questão "+q.number;
+ frame.setAttribute("loading","eager");
+ frame.setAttribute("referrerpolicy","no-referrer");
+ frame.src=srcNative;
+ const toggle=button("Ocultar PDF","small-button",()=>{
+   const was=frame.hidden;
+   frame.hidden=!was;
+   toggle.textContent=was?"Ocultar PDF":"Mostrar PDF";
+ });
+ controls.appendChild(toggle);
+ const alternate=button("Outro leitor","small-button",()=>{
+   const alternateActive=frame.dataset.alternate==="true";
+   frame.dataset.alternate=String(!alternateActive);
+   frame.src=alternateActive?srcNative:srcAlt;
+   alternate.textContent=alternateActive?"Outro leitor":"Leitor original";
+   frame.hidden=false;
+   toggle.textContent="Ocultar PDF";
+ });
+ controls.appendChild(alternate);
+ const help=add(reader,"div","reader-help");
+ add(help,"span","","Se o documento não carregar no celular, toque em “Outro leitor”.");
+ help.appendChild(link("Abrir fonte em outra aba (alternativa) ↗",pdfURL+"#page="+page));
+ if(q.exam==="pmesp")help.appendChild(link("Comparar com a questão digital ↗",sourceURL(q)));
  if(q.annulled)add(area,"p","support-note","Questão oficialmente anulada. Ela não é contabilizada como acerto ou erro.");
  add(area,"h3","subheading",graded?"Alternativas e correção":"Marque sua resposta (A a E)");
  const opts=add(area,"div","answer-options");
@@ -210,7 +233,19 @@ function renderQuestion(){
  if(graded&&!q.annulled&&q.key===letter)b.classList.add("correct");
  if(graded&&!q.annulled&&chosen===letter&&chosen!==q.key)b.classList.add("wrong");
  add(b,"span","letter",letter);add(b,"span","","Alternativa "+letter);
- b.addEventListener("click",()=>{if(graded)return;s.picks[q.id]=letter;save();renderQuestion();});
+ b.addEventListener("click",()=>{
+ if(graded)return;
+ s.picks[q.id]=letter;save();
+ opts.querySelectorAll(".option").forEach((option,i)=>{
+  const picked="ABCDE"[i]===letter;
+  option.classList.toggle("is-picked",picked);
+  option.setAttribute("aria-pressed",String(picked));
+ });
+ const action=$("check");
+ if(action&&!s.finished)action.disabled=false;
+ const navIndex=$("question-numbers")?.children[s.index];
+ if(navIndex)navIndex.classList.add("marked");
+});
  opts.appendChild(b);
  });
  $("feedback").hidden=true;
