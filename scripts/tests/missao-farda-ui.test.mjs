@@ -65,3 +65,31 @@ test("Syllabus and essay are persisted locally without backend requests",()=>{
  assert.ok(document.querySelector("#topics-complete").textContent.startsWith("1/"));
  w.close();
 });
+
+
+test("Original PMESP 2026 question PDF is embedded at its actual page without leaving the app",()=>{
+ const a=createApp(),{document,click,w}=a;
+ click("#daily-start");
+ const iframe=document.querySelector("#pdf-reader-frame");
+ assert.ok(iframe,"Original PDF viewer should exist");
+ assert.match(iframe.src,/Prova-pmsp\.pdf#page=3&zoom=page-width/);
+ assert.equal(document.querySelector("#reader-for-question").hidden,false);
+ click(".option");
+ assert.strictEqual(document.querySelector("#pdf-reader-frame"),iframe,"Selecting an answer must not reload the original PDF iframe");
+ assert.equal(document.querySelectorAll(".option.is-picked").length,1);
+ w.close();
+});
+test("FGV 2025 and 2024 papers show inside the same question view at mapped pages",()=>{
+ const a=createApp(),{document,click,w}=a;
+ for(const [id,part] of [["pmesp25","tipo-1_0.pdf"],["pmesp24","tipo-1.pdf"]]){
+  const selector=document.querySelector("#exam");
+  selector.value=id;selector.dispatchEvent(new w.Event("change",{bubbles:true}));
+  click("#create-session");
+  const iframe=document.querySelector("#pdf-reader-frame");
+  assert.ok(iframe,"PDF iframe missing for "+id);
+  assert.ok(iframe.src.includes(part),id+" did not use its official PDF");
+  assert.ok(iframe.src.includes("#page="),id+" did not jump to page");
+  assert.equal(document.querySelector("#reader-for-question").hidden,false);
+ }
+ w.close();
+});
