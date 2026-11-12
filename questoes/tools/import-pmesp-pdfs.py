@@ -203,8 +203,8 @@ def fallback_2026_from_website(cfg):
         markers={}
         for i,v in enumerate(ls):
             for k in "ABCDE":
-                if v==k+" "+k+"." or v==k+"." or (v==k and i+1<len(ls) and ls[i+1]==k+"."):
-                    markers.setdefault(k,i)
+                if v==k+" "+k+"." or v==k+"." or (v==k and i+1<len(ls) and ls[i+1]==k+".") or (v==k and i+2<len(ls) and ls[i+1]==k and ls[i+2]=="."):
+                    markers.setdefault(k,i+2 if v==k and i+2<len(ls) and ls[i+1]==k and ls[i+2]=="." else i)
         if set(markers)!={"A","B","C","D","E"}:
             print("QUESTION HEAD",n,repr(heading[:180]),"LINES",repr(ls[:95]),flush=True)
             raise RuntimeError("Alternativas incompletas Q"+str(n)+" markers="+str(markers))
