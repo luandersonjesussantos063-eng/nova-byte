@@ -1,12 +1,12 @@
 {
-  "name": "Missão Farda — Questões Reais",
-  "short_name": "Missão Farda",
+  "name": "Missão Farda — Provas da PMESP",
+  "short_name": "PMESP Questões",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "background_color": "#080e1b",
   "theme_color": "#0c1324",
-  "description": "Treino de questões reais dos concursos PMMG, PMESP e Guarda Municipal.",
+  "description": "Exclusivo para estudar Soldado da PMESP com provas reais de 2026, 2025 e 2024.",
   "icons": [
     {
       "src": "./icon.svg",
