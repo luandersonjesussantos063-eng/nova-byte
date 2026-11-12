@@ -19,7 +19,7 @@ jobs:
         with:
           python-version: '3.12'
       - name: Bibliotecas de leitura e imagens
-        run: python -m pip install --disable-pip-version-check pymupdf pillow
+        run: python -m pip install --disable-pip-version-check pymupdf pillow beautifulsoup4
       - name: Converter cadernos reais em questões
         run: python questoes/tools/import-pmesp-pdfs.py
       - name: Verificar banco gerado
