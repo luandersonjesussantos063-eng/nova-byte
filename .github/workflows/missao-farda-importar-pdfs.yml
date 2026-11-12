@@ -1,0 +1,42 @@
+name: Importar questões originais PMESP
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Bibliotecas de leitura e imagens
+        run: python -m pip install --disable-pip-version-check pymupdf pillow
+      - name: Converter cadernos reais em questões
+        run: python questoes/tools/import-pmesp-pdfs.py
+      - name: Verificar banco gerado
+        run: |
+          python - <<'PY'
+          import json,pathlib
+          s=pathlib.Path('questoes/banco-transcrito.js').read_text('utf-8')
+          d=json.loads(s.split('window.EXAM_BANK=',1)[1].rstrip().rstrip(';'))
+          assert len(d['questions'])==300
+          assert len(d['exams'])==5
+          assert all(set(q['options'])==set('ABCDE') and q['text'] for q in d['questions'])
+          print('Validado:',len(d['questions']),'questões reais em',len(d['exams']),'provas.')
+          PY
+      - name: Publicar banco de questões e imagens no repositório
+        run: |
+          git config user.name "Missao Farda Automation"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add questoes/banco-transcrito.js questoes/figuras/
+          if git diff --staged --quiet; then
+            echo "Nenhum arquivo a atualizar."
+          else
+            git commit -m "Publish 300 PMESP questions and original visual excerpts"
+            git push origin HEAD:main
+          fi
