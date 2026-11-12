@@ -1,6 +1,10 @@
 name: Importar questões originais PMESP
 on:
   workflow_dispatch:
+  push:
+    paths:
+      - 'questoes/tools/import-pmesp-pdfs.py'
+      - '.github/workflows/missao-farda-importar-pdfs.yml'
 permissions:
   contents: write
 jobs:
