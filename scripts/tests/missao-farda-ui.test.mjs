@@ -22,7 +22,7 @@ test("The PMESP dashboard loads and creates real five-question sessions",()=>{
  const state=JSON.parse(w.localStorage.getItem("missao-farda-state-v3"));
  assert.equal(state.session.ids.length,5);
  assert.ok(state.session.ids.every(id=>id.startsWith("pmesp")));
- assert.ok(document.querySelector("#question-area").textContent.includes("Leia o enunciado original aqui mesmo"));
+ assert.ok(document.querySelector("#question-area").querySelector(".actual-question"));
  w.close();
 });
 test("Practice grades exactly once and stores real learning history",()=>{
@@ -67,29 +67,45 @@ test("Syllabus and essay are persisted locally without backend requests",()=>{
 });
 
 
-test("Original PMESP 2026 question PDF is embedded at its actual page without leaving the app",()=>{
+test("All PMESP editions display real question stems and complete alternatives inside the app",()=>{
+ const a=createApp(),{document,click,w}=a;
+ const expected=[["pmesp","calulu"],["pmesp25","palavras"],["pmesp24","definições"],["pmesp23","humor"],["pmesp21","resiliente"]];
+ for(const [id,word] of expected){
+  const select=document.querySelector("#exam");select.value=id;
+  select.dispatchEvent(new w.Event("change",{bubbles:true}));
+  click("#create-session");
+  assert.equal(document.querySelectorAll(".option").length,5,id);
+  assert.ok(document.querySelector(".actual-question")?.textContent.length>12,id);
+  assert.ok(document.querySelector(".actual-question").textContent.toLowerCase().includes(word),id);
+  assert.equal(document.querySelector("#pdf-reader-frame"),null);
+  assert.ok(document.querySelectorAll(".option span:last-child").length===5,id);
+ }
+ w.close();
+});
+test("Source notes and inline images preserve original layout on mobile",()=>{
  const a=createApp(),{document,click,w}=a;
  click("#daily-start");
- const iframe=document.querySelector("#pdf-reader-frame");
- assert.ok(iframe,"Original PDF viewer should exist");
- assert.match(iframe.src,/Prova-pmsp\.pdf#page=3&zoom=page-width/);
- assert.equal(document.querySelector("#reader-for-question").hidden,false);
- click(".option");
- assert.strictEqual(document.querySelector("#pdf-reader-frame"),iframe,"Selecting an answer must not reload the original PDF iframe");
+ assert.ok(document.querySelector(".actual-question"));
+ assert.ok(document.querySelector(".source-passage"));
+ assert.equal(document.querySelector("#pdf-reader-frame"),null);
+ const selected=document.querySelector(".option");
+ const old=selected.textContent;
+ selected.click();
+ assert.equal(selected.textContent,old);
  assert.equal(document.querySelectorAll(".option.is-picked").length,1);
  w.close();
 });
-test("FGV 2025 and 2024 papers show inside the same question view at mapped pages",()=>{
+test("Prova 2023 with no verified answer key is not scored as an error",()=>{
  const a=createApp(),{document,click,w}=a;
- for(const [id,part] of [["pmesp25","tipo-1_0.pdf"],["pmesp24","tipo-1.pdf"]]){
-  const selector=document.querySelector("#exam");
-  selector.value=id;selector.dispatchEvent(new w.Event("change",{bubbles:true}));
-  click("#create-session");
-  const iframe=document.querySelector("#pdf-reader-frame");
-  assert.ok(iframe,"PDF iframe missing for "+id);
-  assert.ok(iframe.src.includes(part),id+" did not use its official PDF");
-  assert.ok(iframe.src.includes("#page="),id+" did not jump to page");
-  assert.equal(document.querySelector("#reader-for-question").hidden,false);
- }
+ const select=document.querySelector("#exam");select.value="pmesp23";
+ select.dispatchEvent(new w.Event("change",{bubbles:true}));
+ click("#create-session");
+ click(".option");
+ click("#check");
+ const state=JSON.parse(w.localStorage.getItem("missao-farda-state-v3"));
+ const id=state.session.ids[0];
+ assert.equal(state.progress[id].correct,null);
+ assert.equal(state.events.length,0);
+ assert.match(document.querySelector("#feedback").textContent,/sem|não|definitivo|conferido/i);
  w.close();
 });
