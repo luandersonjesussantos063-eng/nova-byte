@@ -393,6 +393,7 @@ function updateOnline(){
  if(!navigator.onLine)label.title="O aplicativo pode abrir sem internet, mas o caderno original de questões exige conexão.";
 }
 function boot(){
+ if(DAY>"2026-12-22"){$("registration-title").textContent="Confira as publicações do concurso atual no portal da VUNESP.";$("registration-subtitle").textContent="O prazo de inscrição da edição divulgada em novembro de 2026 terminou. Consulte as atualizações oficiais.";}
  initEvents();fillSubjects();renderSources();show("home");updateOnline();
  if("serviceWorker" in navigator)navigator.serviceWorker.register("./sw.js").catch(()=>{});
  save();
