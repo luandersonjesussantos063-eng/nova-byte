@@ -12,6 +12,15 @@ const TOPICS={
 "Informática":["Sistema operacional Windows e arquivos","Ferramentas de edição de texto e planilhas","Correio eletrônico e internet","Ferramentas de comunicação e colaboração"],
 "Administração Pública":["Constituição Federal — tópicos exigidos no edital","Constituição do Estado de São Paulo","Lei de Acesso à Informação (LAI)","Decreto paulista nº 68.155/2023"]
 };
+
+const LESSONS={
+"Português":{title:"Entenda o texto antes de decorar regras",intro:"Na PMESP, interpretar bem o enunciado ajuda até nas questões de gramática. Você precisa identificar o que o autor afirma e distinguir isso do que a alternativa sugere.",steps:["Leia primeiro o comando e marque mentalmente se a banca pede a correta ou a incorreta.","Procure a ideia central de cada parágrafo. Palavras como mas, porém e portanto mudam a relação entre as frases.","Em gramática, revise classes de palavras, concordância, crase e pontuação com exemplos curtos."],practice:"Comece pela prova VUNESP 2026, questões 1 a 5, consultando o texto de apoio original."},
+"Matemática":{title:"Raciocine com calma antes de calcular",intro:"Seu ponto de partida são operações, frações e proporções. Não precisa tentar decorar tudo de uma vez: escreva os dados, a pergunta e as unidades.",steps:["Porcentagem significa partes de 100: 25% = 25/100 = 1/4. Entenda a relação antes da fórmula.","Em problemas, identifique o que cresce e o que diminui. Faça uma estimativa do resultado para perceber absurdos.","Aprenda a conferir a resposta: substitua o valor encontrado na relação inicial."],practice:"Revise porcentagem e abra as primeiras questões de Matemática do caderno real, a partir da questão 21."},
+"Conhecimentos Gerais":{title:"Organize o conteúdo em tempo, lugar e causa",intro:"História e Geografia ficam mais claras quando você entende o contexto. Atualidades exigem checar o período cobrado no edital e utilizar fontes confiáveis.",steps:["História: separe fato, período histórico, causas e consequências em uma linha do tempo.","Geografia: localize o fenômeno no mapa, identifique agentes e compare indicadores em gráficos.","Atualidades: anote data, acontecimento, contexto e consequências. Evite decorar manchetes sem entender o tema."],practice:"Abra as questões de Conhecimentos Gerais, História, Geografia ou Atualidades de uma prova real."},
+"Informática":{title:"Aprenda pela função de cada ferramenta",intro:"Para resolver Informática, diferencie as tarefas que o sistema operacional, o navegador, o e-mail e os aplicativos de escritório realizam.",steps:["Arquivos e pastas: entenda criar, mover, renomear, recuperar e localizar.","Texto e planilha: pratique formatação, tabelas e referências de células em situações simples.","Internet: diferencie endereço, navegador, pesquisa, envio de e-mails e segurança digital."],practice:"Use o bloco de Informática da PMESP 2026, questões 51 a 55."},
+"Administração Pública":{title:"Separe princípio, regra e aplicação",intro:"Estude a norma pelo que ela protege e por como aparece em situações concretas. O edital delimita os textos legais exigidos.",steps:["Constituição Federal: identifique direitos fundamentais e princípios da Administração Pública.","Memorize o sentido de legalidade, impessoalidade, moralidade, publicidade e eficiência antes de siglas.","Consulte a Constituição paulista, a LAI e o Decreto nº 68.155/2023, respeitando as versões em vigor."],practice:"Treine nas questões 56 a 60 do caderno PMESP 2026."}
+};
+
 const read=(key)=>{try{return JSON.parse(localStorage.getItem(key)||"null");}catch{return null;}};
 const defaultState=()=>({version:3,progress:{},events:[],sessions:[],topics:{},essay:"",essayWeek:"",settings:{goal:5,timer:"off"},session:null});
 let state=read(STATEKEY)||defaultState();
@@ -214,6 +223,10 @@ function renderQuestion(){
  add(f,"p","",chosen===q.key?"Boa! A banca indicou a mesma alternativa que você marcou.":"Você marcou "+(chosen||"em branco")+". A alternativa oficial deste caderno é "+q.key+".");
  add(f,"p","","O app usa o gabarito da banca; ele não inventa uma explicação para o enunciado.");
  if(chosen&&chosen!==q.key){
+ const help=button("Estudar a base de "+C.subjectGroup(q)+" →","small-button",()=>{
+  show("path");$("lesson-subject").value=C.subjectGroup(q);renderLesson();$("lesson-hub").scrollIntoView({block:"start",behavior:"smooth"});
+ });
+ f.appendChild(help);
  add(f,"p","dim small","O que dificultou esta questão? (opcional)");
  const r=add(f,"div","error-reason");
  ["Não sabia o conteúdo","Interpretei errado","Desatenção","Faltou tempo"].forEach(reason=>{
@@ -257,8 +270,18 @@ function checkClick(){
  gradeOne(q);renderAll();
 }
 function renderTraining(){renderSources();renderQuestion();}
+
+function renderLesson(){
+ const key=$("lesson-subject").value,lesson=LESSONS[key]||LESSONS.Português;
+ const target=$("lesson-content");target.replaceChildren();
+ add(target,"h3","",lesson.title);
+ add(target,"p","dim",lesson.intro);
+ const list=add(target,"ol","lesson-steps");
+ lesson.steps.forEach(step=>add(list,"li","",step));
+ add(target,"p","support-note",lesson.practice);
+}
 function renderPath(){
- upcoming();const total=Object.values(TOPICS).reduce((a,b)=>a+b.length,0);
+ renderLesson();upcoming();const total=Object.values(TOPICS).reduce((a,b)=>a+b.length,0);
  const done=Object.keys(state.topics).filter(k=>state.topics[k]===true).length;
  $("topics-complete").textContent=done+"/"+total;meter("topics-meter",percent(done,total));
  const target=$("weight-list");target.replaceChildren();
@@ -344,6 +367,8 @@ function initEvents(){
  $("timer-setting").addEventListener("change",()=>{state.settings.timer=$("timer-setting").value;save();timerStart();});
  $("timer-toggle").addEventListener("click",()=>{timerPaused=!timerPaused;$("timer-toggle").textContent=timerPaused?"Continuar":"Pausar";});
  $("timer-reset").addEventListener("click",timerStart);
+ $("lesson-subject").addEventListener("change",renderLesson);
+ $("lesson-practice").addEventListener("click",()=>{const subject=$("lesson-subject").value;$("exam").value="pmesp";fillSubjects();sessionNew({kind:"daily",exam:"pmesp",subject,count:5,grading:"practice"});});
  $("essay").addEventListener("input",()=>{state.essay=$("essay").value;save();$("essay-status").textContent=state.essay.trim().split(/\s+/).filter(Boolean).length+" palavras no rascunho · salvo localmente";});
  $("essay-week").addEventListener("change",()=>{
  const offset=(new Date(DAY+"T12:00:00Z").getUTCDay()+6)%7;
