@@ -4,9 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0c1324">
-<meta name="description" content="Missão Farda: estude com questões reais da PMESP 2026, PMMG 2024 e GCM Lucas do Rio Verde 2023, com gabaritos oficiais e desempenho salvo.">
+<meta name="description" content="Missão Farda: somente provas reais da PMESP para Soldado, aplicadas em 2026, 2025 e 2024. Gabaritos oficiais e progresso salvo.">
 <meta name="robots" content="noindex,follow">
-<title>Missão Farda | Questões reais de concursos policiais</title>
+<title>Missão Farda | Provas reais da PMESP para Soldado</title>
 <link rel="manifest" href="./manifest.webmanifest">
 <style>
 :root{color-scheme:dark;--bg:#080e1b;--panel:#101b30;--card:#14223b;--line:#293752;--main:#eff5ff;--muted:#9eacc2;--accent:#50e5d0;--blue:#81aafa;--ok:#55dca7;--bad:#ff8f9e}
@@ -33,22 +33,22 @@ footer{border-top:1px solid #24334a;text-align:center;padding:20px 0 31px;color:
 </head>
 <body>
 <header><div class="wrap top">
-<a class="brand" href="./" aria-label="Missão Farda, início"><div class="brand-symbol" aria-hidden="true"><svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2 4 5v7c0 5 3.5 8.4 8 10 4.5-1.6 8-5 8-10V5l-8-3Z"/><path d="m8 12 2.5 2.5L16.5 9"/></svg></div><span><b>Missão Farda</b><small>Estude com provas reais</small></span></a>
+<a class="brand" href="./" aria-label="Missão Farda, início"><div class="brand-symbol" aria-hidden="true"><svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2 4 5v7c0 5 3.5 8.4 8 10 4.5-1.6 8-5 8-10V5l-8-3Z"/><path d="m8 12 2.5 2.5L16.5 9"/></svg></div><span><b>Missão Farda · PMESP</b><small>Exclusivo Soldado PM de São Paulo</small></span></a>
 <a class="top-link" href="https://novabytesolucoes.com.br/" rel="noopener">Criado pela Nova Byte ↗</a>
 </div></header>
 <main class="wrap">
-<section class="hero" aria-labelledby="page-title"><div><div class="eyebrow">Seu treinamento começa aqui</div><h1 id="page-title">Não dependa da motivação.<br><span>Construa sua aprovação.</span></h1><p>Questões que realmente caíram na PMESP, PMMG e Guarda de Lucas do Rio Verde. Corrija com os gabaritos oficiais e retome de onde parou.</p></div><aside class="hero-side"><span class="mini">● FOCO NO QUE IMPORTA</span><strong>5 questões já contam como estudo.</strong><p>Para os dias difíceis, um treino pequeno ainda é progresso. Escolha o ritmo sem perder o histórico.</p></aside></section>
-<div class="stats" aria-label="Seu painel de desempenho"><div class="stat"><strong id="stat-available">190</strong><small>questões de provas reais</small></div><div class="stat"><strong id="stat-accuracy">—</strong><small>seus acertos</small></div><div class="stat"><strong id="stat-today">0</strong><small>respondidas hoje</small></div></div>
+<section class="hero" aria-labelledby="page-title"><div><div class="eyebrow">Exclusivo PMESP · Soldado de 2ª Classe</div><h1 id="page-title">Não dependa da motivação.<br><span>Construa sua aprovação.</span></h1><p>Estude com as provas reais da PM de São Paulo de 2026, 2025 e 2024. Sem outras polícias e sem questões inventadas. Responda no aplicativo e acompanhe seus acertos.</p></div><aside class="hero-side"><span class="mini">● FOCO NO QUE IMPORTA</span><strong>5 questões já contam como estudo.</strong><p>Para os dias difíceis, um treino pequeno ainda é progresso. Escolha o ritmo sem perder o histórico.</p></aside></section>
+<div class="stats" aria-label="Seu painel de desempenho"><div class="stat"><strong id="stat-available">180</strong><small>questões PMESP</small></div><div class="stat"><strong id="stat-accuracy">—</strong><small>seus acertos</small></div><div class="stat"><strong id="stat-today">0</strong><small>respondidas hoje</small></div></div>
 <div class="layout">
 <aside class="panel sidebar" aria-label="Configurar treinamento">
 <h2 class="section-label">Configure seu treino</h2>
-<div class="field"><label for="exam">Qual concurso?</label><select id="exam"><option value="pmmg">PMMG · Soldado 2024</option><option value="pmesp">PMESP · Soldado 2026</option><option value="gcm">Guarda · Lucas 2023</option><option value="all">Misturar as 3 provas</option></select></div>
+<div class="field"><label for="exam">Qual prova da PMESP?</label><select id="exam"><option value="pmesp">PMESP · 2026 · VUNESP</option><option value="pmesp25">PMESP · 2025 · FGV Tipo 1</option><option value="pmesp24">PMESP · 2024 · FGV Tipo 1</option></select></div>
 <div class="field"><label for="subject">Matéria</label><select id="subject"><option value="all">Todas as matérias</option></select></div>
 <div class="field"><label for="filter">Quais questões?</label><select id="filter"><option value="all">Todas</option><option value="new">Ainda não respondidas</option><option value="wrong">Questões que errei</option></select></div>
 <div class="field"><label>Quantidade por sessão</label><div class="seg" role="group" aria-label="Quantidade"><button type="button" class="active" data-length="5" aria-pressed="true">5 rápidas</button><button type="button" data-length="10" aria-pressed="false">10 foco</button><button type="button" data-length="all" aria-pressed="false">Prova inteira</button></div></div>
 <div class="field"><label for="grading">Modo de correção</label><select id="grading"><option value="practice">Treino: corrigir uma a uma</option><option value="exam">Simulado: corrigir no final</option></select></div>
 <button id="start" class="primary" type="button">Iniciar novo treino</button>
-<div class="side-note"><div class="section-label">Documentação da prova</div><p class="note" id="exam-notice">Selecione um concurso para conferir as fontes.</p><a id="official-source" href="#" target="_blank" rel="noopener noreferrer">Abrir caderno da prova ↗</a><a id="official-key" href="#" target="_blank" rel="noopener noreferrer">Ver gabarito oficial ↗</a></div>
+<div class="side-note"><div class="section-label">Prova e gabarito oficial</div><p class="note" id="exam-notice">Escolha uma edição da PMESP para conferir a versão do caderno e a fonte do gabarito.</p><a id="official-source" href="#" target="_blank" rel="noopener noreferrer">Abrir caderno da prova ↗</a><a id="official-key" href="#" target="_blank" rel="noopener noreferrer">Ver gabarito oficial ↗</a></div>
 <p class="note side-note">🔒 Histórico salvo somente neste navegador, neste aparelho. Sem cadastro, sem pagamento e sem compartilhamento de respostas.</p>
 <button class="secondary" id="export" type="button" style="width:100%;font-size:12px">Exportar meu desempenho</button>
 </aside>
@@ -63,5 +63,5 @@ footer{border-top:1px solid #24334a;text-align:center;padding:20px 0 31px;color:
 </section>
 </div>
 </main>
-<footer>Missão Farda · Ferramenta independente de estudo, sem vínculo com as bancas ou corporações.<br>Desenvolvido por <a href="https://novabytesolucoes.com.br/">Nova Byte</a>. Os cadernos e gabaritos pertencem às respectivas instituições.</footer>
+<footer>Missão Farda · Estudo exclusivo de provas PMESP, sem vínculo com a PMESP, VUNESP ou FGV.<br>Desenvolvido por <a href="https://novabytesolucoes.com.br/">Nova Byte</a>. Os cadernos e gabaritos pertencem às respectivas instituições.</footer>
 </body></html>
