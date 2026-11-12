@@ -1,7 +1,7 @@
 "use strict";
 /* Cache apenas a interface. Enunciados e cadernos de terceiros exigem internet. */
-const CACHE="missao-farda-pmesp-v3-20261112";
-const CORE=["./","./index.html","./ui.css?v=3","./banco.js?v=3","./core.js?v=3","./app.js?v=3","./manifest.webmanifest","./icon.svg"];
+const CACHE="missao-farda-pmesp-v4-inline-pdf";
+const CORE=["./","./index.html","./ui.css?v=4","./banco.js?v=4","./core.js?v=4","./app.js?v=4","./manifest.webmanifest","./icon.svg"];
 self.addEventListener("install",event=>{
  event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(CORE)).then(()=>self.skipWaiting()));
 });
