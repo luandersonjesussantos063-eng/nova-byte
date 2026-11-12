@@ -14,7 +14,7 @@ function cleanHistory(state,ids){const out={};Object.keys(state||{}).forEach(id=
 function reviewDue(p,now){if(!p)return false;return p.due?String(p.due)<=now:p.correct===false;}
 function grade(q,choice,old,iso,reason=""){
   if(!isReal(q))throw new Error("Questão não pertence à PMESP");
-  if(q.annulled)return {answer:choice||"",correct:null,annulled:true,at:Date.now(),day:iso,attempts:(old?.attempts||0)+1,due:null,successStreak:0,reason:""};
+  if(q.annulled||!/[A-E]/.test(q.key||""))return {answer:choice||"",correct:null,annulled:!!q.annulled,at:Date.now(),day:iso,attempts:(old?.attempts||0)+1,due:null,successStreak:0,reason:""};
   if(!"ABCDE".includes(choice||""))throw new Error("Alternativa inválida");
   const hit=q.key===choice,streak=hit?(old?.successStreak||0)+1:0;
   const days=hit?([0,3,7,14,30,45,60][Math.min(6,streak)]):1;
@@ -59,7 +59,7 @@ function choose(questions,progress={},options={}){
  pool.sort((a,b)=>{
   const rank=attemptRank(a,progress,now,kind)-attemptRank(b,progress,now,kind);
   if(rank!==0)return rank;
-  if(a.exam!==b.exam){const order=["pmesp","pmesp25","pmesp24"];return order.indexOf(a.exam)-order.indexOf(b.exam);}
+  if(a.exam!==b.exam){const order=["pmesp","pmesp25","pmesp24","pmesp23","pmesp21"];return order.indexOf(a.exam)-order.indexOf(b.exam);}
   return a.number-b.number;
  });
  if(subject!=="all"||kind==="review"||kind==="new")return pool.slice(0,size);
