@@ -45,18 +45,28 @@ test("Dates and seven-day activity are stable",()=>{
  assert.equal(C.weeklyActivity([{id:"a",day:"2026-11-12"}],"2026-11-12").length,7);
 });
 test("PMESP bank exists and contains valid original-key records",()=>{
- const p=readFileSync(resolve(root,"banco.js"),"utf8");
+ const p=readFileSync(resolve(root,"banco-transcrito.js"),"utf8");
  const db=JSON.parse(p.split("window.EXAM_BANK=")[1].trim().replace(/;\s*$/,""));
- assert.equal(db.questions.length,180);
- assert.equal(Object.keys(db.exams).length,3);
- assert.equal(new Set(db.questions.map(q=>q.id)).size,180);
+ assert.equal(db.questions.length,300);
+ assert.equal(Object.keys(db.exams).length,5);
+ assert.equal(new Set(db.questions.map(q=>q.id)).size,300);
  for(const q of db.questions){
   assert.ok(C.isReal(q),q.id);
-  assert.ok(q.annulled || "ABCDE".includes(q.key),q.id);
+  assert.ok(q.key===null||q.annulled||"ABCDE".includes(q.key),q.id);
   assert.ok(db.exams[q.exam],q.id);
-  assert.equal(q.kind,"source");
+  assert.equal(q.kind,"inline");
+  assert.ok(q.text&&q.text.length>=7,q.id);
+  assert.deepEqual(Object.keys(q.options).sort(),["A","B","C","D","E"],q.id);
  }
- for(const f of ["index.html","app.js","core.js","sw.js","manifest.webmanifest","icon.svg"]){
+ for(const f of ["index.html","app.js","core.js","banco-transcrito.js","sw.js","manifest.webmanifest","icon.svg"]){
   assert.ok(existsSync(resolve(root,f)),f);
  }
+});
+
+test("Unverified answer is saved without being graded as incorrect",()=>{
+ const noKey={...examples[0],key:null};
+ const outcome=C.grade(noKey,"A",null,"2026-11-12");
+ assert.equal(outcome.correct,null);
+ assert.equal(outcome.due,null);
+ assert.equal(C.isValid(noKey),false);
 });
