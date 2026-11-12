@@ -32,3 +32,18 @@
 .reader-help a{color:#a6e4db;font-size:11px;font-weight:700}
 .option{min-height:60px}
 @media(max-width:580px){.embedded-reader .reader-head{padding:10px 12px}.reader-controls{width:100%}.reader-controls button{flex:1}.embedded-reader iframe{height:60vh;min-height:380px}.reader-help{padding:10px 12px}}
+
+
+/* Exam question displayed directly in the application, without embedded PDFs */
+.actual-question{font-size:clamp(17px,2vw,20px);font-weight:580;line-height:1.65;white-space:pre-line;color:#f2fafc;margin:12px 0 18px}
+.source-passage{background:#112e43;border:1px solid #376575;border-radius:14px;padding:18px;margin:12px 0 19px}
+.source-passage h3{color:#9ff5dc;font-size:14px;margin:0 0 12px}
+.passage-content{white-space:pre-line;font-size:14px;line-height:1.75;color:#e0ecf1;overflow-wrap:anywhere;max-height:430px;overflow-y:auto;padding-right:4px;scrollbar-color:#578e8e transparent}
+.question-figure{background:#f5fafc;border-radius:13px;overflow:hidden;margin:12px 0 19px;padding:8px}
+.question-figure img{display:block;margin:auto;max-width:100%;height:auto;max-height:630px;object-fit:contain}
+.question-figure figcaption{color:#2c4950;text-align:center;font-size:11px;padding:8px}
+.question-note{font-size:12px;line-height:1.5;background:#31314b;border:1px solid #797b9e;border-radius:12px;padding:11px 13px;color:#d6e2f2}
+.option{align-items:flex-start;min-height:57px}
+.option span:last-child{font-size:14px;line-height:1.55;white-space:pre-line;overflow-wrap:anywhere}
+.question-panel{min-width:0}
+@media(max-width:580px){.actual-question{font-size:17px}.source-passage{padding:12px}.passage-content{font-size:13px;max-height:370px}.question-figure{padding:4px}}
