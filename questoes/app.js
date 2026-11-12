@@ -66,7 +66,7 @@ function renderHome(){
  const events=totalEvents(),score=C.score(events,DB.questions),seen=C.progressCount(state.progress,DB.questions,DAY),week=getWeeklyCount();
  $("home-answered").textContent=String(events.length);
  $("home-accuracy").textContent=score.percent===null?"—":score.percent+"%";
- $("unique-done").textContent=seen.seen+"/180";meter("seen-meter",percent(seen.seen,180));
+ $("unique-done").textContent=seen.seen+"/300";meter("seen-meter",percent(seen.seen,300));
  $("today-count").textContent=String(events.filter(e=>e.day===DAY).length);
  $("due-count").textContent=String(getDue());
  $("weeks-active").textContent=week+"/7";
@@ -140,14 +140,14 @@ function gradeAll(){
 function finish(){
  const s=currentSession();if(!s||s.finished)return;
  s.finished=true;s.reviewing=false;s.finishedAt=Date.now();
- const scored=sessionItems().filter(q=>!q.annulled),correct=scored.filter(q=>s.picks[q.id]&&s.picks[q.id]===q.key).length;
+ const scored=sessionItems().filter(q=>!q.annulled&&q.key),correct=scored.filter(q=>s.picks[q.id]&&s.picks[q.id]===q.key).length;
  state.sessions.push({at:s.finishedAt,day:DAY,kind:s.kind,exam:s.exam,total:scored.length,correct,responded:scored.filter(q=>!!s.picks[q.id]).length});
  state.sessions=state.sessions.slice(-500);
  timerStop();save();renderAll();
 }
 function outcome(){
  const s=currentSession();if(!s)return null;
- const items=sessionItems(),valid=items.filter(q=>!q.annulled);
+ const items=sessionItems(),valid=items.filter(q=>!q.annulled&&q.key);
  return {total:items.length,valid:valid.length,correct:valid.filter(q=>s.picks[q.id]===q.key).length,responded:valid.filter(q=>!!s.picks[q.id]).length,annulled:items.filter(q=>q.annulled).length,graded:items.filter(q=>s.checked[q.id]).length};
 }
 function showSessionResult(area){
@@ -160,7 +160,7 @@ function showSessionResult(area){
  for(const [number,label] of [[result.correct,"Acertos"],[result.responded-result.correct,"Erros"],[result.valid-result.responded,"Em branco"],[result.annulled,"Anuladas"]]){
  const card=add(cards,"div","mini-card");add(card,"strong","",number);add(card,"span","",label);
  }
- const p=add(area,"p","support-note","Acerto na sessão: "+(result.valid?percent(result.correct,result.valid)+"%":"—")+". Este número é um indicador de treino, não uma previsão de aprovação.");
+ const p=add(area,"p","support-note","Acerto nas questões corrigíveis: "+(result.valid?percent(result.correct,result.valid)+"%":"—")+". Questões sem gabarito confirmado não entram na nota. Esta taxa não prevê aprovação.");
  const actions=add(area,"div","source-links");
  actions.appendChild(button("Revisar minhas respostas","outline",()=>{s.reviewing=true;s.index=0;save();renderAll();}));
  actions.appendChild(button("Fazer outra sessão","outline light",()=>sessionNew({kind:"daily",exam:s.exam,subject:"all",count:5})));
@@ -184,46 +184,28 @@ function renderQuestion(){
  $("question-meta").textContent=C.subjectGroup(q)+" · questão original nº "+q.number+" · "+(info.type||"caderno original");
  meter("quiz-meter",percent(items.filter(x=>s.checked[x.id]).length,items.length));
  const title=add(area,"h2","question-title","Questão "+q.number+" — "+C.subjectGroup(q));
- const box=add(area,"div","q-source");
- add(box,"h3","","Leia o enunciado original aqui mesmo");
- add(box,"p","","A página da prova aparece abaixo, com texto, imagens e alternativas originais. Leia a questão "+q.number+" e marque A, B, C, D ou E nesta mesma tela.");
- const reader=add(area,"div","embedded-reader");
- reader.id="reader-for-question";
- reader.dataset.question=q.id;
- const bar=add(reader,"div","reader-head");
- const row=add(bar,"div","reader-caption");
- add(row,"strong","","Caderno "+info.year+" • questão "+q.number);
- add(row,"span","dim small","Página "+(q.paperPage||"?")+" da prova • "+(info.type||"VUNESP"));
- const controls=add(bar,"div","reader-controls");
- const pdfURL=q.paperUrl||info.paperPdf||info.source;
- const page=Number(q.paperPage)||1;
- const srcNative=pdfURL+"#page="+page+"&zoom=page-width";
- const srcAlt="https://docs.google.com/gview?embedded=1&url="+encodeURIComponent(pdfURL);
- const frame=add(reader,"iframe");
- frame.id="pdf-reader-frame";
- frame.title="Página "+page+" do caderno PMESP "+info.year+" — questão "+q.number;
- frame.setAttribute("loading","eager");
- frame.setAttribute("referrerpolicy","no-referrer");
- frame.src=srcNative;
- const toggle=button("Ocultar PDF","small-button",()=>{
-   const was=frame.hidden;
-   frame.hidden=!was;
-   toggle.textContent=was?"Ocultar PDF":"Mostrar PDF";
- });
- controls.appendChild(toggle);
- const alternate=button("Outro leitor","small-button",()=>{
-   const alternateActive=frame.dataset.alternate==="true";
-   frame.dataset.alternate=String(!alternateActive);
-   frame.src=alternateActive?srcNative:srcAlt;
-   alternate.textContent=alternateActive?"Outro leitor":"Leitor original";
-   frame.hidden=false;
-   toggle.textContent="Ocultar PDF";
- });
- controls.appendChild(alternate);
- const help=add(reader,"div","reader-help");
- add(help,"span","","Se o documento não carregar no celular, toque em “Outro leitor”.");
- help.appendChild(link("Abrir fonte em outra aba (alternativa) ↗",pdfURL+"#page="+page));
- if(q.exam==="pmesp")help.appendChild(link("Comparar com a questão digital ↗",sourceURL(q)));
+ add(area,"p","actual-question",q.text||"Enunciado em revisão.");
+ if(q.support?.text){
+  const passage=add(area,"section","source-passage");
+  add(passage,"h3","","Texto de apoio original");
+  const content=add(passage,"div","passage-content",q.support.text);
+  content.setAttribute("aria-label","Texto de apoio para esta questão");
+ }
+ if(q.visual){
+  const figure=add(area,"figure","question-figure");
+  const picture=add(figure,"img");
+  picture.src=q.visual;
+  picture.loading="lazy";
+  picture.alt="Trecho visual do caderno original PMESP "+info.year+", questão "+q.number;
+  add(figure,"figcaption","","Imagem, gráfico ou alternativa ilustrada da prova original");
+ }
+ if(q.needsVisual&&!q.visual&&!q.support?.text){
+  const note=add(area,"p","support-note","Esta questão menciona um elemento visual. Se ele não aparecer, confira a figura do caderno original antes de responder.");
+  note.appendChild(link(" Conferir imagem na prova ↗",info.paperPdf||info.source));
+ }
+ if(q.key===null&&!q.annulled){
+  add(area,"p","question-note","Resposta salva sem nota: este caderno ainda não tem gabarito definitivo conferido nesta versão.");
+ }
  if(q.annulled)add(area,"p","support-note","Questão oficialmente anulada. Ela não é contabilizada como acerto ou erro.");
  add(area,"h3","subheading",graded?"Alternativas e correção":"Marque sua resposta (A a E)");
  const opts=add(area,"div","answer-options");
@@ -232,7 +214,7 @@ function renderQuestion(){
  b.setAttribute("aria-pressed",String(chosen===letter));if(chosen===letter)b.classList.add("is-picked");
  if(graded&&!q.annulled&&q.key===letter)b.classList.add("correct");
  if(graded&&!q.annulled&&chosen===letter&&chosen!==q.key)b.classList.add("wrong");
- add(b,"span","letter",letter);add(b,"span","","Alternativa "+letter);
+ add(b,"span","letter",letter);add(b,"span","",q.options?.[letter]||"Alternativa "+letter+" — confira o caderno.");
  b.addEventListener("click",()=>{
  if(graded)return;
  s.picks[q.id]=letter;save();
@@ -253,6 +235,7 @@ function renderQuestion(){
  const f=$("feedback");f.replaceChildren();f.hidden=false;
  f.className="feedback "+(q.annulled?"":chosen===q.key?"good":"bad");
  if(q.annulled){add(f,"strong","","Anulada no gabarito definitivo");add(f,"p","","Não conta como acerto nem erro. Continue estudando as demais questões.");}
+ else if(!q.key){add(f,"strong","","Resposta registrada");add(f,"p","","Ainda não há gabarito definitivo conferido nesta versão. Sua escolha não será contada como erro nem acerto.");}
  else {
  add(f,"strong","",chosen===q.key?"✓ Você acertou!":"Gabarito oficial: alternativa "+q.key);
  add(f,"p","",chosen===q.key?"Boa! A banca indicou a mesma alternativa que você marcou.":"Você marcou "+(chosen||"em branco")+". A alternativa oficial deste caderno é "+q.key+".");
