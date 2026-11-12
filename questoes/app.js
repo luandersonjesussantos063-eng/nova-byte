@@ -70,7 +70,7 @@ function renderHome(){
  $("today-count").textContent=String(events.filter(e=>e.day===DAY).length);
  $("due-count").textContent=String(getDue());
  $("weeks-active").textContent=week+"/7";
- $("phase").textContent=C.phase(events.length);
+ $("phase").textContent=C.phase(events.length,C.daysBetween(DAY,C.DEFAULT_EXAM_DATE));
  $("home-review-text").textContent=getDue()?getDue()+" questão(ões) aguardando revisão. Comece por elas se tiver disposição.":"Sem revisões vencidas. Você pode explorar questões novas.";
  const last=lastDate(),gap=last?C.daysBetween(last,DAY):null;
  $("greeting").textContent=gap!==null&&gap>=2?"Um recomeço pequeno já vale.":events.length===0?"Começar é só resolver uma questão.":"Mais um passo na sua preparação.";
