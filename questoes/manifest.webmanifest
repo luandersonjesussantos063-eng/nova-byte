@@ -1,17 +1,17 @@
 {
-  "name": "Missão Farda — Provas da PMESP",
-  "short_name": "PMESP Questões",
+  "name": "Missão Farda — Trilha PMESP",
+  "short_name": "Missão Farda",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#080e1b",
-  "theme_color": "#0c1324",
-  "description": "Exclusivo para estudar Soldado da PMESP com provas reais de 2026, 2025 e 2024.",
+  "background_color": "#07101e",
+  "theme_color": "#081323",
+  "description": "Estudos flexíveis para Soldado PMESP: provas reais, revisão espaçada, redação e histórico local.",
   "icons": [
     {
       "src": "./icon.svg",
-      "type": "image/svg+xml",
       "sizes": "any",
+      "type": "image/svg+xml",
       "purpose": "any maskable"
     }
   ]
