@@ -9,7 +9,7 @@ const content=(p)=>readFileSync(resolve(root,p),"utf8");
 function createApp(){
  const dom=new JSDOM(content("index.html"),{url:"https://novabytesolucoes.com.br/questoes/",runScripts:"outside-only",pretendToBeVisual:true});
  const w=dom.window;w.scrollTo=()=>{};w.confirm=()=>true;
- for(const f of ["banco.js","core.js","app.js"])w.eval(content(f));
+ for(const f of ["banco-transcrito.js","core.js","app.js"])w.eval(content(f));
  return {dom,w,document:w.document,click:(selector)=>{const x=w.document.querySelector(selector);assert.ok(x,"Missing "+selector);x.click();return x;}};
 }
 test("The PMESP dashboard loads and creates real five-question sessions",()=>{
