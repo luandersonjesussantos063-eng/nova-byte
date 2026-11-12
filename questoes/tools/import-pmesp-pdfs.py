@@ -205,6 +205,7 @@ def fallback_2026_from_website(cfg):
             for k in "ABCDE":
                 if v==k+" "+k+"." or v==k+"." or (v==k and i+1<len(ls) and ls[i+1]==k+".") or (v==k and i+2<len(ls) and ls[i+1]==k and ls[i+2]=="."):
                     markers.setdefault(k,i+2 if v==k and i+2<len(ls) and ls[i+1]==k and ls[i+2]=="." else i)
+        if n==55: markers={k:0 for k in "ABCDE"}  # opções transcritas da página 20 do PDF enviado
         if set(markers)!={"A","B","C","D","E"}:
             print("QUESTION HEAD",n,repr(heading[:180]),"LINES",repr(ls[:95]),flush=True)
             raise RuntimeError("Alternativas incompletas Q"+str(n)+" markers="+str(markers))
@@ -213,6 +214,12 @@ def fallback_2026_from_website(cfg):
             end=min([v for x,v in markers.items() if v>markers[k]] or [len(ls)])
             val=" ".join(x for x in ls[start:end] if x not in (k,k+"."))
             opts[k]=tidy(val)
+        if n==52:
+            heading="Um usuário, por meio do MS-Word 2016, em sua configuração padrão, criou um novo documento vazio e inseriu uma tabela 2x2 vazia. Com o cursor na primeira célula, digitou A, depois pressionou Tab, digitou B, pressionou Tab, digitou C, pressionou Tab, digitou D, pressionou Tab, digitou E, pressionou Tab, digitou F, pressionou Enter, digitou G, pressionou Enter e, por fim, digitou H. Após todas as ações descritas no enunciado, a tabela possui quantas células?"
+            opts={"A":"6","B":"5","C":"4","D":"7","E":"8"}
+        if n==55:
+            heading="Um soldado, por meio do Gmail, em sua configuração padrão, enviou a seguinte mensagem de e-mail: De: SoldadoA Para: SoldadoB Cc: TenenteA Cco: CoronelA Assunto: coronelB TenenteA ao receber a mensagem de SoldadoA, clicou em Responder e enviou sua mensagem. SoldadoB ao receber a mensagem de SoldadoA, clicou em Responder a Todos e enviou sua mensagem. CoronelA ao receber a mensagem de SoldadoA, clicou em Responder a Todos e enviou sua mensagem. Por fim, todos que receberam a mensagem de SoldadoB, clicaram em Responder e enviaram suas mensagens. Considerando que todos os e-mails foram enviados e recebidos com sucesso, assinale a alternativa com o total de e-mails recebidos, respectivamente, pelos usuários SoldadoA e SoldadoB."
+            opts={"A":"3 e 3.","B":"4 e 4.","C":"4 e 5.","D":"5 e 5.","E":"3 e 4."}
         option_visual=None
         if any(len(v)<2 or re.fullmatch(r"[A-E]\s+[A-E]",v) for v in opts.values()):
             from PIL import Image,ImageDraw
