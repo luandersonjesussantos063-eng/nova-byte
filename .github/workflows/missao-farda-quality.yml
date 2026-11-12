@@ -1,0 +1,31 @@
+name: Validar Missão Farda PMESP
+on:
+  push:
+    paths:
+      - 'questoes/**'
+      - 'scripts/tests/missao-farda.test.mjs'
+      - '.github/workflows/missao-farda-quality.yml'
+  pull_request:
+    paths:
+      - 'questoes/**'
+      - 'scripts/tests/missao-farda.test.mjs'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validar sintaxe
+        run: |
+          node --check questoes/app.js
+          node --check questoes/core.js
+          node --check questoes/banco.js
+          node --check questoes/sw.js
+      - name: Testar revisão, seleção e gabaritos
+        run: node --test scripts/tests/missao-farda.test.mjs
