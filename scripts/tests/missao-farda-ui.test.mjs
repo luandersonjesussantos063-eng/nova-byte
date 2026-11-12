@@ -22,7 +22,7 @@ test("The PMESP dashboard loads and creates real five-question sessions",()=>{
  const state=JSON.parse(w.localStorage.getItem("missao-farda-state-v3"));
  assert.equal(state.session.ids.length,5);
  assert.ok(state.session.ids.every(id=>id.startsWith("pmesp")));
- assert.ok(document.querySelector("#question-area").textContent.includes("Enunciado 100% da prova original"));
+ assert.ok(document.querySelector("#question-area").textContent.includes("Leia o enunciado original aqui mesmo"));
  w.close();
 });
 test("Practice grades exactly once and stores real learning history",()=>{
