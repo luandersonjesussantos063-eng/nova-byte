@@ -2,66 +2,163 @@
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#0c1324">
-<meta name="description" content="Missão Farda: somente provas reais da PMESP para Soldado, aplicadas em 2026, 2025 e 2024. Gabaritos oficiais e progresso salvo.">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#081323">
+<meta name="description" content="Missão Farda: preparação para Soldado PMESP com provas anteriores reais, revisões inteligentes e rotina flexível de estudos.">
 <meta name="robots" content="noindex,follow">
-<title>Missão Farda | Provas reais da PMESP para Soldado</title>
+<link rel="icon" type="image/svg+xml" href="./icon.svg">
 <link rel="manifest" href="./manifest.webmanifest">
-<style>
-:root{color-scheme:dark;--bg:#080e1b;--panel:#101b30;--card:#14223b;--line:#293752;--main:#eff5ff;--muted:#9eacc2;--accent:#50e5d0;--blue:#81aafa;--ok:#55dca7;--bad:#ff8f9e}
-*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(circle at 85% 0%,#193456 0,transparent 420px),linear-gradient(180deg,#0c1425,#070d19);color:var(--main);font:15px/1.55 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;min-height:100vh}
-button,select{font:inherit}button{cursor:pointer}button:focus-visible,select:focus-visible,a:focus-visible{outline:3px solid #f3cb83;outline-offset:3px}a{color:#a8d4ff;text-underline-offset:3px}button:disabled{opacity:.48;cursor:not-allowed}header{border-bottom:1px solid #2b3855aa;background:#0a1322de;backdrop-filter:blur(18px)}
-.wrap{width:min(1120px,calc(100% - 30px));margin:auto}.top{min-height:76px;display:flex;align-items:center;justify-content:space-between;gap:14px}.brand{display:flex;align-items:center;gap:12px;text-decoration:none;color:var(--main)}.brand-symbol{width:43px;height:43px;border:1px solid #66f1e04a;border-radius:13px;display:grid;place-items:center;color:var(--accent);background:#103042}.brand b{display:block;font-size:17px;line-height:1.1;letter-spacing:.01em}.brand small{display:block;color:var(--muted);font-size:11px;letter-spacing:.09em;text-transform:uppercase;margin-top:4px}.top-link{font-size:12px;white-space:nowrap;color:#c3e8e4;text-decoration:none;padding:9px 12px;border:1px solid #334761;border-radius:10px}
-.hero{padding:37px 0 24px;display:grid;grid-template-columns:1.6fr 1fr;gap:18px;align-items:center}.eyebrow{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);font-weight:800}.hero h1{font-size:clamp(29px,4.4vw,49px);line-height:1.12;letter-spacing:-.04em;margin:9px 0 14px;max-width:680px}.hero h1 span{color:var(--accent)}.hero p{max-width:620px;color:#c4d0e0;margin:0}.hero-side{border-radius:20px;padding:22px;background:linear-gradient(140deg,#1e3851,#13263e 60%,#142038);border:1px solid #39536b;box-shadow:0 16px 60px #050a1533}.hero-side strong{display:block;font-size:24px;line-height:1.3;margin:5px 0}.hero-side p{font-size:13px;line-height:1.5}.hero-side .mini{display:inline-flex;align-items:center;gap:7px;font-weight:700;font-size:11px;color:var(--accent)}
-.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:8px 0 22px}.stat{background:#111d31;border:1px solid #283850;border-radius:14px;padding:17px 18px}.stat strong{display:block;font-size:29px;line-height:1.16;font-variant-numeric:tabular-nums}.stat small{color:var(--muted);font-size:12px}.layout{display:grid;grid-template-columns:300px minmax(0,1fr);gap:16px;align-items:start;padding-bottom:40px}
-.panel{background:#101b30;border:1px solid #293952;border-radius:19px;box-shadow:0 16px 45px #050b1624}.sidebar{padding:20px;position:sticky;top:16px}.section-label{color:#cfe6ef;font-weight:800;font-size:14px;letter-spacing:.01em;margin:0 0 16px}.field{margin-bottom:14px}.field label{display:block;color:#aebfd1;font-size:12px;font-weight:700;margin-bottom:7px}.field select{appearance:none;width:100%;padding:12px 34px 12px 12px;color:#eff7ff;border-radius:11px;background:#182840 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23cbd7e7' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") right 10px center/17px no-repeat;border:1px solid #344a65}.field select option{background:#1c2b40}
-.seg{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.seg button{background:#192a43;color:#b5c4d4;border:1px solid #30445f;border-radius:10px;padding:10px 4px;font-size:12px;font-weight:700}.seg button.active{background:#1c4e53;color:#bffff4;border-color:#48dac3}.primary{width:100%;border:1px solid #65f4db;background:var(--accent);color:#07252a;font-weight:800;border-radius:12px;padding:13px 16px;min-height:46px;box-shadow:0 6px 20px #40d9c32a}.primary:hover{filter:brightness(1.045)}.secondary{background:#192941;color:#e4edff;border:1px solid #36526b;border-radius:11px;padding:11px 14px;font-weight:700}.action-row{display:flex;align-items:center;gap:10px;margin-top:16px}.action-row>*{flex:1}
-.note{color:#a4b1c3;font-size:12px;line-height:1.55}.side-note{border-top:1px solid #2b3b54;margin-top:20px;padding-top:16px}.side-note a{display:block;font-size:12px;margin-top:7px;overflow-wrap:anywhere}.scorestrip{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:13px;color:#b8c9d8;margin:12px 0 14px}.track{height:7px;background:#22354b;border-radius:10px;overflow:hidden}.track i{display:block;width:0;height:100%;background:linear-gradient(90deg,#51dac8,#8dc9ff);transition:width .18s ease}
-.quiz{padding:24px;min-height:470px}.quiz-head{display:flex;align-items:start;justify-content:space-between;gap:10px}.chip{display:inline-flex;font-size:11px;font-weight:800;letter-spacing:.04em;border-radius:999px;background:#17394a;color:#88e6d5;border:1px solid #32776f;padding:6px 10px}.meta{color:#9fb1c5;font-size:12px;margin:12px 0 18px}.counter{font-size:13px;font-weight:800;color:#c1d6e7;text-align:right}.question-title{font-size:clamp(18px,2.2vw,22px);font-weight:760;line-height:1.45;letter-spacing:-.008em;white-space:pre-wrap;margin:22px 0 14px;overflow-wrap:anywhere}.support{padding:15px;background:#0d2635;border:1px solid #225263;border-radius:12px;color:#c1dcd9;margin:13px 0}.support strong{display:block;font-size:13px;margin-bottom:6px;color:#bafbea}.support p{margin:0 0 11px;font-size:13px}.support a{font-size:13px;font-weight:750}.source-links{display:flex;flex-wrap:wrap;gap:10px;margin:14px 0 18px}.source-links a{font-size:12px;text-decoration:none;border:1px solid #40516d;padding:9px 12px;border-radius:9px;color:#cbdbee;background:#192b43}.source-links a:hover{border-color:#5ce9d1}
-.answers{display:grid;gap:10px;margin:18px 0}.choice{display:flex;align-items:flex-start;text-align:left;gap:12px;border-radius:12px;background:#14253c;border:1px solid #344560;color:#f3f8ff;padding:13px 14px;width:100%;min-height:54px;transition:background .15s,border-color .15s}.choice .letter{flex:none;display:grid;place-items:center;width:27px;height:27px;border-radius:8px;background:#273c58;font-weight:800;color:#d2e9f6}.choice .choice-text{white-space:pre-wrap;line-height:1.47;overflow-wrap:anywhere;padding-top:2px}.choice:hover:not(:disabled){background:#1e3650}.choice.selected{background:#174b52;border-color:#54e4cb}.choice.selected .letter{background:#5ce7d0;color:#0d2730}.choice.correct{background:#15443a;border-color:#5ce7af}.choice.incorrect{background:#482634;border-color:#ff94a1}
-.feedback{border:1px solid #34516a;background:#18293c;padding:15px 16px;border-radius:12px;margin:16px 0;color:#d9e6f1}.feedback.success{border-color:#377c60;background:#153d35}.feedback.wrong{border-color:#975569;background:#402531}.feedback strong{display:block;margin-bottom:4px}.feedback p{margin:0;font-size:13px}.bottom{border-top:1px solid #2b3b53;padding-top:18px;display:flex;align-items:center;gap:10px;justify-content:space-between;margin-top:20px}.bottom button{min-width:116px}.bottom .primary{width:auto}.hint{font-size:12px;color:#a5bcd0;margin-top:12px}.hidden{display:none!important}.empty{display:grid;place-items:center;text-align:center;min-height:330px;padding:25px}.empty h2{font-size:22px;margin:0}.empty p{max-width:440px;color:#afc0d0;font-size:14px}
-.grid-wrap{margin-top:20px}.grid-wrap h3{font-size:13px;margin:0 0 10px;color:#b9d2e0}.question-grid{display:flex;flex-wrap:wrap;gap:6px}.question-grid button{min-width:32px;height:32px;border:1px solid #34435e;background:#1b2b41;border-radius:8px;color:#b4c7d8;font-size:11px;font-weight:800}.question-grid button.current{border-color:#63e4d3;color:#adffec}.question-grid button.answered{background:#22665b;color:#ddfff8}.question-grid button.wrong{background:#664052;color:#ffccd2}.question-grid button.annulled{border-style:dashed}
-.result-overview{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin:18px 0}.result-overview div{text-align:center;background:#162d43;padding:15px 7px;border-radius:13px}.result-overview b{display:block;font-size:27px}.result-overview small{font-size:11px;color:#a7bdd1}
-footer{border-top:1px solid #24334a;text-align:center;padding:20px 0 31px;color:#8da1b9;font-size:12px}footer a{text-decoration:none}.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}
-@media(max-width:850px){.layout{grid-template-columns:1fr}.sidebar{position:static}.hero{grid-template-columns:1fr}.hero-side{display:none}.stats{grid-template-columns:repeat(3,1fr)}.quiz{padding:20px}}
-@media(max-width:550px){.wrap{width:calc(100% - 22px)}.top{min-height:68px}.top-link{font-size:10px;padding:8px}.hero{padding:26px 0 18px}.hero p{font-size:13px}.stats{gap:7px}.stat{padding:14px 9px}.stat strong{font-size:22px}.stat small{font-size:10px}.sidebar{padding:16px}.quiz{padding:17px}.quiz-head{align-items:center}.bottom button{min-width:0}.source-links a{flex:1;text-align:center}.question-title{font-size:18px}.choice{padding:12px 10px;gap:9px}.result-overview b{font-size:23px}}
-@media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
-</style>
-<script src="./banco.js" defer></script>
-<script src="./app.js" defer></script>
+<link rel="stylesheet" href="./ui.css?v=3">
+<title>Missão Farda | Do zero à prova da PMESP</title>
+<script src="./banco.js?v=3" defer></script>
+<script src="./core.js?v=3" defer></script>
+<script src="./app.js?v=3" defer></script>
 </head>
 <body>
-<header><div class="wrap top">
-<a class="brand" href="./" aria-label="Missão Farda, início"><div class="brand-symbol" aria-hidden="true"><svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2 4 5v7c0 5 3.5 8.4 8 10 4.5-1.6 8-5 8-10V5l-8-3Z"/><path d="m8 12 2.5 2.5L16.5 9"/></svg></div><span><b>Missão Farda · PMESP</b><small>Exclusivo Soldado PM de São Paulo</small></span></a>
-<a class="top-link" href="https://novabytesolucoes.com.br/" rel="noopener">Criado pela Nova Byte ↗</a>
-</div></header>
-<main class="wrap">
-<section class="hero" aria-labelledby="page-title"><div><div class="eyebrow">Exclusivo PMESP · Soldado de 2ª Classe</div><h1 id="page-title">Não dependa da motivação.<br><span>Construa sua aprovação.</span></h1><p>Estude com as provas reais da PM de São Paulo de 2026, 2025 e 2024. Sem outras polícias e sem questões inventadas. Responda no aplicativo e acompanhe seus acertos.</p></div><aside class="hero-side"><span class="mini">● FOCO NO QUE IMPORTA</span><strong>5 questões já contam como estudo.</strong><p>Para os dias difíceis, um treino pequeno ainda é progresso. Escolha o ritmo sem perder o histórico.</p></aside></section>
-<div class="stats" aria-label="Seu painel de desempenho"><div class="stat"><strong id="stat-available">180</strong><small>questões PMESP</small></div><div class="stat"><strong id="stat-accuracy">—</strong><small>seus acertos</small></div><div class="stat"><strong id="stat-today">0</strong><small>respondidas hoje</small></div></div>
-<div class="layout">
-<aside class="panel sidebar" aria-label="Configurar treinamento">
-<h2 class="section-label">Configure seu treino</h2>
-<div class="field"><label for="exam">Qual prova da PMESP?</label><select id="exam"><option value="pmesp">PMESP · 2026 · VUNESP</option><option value="pmesp25">PMESP · 2025 · FGV Tipo 1</option><option value="pmesp24">PMESP · 2024 · FGV Tipo 1</option></select></div>
-<div class="field"><label for="subject">Matéria</label><select id="subject"><option value="all">Todas as matérias</option></select></div>
-<div class="field"><label for="filter">Quais questões?</label><select id="filter"><option value="all">Todas</option><option value="new">Ainda não respondidas</option><option value="wrong">Questões que errei</option></select></div>
-<div class="field"><label>Quantidade por sessão</label><div class="seg" role="group" aria-label="Quantidade"><button type="button" class="active" data-length="5" aria-pressed="true">5 rápidas</button><button type="button" data-length="10" aria-pressed="false">10 foco</button><button type="button" data-length="all" aria-pressed="false">Prova inteira</button></div></div>
-<div class="field"><label for="grading">Modo de correção</label><select id="grading"><option value="practice">Treino: corrigir uma a uma</option><option value="exam">Simulado: corrigir no final</option></select></div>
-<button id="start" class="primary" type="button">Iniciar novo treino</button>
-<div class="side-note"><div class="section-label">Prova e gabarito oficial</div><p class="note" id="exam-notice">Escolha uma edição da PMESP para conferir a versão do caderno e a fonte do gabarito.</p><a id="official-source" href="#" target="_blank" rel="noopener noreferrer">Abrir caderno da prova ↗</a><a id="official-key" href="#" target="_blank" rel="noopener noreferrer">Ver gabarito oficial ↗</a></div>
-<p class="note side-note">🔒 Histórico salvo somente neste navegador, neste aparelho. Sem cadastro, sem pagamento e sem compartilhamento de respostas.</p>
-<button class="secondary" id="export" type="button" style="width:100%;font-size:12px">Exportar meu desempenho</button>
+<a class="skip" href="#main">Pular para o conteúdo</a>
+<header class="topbar">
+<div class="shell head-inner">
+<a class="logo" href="./" aria-label="Missão Farda — PMESP, voltar ao início">
+<span class="logo-symbol" aria-hidden="true"><svg viewBox="0 0 48 48" width="36" height="36" fill="none"><path d="M24 4 8 10v14c0 9 6.4 16.6 16 20 9.6-3.4 16-11 16-20V10L24 4Z" stroke="currentColor" stroke-width="2.5"/><path d="m16 24 5.5 5.5L32 18" stroke="currentColor" stroke-width="3.1" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+<span><strong>MISSÃO FARDA</strong><small>TRILHA PMESP · SOLDADO</small></span>
+</a>
+<div class="head-links"><span class="online-status" id="connection-status"><span class="status-dot"></span>Provas oficiais</span><a class="header-link" href="https://www.vunesp.com.br/PMES2601" target="_blank" rel="noopener noreferrer">Fonte VUNESP <span aria-hidden="true">↗</span></a></div>
+</div>
+</header>
+<main id="main" class="shell">
+<div class="page-heading">
+<div><p class="eyebrow">Sua preparação, um treino de cada vez</p><h1>Do zero à <em>próxima etapa.</em></h1><p class="page-subtitle">Sem metas impossíveis. Só progresso real, baseado nas provas anteriores da PM de São Paulo.</p></div>
+<div class="exam-date"><span>PRÓXIMA PROVA PREVISTA</span><strong>28 fev. 2027</strong><small id="days-left">Conforme edital 2026</small></div>
+</div>
+<nav class="tabs" aria-label="Áreas do aplicativo">
+<button type="button" class="tab active" data-tab="home" aria-current="page"><span aria-hidden="true">⌂</span> Hoje</button>
+<button type="button" class="tab" data-tab="train"><span aria-hidden="true">▤</span> Questões</button>
+<button type="button" class="tab" data-tab="path"><span aria-hidden="true">◎</span> Trilha</button>
+<button type="button" class="tab" data-tab="insights"><span aria-hidden="true">▥</span> Evolução</button>
+</nav>
+<section id="view-home" class="view">
+<div class="home-grid">
+<div class="hero panel">
+<div><p class="eyebrow">SEU TREINO DE HOJE</p><h2 id="greeting">Vamos avançar um pouco?</h2><p id="daily-copy" class="dim">Você não precisa de motivação todos os dias. Basta um próximo passo pequeno.</p></div>
+<div class="micro-goal"><span>ESCOLHA O SEU RITMO</span><div class="goal-buttons" role="group" aria-label="Quantidade de questões para hoje"><button type="button" data-goal="2">2 <small>mínimo</small></button><button type="button" data-goal="5" class="selected" aria-pressed="true">5 <small>leve</small></button><button type="button" data-goal="10">10 <small>foco</small></button></div></div>
+<div class="hero-actions"><button id="daily-start" type="button" class="primary large">Começar missão de hoje <span aria-hidden="true">→</span></button><button id="resume" type="button" class="ghost" hidden>Retomar meu treino</button></div>
+<p class="fine">Dia difícil? Duas questões bastam. Sua meta é retornar, não manter uma sequência perfeita.</p>
+</div>
+<aside class="snapshot panel">
+<div class="snapshot-head"><span class="eyebrow">SEU PAINEL</span><span class="dot-label">LOCAL NO CELULAR</span></div>
+<div class="snapshot-row"><div><strong id="home-answered">0</strong><small>tentativas registradas</small></div><div><strong id="home-accuracy">—</strong><small>acertos até agora</small></div></div>
+<div class="mini-meter"><div class="mini-meter-top"><span>Conhecimento praticado</span><strong id="unique-done">0/180</strong></div><div class="meter"><span id="seen-meter"></span></div></div>
+<p class="dim small" id="home-review-text">Ainda não há revisões pendentes.</p>
+<button type="button" id="review-shortcut" class="text-button">Revisar pontos fracos <span aria-hidden="true">→</span></button>
 </aside>
-<section class="panel quiz" id="quiz" aria-live="polite" aria-label="Questões">
-<div class="quiz-head"><span class="chip" id="tag">QUESTÃO REAL</span><span class="counter" id="counter">1 de 5</span></div>
-<div class="meta" id="qmeta">Escolha sua primeira questão.</div>
-<div class="track" aria-label="Progresso da sessão"><i id="session-progress"></i></div>
-<div id="quiz-body"></div>
-<div id="feedback" class="feedback hidden" role="status"></div>
-<div class="bottom" id="action-bar"><button id="previous" class="secondary" type="button">← Anterior</button><button id="check" class="primary" type="button" disabled>Corrigir resposta</button><button id="next" class="secondary" type="button">Próxima →</button></div>
-<div class="grid-wrap" id="navigation"><h3>Questões da sessão</h3><div class="question-grid" id="question-grid"></div></div>
+</div>
+<div class="metric-grid">
+<div class="mini-card"><span class="metric-icon">◷</span><strong id="today-count">0</strong><span>Questões hoje</span></div>
+<div class="mini-card"><span class="metric-icon">↻</span><strong id="due-count">0</strong><span>Revisões pendentes</span></div>
+<div class="mini-card"><span class="metric-icon">▣</span><strong id="weeks-active">0/7</strong><span>Dias estudados na semana</span></div>
+<div class="mini-card"><span class="metric-icon">⚑</span><strong id="phase">Fundação</strong><span>Fase de preparação</span></div>
+</div>
+<div class="two-cols">
+<section class="panel section-card"><div class="section-head"><div><p class="eyebrow">PRIMEIRO PASSO</p><h2>Um caminho que cabe na sua rotina</h2></div></div>
+<div class="steps">
+<div class="step"><span>01</span><div><strong>Diagnóstico com 10 questões reais</strong><p>Descubra seus pontos de partida. Não é para te julgar.</p></div></div>
+<div class="step"><span>02</span><div><strong>Conquiste pequenas vitórias</strong><p>Resolva 2, 5 ou 10 questões. Corrija e registre o que aprendeu.</p></div></div>
+<div class="step"><span>03</span><div><strong>Volte aos erros na hora certa</strong><p>A revisão prioriza o que você errou e agenda novas tentativas.</p></div></div>
+<div class="step"><span>04</span><div><strong>Treine no formato da banca</strong><p>Faça provas completas e acompanhe a evolução por disciplina.</p></div></div>
+</div>
+<button id="diagnostic-home" type="button" class="outline">Fazer diagnóstico inicial <span aria-hidden="true">↗</span></button>
+</section>
+<section class="panel section-card">
+<div class="section-head"><div><p class="eyebrow">ROTINA FLEXÍVEL</p><h2>Organização sem pressão</h2></div></div>
+<p id="week-tip" class="support-note"></p>
+<div id="week-calendar" class="week-calendar" aria-label="Atividade dos últimos sete dias"></div>
+<div class="separate"></div>
+<h3>Se parar de estudar por alguns dias</h3>
+<p class="dim">Não precisa recomeçar tudo ou compensar horas. Volte com 2 questões de uma prova real. O histórico continua aqui.</p>
+<button type="button" id="two-questions" class="outline light">Recomeçar com 2 questões <span aria-hidden="true">→</span></button>
 </section>
 </div>
+</section>
+<section id="view-train" class="view" hidden>
+<div class="training-layout">
+<aside class="panel config">
+<div class="section-head"><div><p class="eyebrow">PROVAS ANTERIORES</p><h2>Seu treino</h2></div></div>
+<div class="field"><label for="exam">Edição da PMESP</label><select id="exam">
+<option value="pmesp">2026 · VUNESP · 60 questões</option>
+<option value="pmesp25">2025 · FGV · Tipo 1</option>
+<option value="pmesp24">2024 · FGV · Tipo 1</option></select></div>
+<div class="field"><label for="subject">Disciplina</label><select id="subject"><option value="all">Todas as disciplinas</option></select></div>
+<div class="field"><label for="mode">Tipo de treino</label><select id="mode">
+<option value="daily">Treino guiado</option><option value="diagnostic">Diagnóstico de nível</option><option value="review">Revisar questões erradas ou vencidas</option><option value="new">Questões ainda não respondidas</option><option value="full">Prova completa</option></select></div>
+<div class="field"><label for="quantity">Quantidade</label><select id="quantity"><option value="2">2 questões · dia difícil</option><option value="5" selected>5 questões · treino leve</option><option value="10">10 questões · foco</option><option value="20">20 questões · sessão longa</option></select></div>
+<div class="field"><label for="grading">Correção</label><select id="grading"><option value="practice">Ver resposta após confirmar</option><option value="exam">Revelar respostas só ao finalizar</option></select></div>
+<button id="create-session" type="button" class="primary full">Iniciar treino selecionado</button>
+<div class="separate"></div>
+<div class="field"><label for="timer-setting">Cronômetro opcional</label><select id="timer-setting"><option value="off">Desligado — sem pressão</option><option value="10">10 minutos</option><option value="25">25 minutos</option></select></div>
+<div id="timer-box" class="timer-box" hidden><span id="timer-display">10:00</span><button id="timer-toggle" class="small-button" type="button">Pausar</button><button id="timer-reset" class="small-button" type="button">Reiniciar</button></div>
+<div class="source-side"><h3>Origem do material</h3><p id="exam-note" class="dim small">Somente questões reais da PMESP.</p><a id="paper-link" href="https://www.vunesp.com.br/PMES2601" target="_blank" rel="noopener noreferrer">Prova original ↗</a><a id="key-link" href="https://www.vunesp.com.br/PMES2601" target="_blank" rel="noopener noreferrer">Gabarito oficial ↗</a></div>
+</aside>
+<div class="panel question-panel">
+<div class="question-top"><div><span id="question-chip" class="pill">PMESP · PROVA REAL</span><p id="question-meta" class="question-meta">Escolha um treino para começar.</p></div><span id="question-counter" class="counter"></span></div>
+<div class="meter slim"><span id="quiz-meter"></span></div>
+<div id="question-area" class="question-area"><div class="empty-state"><div class="empty-mark">▤</div><h2>Pronto para sua primeira questão?</h2><p>Você só precisa escolher um treino. Vou guardar seu progresso neste aparelho.</p></div></div>
+<div id="feedback" class="feedback" role="status" aria-live="polite" hidden></div>
+<div id="question-actions" class="question-actions" hidden><button type="button" id="previous" class="ghost">← Anterior</button><button type="button" id="check" class="primary" disabled>Confirmar resposta</button><button type="button" id="next" class="ghost">Próxima →</button></div>
+<div id="question-numbers-wrap" hidden><h3 class="subheading">Navegar entre questões</h3><div id="question-numbers" class="number-grid"></div></div>
+</div>
+</div>
+</section>
+<section id="view-path" class="view" hidden>
+<div class="path-heading panel section-card">
+<p class="eyebrow">DO PRIMEIRO DIA ATÉ A PROVA</p><h2>Trilha de preparação para Soldado</h2>
+<p class="dim">Um mapa flexível baseado na distribuição do edital atual. Marque apenas o que você realmente revisou: não há cobrança por dias perdidos.</p>
+<div class="path-meters"><div><strong id="topics-complete">0/0</strong><span>Tópicos revisados</span></div><div><strong id="path-days">—</strong><span>Dias para a prova prevista</span></div></div>
+<div class="meter"><span id="topics-meter"></span></div>
+</div>
+<div class="two-cols">
+<div class="panel section-card"><p class="eyebrow">ORDEM SUGERIDA</p><h2>Quatro etapas</h2><ol class="learning-phases">
+<li><strong>Fundação</strong><span>Português e Matemática primeiro. Resolva poucas questões e anote dúvidas.</span></li>
+<li><strong>Construção</strong><span>Alterne História, Geografia, Atualidades, Informática e Administração Pública.</span></li>
+<li><strong>Revisão</strong><span>Priorize erros que voltaram e assuntos de menor aproveitamento.</span></li>
+<li><strong>Reta final</strong><span>Provas completas, redação e revisão de pontos frágeis. Sem prometer aprovação.</span></li>
+</ol></div>
+<div class="panel section-card">
+<p class="eyebrow">DISTRIBUIÇÃO DA PROVA</p><h2>Onde concentrar energia</h2>
+<div id="weight-list" class="weights"></div><p class="fine">Referência: edital de Aluno-Soldado publicado em 05/11/2026. A redação é uma etapa separada.</p>
+<a href="https://doe.sp.gov.br/executivo/secretaria-da-seguranca-publica/edital-de-concurso-publico-n-dp-4-321-26-202611041336161962254080" target="_blank" rel="noopener noreferrer">Conferir edital vigente ↗</a>
+</div>
+</div>
+<div class="panel section-card topics-card"><div class="section-head"><div><p class="eyebrow">SEU CHECKLIST</p><h2>Matérias e assuntos do edital</h2></div></div><p class="dim small">Marcar um assunto significa “revisei”; não é certificado de domínio. Questões reais e seu percentual de acertos ficam na aba Evolução.</p><div id="syllabus" class="syllabus"></div></div>
+<div class="two-cols">
+<section class="panel section-card">
+<p class="eyebrow">REDAÇÃO · ETAPA OBRIGATÓRIA</p><h2>Treinar escrita também conta</h2>
+<p class="dim">Use um tema de redação de uma prova oficial anterior, acessível no PDF de 2024 ou 2025. O texto abaixo é seu rascunho pessoal — não há correção automática nem nota inventada.</p>
+<div class="source-links"><a href="https://conhecimento.fgv.br/sites/default/files/concursos/soldado-pm-de-2a-classe-cnm001-tipo-1_0.pdf" target="_blank" rel="noopener noreferrer">Tema da prova FGV 2025 ↗</a><a href="https://conhecimento.fgv.br/sites/default/files/concursos/soldado-pm-de-2a-classe-cnm001-tipo-1.pdf" target="_blank" rel="noopener noreferrer">Tema da prova FGV 2024 ↗</a></div>
+<label class="block-label" for="essay">Meu rascunho de redação</label><textarea id="essay" rows="7" maxlength="20000" placeholder="Escreva aqui seu rascunho, usando o tema da prova original..."></textarea><p class="dim small" id="essay-status">O texto fica salvo apenas neste dispositivo.</p>
+<label class="tick-line"><input type="checkbox" id="essay-week"> Fiz uma sessão de redação nesta semana</label>
+</section>
+<section class="panel section-card">
+<p class="eyebrow">ALÉM DA PROVA OBJETIVA</p><h2>Outras etapas para acompanhar</h2><div class="step"><span>01</span><div><strong>Inscrição</strong><p>Consulte prazos e documentos no edital oficial. Não depende do app.</p></div></div>
+<div class="step"><span>02</span><div><strong>Aptidão física</strong><p>Confira os índices oficiais e planeje a preparação com orientação adequada.</p></div></div>
+<div class="step"><span>03</span><div><strong>Saúde e avaliação psicológica</strong><p>Acompanhe os critérios e procedimentos publicados pela PMESP.</p></div></div>
+<div class="step"><span>04</span><div><strong>Investigação social e documentos</strong><p>Guarde os comprovantes e acompanhe as convocações oficiais.</p></div></div>
+<p class="fine">Este aplicativo ajuda nos estudos e não substitui editais, acompanhamento médico ou preparação física profissional.</p>
+</section></div>
+</section>
+<section id="view-insights" class="view" hidden>
+<div class="panel section-card">
+<div class="section-head"><div><p class="eyebrow">DADOS DO SEU TREINAMENTO</p><h2>Sua evolução real</h2><p class="dim">Resultados das respostas que você efetivamente registrou. Repetições aparecem como novas tentativas; não são previsão de aprovação.</p></div></div>
+<div class="metric-grid insights-metrics">
+<div class="mini-card"><strong id="insight-attempts">0</strong><span>Tentativas válidas</span></div><div class="mini-card"><strong id="insight-accuracy">—</strong><span>Acertos nas tentativas</span></div><div class="mini-card"><strong id="insight-due">0</strong><span>Revisões pendentes</span></div><div class="mini-card"><strong id="insight-sessions">0</strong><span>Sessões encerradas</span></div></div>
+<h3 class="subheading">Aproveitamento por disciplina</h3><div id="subject-progress" class="subject-progress"></div>
+</div>
+<div class="two-cols"><div class="panel section-card"><p class="eyebrow">ÚLTIMOS SETE DIAS</p><h2>Constância sem cobrança</h2><div id="insight-calendar" class="week-calendar"></div><p id="last-activity" class="dim small"></p></div>
+<div class="panel section-card"><p class="eyebrow">SUA PRÓXIMA AÇÃO</p><h2 id="next-recommendation">Comece com uma sessão curta</h2><p class="dim" id="next-recommendation-detail">Depois de responder questões reais, suas prioridades aparecerão aqui.</p><button id="next-step" type="button" class="outline">Treinar minha prioridade →</button></div></div>
+<div class="panel section-card"><p class="eyebrow">SEUS DADOS</p><h2>Backup e privacidade</h2><p class="dim">Tudo é guardado localmente no navegador, não na sua conta GitHub. Exporte um backup para trocar de aparelho ou evitar perda do histórico. Nenhum arquivo é enviado a servidor.</p>
+<div class="backup-actions"><button id="export-backup" class="outline" type="button">Baixar backup completo</button><button id="export-csv" class="outline light" type="button">Exportar CSV</button><button id="import-trigger" class="ghost" type="button">Restaurar backup</button><input id="import-file" class="sr-only" type="file" accept=".json,application/json"></div><p id="backup-status" class="dim small" role="status"></p></div>
+</section>
 </main>
-<footer>Missão Farda · Estudo exclusivo de provas PMESP, sem vínculo com a PMESP, VUNESP ou FGV.<br>Desenvolvido por <a href="https://novabytesolucoes.com.br/">Nova Byte</a>. Os cadernos e gabaritos pertencem às respectivas instituições.</footer>
-</body></html>
+<footer class="footer"><div class="shell"><strong>Missão Farda</strong> · Uma ferramenta independente de preparação para a PMESP.<p>Questões consultadas nos cadernos oficiais e fontes identificadas em cada exercício. Gabarito não é comentário detalhado. Não somos vinculados à corporação nem às bancas.</p><a href="https://novabytesolucoes.com.br/" target="_blank" rel="noopener noreferrer">Desenvolvido por Nova Byte ↗</a></div></footer>
+<div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+</body>
+</html>
