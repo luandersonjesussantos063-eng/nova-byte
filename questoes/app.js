@@ -4,12 +4,15 @@
   const $ = function (id) { return document.getElementById(id); };
   const keyProgress = "missao-farda-progress-v1";
   const keySession = "missao-farda-session-v1";
-  const examOrder = ["pmmg", "pmesp", "gcm"];
+  const examOrder = ["pmesp", "pmesp25", "pmesp24"];
   const alphabet = ["A", "B", "C", "D", "E"];
   const today = function () { return new Date().toLocaleDateString("en-CA"); };
   const safeRead = function (key) { try { return JSON.parse(localStorage.getItem(key) || "null"); } catch (e) { return null; } };
   const progress = safeRead(keyProgress) || {};
   let session = safeRead(keySession);
+  const validIds = new Set(bank.questions.map(function(q){return q.id;}));
+  Object.keys(progress).forEach(function(id){if(!validIds.has(id))delete progress[id];});
+  if (session && (!Array.isArray(session.ids) || !bank.exams[session.exam] || session.ids.some(function(id){return !validIds.has(id);}))) session=null;
   let lengthValue = "5";
 
   function store() {
@@ -22,7 +25,7 @@
   }
   function examQuestions() {
     const id = $("exam").value;
-    return bank.questions.filter(function (q) { return id === "all" || q.exam === id; });
+    return bank.questions.filter(function (q) { return q.exam === id; });
   }
   function updateSubjects() {
     const selected = $("subject").value;
@@ -101,10 +104,12 @@
   }
   function sourceLinks(body, q) {
     const links = element("div","source-links");
-    const view = element("a","","↗ Ver questão original");
-    view.href = openSourceFor(q); view.target = "_blank"; view.rel = "noopener noreferrer";
-    links.appendChild(view);
-    const pdf = element("a","","↗ Caderno completo");
+    if (q.exam === "pmesp") {
+      const view = element("a","","↗ Abrir questão real");
+      view.href = openSourceFor(q); view.target = "_blank"; view.rel = "noopener noreferrer";
+      links.appendChild(view);
+    }
+    const pdf = element("a","",q.exam === "pmesp" ? "↗ Página oficial da prova" : "↗ Abrir prova original (PDF)");
     pdf.href = bank.exams[q.exam].source; pdf.target = "_blank"; pdf.rel = "noopener noreferrer";
     links.appendChild(pdf);
     body.appendChild(links);
@@ -114,12 +119,12 @@
     $("tag").textContent = meta.short + " · " + meta.year;
     $("counter").textContent = "Questão " + (session.index + 1) + " de " + session.ids.length;
     $("qmeta").textContent = q.subject + " · Nº " + q.number + " da prova real · " + meta.board;
-    const copy = q.kind === "source" ? "Questão nº " + q.number + " da prova de Soldado PMESP 2026" : q.text;
+    const copy = q.kind === "source" ? "Questão nº " + q.number + " da prova de Soldado PMESP " + meta.year + (meta.type ? " · " + meta.type : "") : q.text;
     body.appendChild(element("h2","question-title",copy));
     if (q.kind === "source") {
       const note = element("div","support");
       note.appendChild(element("strong","","Enunciado na prova original, sem adaptação"));
-      note.appendChild(element("p","","Abra a questão pelo link abaixo, leia o texto e as cinco alternativas na fonte e volte para marcar A, B, C, D ou E. O gabarito só aparece após corrigir."));
+      note.appendChild(element("p","","Leia o enunciado e as cinco alternativas na prova original da " + meta.board + ". Volte aqui para marcar A, B, C, D ou E e corrigir pelo gabarito correspondente ao caderno. Não há questões simuladas."));
       body.appendChild(note);
     } else {
       const note = element("p","hint","Se a questão mencionar um texto, quadro, figura ou palavras destacadas, confira o caderno original pelo link abaixo.");
@@ -129,7 +134,7 @@
     const answers = element("div","answers");
     const checked = !!session.checked[q.id] && session.grading === "practice" || !!session.finished;
     const chosen = session.picks[q.id];
-    (q.exam === "pmesp" ? alphabet : alphabet.slice(0,4)).forEach(function(letter){
+    alphabet.forEach(function(letter){
       const value = q.options && q.options[letter] ? q.options[letter] : "Alternativa " + letter + " (consulte o enunciado original)";
       const button = element("button","choice");
       button.type = "button";
@@ -259,7 +264,7 @@
     a.href=href;a.download="missao-farda-desempenho.csv";a.click();setTimeout(function(){URL.revokeObjectURL(href);},1500);
   });
   if(session && Array.isArray(session.ids) && session.ids.length) {
-    $("exam").value=session.exam||"pmmg";updateSubjects();$("subject").value=session.subject||"all";$("filter").value=session.filter||"all";$("grading").value=session.grading||"practice";selectLength(session.length||"5");
+    $("exam").value=session.exam||"pmesp";updateSubjects();$("subject").value=session.subject||"all";$("filter").value=session.filter||"all";$("grading").value=session.grading||"practice";selectLength(session.length||"5");
     session.reviewing=!!session.reviewing;
     render();
   } else {
