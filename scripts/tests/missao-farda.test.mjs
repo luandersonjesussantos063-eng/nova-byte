@@ -70,3 +70,21 @@ test("Unverified answer is saved without being graded as incorrect",()=>{
  assert.equal(outcome.due,null);
  assert.equal(C.isValid(noKey),false);
 });
+
+// Regression: issue reported by student, original PMESP 2026 Q21 was cut mid-sentence.
+test("PMESP 2026 stems are complete and question 21 includes all four transactions",()=>{
+ const raw=readFileSync(resolve(root,"banco-transcrito.js"),"utf8");
+ const db=JSON.parse(raw.split("window.EXAM_BANK=")[1].trim().replace(/;\s*$/,""));
+ const qs=db.questions.filter(q=>q.exam==="pmesp");
+ assert.equal(qs.length,60);
+ assert.deepEqual(qs.filter(q=>q.text.trim().endsWith("…")).map(q=>q.number),[]);
+ const q=qs.find(q=>q.number===21);
+ assert.match(q.text,/1\) Em 01\.04\.26/);
+ assert.match(q.text,/2\) Em 02\.04\.26/);
+ assert.match(q.text,/3\) Em 15\.04\.26/);
+ assert.match(q.text,/4\) Em 16\.04\.26/);
+ assert.match(q.text,/2\/3/);
+ assert.match(q.text,/3\/10/);
+ assert.match(q.text,/3\/5/);
+ assert.match(q.text,/após essas movimentações/);
+});
