@@ -1,7 +1,7 @@
 "use strict";
 /* Cache apenas a interface. Enunciados e cadernos de terceiros exigem internet. */
-const CACHE="missao-farda-pmesp-v6-300-questoes-inline";
-const CORE=["./","./index.html","./ui.css?v=6","./banco-transcrito.js?v=6","./core.js?v=6","./app.js?v=6","./manifest.webmanifest","./icon.svg"];
+const CACHE="missao-farda-pmesp-v8-complete-questions";
+const CORE=["./","./index.html","./ui.css?v=8","./banco-transcrito.js?v=8","./core.js?v=8","./app.js?v=8","./manifest.webmanifest","./icon.svg"];
 self.addEventListener("install",event=>{
  event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(CORE)).then(()=>self.skipWaiting()));
 });
