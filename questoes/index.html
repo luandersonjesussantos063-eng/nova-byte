@@ -8,11 +8,11 @@
 <meta name="robots" content="noindex,follow">
 <link rel="icon" type="image/svg+xml" href="./icon.svg">
 <link rel="manifest" href="./manifest.webmanifest">
-<link rel="stylesheet" href="./ui.css?v=11-pmmg-brasao">
+<link rel="stylesheet" href="./ui.css?v=12-pmmg-perfis">
 <title>Missão Farda | Do zero à prova da PMMG</title>
-<script src="./banco-transcrito.js?v=11-pmmg-brasao" defer></script>
-<script src="./core.js?v=11-pmmg-brasao" defer></script>
-<script src="./app.js?v=11-pmmg-brasao" defer></script>
+<script src="./banco-transcrito.js?v=12-pmmg-perfis" defer></script>
+<script src="./core.js?v=12-pmmg-perfis" defer></script>
+<script src="./app.js?v=12-pmmg-perfis" defer></script>
 </head>
 <body>
 <a class="skip" href="#main">Pular para o conteúdo</a>
@@ -25,7 +25,13 @@
 <div class="head-links"><span class="online-status" id="connection-status"><span class="status-dot"></span>Provas oficiais</span><a class="header-link" href="https://www.policiamilitar.mg.gov.br/site/crs" target="_blank" rel="noopener noreferrer">Portal CRS/PMMG <span aria-hidden="true">↗</span></a></div>
 </div>
 </header>
-<main id="main" class="shell">
+<section id="profile-picker" class="profile-overlay" role="dialog" aria-modal="true" aria-labelledby="profile-title" hidden>
+<div class="panel profile-card"><p class="eyebrow">MISSÃO FARDA · PMMG</p><h2 id="profile-title">Quem vai estudar agora?</h2><p class="dim">Cada um tem seu painel, suas metas, respostas e revisões.</p>
+<div class="profile-choices"><button id="profile-luanderson" type="button" data-profile="luanderson" class="profile-choice"><span class="profile-avatar" aria-hidden="true">L</span><strong>Luanderson</strong><small>Abrir meu painel →</small></button><button type="button" data-profile="jackeline" class="profile-choice"><span class="profile-avatar jackeline" aria-hidden="true">J</span><strong>Jackeline Santana</strong><small>Abrir meu painel →</small></button></div>
+<p id="profile-migration-note" class="support-note" hidden>Há um histórico anterior neste navegador. Escolha primeiro o dono desse histórico: ele será preservado no perfil escolhido.</p>
+<p class="fine">Os perfis ficam salvos neste navegador. Em outro celular, use o backup do seu perfil para levar seu progresso.</p><button id="profile-cancel" type="button" class="ghost" hidden>Voltar ao meu painel</button></div></section>
+<main id="main" class="shell" inert>
+<div class="profile-bar"><div><small>ESTUDANDO AGORA</small><strong id="active-profile-name">Escolha seu perfil</strong></div><button id="switch-profile" type="button" class="outline">Trocar perfil</button></div>
 <div class="page-heading">
 <div><p class="eyebrow">Sua preparação, um treino de cada vez</p><h1>Do zero à <em>próxima etapa.</em></h1><p class="page-subtitle">Sem metas impossíveis. Só progresso real, baseado nas provas anteriores da PM de Minas Gerais.</p></div>
 <div class="exam-date"><span>CONCURSO · SOLDADO PMMG</span><strong>Acompanhe o edital</strong><small id="days-left">Portal oficial do CRS/PMMG</small></div>
@@ -159,8 +165,8 @@
 </div>
 <div class="two-cols"><div class="panel section-card"><p class="eyebrow">ÚLTIMOS SETE DIAS</p><h2>Constância sem cobrança</h2><div id="insight-calendar" class="week-calendar"></div><p id="last-activity" class="dim small"></p></div>
 <div class="panel section-card"><p class="eyebrow">SUA PRÓXIMA AÇÃO</p><h2 id="next-recommendation">Comece com uma sessão curta</h2><p class="dim" id="next-recommendation-detail">Depois de responder questões reais, suas prioridades aparecerão aqui.</p><button id="next-step" type="button" class="outline">Treinar minha prioridade →</button></div></div>
-<div class="panel section-card"><p class="eyebrow">SEUS DADOS</p><h2>Backup e privacidade</h2><p class="dim">Tudo é guardado localmente no navegador, não na sua conta GitHub. Exporte um backup para trocar de aparelho ou evitar perda do histórico. Nenhum arquivo é enviado a servidor.</p>
-<div class="backup-actions"><button id="export-backup" class="outline" type="button">Baixar backup completo</button><button id="export-csv" class="outline light" type="button">Exportar CSV</button><button id="import-trigger" class="ghost" type="button">Restaurar backup</button><input id="import-file" class="sr-only" type="file" accept=".json,application/json"></div><p id="backup-status" class="dim small" role="status"></p></div>
+<div class="panel section-card"><p class="eyebrow">SEUS DADOS</p><h2>Backup e privacidade</h2><p class="dim">O progresso de cada perfil é guardado separadamente neste navegador. Não há sincronização automática entre celulares. Exporte um backup para trocar de aparelho ou evitar perda do histórico. Nenhum arquivo é enviado a servidor.</p>
+<div class="backup-actions"><button id="export-backup" class="outline" type="button">Baixar backup do meu perfil</button><button id="export-csv" class="outline light" type="button">Exportar CSV</button><button id="import-trigger" class="ghost" type="button">Restaurar backup</button><input id="import-file" class="sr-only" type="file" accept=".json,application/json"></div><p id="backup-status" class="dim small" role="status"></p></div>
 </section>
 </main>
 <footer class="footer"><div class="shell"><strong>Missão Farda</strong> · Uma ferramenta independente de preparação para a PMMG.<p>Questões consultadas nos cadernos oficiais e fontes identificadas em cada exercício. Gabarito não é comentário detalhado. Não somos vinculados à corporação nem às bancas.</p><a href="https://novabytesolucoes.com.br/" target="_blank" rel="noopener noreferrer">Desenvolvido por Nova Byte ↗</a></div></footer>

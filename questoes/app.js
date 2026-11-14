@@ -4,15 +4,19 @@
 const DB=window.EXAM_BANK,C=window.MFCore;
 if(!DB||!C){document.body.textContent="Não foi possível carregar o banco de provas. Atualize a página com internet.";return;}
 const $=id=>document.getElementById(id),DAY=C.dayDate(),IDS=new Set(DB.questions.map(q=>q.id)),QUESTION=new Map(DB.questions.map(q=>[q.id,q]));
-const STATEKEY="missao-farda-pmmg-state-v3";
+const LEGACYKEY="missao-farda-pmmg-state-v3",PROFILEKEY="missao-farda-pmmg-legacy-owner";
+const PROFILES={luanderson:"Luanderson",jackeline:"Jackeline Santana"};
+let activeProfile=null,STATEKEY=null;
 const TOPICS={"Português": ["Interpretação de textos", "Sentidos e figuras de linguagem", "Classes de palavras e formação de palavras", "Concordância, regência e crase", "Pontuação e colocação pronominal", "Ortografia e acentuação"], "Literatura": ["Obras literárias cobradas em cada edição", "Narrador, personagens e construção do espaço", "Contexto e linguagem literária"], "Inglês": ["Leitura e interpretação de textos", "Vocabulário em contexto", "Relações entre frases e ideias"], "Noções de Direito e Direitos Humanos": ["Constituição Federal e direitos fundamentais", "Segurança pública e organização do Estado", "Declaração Universal dos Direitos Humanos", "Convenção Americana sobre Direitos Humanos"], "Raciocínio Lógico-Matemático": ["Proporções, porcentagens e regra de três", "Lógica e proposições", "Conjuntos e análise combinatória", "Geometria", "Probabilidade e estatística"], "Direito Penal": ["Crime e ilicitude", "Crimes e aplicação da lei penal"], "Direito Constitucional": ["Direitos e garantias fundamentais", "Organização do Estado e segurança pública"], "Direito Penal Militar": ["Crimes militares", "Extinção da punibilidade"], "Direitos Humanos": ["Declarações e convenções de direitos humanos", "Direitos e garantias"], "Legislação Extravagante": ["Normas indicadas na edição de 2021", "Leitura da lei e aplicação em situações concretas"], "Estatística": ["Probabilidade", "Leitura de tabelas e gráficos", "Média, mediana e distribuições"]};
 const LESSONS={"Português": {"title": "Comece pela base de Português", "intro": "Leia o comando antes das alternativas e identifique se ele pede a opção correta ou a incorreta. Volte ao texto para conferir sua interpretação.", "steps": ["Interpretação de textos", "Sentidos e figuras de linguagem", "Classes de palavras e formação de palavras", "Concordância, regência e crase", "Pontuação e colocação pronominal", "Ortografia e acentuação"], "practice": "Escolha uma sessão curta de questões reais da PMMG e confira os textos e figuras originais antes de responder."}, "Direito Penal": {"title": "Comece pela base de Direito Penal", "intro": "Use os assuntos desta disciplina para orientar sua revisão. Confira o programa do próximo edital e a edição de cada questão.", "steps": ["Crime e ilicitude", "Crimes e aplicação da lei penal"], "practice": "Escolha uma sessão curta de questões reais da PMMG e confira os textos e figuras originais antes de responder."}, "Direito Constitucional": {"title": "Comece pela base de Direito Constitucional", "intro": "Use os assuntos desta disciplina para orientar sua revisão. Confira o programa do próximo edital e a edição de cada questão.", "steps": ["Direitos e garantias fundamentais", "Organização do Estado e segurança pública"], "practice": "Escolha uma sessão curta de questões reais da PMMG e confira os textos e figuras originais antes de responder."}, "Direito Penal Militar": {"title": "Comece pela base de Direito Penal Militar", "intro": "Use os assuntos desta disciplina para orientar sua revisão. Confira o programa do próximo edital e a edição de cada questão.", "steps": ["Crimes militares", "Extinção da punibilidade"], "practice": "Escolha uma sessão curta de questões reais da PMMG e confira os textos e figuras originais antes de responder."}, "Direitos Humanos": {"title": "Comece pela base de Direitos Humanos", "intro": "Use os assuntos desta disciplina para orientar sua revisão. Confira o programa do próximo edital e a edição de cada questão.", "steps": ["Declarações e convenções de direitos humanos", "Direitos e garantias"], "practice": "Escolha uma sessão curta de questões reais da PMMG e confira os textos e figuras originais antes de responder."}, "Legislação Extravagante": {"title": "Comece pela base de Legislação Extravagante", "intro": "Use os assuntos desta disciplina para orientar sua revisão. Confira o programa do próximo edital e a edição de cada questão.", "steps": ["Normas indicadas na edição de 2021", "Leitura da lei e aplicação em situações concretas"], "practice": "Escolha uma sessão curta de questões reais da PMMG e confira os textos e figuras originais antes de responder."}, "Estatística": {"title": "Comece pela base de Estatística", "intro": "Use os assuntos desta disciplina para orientar sua revisão. Confira o programa do próximo edital e a edição de cada questão.", "steps": ["Probabilidade", "Leitura de tabelas e gráficos", "Média, mediana e distribuições"], "practice": "Escolha uma sessão curta de questões reais da PMMG e confira os textos e figuras originais antes de responder."}, "Literatura": {"title": "Comece pela base de Literatura", "intro": "Use os assuntos desta disciplina para orientar sua revisão. Confira o programa do próximo edital e a edição de cada questão.", "steps": ["Obras literárias cobradas em cada edição", "Narrador, personagens e construção do espaço", "Contexto e linguagem literária"], "practice": "Escolha uma sessão curta de questões reais da PMMG e confira os textos e figuras originais antes de responder."}, "Inglês": {"title": "Comece pela base de Inglês", "intro": "Use os assuntos desta disciplina para orientar sua revisão. Confira o programa do próximo edital e a edição de cada questão.", "steps": ["Leitura e interpretação de textos", "Vocabulário em contexto", "Relações entre frases e ideias"], "practice": "Escolha uma sessão curta de questões reais da PMMG e confira os textos e figuras originais antes de responder."}, "Noções de Direito e Direitos Humanos": {"title": "Comece pela base de Noções de Direito e Direitos Humanos", "intro": "Use os assuntos desta disciplina para orientar sua revisão. Confira o programa do próximo edital e a edição de cada questão.", "steps": ["Constituição Federal e direitos fundamentais", "Segurança pública e organização do Estado", "Declaração Universal dos Direitos Humanos", "Convenção Americana sobre Direitos Humanos"], "practice": "Escolha uma sessão curta de questões reais da PMMG e confira os textos e figuras originais antes de responder."}, "Raciocínio Lógico-Matemático": {"title": "Comece pela base de Raciocínio Lógico-Matemático", "intro": "Escreva os dados, identifique o que a questão pede e faça as contas por etapas. Porcentagem é uma parte de 100; uma fração pode ser calculada dividindo pelo denominador e multiplicando pelo numerador.", "steps": ["Proporções, porcentagens e regra de três", "Lógica e proposições", "Conjuntos e análise combinatória", "Geometria", "Probabilidade e estatística"], "practice": "Escolha uma sessão curta de questões reais da PMMG e confira os textos e figuras originais antes de responder."}};
 
 const read=(key)=>{try{return JSON.parse(localStorage.getItem(key)||"null");}catch{return null;}};
 const defaultState=()=>({version:3,progress:{},events:[],sessions:[],topics:{},essay:"",essayWeek:"",settings:{goal:5,timer:"off"},session:null});
-let state=read(STATEKEY)||defaultState();
+function loadProfile(id){
+const canMigrate=!read(PROFILEKEY)&&!read(STATEKEY);
+let state=read(STATEKEY)||(canMigrate?read(LEGACYKEY):null)||defaultState();
 const old=read("missao-farda-pmmg-progress-v1");
-if(!read(STATEKEY)&&old&&typeof old==="object"){
+if(canMigrate&&!read(LEGACYKEY)&&old&&typeof old==="object"){
  for(const [id,p] of Object.entries(old))if(IDS.has(id)&&p&&typeof p==="object"){
  state.progress[id]={...p,due:p.due||C.dayShift(p.day||DAY,p.correct===false?1:3),successStreak:p.correct?1:0};
  if(p.correct!==null&&"ABCD".includes(p.answer||"")){
@@ -25,13 +29,37 @@ if(!read(STATEKEY)&&old&&typeof old==="object"){
 }
 state={...defaultState(),...state};
 state.progress=C.cleanHistory(state.progress,IDS);
-state.events=Array.isArray(state.events)?state.events.filter(e=>IDS.has(e.id)&&e&&typeof e==="object").slice(-12000):[];
+state.events=Array.isArray(state.events)?state.events.filter(e=>e&&typeof e==="object"&&IDS.has(e.id)).slice(-12000):[];
 state.sessions=Array.isArray(state.sessions)?state.sessions.filter(s=>s&&typeof s==="object").slice(-500):[];
 if(!state.topics||typeof state.topics!=="object")state.topics={};
 if(!state.settings||typeof state.settings!=="object")state.settings={goal:5,timer:"off"};
 if(state.session&&(!Array.isArray(state.session.ids)||state.session.ids.some(id=>!IDS.has(id))||!DB.exams[state.session.exam]&&state.session.exam!=="all"))state.session=null;
+return state;
+}
+let state=defaultState();
 let activeTab="home",countdown=null,remaining=0,timerPaused=false,toastTimeout=null,readerOpenKey=null;
-function save(){try{localStorage.setItem(STATEKEY,JSON.stringify(state));return true;}catch{toast("Armazenamento do navegador indisponível: exporte um backup dos seus dados.");return false;}}
+function save(){if(!activeProfile)return false;try{localStorage.setItem(STATEKEY,JSON.stringify(state));return true;}catch{toast("Armazenamento do navegador indisponível: exporte um backup dos seus dados.");return false;}}
+function chooseProfile(id){
+ if(!Object.hasOwn(PROFILES,id))return;
+ if(activeProfile&&!save())return;
+ timerStop();remaining=0;timerPaused=false;readerOpenKey=null;
+ activeProfile=id;STATEKEY=LEGACYKEY+"-"+id;state=loadProfile(id);
+ if(save())try{if(!read(PROFILEKEY))localStorage.setItem(PROFILEKEY,JSON.stringify(id));}catch{}
+ $("active-profile-name").textContent=PROFILES[id];
+ document.querySelectorAll("[data-profile]").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.profile===id)));
+ $("profile-picker").hidden=true;$("main").inert=false;
+ $("timer-setting").value=state.settings.timer||"off";$("timer-box").hidden=true;$("timer-toggle").textContent="Pausar";
+ $("exam").value="pmmg2024";$("mode").value="daily";$("subject").value="all";$("grading").value="practice";$("quantity").value=String(state.settings.goal||5);fillSubjects();renderSources();
+ renderHome();renderTraining();renderPath();renderInsights();show("home");
+ $("switch-profile").focus();
+}
+function openProfiles(){
+ $("profile-picker").hidden=false;$("main").inert=true;
+ const legacy=read(LEGACYKEY)||read("missao-farda-pmmg-progress-v1");
+ $("profile-migration-note").hidden=!!read(PROFILEKEY)||!legacy;
+ $("profile-cancel").hidden=!activeProfile;
+ $("profile-luanderson").focus();
+}
 function toast(message){const el=$("toast");el.textContent=message;el.hidden=false;clearTimeout(toastTimeout);toastTimeout=setTimeout(()=>{el.hidden=true;},3900);}
 function el(tag,cls,txt){const x=document.createElement(tag);if(cls)x.className=cls;if(txt!==undefined)x.textContent=String(txt);return x;}
 function add(parent,tag,cls,txt){const x=el(tag,cls,txt);parent.appendChild(x);return x;}
@@ -318,18 +346,20 @@ function renderAll(){if(activeTab==="home")renderHome();if(activeTab==="train")r
 function download(name,text,type){
  const blob=new Blob([text],{type}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),2000);
 }
-function backupExport(){download("missao-farda-backup-"+DAY+".json",C.exportSafe(state),"application/json;charset=utf-8");toast("Backup gerado. Guarde o arquivo em um lugar seguro.");}
+function backupExport(){download("missao-farda-backup-"+activeProfile+"-"+DAY+".json",JSON.stringify({...JSON.parse(C.exportSafe(state)),profile:{id:activeProfile,name:PROFILES[activeProfile]}},null,2),"application/json;charset=utf-8");toast("Backup gerado. Guarde o arquivo em um lugar seguro.");}
 function csvExport(){
  const lines=[["Data","Prova","Disciplina","Questão","Resposta","Acertou"]];
  for(const ev of state.events){const q=QUESTION.get(ev.id);if(!q)continue;lines.push([ev.day,DB.exams[q.exam].year,C.subjectGroup(q),q.number,ev.answer,ev.correct?"SIM":"NÃO"]);}
- const csv=lines.map(row=>row.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(";")).join("\r\n");download("missao-farda-tentativas-"+DAY+".csv","\ufeff"+csv,"text/csv;charset=utf-8");
+ const csv=lines.map(row=>row.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(";")).join("\r\n");download("missao-farda-tentativas-"+activeProfile+"-"+DAY+".csv","\ufeff"+csv,"text/csv;charset=utf-8");
 }
 function restore(file){
  if(!file)return; if(file.size>6*1024*1024){toast("Arquivo maior que o limite permitido (6 MB).");return;}
- const reader=new FileReader();
+ const targetProfile=activeProfile;const reader=new FileReader();
  reader.onload=()=>{try{
+ if(targetProfile!==activeProfile){toast("Volte ao perfil escolhido para restaurar este backup.");return;}
  const parsed=JSON.parse(String(reader.result));if(parsed.app!=="missao-farda-pmmg"||parsed.version!==3||!parsed.state||typeof parsed.state!=="object")throw Error("Arquivo não é um backup do Missão Farda");
- if(!window.confirm("Restaurar este backup substituirá o progresso salvo neste aparelho. Continuar?"))return;
+ if(parsed.profile&&parsed.profile.id!==activeProfile){toast("Este backup pertence a "+(PROFILES[parsed.profile.id]||"outro perfil")+". Troque de perfil para restaurar.");return;}
+ if(!window.confirm("Restaurar este backup substituirá apenas o progresso de "+PROFILES[activeProfile]+" neste navegador. Continuar?"))return;
  const incoming=parsed.state;const safe=defaultState();safe.progress=C.cleanHistory(incoming.progress||{},IDS);
  safe.events=Array.isArray(incoming.events)?incoming.events.filter(e=>e&&IDS.has(e.id)&&"ABCD".includes(e.answer||"")).slice(-12000):[];
  safe.sessions=Array.isArray(incoming.sessions)?incoming.sessions.filter(x=>x&&typeof x==="object").slice(-500):[];
@@ -341,10 +371,14 @@ function restore(file){
  }catch(e){toast("Não foi possível restaurar: formato do backup inválido.");}};
  reader.readAsText(file);
 }
-function shortcuts(e){if(activeTab!=="train"||!currentSession()||currentSession().finished||["INPUT","TEXTAREA","SELECT"].includes(document.activeElement?.tagName)||e.altKey||e.ctrlKey||e.metaKey)return;
+function shortcuts(e){if(!$("profile-picker").hidden||activeTab!=="train"||!currentSession()||currentSession().finished||["INPUT","TEXTAREA","SELECT"].includes(document.activeElement?.tagName)||e.altKey||e.ctrlKey||e.metaKey)return;
  const key=e.key.toUpperCase();if("ABCD".includes(key)&&key.length===1){const s=currentSession(),q=sessionItems()[s.index];if(!q.options[key]||(s.checked[q.id]&&s.grading==="practice"))return;s.picks[q.id]=key;save();renderQuestion();e.preventDefault();}
 }
 function initEvents(){
+ document.querySelectorAll("[data-profile]").forEach(b=>b.addEventListener("click",()=>chooseProfile(b.dataset.profile)));
+ $("switch-profile").addEventListener("click",openProfiles);
+ $("profile-cancel").addEventListener("click",()=>{$("profile-picker").hidden=true;$("main").inert=false;$("switch-profile").focus();});
+ $("profile-picker").addEventListener("keydown",e=>{if(e.key==="Escape"&&activeProfile){$("profile-cancel").click();}if(e.key==="Tab"){const buttons=[...$("profile-picker").querySelectorAll("button")].filter(b=>!b.hidden),first=buttons[0],last=buttons.at(-1);if(e.shiftKey&&document.activeElement===first){last.focus();e.preventDefault();}else if(!e.shiftKey&&document.activeElement===last){first.focus();e.preventDefault();}}});
  document.querySelectorAll("[data-tab]").forEach(b=>b.addEventListener("click",()=>show(b.dataset.tab)));
  document.querySelectorAll("[data-goal]").forEach(b=>b.addEventListener("click",()=>{state.settings.goal=Number(b.dataset.goal);save();renderHome();}));
  $("daily-start").addEventListener("click",()=>sessionNew({kind:"daily",exam:"all",subject:"all",count:state.settings.goal||5,grading:"practice"}));
@@ -389,8 +423,8 @@ function updateOnline(){
 }
 function boot(){
  initEvents();fillSubjects();renderSources();show("home");updateOnline();
- if("serviceWorker" in navigator)navigator.serviceWorker.register("./sw.js?v=10-pmmg").catch(()=>{});
- save();
+ if("serviceWorker" in navigator)navigator.serviceWorker.register("./sw.js?v=12-pmmg-perfis").catch(()=>{});
+ openProfiles();
 }
 boot();
 })();
