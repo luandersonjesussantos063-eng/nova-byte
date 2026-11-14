@@ -69,7 +69,7 @@ test("Syllabus and essay are persisted locally without backend requests",()=>{
 
 test("All PMMG editions display real question stems and complete alternatives inside the app",()=>{
  const a=createApp(),{document,click,w}=a;
- const expected=[["pmmg2024","texto"],["pmmg2023","narrativa"],["pmmg2021","tipos"]];
+ const expected=[["pmmg2018","perfil"],["pmmg2024","texto"],["pmmg2023","narrativa"],["pmmg2021","tipos"]];
  for(const [id,word] of expected){
   const select=document.querySelector("#exam");select.value=id;
   select.dispatchEvent(new w.Event("change",{bubbles:true}));
@@ -106,9 +106,9 @@ test("2023 annulled questions are excluded from scoring in the complete exam",()
  assert.equal(state.events.some(e=>e.id==="pmmg2023-2"),false);
  w.close();
 });
-test("PMMG dashboard isolates progress, displays 140 questions and does not invent exam dates",()=>{
+test("PMMG dashboard isolates progress, displays 180 questions and does not invent exam dates",()=>{
  const a=createApp(),{document,click,w}=a;
- assert.equal(document.querySelector("#unique-done").textContent,"0/140");
+ assert.equal(document.querySelector("#unique-done").textContent,"0/180");
  assert.match(document.querySelector("#days-left").textContent,/CRS/);
  assert.doesNotMatch(document.body.textContent,/PMESP|VUNESP|28 fev/);
  click('[data-tab="path"]');

@@ -389,7 +389,7 @@ function updateOnline(){
 }
 function boot(){
  initEvents();fillSubjects();renderSources();show("home");updateOnline();
- if("serviceWorker" in navigator)navigator.serviceWorker.register("./sw.js?v=9-pmmg").catch(()=>{});
+ if("serviceWorker" in navigator)navigator.serviceWorker.register("./sw.js?v=10-pmmg").catch(()=>{});
  save();
 }
 boot();

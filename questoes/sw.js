@@ -1,7 +1,7 @@
 "use strict";
 /* Cache apenas a interface. Enunciados e cadernos de terceiros exigem internet. */
-const CACHE="missao-farda-pmmg-v9";
-const CORE=["./","./index.html","./ui.css?v=9-pmmg","./banco-transcrito.js?v=9-pmmg","./core.js?v=9-pmmg","./app.js?v=9-pmmg","./manifest.webmanifest","./icon.svg"];
+const CACHE="missao-farda-pmmg-v10";
+const CORE=["./","./index.html","./ui.css?v=10-pmmg","./banco-transcrito.js?v=10-pmmg","./core.js?v=10-pmmg","./app.js?v=10-pmmg","./manifest.webmanifest","./icon.svg"];
 self.addEventListener("install",event=>{
  event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(CORE)).then(()=>self.skipWaiting()));
 });

@@ -47,9 +47,9 @@ test("Dates and seven-day activity are stable",()=>{
 test("PMMG bank exists and contains valid original-key records",()=>{
  const p=readFileSync(resolve(root,"banco-transcrito.js"),"utf8");
  const db=JSON.parse(p.split("window.EXAM_BANK=")[1].trim().replace(/;\s*$/,""));
- assert.equal(db.questions.length,140);
- assert.equal(Object.keys(db.exams).length,3);
- assert.equal(new Set(db.questions.map(q=>q.id)).size,140);
+ assert.equal(db.questions.length,180);
+ assert.equal(Object.keys(db.exams).length,4);
+ assert.equal(new Set(db.questions.map(q=>q.id)).size,180);
  for(const q of db.questions){
   assert.ok(C.isReal(q),q.id);
   assert.ok(q.key===null||q.annulled||"ABCD".includes(q.key),q.id);
@@ -84,4 +84,15 @@ test("Source passages, diagrams and continuations are complete for PMMG",()=>{
  assert.equal(C.grade(adjusted,"C",null,"2026-11-13").correct,true);
  assert.throws(()=>C.grade({...adjusted,exam:"pmesp"},"C",null,"2026-11-13"));
  assert.throws(()=>C.grade(adjusted,"E",null,"2026-11-13"));
+});
+
+test("2018 Type A includes 40 questions and applies appeal annulment to Q27",()=>{
+ const db=JSON.parse(readFileSync(resolve(root,"banco-transcrito.js"),"utf8").split("window.EXAM_BANK=")[1].trim().replace(/;\s*$/,""));
+ const qs=db.questions.filter(q=>q.exam==="pmmg2018");assert.equal(qs.length,40);
+ assert.equal(C.choose(db.questions,{}, {exam:"pmmg2018",kind:"full"}).length,40);
+ const q=qs.find(q=>q.number===27);assert.equal(q.annulled,true);assert.equal(q.key,null);
+ assert.equal(C.grade(q,"D",null,"2026-11-13").correct,null);
+ assert.equal(qs[0].key,"D");assert.equal(qs[39].key,"B");
+ assert.ok(qs[0].supportImages.length===2);
+ for(const q of qs)for(const src of [...q.supportImages,...q.originalImages])assert.ok(existsSync(resolve(root,src)));
 });

@@ -8,7 +8,7 @@ function dayDate(date){const d=date instanceof Date?date:new Date(date||Date.now
 function dayShift(iso,n){const [y,m,d]=String(iso).split("-").map(Number);const z=new Date(Date.UTC(y,m-1,d+Number(n||0)));return z.toISOString().slice(0,10);}
 function daysBetween(a,b){return Math.round((Date.parse(b+"T12:00:00Z")-Date.parse(a+"T12:00:00Z"))/86400000);}
 function subjectGroup(q){return typeof q==="string"?q:q?.subject||"";}
-function isReal(q){return q&&/^pmmg(2021|2023|2024)$/.test(q.exam)&&Number.isInteger(q.number)&&q.number>=1&&q.number<=(q.exam==="pmmg2021"?40:50);}
+function isReal(q){return q&&/^pmmg(2018|2021|2023|2024)$/.test(q.exam)&&Number.isInteger(q.number)&&q.number>=1&&q.number<=(["pmmg2018","pmmg2021"].includes(q.exam)?40:50);}
 function isValid(q){return isReal(q)&&!q.annulled&&"ABCD".includes(q.key||"-");}
 function cleanHistory(state,ids){const out={};Object.keys(state||{}).forEach(id=>{if(!ids.has(id))return;const p=state[id];if(p&&typeof p==="object")out[id]={...p};});return out;}
 function reviewDue(p,now){if(!p)return false;return p.due?String(p.due)<=now:p.correct===false;}
@@ -59,7 +59,7 @@ function choose(questions,progress={},options={}){
  pool.sort((a,b)=>{
   const rank=attemptRank(a,progress,now,kind)-attemptRank(b,progress,now,kind);
   if(rank!==0)return rank;
-  if(a.exam!==b.exam){const order=["pmmg2024","pmmg2023","pmmg2021"];return order.indexOf(a.exam)-order.indexOf(b.exam);}
+  if(a.exam!==b.exam){const order=["pmmg2024","pmmg2023","pmmg2021","pmmg2018"];return order.indexOf(a.exam)-order.indexOf(b.exam);}
   return a.number-b.number;
  });
  if(subject!=="all"||kind==="review"||kind==="new")return pool.slice(0,size);
