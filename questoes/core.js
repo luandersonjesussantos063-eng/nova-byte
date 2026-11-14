@@ -1,27 +1,27 @@
 /* Missão Farda 3 — lógica pura e testável, sem dependências externas. */
 (function(root){
 "use strict";
-const GROUPS=["Português","Matemática","Conhecimentos Gerais","Informática","Administração Pública"];
-const TARGETS={"Português":20,"Matemática":15,"Conhecimentos Gerais":15,"Informática":5,"Administração Pública":5};
-const DEFAULT_EXAM_DATE="2027-02-28";
+const GROUPS=["Português", "Direito Penal", "Direito Constitucional", "Direito Penal Militar", "Direitos Humanos", "Legislação Extravagante", "Estatística", "Literatura", "Inglês", "Noções de Direito e Direitos Humanos", "Raciocínio Lógico-Matemático"];
+const TARGETS={"Português": 20, "Direito Penal": 0, "Direito Constitucional": 0, "Direito Penal Militar": 0, "Direitos Humanos": 0, "Legislação Extravagante": 0, "Estatística": 0, "Literatura": 5, "Inglês": 5, "Noções de Direito e Direitos Humanos": 10, "Raciocínio Lógico-Matemático": 10};
+const DEFAULT_EXAM_DATE=null;
 function dayDate(date){const d=date instanceof Date?date:new Date(date||Date.now());return [d.getFullYear(),String(d.getMonth()+1).padStart(2,"0"),String(d.getDate()).padStart(2,"0")].join("-");}
 function dayShift(iso,n){const [y,m,d]=String(iso).split("-").map(Number);const z=new Date(Date.UTC(y,m-1,d+Number(n||0)));return z.toISOString().slice(0,10);}
 function daysBetween(a,b){return Math.round((Date.parse(b+"T12:00:00Z")-Date.parse(a+"T12:00:00Z"))/86400000);}
-function subjectGroup(q){const s=typeof q==="string"?q:q?.subject||"";return ["História","Geografia","Atualidades","Conhecimentos Gerais"].includes(s)?"Conhecimentos Gerais":s;}
-function isReal(q){return q&&/^pmesp/.test(q.exam)&&Number.isInteger(q.number)&&q.number>=1&&q.number<=60;}
-function isValid(q){return isReal(q)&&!q.annulled&&"ABCDE".includes(q.key||"-");}
+function subjectGroup(q){return typeof q==="string"?q:q?.subject||"";}
+function isReal(q){return q&&/^pmmg(2021|2023|2024)$/.test(q.exam)&&Number.isInteger(q.number)&&q.number>=1&&q.number<=(q.exam==="pmmg2021"?40:50);}
+function isValid(q){return isReal(q)&&!q.annulled&&"ABCD".includes(q.key||"-");}
 function cleanHistory(state,ids){const out={};Object.keys(state||{}).forEach(id=>{if(!ids.has(id))return;const p=state[id];if(p&&typeof p==="object")out[id]={...p};});return out;}
 function reviewDue(p,now){if(!p)return false;return p.due?String(p.due)<=now:p.correct===false;}
 function grade(q,choice,old,iso,reason=""){
-  if(!isReal(q))throw new Error("Questão não pertence à PMESP");
-  if(q.annulled||!/[A-E]/.test(q.key||""))return {answer:choice||"",correct:null,annulled:!!q.annulled,at:Date.now(),day:iso,attempts:(old?.attempts||0)+1,due:null,successStreak:0,reason:""};
-  if(!"ABCDE".includes(choice||""))throw new Error("Alternativa inválida");
+  if(!isReal(q))throw new Error("Questão não pertence à PMMG");
+  if(q.annulled||!/[A-D]/.test(q.key||""))return {answer:choice||"",correct:null,annulled:!!q.annulled,at:Date.now(),day:iso,attempts:(old?.attempts||0)+1,due:null,successStreak:0,reason:""};
+  if(!"ABCD".includes(choice||""))throw new Error("Alternativa inválida");
   const hit=q.key===choice,streak=hit?(old?.successStreak||0)+1:0;
   const days=hit?([0,3,7,14,30,45,60][Math.min(6,streak)]):1;
   return {answer:choice,correct:hit,annulled:false,at:Date.now(),day:iso,attempts:(old?.attempts||0)+1,due:dayShift(iso,days),successStreak:streak,reason};
 }
 function score(events,questions){
- const map=new Map(questions.map(q=>[q.id,q]));const valid=(events||[]).filter(e=>isValid(map.get(e.id))&&(e.answer||"ABCDE".includes(e.choice||"")));
+ const map=new Map(questions.map(q=>[q.id,q]));const valid=(events||[]).filter(e=>isValid(map.get(e.id))&&(e.answer||"ABCD".includes(e.choice||"")));
  const correct=valid.filter(e=>e.correct===true).length;
  return {attempts:valid.length,correct,wrong:valid.length-correct,percent:valid.length?Math.round(correct/valid.length*100):null};
 }
@@ -59,13 +59,13 @@ function choose(questions,progress={},options={}){
  pool.sort((a,b)=>{
   const rank=attemptRank(a,progress,now,kind)-attemptRank(b,progress,now,kind);
   if(rank!==0)return rank;
-  if(a.exam!==b.exam){const order=["pmesp","pmesp25","pmesp24","pmesp23","pmesp21"];return order.indexOf(a.exam)-order.indexOf(b.exam);}
+  if(a.exam!==b.exam){const order=["pmmg2024","pmmg2023","pmmg2021"];return order.indexOf(a.exam)-order.indexOf(b.exam);}
   return a.number-b.number;
  });
  if(subject!=="all"||kind==="review"||kind==="new")return pool.slice(0,size);
  const buckets=new Map(GROUPS.map(s=>[s,[]]));
  pool.forEach(q=>{const b=buckets.get(subjectGroup(q));if(b)b.push(q);});
- const weights={Português:0.33,Matemática:0.25,"Conhecimentos Gerais":0.25,Informática:0.085,"Administração Pública":0.085};
+ const weights=Object.fromEntries(GROUPS.map(s=>[s,TARGETS[s]||5]));
  const picked=[],ids=new Set(); let spins=0;
  while(picked.length<size&&spins<size*10){
   spins++;
@@ -91,13 +91,13 @@ function progressCount(progress,qs,today){
  const entries=Object.entries(progress).filter(([id])=>ids.has(id));
  return {seen:entries.length,wrong:entries.filter(([id,p])=>p.correct===false).length,due:entries.filter(([id,p])=>reviewDue(p,today)).length};
 }
-function nextSubject(date){const weekday=new Date(date+"T12:00:00Z").getUTCDay();return {0:"Revisão leve",1:"Português",2:"Matemática",3:"Conhecimentos Gerais",4:"Português",5:"Matemática",6:"Informática e Administração Pública"}[weekday];}
+function nextSubject(date){const weekday=new Date(date+"T12:00:00Z").getUTCDay();return {0:"Revisão leve",1:"Português",2:"Raciocínio Lógico-Matemático",3:"Noções de Direito e Direitos Humanos",4:"Português e Literatura",5:"Inglês",6:"Revisão dos erros"}[weekday];}
 function phase(done,daysLeft){
  const d=Number(done)||0;
  if(typeof daysLeft==="number"&&daysLeft>=0&&daysLeft<=21)return "Reta final";
  return d<30?"Fundação":d<90?"Construção":"Revisão ativa";
 }
-function exportSafe(state){return JSON.stringify({app:"missao-farda",version:3,exportedAt:new Date().toISOString(),state},null,2);}
+function exportSafe(state){return JSON.stringify({app:"missao-farda-pmmg",version:3,exportedAt:new Date().toISOString(),state},null,2);}
 const API={GROUPS,TARGETS,DEFAULT_EXAM_DATE,dayDate,dayShift,daysBetween,subjectGroup,isReal,isValid,cleanHistory,reviewDue,grade,score,statsBySubject,weakestSubject,choose,weeklyActivity,progressCount,nextSubject,phase,exportSafe};
 root.MFCore=API;
 })(typeof globalThis!=="undefined"?globalThis:this);

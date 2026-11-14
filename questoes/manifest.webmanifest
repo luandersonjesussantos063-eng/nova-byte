@@ -1,12 +1,12 @@
 {
-  "name": "Missão Farda — Trilha PMESP",
+  "name": "Missão Farda — Trilha PMMG",
   "short_name": "Missão Farda",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#07101e",
-  "theme_color": "#081323",
-  "description": "Estudos flexíveis para Soldado PMESP: provas reais, revisão espaçada, redação e histórico local.",
+  "background_color": "#211c17",
+  "theme_color": "#30271f",
+  "description": "Preparação para Soldado PMMG: 140 questões reais, revisão espaçada e histórico local.",
   "icons": [
     {
       "src": "./icon.svg",

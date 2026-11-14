@@ -1,4 +1,4 @@
-name: Validar Missão Farda PMESP
+name: Validar Missão Farda PMMG
 on:
   push:
     paths:

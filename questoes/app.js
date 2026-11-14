@@ -1,38 +1,25 @@
-/* Missão Farda 3 — progresso local, estudo gradual e somente provas PMESP. */
+/* Missão Farda 3 — progresso local, estudo gradual e somente provas PMMG. */
 "use strict";
 (function(){
 const DB=window.EXAM_BANK,C=window.MFCore;
 if(!DB||!C){document.body.textContent="Não foi possível carregar o banco de provas. Atualize a página com internet.";return;}
 const $=id=>document.getElementById(id),DAY=C.dayDate(),IDS=new Set(DB.questions.map(q=>q.id)),QUESTION=new Map(DB.questions.map(q=>[q.id,q]));
-const STATEKEY="missao-farda-state-v3";
-const TOPICS={
-"Português":["Interpretação de textos literários e não literários","Sinônimos, antônimos e sentidos das palavras","Sentido próprio e figurado","Pontuação","Classes de palavras","Concordância verbal e nominal","Regência verbal e nominal","Colocação pronominal","Crase"],
-"Matemática":["Operações com números inteiros","Números racionais, frações e decimais","Mínimo múltiplo comum","Razão e proporção","Porcentagem","Regra de três simples","Média aritmética","Equações de primeiro grau","Sistema de equações de primeiro grau","Medidas e sistema métrico","Interpretação de tabelas e gráficos","Geometria: perímetro, área, volume e Pitágoras"],
-"Conhecimentos Gerais":["História Geral","História do Brasil","Geografia Geral","Geografia do Brasil","Atualidades — acontecimentos do período exigido no edital"],
-"Informática":["Sistema operacional Windows e arquivos","Ferramentas de edição de texto e planilhas","Correio eletrônico e internet","Ferramentas de comunicação e colaboração"],
-"Administração Pública":["Constituição Federal — tópicos exigidos no edital","Constituição do Estado de São Paulo","Lei de Acesso à Informação (LAI)","Decreto paulista nº 68.155/2023"]
-};
-
-const LESSONS={
-"Português":{title:"Entenda o texto antes de decorar regras",intro:"Na PMESP, interpretar bem o enunciado ajuda até nas questões de gramática. Você precisa identificar o que o autor afirma e distinguir isso do que a alternativa sugere.",steps:["Leia primeiro o comando e marque mentalmente se a banca pede a correta ou a incorreta.","Procure a ideia central de cada parágrafo. Palavras como mas, porém e portanto mudam a relação entre as frases.","Em gramática, revise classes de palavras, concordância, crase e pontuação com exemplos curtos."],practice:"Comece pela prova VUNESP 2026, questões 1 a 5, consultando o texto de apoio original."},
-"Matemática":{title:"Raciocine com calma antes de calcular",intro:"Seu ponto de partida são operações, frações e proporções. Não precisa tentar decorar tudo de uma vez: escreva os dados, a pergunta e as unidades.",steps:["Porcentagem significa partes de 100: 25% = 25/100 = 1/4. Entenda a relação antes da fórmula.","Em problemas, identifique o que cresce e o que diminui. Faça uma estimativa do resultado para perceber absurdos.","Aprenda a conferir a resposta: substitua o valor encontrado na relação inicial."],practice:"Revise porcentagem e abra as primeiras questões de Matemática do caderno real, a partir da questão 21."},
-"Conhecimentos Gerais":{title:"Organize o conteúdo em tempo, lugar e causa",intro:"História e Geografia ficam mais claras quando você entende o contexto. Atualidades exigem checar o período cobrado no edital e utilizar fontes confiáveis.",steps:["História: separe fato, período histórico, causas e consequências em uma linha do tempo.","Geografia: localize o fenômeno no mapa, identifique agentes e compare indicadores em gráficos.","Atualidades: anote data, acontecimento, contexto e consequências. Evite decorar manchetes sem entender o tema."],practice:"Abra as questões de Conhecimentos Gerais, História, Geografia ou Atualidades de uma prova real."},
-"Informática":{title:"Aprenda pela função de cada ferramenta",intro:"Para resolver Informática, diferencie as tarefas que o sistema operacional, o navegador, o e-mail e os aplicativos de escritório realizam.",steps:["Arquivos e pastas: entenda criar, mover, renomear, recuperar e localizar.","Texto e planilha: pratique formatação, tabelas e referências de células em situações simples.","Internet: diferencie endereço, navegador, pesquisa, envio de e-mails e segurança digital."],practice:"Use o bloco de Informática da PMESP 2026, questões 51 a 55."},
-"Administração Pública":{title:"Separe princípio, regra e aplicação",intro:"Estude a norma pelo que ela protege e por como aparece em situações concretas. O edital delimita os textos legais exigidos.",steps:["Constituição Federal: identifique direitos fundamentais e princípios da Administração Pública.","Memorize o sentido de legalidade, impessoalidade, moralidade, publicidade e eficiência antes de siglas.","Consulte a Constituição paulista, a LAI e o Decreto nº 68.155/2023, respeitando as versões em vigor."],practice:"Treine nas questões 56 a 60 do caderno PMESP 2026."}
-};
+const STATEKEY="missao-farda-pmmg-state-v3";
+const TOPICS={"Português": ["Interpretação de textos", "Sentidos e figuras de linguagem", "Classes de palavras e formação de palavras", "Concordância, regência e crase", "Pontuação e colocação pronominal", "Ortografia e acentuação"], "Literatura": ["Obras literárias cobradas em cada edição", "Narrador, personagens e construção do espaço", "Contexto e linguagem literária"], "Inglês": ["Leitura e interpretação de textos", "Vocabulário em contexto", "Relações entre frases e ideias"], "Noções de Direito e Direitos Humanos": ["Constituição Federal e direitos fundamentais", "Segurança pública e organização do Estado", "Declaração Universal dos Direitos Humanos", "Convenção Americana sobre Direitos Humanos"], "Raciocínio Lógico-Matemático": ["Proporções, porcentagens e regra de três", "Lógica e proposições", "Conjuntos e análise combinatória", "Geometria", "Probabilidade e estatística"], "Direito Penal": ["Crime e ilicitude", "Crimes e aplicação da lei penal"], "Direito Constitucional": ["Direitos e garantias fundamentais", "Organização do Estado e segurança pública"], "Direito Penal Militar": ["Crimes militares", "Extinção da punibilidade"], "Direitos Humanos": ["Declarações e convenções de direitos humanos", "Direitos e garantias"], "Legislação Extravagante": ["Normas indicadas na edição de 2021", "Leitura da lei e aplicação em situações concretas"], "Estatística": ["Probabilidade", "Leitura de tabelas e gráficos", "Média, mediana e distribuições"]};
+const LESSONS={"Português": {"title": "Comece pela base de Português", "intro": "Leia o comando antes das alternativas e identifique se ele pede a opção correta ou a incorreta. Volte ao texto para conferir sua interpretação.", "steps": ["Interpretação de textos", "Sentidos e figuras de linguagem", "Classes de palavras e formação de palavras", "Concordância, regência e crase", "Pontuação e colocação pronominal", "Ortografia e acentuação"], "practice": "Escolha uma sessão curta de questões reais da PMMG e confira os textos e figuras originais antes de responder."}, "Direito Penal": {"title": "Comece pela base de Direito Penal", "intro": "Use os assuntos desta disciplina para orientar sua revisão. Confira o programa do próximo edital e a edição de cada questão.", "steps": ["Crime e ilicitude", "Crimes e aplicação da lei penal"], "practice": "Escolha uma sessão curta de questões reais da PMMG e confira os textos e figuras originais antes de responder."}, "Direito Constitucional": {"title": "Comece pela base de Direito Constitucional", "intro": "Use os assuntos desta disciplina para orientar sua revisão. Confira o programa do próximo edital e a edição de cada questão.", "steps": ["Direitos e garantias fundamentais", "Organização do Estado e segurança pública"], "practice": "Escolha uma sessão curta de questões reais da PMMG e confira os textos e figuras originais antes de responder."}, "Direito Penal Militar": {"title": "Comece pela base de Direito Penal Militar", "intro": "Use os assuntos desta disciplina para orientar sua revisão. Confira o programa do próximo edital e a edição de cada questão.", "steps": ["Crimes militares", "Extinção da punibilidade"], "practice": "Escolha uma sessão curta de questões reais da PMMG e confira os textos e figuras originais antes de responder."}, "Direitos Humanos": {"title": "Comece pela base de Direitos Humanos", "intro": "Use os assuntos desta disciplina para orientar sua revisão. Confira o programa do próximo edital e a edição de cada questão.", "steps": ["Declarações e convenções de direitos humanos", "Direitos e garantias"], "practice": "Escolha uma sessão curta de questões reais da PMMG e confira os textos e figuras originais antes de responder."}, "Legislação Extravagante": {"title": "Comece pela base de Legislação Extravagante", "intro": "Use os assuntos desta disciplina para orientar sua revisão. Confira o programa do próximo edital e a edição de cada questão.", "steps": ["Normas indicadas na edição de 2021", "Leitura da lei e aplicação em situações concretas"], "practice": "Escolha uma sessão curta de questões reais da PMMG e confira os textos e figuras originais antes de responder."}, "Estatística": {"title": "Comece pela base de Estatística", "intro": "Use os assuntos desta disciplina para orientar sua revisão. Confira o programa do próximo edital e a edição de cada questão.", "steps": ["Probabilidade", "Leitura de tabelas e gráficos", "Média, mediana e distribuições"], "practice": "Escolha uma sessão curta de questões reais da PMMG e confira os textos e figuras originais antes de responder."}, "Literatura": {"title": "Comece pela base de Literatura", "intro": "Use os assuntos desta disciplina para orientar sua revisão. Confira o programa do próximo edital e a edição de cada questão.", "steps": ["Obras literárias cobradas em cada edição", "Narrador, personagens e construção do espaço", "Contexto e linguagem literária"], "practice": "Escolha uma sessão curta de questões reais da PMMG e confira os textos e figuras originais antes de responder."}, "Inglês": {"title": "Comece pela base de Inglês", "intro": "Use os assuntos desta disciplina para orientar sua revisão. Confira o programa do próximo edital e a edição de cada questão.", "steps": ["Leitura e interpretação de textos", "Vocabulário em contexto", "Relações entre frases e ideias"], "practice": "Escolha uma sessão curta de questões reais da PMMG e confira os textos e figuras originais antes de responder."}, "Noções de Direito e Direitos Humanos": {"title": "Comece pela base de Noções de Direito e Direitos Humanos", "intro": "Use os assuntos desta disciplina para orientar sua revisão. Confira o programa do próximo edital e a edição de cada questão.", "steps": ["Constituição Federal e direitos fundamentais", "Segurança pública e organização do Estado", "Declaração Universal dos Direitos Humanos", "Convenção Americana sobre Direitos Humanos"], "practice": "Escolha uma sessão curta de questões reais da PMMG e confira os textos e figuras originais antes de responder."}, "Raciocínio Lógico-Matemático": {"title": "Comece pela base de Raciocínio Lógico-Matemático", "intro": "Escreva os dados, identifique o que a questão pede e faça as contas por etapas. Porcentagem é uma parte de 100; uma fração pode ser calculada dividindo pelo denominador e multiplicando pelo numerador.", "steps": ["Proporções, porcentagens e regra de três", "Lógica e proposições", "Conjuntos e análise combinatória", "Geometria", "Probabilidade e estatística"], "practice": "Escolha uma sessão curta de questões reais da PMMG e confira os textos e figuras originais antes de responder."}};
 
 const read=(key)=>{try{return JSON.parse(localStorage.getItem(key)||"null");}catch{return null;}};
 const defaultState=()=>({version:3,progress:{},events:[],sessions:[],topics:{},essay:"",essayWeek:"",settings:{goal:5,timer:"off"},session:null});
 let state=read(STATEKEY)||defaultState();
-const old=read("missao-farda-progress-v1");
+const old=read("missao-farda-pmmg-progress-v1");
 if(!read(STATEKEY)&&old&&typeof old==="object"){
  for(const [id,p] of Object.entries(old))if(IDS.has(id)&&p&&typeof p==="object"){
  state.progress[id]={...p,due:p.due||C.dayShift(p.day||DAY,p.correct===false?1:3),successStreak:p.correct?1:0};
- if(p.correct!==null&&"ABCDE".includes(p.answer||"")){
+ if(p.correct!==null&&"ABCD".includes(p.answer||"")){
  const q=QUESTION.get(id);state.events.push({id,day:p.day||DAY,at:Number(p.at)||Date.now(),answer:p.answer,correct:p.correct,exam:q.exam,subject:C.subjectGroup(q)});
  }
  }
- const oldSession=read("missao-farda-session-v1");
+ const oldSession=read("missao-farda-pmmg-session-v1");
  if(oldSession&&Array.isArray(oldSession.ids)&&oldSession.ids.length&&oldSession.ids.every(id=>IDS.has(id))&&oldSession.exam in DB.exams&&!oldSession.finished)
  state.session={...oldSession,grading:oldSession.grading||"practice",kind:"daily",started:oldSession.created||Date.now(),reviewing:false,finished:false};
 }
@@ -54,19 +41,19 @@ function visible(view){document.querySelectorAll("[data-tab]").forEach(x=>{const
 function show(view){visible(view);renderAll();}
 function currentSession(){return state.session&&Array.isArray(state.session.ids)?state.session:null;}
 function sessionItems(){return (currentSession()?.ids||[]).map(id=>QUESTION.get(id)).filter(Boolean);}
-function totalEvents(){return state.events.filter(e=>e&&"ABCDE".includes(e.answer||"")&&!QUESTION.get(e.id)?.annulled);}
+function totalEvents(){return state.events.filter(e=>e&&"ABCD".includes(e.answer||"")&&!QUESTION.get(e.id)?.annulled);}
 function getDue(){return C.progressCount(state.progress,DB.questions,DAY).due;}
 function lastDate(){const d=state.events.map(x=>x.day).sort();return d.at(-1)||null;}
 function percent(n,d){return d?Math.round(n/d*100):0;}
 function meter(id,percentage){$(id).style.width=Math.max(0,Math.min(100,percentage))+"%";}
 function weekGrid(target){const activity=C.weeklyActivity(state.events,DAY),names=["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"];target.replaceChildren();activity.forEach(d=>{const date=new Date(d.day+"T12:00:00Z"),box=el("div","week-day");const b=add(box,"b",d.count?"done":"",d.count?String(d.count):"·");b.title=d.count+" tentativa(s) em "+d.day;add(box,"small","",names[date.getUTCDay()]);target.appendChild(box);});}
-function upcoming(){const days=C.daysBetween(DAY,C.DEFAULT_EXAM_DATE);$("days-left").textContent=days>=0?days+" dias restantes (previsão)":"Data prevista já passou; confira novo edital";$("path-days").textContent=days>=0?String(days):"—";}
+function upcoming(){ $("days-left").textContent="Confira o próximo edital no CRS/PMMG";$("path-days").textContent="A confirmar";}
 function getWeeklyCount(){return new Set(C.weeklyActivity(state.events,DAY).filter(x=>x.count).map(x=>x.day)).size;}
 function renderHome(){
  const events=totalEvents(),score=C.score(events,DB.questions),seen=C.progressCount(state.progress,DB.questions,DAY),week=getWeeklyCount();
  $("home-answered").textContent=String(events.length);
  $("home-accuracy").textContent=score.percent===null?"—":score.percent+"%";
- $("unique-done").textContent=seen.seen+"/300";meter("seen-meter",percent(seen.seen,300));
+ $("unique-done").textContent=seen.seen+"/"+DB.questions.length;meter("seen-meter",percent(seen.seen,DB.questions.length));
  $("today-count").textContent=String(events.filter(e=>e.day===DAY).length);
  $("due-count").textContent=String(getDue());
  $("weeks-active").textContent=week+"/7";
@@ -82,10 +69,10 @@ function renderHome(){
  document.querySelectorAll("[data-goal]").forEach(b=>{const active=+b.dataset.goal===chosen;b.classList.toggle("selected",active);b.setAttribute("aria-pressed",String(active));});
 }
 function renderSources(){
- const exam=DB.exams[$("exam").value]||DB.exams.pmesp;
+ const exam=DB.exams[$("exam").value]||DB.exams.pmmg2024;
  $("exam-note").textContent=exam.note;
  $("paper-link").href=exam.source;
- $("paper-link").textContent=exam.board==="VUNESP"?"Prova na VUNESP ↗":"PDF da prova original ↗";
+ $("paper-link").textContent="PDF da prova original ↗";
  $("key-link").href=exam.keySource||exam.source;
 }
 function fillSubjects(){const exam=$("exam").value,old=$("subject").value;
@@ -108,9 +95,9 @@ function sessionNew(options={}){
  }
  const kind=options.kind||$("mode").value;
  const grading=kind==="full"||kind==="diagnostic"?"exam":options.grading||$("grading").value;
- const exam=kind==="diagnostic"?"pmesp":options.exam||$("exam").value||"pmesp";
+ const exam=kind==="diagnostic"?"pmmg2024":options.exam||$("exam").value||"pmmg2024";
  const subject=kind==="diagnostic"||kind==="full"?"all":options.subject||$("subject").value||"all";
- const count=kind==="diagnostic"?10:kind==="full"?60:Number(options.count||$("quantity").value||5);
+ const count=kind==="diagnostic"?10:kind==="full"?DB.questions.filter(q=>q.exam===exam).length:Number(options.count||$("quantity").value||5);
  const list=C.choose(DB.questions,state.progress,{kind,exam,subject,count,today:DAY,excludeAnnulled:kind!=="full"});
  if(!list.length){toast(kind==="review"?"Ainda não há revisões vencidas. Faça um treino de questões novas.":"Não há questões disponíveis neste filtro. Tente outra disciplina ou edição.");show("train");return;}
  readerOpenKey=null;
@@ -118,7 +105,7 @@ function sessionNew(options={}){
  if(DB.exams[exam])$("exam").value=exam;
  fillSubjects();$("subject").value=subject;save();timerStart();show("train");
 }
-function sourceURL(q){return q.exam==="pmesp"?"https://carreirapublica.com.br/questoes/Q"+(208122+q.number):DB.exams[q.exam].source;}
+function sourceURL(q){return DB.exams[q.exam].source;}
 function gradeOne(q){
  if(!q||!currentSession()||currentSession().checked[q.id])return;
  const s=state.session,choice=s.picks[q.id]||"";
@@ -153,7 +140,7 @@ function outcome(){
 function showSessionResult(area){
  const s=currentSession(),result=outcome();
  $("question-chip").textContent="TREINO CONCLUÍDO";$("question-counter").textContent=result.total+" questões";
- $("question-meta").textContent="Resultado desta sessão · prova(s) da PMESP";
+ $("question-meta").textContent="Resultado desta sessão · prova(s) da PMMG";
  const title=add(area,"h2","question-title",result.correct+" acerto(s) em "+result.valid+" questão(ões) válidas");
  add(area,"p","dim","Você concluiu seu treino. O que importa agora é descobrir o que revisar, e não buscar uma nota perfeita no primeiro dia.");
  const cards=add(area,"div","metric-grid");cards.style.margin="18px 0";
@@ -170,8 +157,8 @@ function showSessionResult(area){
 function renderQuestion(){
  const area=$("question-area");area.replaceChildren();
  const s=currentSession();
- if(!s){$("question-chip").textContent="PMESP · PROVAS REAIS";$("question-counter").textContent="";$("question-meta").textContent="Selecione uma edição e um treino.";
- const empty=add(area,"div","empty-state");add(empty,"div","empty-mark","▤");add(empty,"h2","","Seu treino começa aqui");add(empty,"p","","Escolha uma edição da PMESP. Você responderá às questões reais usando o caderno oficial como referência.");
+ if(!s){$("question-chip").textContent="PMMG · PROVAS REAIS";$("question-counter").textContent="";$("question-meta").textContent="Selecione uma edição e um treino.";
+ const empty=add(area,"div","empty-state");add(empty,"div","empty-mark","▤");add(empty,"h2","","Seu treino começa aqui");add(empty,"p","","Escolha uma edição da PMMG. Você responderá às questões reais usando o caderno oficial como referência.");
  $("question-actions").hidden=true;$("question-numbers-wrap").hidden=true;meter("quiz-meter",0);return;}
  if(s.finished&&!s.reviewing){
  $("question-actions").hidden=true;$("question-numbers-wrap").hidden=true;meter("quiz-meter",100);
@@ -179,37 +166,27 @@ function renderQuestion(){
  const items=sessionItems();if(!items.length){state.session=null;save();renderQuestion();return;}
  s.index=Math.max(0,Math.min(items.length-1,Number(s.index)||0));
  const q=items[s.index],info=DB.exams[q.exam],chosen=s.picks[q.id]||"",graded=!!s.checked[q.id]&&s.grading==="practice"||!!s.finished;
- $("question-chip").textContent="PMESP "+info.year+" · "+info.board;
+ $("question-chip").textContent="PMMG "+info.year+" · "+info.board;
  $("question-counter").textContent=(s.index+1)+" / "+items.length;
  $("question-meta").textContent=C.subjectGroup(q)+" · questão original nº "+q.number+" · "+(info.type||"caderno original");
  meter("quiz-meter",percent(items.filter(x=>s.checked[x.id]).length,items.length));
  const title=add(area,"h2","question-title","Questão "+q.number+" — "+C.subjectGroup(q));
  add(area,"p","actual-question",q.text||"Enunciado em revisão.");
- if(q.support?.text){
-  const passage=add(area,"section","source-passage");
-  add(passage,"h3","","Texto de apoio original");
-  const content=add(passage,"div","passage-content",q.support.text);
-  content.setAttribute("aria-label","Texto de apoio para esta questão");
+ function sourceImages(paths,label,opened){
+  if(!paths?.length)return;
+  const details=add(area,"details","source-passage");details.open=opened;
+  add(details,"summary","",label);
+  paths.forEach((src,i)=>{const figure=add(details,"figure","question-figure"),picture=add(figure,"img");picture.src=src;picture.loading="lazy";picture.alt=label+" · PMMG "+info.year+" · parte "+(i+1);});
  }
- if(q.visual){
-  const figure=add(area,"figure","question-figure");
-  const picture=add(figure,"img");
-  picture.src=q.visual;
-  picture.loading="lazy";
-  picture.alt="Trecho visual do caderno original PMESP "+info.year+", questão "+q.number;
-  add(figure,"figcaption","","Imagem, gráfico ou alternativa ilustrada da prova original");
- }
- if(q.needsVisual&&!q.visual&&!q.support?.text){
-  const note=add(area,"p","support-note","Esta questão menciona um elemento visual. Se ele não aparecer, confira a figura do caderno original antes de responder.");
-  note.appendChild(link(" Conferir imagem na prova ↗",info.paperPdf||info.source));
- }
+ sourceImages(q.supportImages,"Texto de apoio original",true);
+ sourceImages(q.originalImages,"Questão original com destaques, tabelas e figuras",q.needsVisual);
  if(q.key===null&&!q.annulled){
   add(area,"p","question-note","Resposta salva sem nota: este caderno ainda não tem gabarito definitivo conferido nesta versão.");
  }
  if(q.annulled)add(area,"p","support-note","Questão oficialmente anulada. Ela não é contabilizada como acerto ou erro.");
- add(area,"h3","subheading",graded?"Alternativas e correção":"Marque sua resposta (A a E)");
+ add(area,"h3","subheading",graded?"Alternativas e correção":"Marque sua resposta (A a D)");
  const opts=add(area,"div","answer-options");
- "ABCDE".split("").forEach(letter=>{
+ Object.keys(q.options).forEach(letter=>{
  const b=el("button","option");b.type="button";b.disabled=graded;
  b.setAttribute("aria-pressed",String(chosen===letter));if(chosen===letter)b.classList.add("is-picked");
  if(graded&&!q.annulled&&q.key===letter)b.classList.add("correct");
@@ -219,7 +196,7 @@ function renderQuestion(){
  if(graded)return;
  s.picks[q.id]=letter;save();
  opts.querySelectorAll(".option").forEach((option,i)=>{
-  const picked="ABCDE"[i]===letter;
+  const picked="ABCD"[i]===letter;
   option.classList.toggle("is-picked",picked);
   option.setAttribute("aria-pressed",String(picked));
  });
@@ -303,7 +280,7 @@ function renderPath(){
  const done=Object.keys(state.topics).filter(k=>state.topics[k]===true).length;
  $("topics-complete").textContent=done+"/"+total;meter("topics-meter",percent(done,total));
  const target=$("weight-list");target.replaceChildren();
- C.GROUPS.forEach(s=>{const row=add(target,"div","weight-line");add(row,"span","",s);add(row,"strong","",C.TARGETS[s]+"/60");const m=add(row,"div","meter");const fill=add(m,"span");fill.style.width=(C.TARGETS[s]/60*100)+"%";});
+ C.GROUPS.forEach(s=>{const row=add(target,"div","weight-line");add(row,"span","",s);add(row,"strong","",C.TARGETS[s]?C.TARGETS[s]+"/50":"Prova 2021");const m=add(row,"div","meter");const fill=add(m,"span");fill.style.width=(C.TARGETS[s]/50*100)+"%";});
  const sy=$("syllabus");sy.replaceChildren();
  C.GROUPS.forEach(group=>{
  const details=add(sy,"details");const summary=add(details,"summary","",""+group+" · "+TOPICS[group].filter((_,i)=>state.topics[group+"|"+i]).length+"/"+TOPICS[group].length);
@@ -335,7 +312,7 @@ function renderInsights(){
  });
  const weak=C.weakestSubject(groups);
  $("next-recommendation").textContent=total.attempts<10?"Faça seu diagnóstico de 10 questões":"Prioridade sugerida: "+weak;
- $("next-recommendation-detail").textContent=total.attempts<10?"Use questões da prova 2026 para conhecer seu ponto de partida, sem pressão.":"O destaque considera seu aproveitamento por disciplina quando há pelo menos 3 tentativas. É uma sugestão, não um diagnóstico definitivo.";
+ $("next-recommendation-detail").textContent=total.attempts<10?"Use questões da PMMG para conhecer seu ponto de partida, sem pressão.":"O destaque considera seu aproveitamento por disciplina quando há pelo menos 3 tentativas. É uma sugestão, não um diagnóstico definitivo.";
 }
 function renderAll(){if(activeTab==="home")renderHome();if(activeTab==="train")renderTraining();if(activeTab==="path")renderPath();if(activeTab==="insights")renderInsights();}
 function download(name,text,type){
@@ -351,10 +328,10 @@ function restore(file){
  if(!file)return; if(file.size>6*1024*1024){toast("Arquivo maior que o limite permitido (6 MB).");return;}
  const reader=new FileReader();
  reader.onload=()=>{try{
- const parsed=JSON.parse(String(reader.result));if(parsed.app!=="missao-farda"||parsed.version!==3||!parsed.state||typeof parsed.state!=="object")throw Error("Arquivo não é um backup do Missão Farda");
+ const parsed=JSON.parse(String(reader.result));if(parsed.app!=="missao-farda-pmmg"||parsed.version!==3||!parsed.state||typeof parsed.state!=="object")throw Error("Arquivo não é um backup do Missão Farda");
  if(!window.confirm("Restaurar este backup substituirá o progresso salvo neste aparelho. Continuar?"))return;
  const incoming=parsed.state;const safe=defaultState();safe.progress=C.cleanHistory(incoming.progress||{},IDS);
- safe.events=Array.isArray(incoming.events)?incoming.events.filter(e=>e&&IDS.has(e.id)&&"ABCDE".includes(e.answer||"")).slice(-12000):[];
+ safe.events=Array.isArray(incoming.events)?incoming.events.filter(e=>e&&IDS.has(e.id)&&"ABCD".includes(e.answer||"")).slice(-12000):[];
  safe.sessions=Array.isArray(incoming.sessions)?incoming.sessions.filter(x=>x&&typeof x==="object").slice(-500):[];
  safe.topics=incoming.topics&&typeof incoming.topics==="object"?Object.fromEntries(Object.entries(incoming.topics).filter(([k,v])=>Object.entries(TOPICS).some(([group,l])=>l.some((_,i)=>k===group+"|"+i))&&typeof v==="boolean")):{};
  safe.essay=typeof incoming.essay==="string"?incoming.essay.slice(0,20000):"";
@@ -365,7 +342,7 @@ function restore(file){
  reader.readAsText(file);
 }
 function shortcuts(e){if(activeTab!=="train"||!currentSession()||currentSession().finished||["INPUT","TEXTAREA","SELECT"].includes(document.activeElement?.tagName)||e.altKey||e.ctrlKey||e.metaKey)return;
- const key=e.key.toUpperCase();if("ABCDE".includes(key)&&key.length===1){const s=currentSession(),q=sessionItems()[s.index];if(s.checked[q.id]&&s.grading==="practice")return;s.picks[q.id]=key;save();renderQuestion();e.preventDefault();}
+ const key=e.key.toUpperCase();if("ABCD".includes(key)&&key.length===1){const s=currentSession(),q=sessionItems()[s.index];if(!q.options[key]||(s.checked[q.id]&&s.grading==="practice"))return;s.picks[q.id]=key;save();renderQuestion();e.preventDefault();}
 }
 function initEvents(){
  document.querySelectorAll("[data-tab]").forEach(b=>b.addEventListener("click",()=>show(b.dataset.tab)));
@@ -386,7 +363,7 @@ function initEvents(){
  $("timer-toggle").addEventListener("click",()=>{timerPaused=!timerPaused;$("timer-toggle").textContent=timerPaused?"Continuar":"Pausar";});
  $("timer-reset").addEventListener("click",timerStart);
  $("lesson-subject").addEventListener("change",renderLesson);
- $("lesson-practice").addEventListener("click",()=>{const subject=$("lesson-subject").value;$("exam").value="pmesp";fillSubjects();sessionNew({kind:"daily",exam:"pmesp",subject,count:5,grading:"practice"});});
+ $("lesson-practice").addEventListener("click",()=>{const subject=$("lesson-subject").value;$("exam").value="pmmg2024";fillSubjects();sessionNew({kind:"daily",exam:"pmmg2024",subject,count:5,grading:"practice"});});
  $("essay").addEventListener("input",()=>{state.essay=$("essay").value;save();$("essay-status").textContent=state.essay.trim().split(/\s+/).filter(Boolean).length+" palavras no rascunho · salvo localmente";});
  $("essay-week").addEventListener("change",()=>{
  const offset=(new Date(DAY+"T12:00:00Z").getUTCDay()+6)%7;
@@ -395,8 +372,8 @@ function initEvents(){
  $("next-step").addEventListener("click",()=>{
  const stats=C.statsBySubject(totalEvents(),DB.questions),weak=C.weakestSubject(stats);
  if(totalEvents().length<10){sessionNew({kind:"diagnostic"});return;}
- $("exam").value="pmesp";fillSubjects();$("subject").value=weak;
- sessionNew({kind:"daily",exam:"pmesp",subject:weak,count:5,grading:"practice"});
+ $("exam").value="pmmg2024";fillSubjects();$("subject").value=weak;
+ sessionNew({kind:"daily",exam:"pmmg2024",subject:weak,count:5,grading:"practice"});
  });
  $("export-backup").addEventListener("click",backupExport);
  $("export-csv").addEventListener("click",csvExport);
@@ -411,9 +388,8 @@ function updateOnline(){
  if(!navigator.onLine)label.title="O aplicativo pode abrir sem internet, mas o caderno original de questões exige conexão.";
 }
 function boot(){
- if(DAY>"2026-12-22"){$("registration-title").textContent="Confira as publicações do concurso atual no portal da VUNESP.";$("registration-subtitle").textContent="O prazo de inscrição da edição divulgada em novembro de 2026 terminou. Consulte as atualizações oficiais.";}
  initEvents();fillSubjects();renderSources();show("home");updateOnline();
- if("serviceWorker" in navigator)navigator.serviceWorker.register("./sw.js").catch(()=>{});
+ if("serviceWorker" in navigator)navigator.serviceWorker.register("./sw.js?v=9-pmmg").catch(()=>{});
  save();
 }
 boot();

@@ -3,34 +3,34 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#081323">
-<meta name="description" content="Missão Farda: preparação para Soldado PMESP com provas anteriores reais, revisões inteligentes e rotina flexível de estudos.">
+<meta name="theme-color" content="#30271f">
+<meta name="description" content="Missão Farda: preparação para Soldado PMMG com provas anteriores reais, revisões inteligentes e rotina flexível de estudos.">
 <meta name="robots" content="noindex,follow">
 <link rel="icon" type="image/svg+xml" href="./icon.svg">
 <link rel="manifest" href="./manifest.webmanifest">
-<link rel="stylesheet" href="./ui.css?v=8">
-<title>Missão Farda | Do zero à prova da PMESP</title>
-<script src="./banco-transcrito.js?v=8" defer></script>
-<script src="./core.js?v=8" defer></script>
-<script src="./app.js?v=8" defer></script>
+<link rel="stylesheet" href="./ui.css?v=9-pmmg">
+<title>Missão Farda | Do zero à prova da PMMG</title>
+<script src="./banco-transcrito.js?v=9-pmmg" defer></script>
+<script src="./core.js?v=9-pmmg" defer></script>
+<script src="./app.js?v=9-pmmg" defer></script>
 </head>
 <body>
 <a class="skip" href="#main">Pular para o conteúdo</a>
 <header class="topbar">
 <div class="shell head-inner">
-<a class="logo" href="./" aria-label="Missão Farda — PMESP, voltar ao início">
+<a class="logo" href="./" aria-label="Missão Farda — PMMG, voltar ao início">
 <span class="logo-symbol" aria-hidden="true"><svg viewBox="0 0 48 48" width="36" height="36" fill="none"><path d="M24 4 8 10v14c0 9 6.4 16.6 16 20 9.6-3.4 16-11 16-20V10L24 4Z" stroke="currentColor" stroke-width="2.5"/><path d="m16 24 5.5 5.5L32 18" stroke="currentColor" stroke-width="3.1" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
-<span><strong>MISSÃO FARDA</strong><small>TRILHA PMESP · SOLDADO</small></span>
+<span><strong>MISSÃO FARDA</strong><small>TRILHA PMMG · SOLDADO</small></span>
 </a>
-<div class="head-links"><span class="online-status" id="connection-status"><span class="status-dot"></span>Provas oficiais</span><a class="header-link" href="https://www.vunesp.com.br/PMES2603" target="_blank" rel="noopener noreferrer">Fonte VUNESP <span aria-hidden="true">↗</span></a></div>
+<div class="head-links"><span class="online-status" id="connection-status"><span class="status-dot"></span>Provas oficiais</span><a class="header-link" href="https://www.policiamilitar.mg.gov.br/site/crs" target="_blank" rel="noopener noreferrer">Portal CRS/PMMG <span aria-hidden="true">↗</span></a></div>
 </div>
 </header>
 <main id="main" class="shell">
 <div class="page-heading">
-<div><p class="eyebrow">Sua preparação, um treino de cada vez</p><h1>Do zero à <em>próxima etapa.</em></h1><p class="page-subtitle">Sem metas impossíveis. Só progresso real, baseado nas provas anteriores da PM de São Paulo.</p></div>
-<div class="exam-date"><span>PRÓXIMA PROVA PREVISTA</span><strong>28 fev. 2027</strong><small id="days-left">Conforme edital 2026</small></div>
+<div><p class="eyebrow">Sua preparação, um treino de cada vez</p><h1>Do zero à <em>próxima etapa.</em></h1><p class="page-subtitle">Sem metas impossíveis. Só progresso real, baseado nas provas anteriores da PM de Minas Gerais.</p></div>
+<div class="exam-date"><span>CONCURSO · SOLDADO PMMG</span><strong>Acompanhe o edital</strong><small id="days-left">Portal oficial do CRS/PMMG</small></div>
 </div>
-<div class="registration-bar" id="registration-bar"><div><strong id="registration-title">Inscrições para Soldado PMESP 2027 abertas até 22/12/2026.</strong><span id="registration-subtitle">Acompanhe sua inscrição exclusivamente no portal oficial da VUNESP. O app não faz inscrições.</span></div><a href="https://www.vunesp.com.br/PMES2603" target="_blank" rel="noopener noreferrer">Concurso atual ↗</a></div>
+<div class="registration-bar" id="registration-bar"><div><strong id="registration-title">Seu foco agora é Soldado da PMMG.</strong><span id="registration-subtitle">140 questões reais de 2021, 2023 e 2024. Consulte inscrições e datas no portal oficial do CRS/PMMG.</span></div><a href="https://www.policiamilitar.mg.gov.br/site/crs" target="_blank" rel="noopener noreferrer">Concurso atual ↗</a></div>
 <nav class="tabs" aria-label="Áreas do aplicativo">
 <button type="button" class="tab active" data-tab="home" aria-current="page"><span aria-hidden="true">⌂</span> Hoje</button>
 <button type="button" class="tab" data-tab="train"><span aria-hidden="true">▤</span> Questões</button>
@@ -48,7 +48,7 @@
 <aside class="snapshot panel">
 <div class="snapshot-head"><span class="eyebrow">SEU PAINEL</span><span class="dot-label">LOCAL NO CELULAR</span></div>
 <div class="snapshot-row"><div><strong id="home-answered">0</strong><small>tentativas registradas</small></div><div><strong id="home-accuracy">—</strong><small>acertos até agora</small></div></div>
-<div class="mini-meter"><div class="mini-meter-top"><span>Conhecimento praticado</span><strong id="unique-done">0/300</strong></div><div class="meter"><span id="seen-meter"></span></div></div>
+<div class="mini-meter"><div class="mini-meter-top"><span>Conhecimento praticado</span><strong id="unique-done">0/140</strong></div><div class="meter"><span id="seen-meter"></span></div></div>
 <p class="dim small" id="home-review-text">Ainda não há revisões pendentes.</p>
 <button type="button" id="review-shortcut" class="text-button">Revisar pontos fracos <span aria-hidden="true">→</span></button>
 </aside>
@@ -84,12 +84,7 @@
 <div class="training-layout">
 <aside class="panel config">
 <div class="section-head"><div><p class="eyebrow">PROVAS ANTERIORES</p><h2>Seu treino</h2></div></div>
-<div class="field"><label for="exam">Edição da PMESP</label><select id="exam">
-<option value="pmesp">2026 · VUNESP · 60 questões</option>
-<option value="pmesp25">2025 · FGV · Tipo 1</option>
-<option value="pmesp24">2024 · FGV · Tipo 1</option>
-<option value="pmesp23">2023 · VUNESP · 60 questões</option>
-<option value="pmesp21">2021 · VUNESP · 60 questões</option></select></div>
+<div class="field"><label for="exam">Edição da PMMG</label><select id="exam"><option value="pmmg2024">2024 · CFSd 2025 · 50 questões</option><option value="pmmg2023">2023 · CFSd 2023 · 50 questões</option><option value="pmmg2021">2021 · CFSd 2022 · 40 questões</option></select></div>
 <div class="field"><label for="subject">Disciplina</label><select id="subject"><option value="all">Todas as disciplinas</option></select></div>
 <div class="field"><label for="mode">Tipo de treino</label><select id="mode">
 <option value="daily">Treino guiado</option><option value="diagnostic">Diagnóstico de nível</option><option value="review">Revisar questões erradas ou vencidas</option><option value="new">Questões ainda não respondidas</option><option value="full">Prova completa</option></select></div>
@@ -99,10 +94,10 @@
 <div class="separate"></div>
 <div class="field"><label for="timer-setting">Cronômetro opcional</label><select id="timer-setting"><option value="off">Desligado — sem pressão</option><option value="10">10 minutos</option><option value="25">25 minutos</option></select></div>
 <div id="timer-box" class="timer-box" hidden><span id="timer-display">10:00</span><button id="timer-toggle" class="small-button" type="button">Pausar</button><button id="timer-reset" class="small-button" type="button">Reiniciar</button></div>
-<div class="source-side"><h3>Origem do material</h3><p id="exam-note" class="dim small">Somente questões reais da PMESP.</p><a id="paper-link" href="https://www.vunesp.com.br/PMES2601" target="_blank" rel="noopener noreferrer">Prova original ↗</a><a id="key-link" href="https://www.vunesp.com.br/PMES2601" target="_blank" rel="noopener noreferrer">Gabarito oficial ↗</a></div>
+<div class="source-side"><h3>Origem do material</h3><p id="exam-note" class="dim small">Somente questões reais da PMMG.</p><a id="paper-link" href="https://www.policiamilitar.mg.gov.br/site/crs" target="_blank" rel="noopener noreferrer">Prova original ↗</a><a id="key-link" href="https://www.policiamilitar.mg.gov.br/site/crs" target="_blank" rel="noopener noreferrer">Gabarito oficial ↗</a></div>
 </aside>
 <div class="panel question-panel">
-<div class="question-top"><div><span id="question-chip" class="pill">PMESP · PROVA REAL</span><p id="question-meta" class="question-meta">Escolha um treino para começar.</p></div><span id="question-counter" class="counter"></span></div>
+<div class="question-top"><div><span id="question-chip" class="pill">PMMG · PROVA REAL</span><p id="question-meta" class="question-meta">Escolha um treino para começar.</p></div><span id="question-counter" class="counter"></span></div>
 <div class="meter slim"><span id="quiz-meter"></span></div>
 <div id="question-area" class="question-area"><div class="empty-state"><div class="empty-mark">▤</div><h2>Pronto para sua primeira questão?</h2><p>Você só precisa escolher um treino. Vou guardar seu progresso neste aparelho.</p></div></div>
 <div id="feedback" class="feedback" role="status" aria-live="polite" hidden></div>
@@ -114,43 +109,43 @@
 <section id="view-path" class="view" hidden>
 <div class="path-heading panel section-card">
 <p class="eyebrow">DO PRIMEIRO DIA ATÉ A PROVA</p><h2>Trilha de preparação para Soldado</h2>
-<p class="dim">Um mapa flexível baseado na distribuição do edital atual. Marque apenas o que você realmente revisou: não há cobrança por dias perdidos.</p>
-<div class="path-meters"><div><strong id="topics-complete">0/0</strong><span>Tópicos revisados</span></div><div><strong id="path-days">—</strong><span>Dias para a prova prevista</span></div></div>
+<p class="dim">Um mapa flexível baseado nos cadernos da PMMG enviados para estudo. Marque apenas o que você realmente revisou: não há cobrança por dias perdidos.</p>
+<div class="path-meters"><div><strong id="topics-complete">0/0</strong><span>Tópicos revisados</span></div><div><strong id="path-days">—</strong><span>Próxima prova</span></div></div>
 <div class="meter"><span id="topics-meter"></span></div>
 </div>
 <div class="two-cols">
 <div class="panel section-card"><p class="eyebrow">ORDEM SUGERIDA</p><h2>Quatro etapas</h2><ol class="learning-phases">
-<li><strong>Fundação</strong><span>Português e Matemática primeiro. Resolva poucas questões e anote dúvidas.</span></li>
-<li><strong>Construção</strong><span>Alterne História, Geografia, Atualidades, Informática e Administração Pública.</span></li>
+<li><strong>Fundação</strong><span>Português e Raciocínio Lógico-Matemático primeiro. Resolva poucas questões e anote dúvidas.</span></li>
+<li><strong>Construção</strong><span>Alterne Literatura, Inglês e Noções de Direito e Direitos Humanos.</span></li>
 <li><strong>Revisão</strong><span>Priorize erros que voltaram e assuntos de menor aproveitamento.</span></li>
-<li><strong>Reta final</strong><span>Provas completas, redação e revisão de pontos frágeis. Sem prometer aprovação.</span></li>
+<li><strong>Reta final</strong><span>Provas completas e revisão de pontos frágeis. Sem prometer aprovação.</span></li>
 </ol></div>
 <div class="panel section-card">
 <p class="eyebrow">DISTRIBUIÇÃO DA PROVA</p><h2>Onde concentrar energia</h2>
-<div id="weight-list" class="weights"></div><p class="fine">Referência: edital de Aluno-Soldado publicado em 05/11/2026. A redação é uma etapa separada.</p>
-<a href="https://doe.sp.gov.br/executivo/secretaria-da-seguranca-publica/edital-de-concurso-publico-n-dp-4-321-26-202611041336161962254080" target="_blank" rel="noopener noreferrer">Conferir edital vigente ↗</a>
+<div id="weight-list" class="weights"></div><p class="fine">Referência histórica: CFSd 2025, com 50 questões. As matérias adicionais abaixo pertencem à prova de 2021. Confira o programa do próximo edital.</p>
+<a href="https://www.policiamilitar.mg.gov.br/site/crs" target="_blank" rel="noopener noreferrer">Consultar portal de concursos ↗</a>
 </div>
 </div>
-<div class="panel section-card topics-card"><div class="section-head"><div><p class="eyebrow">SEU CHECKLIST</p><h2>Matérias e assuntos do edital</h2></div></div><p class="dim small">Marcar um assunto significa “revisei”; não é certificado de domínio. Questões reais e seu percentual de acertos ficam na aba Evolução.</p><div id="syllabus" class="syllabus"></div></div>
+<div class="panel section-card topics-card"><div class="section-head"><div><p class="eyebrow">SEU CHECKLIST</p><h2>Matérias e assuntos para revisar</h2></div></div><p class="dim small">Marcar um assunto significa “revisei”; não é certificado de domínio. Questões reais e seu percentual de acertos ficam na aba Evolução.</p><div id="syllabus" class="syllabus"></div></div>
 
 <section id="lesson-hub" class="panel section-card lesson-hub">
 <div class="section-head"><div><p class="eyebrow">COMECE DO ZERO</p><h2>Entenda a base antes de resolver</h2><p class="dim">Explicações curtas e originais de fundamentos. Não são questões de concurso. As questões da aba Questões continuam 100% de provas anteriores.</p></div></div>
-<div class="field" style="max-width:460px"><label for="lesson-subject">O que você quer aprender agora?</label><select id="lesson-subject"><option value="Português">Português</option><option value="Matemática">Matemática</option><option value="Conhecimentos Gerais">Conhecimentos Gerais</option><option value="Informática">Informática</option><option value="Administração Pública">Administração Pública</option></select></div>
+<div class="field" style="max-width:460px"><label for="lesson-subject">O que você quer aprender agora?</label><select id="lesson-subject"><option value="Português">Português</option><option value="Direito Penal">Direito Penal</option><option value="Direito Constitucional">Direito Constitucional</option><option value="Direito Penal Militar">Direito Penal Militar</option><option value="Direitos Humanos">Direitos Humanos</option><option value="Legislação Extravagante">Legislação Extravagante</option><option value="Estatística">Estatística</option><option value="Literatura">Literatura</option><option value="Inglês">Inglês</option><option value="Noções de Direito e Direitos Humanos">Noções de Direito e Direitos Humanos</option><option value="Raciocínio Lógico-Matemático">Raciocínio Lógico-Matemático</option></select></div>
 <div class="lesson-content" id="lesson-content"></div>
 <button type="button" id="lesson-practice" class="outline">Praticar com questões reais dessa matéria →</button>
 </section>
 <div class="two-cols">
 <section class="panel section-card">
-<p class="eyebrow">REDAÇÃO · ETAPA OBRIGATÓRIA</p><h2>Treinar escrita também conta</h2>
-<p class="dim">Use um tema de redação de uma prova oficial anterior, acessível no PDF de 2024 ou 2025. O texto abaixo é seu rascunho pessoal — não há correção automática nem nota inventada.</p>
-<div class="source-links"><a href="https://conhecimento.fgv.br/sites/default/files/concursos/soldado-pm-de-2a-classe-cnm001-tipo-1_0.pdf" target="_blank" rel="noopener noreferrer">Tema da prova FGV 2025 ↗</a><a href="https://conhecimento.fgv.br/sites/default/files/concursos/soldado-pm-de-2a-classe-cnm001-tipo-1.pdf" target="_blank" rel="noopener noreferrer">Tema da prova FGV 2024 ↗</a></div>
-<label class="block-label" for="essay">Meu rascunho de redação</label><textarea id="essay" rows="7" maxlength="20000" placeholder="Escreva aqui seu rascunho, usando o tema da prova original..."></textarea><p class="dim small" id="essay-status">O texto fica salvo apenas neste dispositivo.</p>
-<label class="tick-line"><input type="checkbox" id="essay-week"> Fiz uma sessão de redação nesta semana</label>
+<p class="eyebrow">CADERNO PESSOAL</p><h2>Anote o que aprendeu</h2>
+<p class="dim">Registre dúvidas, resumos e rascunhos da sua preparação. Suas anotações ficam salvas neste aparelho.</p>
+
+<label class="block-label" for="essay">Minhas anotações</label><textarea id="essay" rows="7" maxlength="20000" placeholder="Escreva suas dúvidas e os pontos que precisa revisar..."></textarea><p class="dim small" id="essay-status">O texto fica salvo apenas neste dispositivo.</p>
+<label class="tick-line"><input type="checkbox" id="essay-week"> Fiz uma sessão de revisão nesta semana</label>
 </section>
 <section class="panel section-card">
 <p class="eyebrow">ALÉM DA PROVA OBJETIVA</p><h2>Outras etapas para acompanhar</h2><div class="step"><span>01</span><div><strong>Inscrição</strong><p>Consulte prazos e documentos no edital oficial. Não depende do app.</p></div></div>
 <div class="step"><span>02</span><div><strong>Aptidão física</strong><p>Confira os índices oficiais e planeje a preparação com orientação adequada.</p></div></div>
-<div class="step"><span>03</span><div><strong>Saúde e avaliação psicológica</strong><p>Acompanhe os critérios e procedimentos publicados pela PMESP.</p></div></div>
+<div class="step"><span>03</span><div><strong>Saúde e avaliação psicológica</strong><p>Acompanhe os critérios e procedimentos publicados pela PMMG.</p></div></div>
 <div class="step"><span>04</span><div><strong>Investigação social e documentos</strong><p>Guarde os comprovantes e acompanhe as convocações oficiais.</p></div></div>
 <p class="fine">Este aplicativo ajuda nos estudos e não substitui editais, acompanhamento médico ou preparação física profissional.</p>
 </section></div>
@@ -168,7 +163,7 @@
 <div class="backup-actions"><button id="export-backup" class="outline" type="button">Baixar backup completo</button><button id="export-csv" class="outline light" type="button">Exportar CSV</button><button id="import-trigger" class="ghost" type="button">Restaurar backup</button><input id="import-file" class="sr-only" type="file" accept=".json,application/json"></div><p id="backup-status" class="dim small" role="status"></p></div>
 </section>
 </main>
-<footer class="footer"><div class="shell"><strong>Missão Farda</strong> · Uma ferramenta independente de preparação para a PMESP.<p>Questões consultadas nos cadernos oficiais e fontes identificadas em cada exercício. Gabarito não é comentário detalhado. Não somos vinculados à corporação nem às bancas.</p><a href="https://novabytesolucoes.com.br/" target="_blank" rel="noopener noreferrer">Desenvolvido por Nova Byte ↗</a></div></footer>
+<footer class="footer"><div class="shell"><strong>Missão Farda</strong> · Uma ferramenta independente de preparação para a PMMG.<p>Questões consultadas nos cadernos oficiais e fontes identificadas em cada exercício. Gabarito não é comentário detalhado. Não somos vinculados à corporação nem às bancas.</p><a href="https://novabytesolucoes.com.br/" target="_blank" rel="noopener noreferrer">Desenvolvido por Nova Byte ↗</a></div></footer>
 <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
 </body>
 </html>
