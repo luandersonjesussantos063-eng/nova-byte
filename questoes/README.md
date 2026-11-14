@@ -11,3 +11,5 @@ Textos e figuras originais são arquivos locais. A distribuição principal da t
 Publicação pelo GitHub Pages na branch main. Validar com `node --test scripts/tests/missao-farda.test.mjs scripts/tests/missao-farda-ui.test.mjs`.
 
 2018: Tipo A; questão 27 excluída da nota conforme deferimento do recurso na Nota Técnica 07/2018. Demais edições e progresso preservados.
+
+Identidade visual: azul `#191d5e`, vermelho `#bb2127` e amarelo `#ffcb05`, conforme brasão indicado pelo usuário. Brasão vetorial: https://commons.wikimedia.org/wiki/File:Bras%C3%A3o_PMMG.svg (Polícia Militar de Minas Gerais; domínio público conforme a fonte). Cabeçalho e ícone instalável usam arquivo local; cache da interface atualizado.

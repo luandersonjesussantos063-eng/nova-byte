@@ -4,8 +4,8 @@
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#211c17",
-  "theme_color": "#30271f",
+  "background_color": "#101337",
+  "theme_color": "#191d5e",
   "description": "Preparação para Soldado PMMG: 180 questões reais, revisão espaçada e histórico local.",
   "icons": [
     {
