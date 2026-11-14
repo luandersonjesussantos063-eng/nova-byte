@@ -49,6 +49,7 @@ function chooseProfile(id){
  activeProfile=id;STATEKEY=LEGACYKEY+"-"+id;state=loadProfile(id);
  if(save())try{if(!read(PROFILEKEY))localStorage.setItem(PROFILEKEY,JSON.stringify(id));}catch{}
  $("active-profile-name").textContent=PROFILES[id];
+ $("active-profile-avatar").src="./avatares/"+id+".webp";$("active-profile-avatar").hidden=false;
  document.querySelectorAll("[data-profile]").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.profile===id)));
  $("profile-picker").hidden=true;$("main").inert=false;
  $("timer-setting").value=state.settings.timer||"off";$("timer-box").hidden=true;$("timer-toggle").textContent="Pausar";
@@ -448,7 +449,7 @@ function updateOnline(){
 }
 function boot(){
  initEvents();initSync();fillSubjects();renderSources();show("home");updateOnline();
- if("serviceWorker" in navigator)navigator.serviceWorker.register("./sw.js?v=13-pmmg-sync").catch(()=>{});
+ if("serviceWorker" in navigator)navigator.serviceWorker.register("./sw.js?v=14-pmmg-avatares").catch(()=>{});
  openProfiles();
 }
 boot();

@@ -8,12 +8,12 @@
 <meta name="robots" content="noindex,follow">
 <link rel="icon" type="image/svg+xml" href="./icon.svg">
 <link rel="manifest" href="./manifest.webmanifest">
-<link rel="stylesheet" href="./ui.css?v=13-pmmg-sync">
+<link rel="stylesheet" href="./ui.css?v=14-pmmg-avatares">
 <title>Missão Farda | Do zero à prova da PMMG</title>
-<script src="./banco-transcrito.js?v=13-pmmg-sync" defer></script>
-<script src="./core.js?v=13-pmmg-sync" defer></script>
-<script src="./sync.js?v=13-pmmg-sync" defer></script>
-<script src="./app.js?v=13-pmmg-sync" defer></script>
+<script src="./banco-transcrito.js?v=14-pmmg-avatares" defer></script>
+<script src="./core.js?v=14-pmmg-avatares" defer></script>
+<script src="./sync.js?v=14-pmmg-avatares" defer></script>
+<script src="./app.js?v=14-pmmg-avatares" defer></script>
 </head>
 <body>
 <a class="skip" href="#main">Pular para o conteúdo</a>
@@ -28,11 +28,11 @@
 </header>
 <section id="profile-picker" class="profile-overlay" role="dialog" aria-modal="true" aria-labelledby="profile-title" hidden>
 <div class="panel profile-card"><p class="eyebrow">MISSÃO FARDA · PMMG</p><h2 id="profile-title">Quem vai estudar agora?</h2><p class="dim">Cada um tem seu painel, suas metas, respostas e revisões.</p>
-<div class="profile-choices"><button id="profile-luanderson" type="button" data-profile="luanderson" class="profile-choice"><span class="profile-avatar" aria-hidden="true">L</span><strong>Luanderson</strong><small>Abrir meu painel →</small></button><button type="button" data-profile="jackeline" class="profile-choice"><span class="profile-avatar jackeline" aria-hidden="true">J</span><strong>Jackeline Santana</strong><small>Abrir meu painel →</small></button></div>
+<div class="profile-choices"><button id="profile-luanderson" type="button" data-profile="luanderson" class="profile-choice"><img class="profile-character" src="./avatares/luanderson.webp" alt="" width="112" height="168"><strong>Luanderson</strong><small>Abrir meu painel →</small></button><button type="button" data-profile="jackeline" class="profile-choice"><img class="profile-character" src="./avatares/jackeline.webp" alt="" width="112" height="168"><strong>Jackeline Santana</strong><small>Abrir meu painel →</small></button></div>
 <p id="profile-migration-note" class="support-note" hidden>Há um histórico anterior neste navegador. Escolha primeiro o dono desse histórico: ele será preservado no perfil escolhido.</p>
 <p class="fine">Escolha seu perfil. Para compartilhar seu progresso entre celulares, conecte-os uma vez com o código privado em Sincronização.</p><button id="profile-cancel" type="button" class="ghost" hidden>Voltar ao meu painel</button></div></section>
 <main id="main" class="shell" inert>
-<div class="profile-bar"><div><small>ESTUDANDO AGORA</small><strong id="active-profile-name">Escolha seu perfil</strong><span id="sync-status" class="sync-status" role="status">Escolha um perfil para sincronizar</span></div><button id="switch-profile" type="button" class="outline">Trocar perfil</button></div>
+<div class="profile-bar"><div class="profile-identity"><img id="active-profile-avatar" src="./avatares/luanderson.webp" alt="" width="56" height="84" hidden><div><small>ESTUDANDO AGORA</small><strong id="active-profile-name">Escolha seu perfil</strong><span id="sync-status" class="sync-status" role="status">Escolha um perfil para sincronizar</span></div></div><button id="switch-profile" type="button" class="outline">Trocar perfil</button></div>
 <details class="sync-settings"><summary>Sincronização · conectar outro celular</summary><div class="sync-content"><p>O progresso sincroniza automaticamente com internet. Sem conexão, você pode continuar estudando e enviar as alterações depois.</p><label for="sync-code">Código privado deste perfil</label><div class="sync-controls"><input id="sync-code" type="text" readonly autocomplete="off" spellcheck="false"><button id="sync-copy" class="outline" type="button">Copiar código</button></div><p class="fine">No outro celular, abra este app, escolha o mesmo nome e cole o código abaixo. Guarde-o: ele dá acesso ao progresso deste perfil.</p><label for="sync-connect-code">Já tenho o código do outro celular</label><div class="sync-controls"><input id="sync-connect-code" type="text" placeholder="Cole aqui o código do seu perfil" autocomplete="off" spellcheck="false"><button id="sync-connect" class="primary" type="button">Conectar</button></div><p class="fine">Conectar une os históricos dos dois celulares. Cada perfil tem seu próprio código.</p></div></details>
 <div class="page-heading">
 <div><p class="eyebrow">Sua preparação, um treino de cada vez</p><h1>Do zero à <em>próxima etapa.</em></h1><p class="page-subtitle">Sem metas impossíveis. Só progresso real, baseado nas provas anteriores da PM de Minas Gerais.</p></div>
