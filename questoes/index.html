@@ -8,11 +8,12 @@
 <meta name="robots" content="noindex,follow">
 <link rel="icon" type="image/svg+xml" href="./icon.svg">
 <link rel="manifest" href="./manifest.webmanifest">
-<link rel="stylesheet" href="./ui.css?v=12-pmmg-perfis">
+<link rel="stylesheet" href="./ui.css?v=13-pmmg-sync">
 <title>Missão Farda | Do zero à prova da PMMG</title>
-<script src="./banco-transcrito.js?v=12-pmmg-perfis" defer></script>
-<script src="./core.js?v=12-pmmg-perfis" defer></script>
-<script src="./app.js?v=12-pmmg-perfis" defer></script>
+<script src="./banco-transcrito.js?v=13-pmmg-sync" defer></script>
+<script src="./core.js?v=13-pmmg-sync" defer></script>
+<script src="./sync.js?v=13-pmmg-sync" defer></script>
+<script src="./app.js?v=13-pmmg-sync" defer></script>
 </head>
 <body>
 <a class="skip" href="#main">Pular para o conteúdo</a>
@@ -29,9 +30,10 @@
 <div class="panel profile-card"><p class="eyebrow">MISSÃO FARDA · PMMG</p><h2 id="profile-title">Quem vai estudar agora?</h2><p class="dim">Cada um tem seu painel, suas metas, respostas e revisões.</p>
 <div class="profile-choices"><button id="profile-luanderson" type="button" data-profile="luanderson" class="profile-choice"><span class="profile-avatar" aria-hidden="true">L</span><strong>Luanderson</strong><small>Abrir meu painel →</small></button><button type="button" data-profile="jackeline" class="profile-choice"><span class="profile-avatar jackeline" aria-hidden="true">J</span><strong>Jackeline Santana</strong><small>Abrir meu painel →</small></button></div>
 <p id="profile-migration-note" class="support-note" hidden>Há um histórico anterior neste navegador. Escolha primeiro o dono desse histórico: ele será preservado no perfil escolhido.</p>
-<p class="fine">Os perfis ficam salvos neste navegador. Em outro celular, use o backup do seu perfil para levar seu progresso.</p><button id="profile-cancel" type="button" class="ghost" hidden>Voltar ao meu painel</button></div></section>
+<p class="fine">Escolha seu perfil. Para compartilhar seu progresso entre celulares, conecte-os uma vez com o código privado em Sincronização.</p><button id="profile-cancel" type="button" class="ghost" hidden>Voltar ao meu painel</button></div></section>
 <main id="main" class="shell" inert>
-<div class="profile-bar"><div><small>ESTUDANDO AGORA</small><strong id="active-profile-name">Escolha seu perfil</strong></div><button id="switch-profile" type="button" class="outline">Trocar perfil</button></div>
+<div class="profile-bar"><div><small>ESTUDANDO AGORA</small><strong id="active-profile-name">Escolha seu perfil</strong><span id="sync-status" class="sync-status" role="status">Escolha um perfil para sincronizar</span></div><button id="switch-profile" type="button" class="outline">Trocar perfil</button></div>
+<details class="sync-settings"><summary>Sincronização · conectar outro celular</summary><div class="sync-content"><p>O progresso sincroniza automaticamente com internet. Sem conexão, você pode continuar estudando e enviar as alterações depois.</p><label for="sync-code">Código privado deste perfil</label><div class="sync-controls"><input id="sync-code" type="text" readonly autocomplete="off" spellcheck="false"><button id="sync-copy" class="outline" type="button">Copiar código</button></div><p class="fine">No outro celular, abra este app, escolha o mesmo nome e cole o código abaixo. Guarde-o: ele dá acesso ao progresso deste perfil.</p><label for="sync-connect-code">Já tenho o código do outro celular</label><div class="sync-controls"><input id="sync-connect-code" type="text" placeholder="Cole aqui o código do seu perfil" autocomplete="off" spellcheck="false"><button id="sync-connect" class="primary" type="button">Conectar</button></div><p class="fine">Conectar une os históricos dos dois celulares. Cada perfil tem seu próprio código.</p></div></details>
 <div class="page-heading">
 <div><p class="eyebrow">Sua preparação, um treino de cada vez</p><h1>Do zero à <em>próxima etapa.</em></h1><p class="page-subtitle">Sem metas impossíveis. Só progresso real, baseado nas provas anteriores da PM de Minas Gerais.</p></div>
 <div class="exam-date"><span>CONCURSO · SOLDADO PMMG</span><strong>Acompanhe o edital</strong><small id="days-left">Portal oficial do CRS/PMMG</small></div>
@@ -165,7 +167,7 @@
 </div>
 <div class="two-cols"><div class="panel section-card"><p class="eyebrow">ÚLTIMOS SETE DIAS</p><h2>Constância sem cobrança</h2><div id="insight-calendar" class="week-calendar"></div><p id="last-activity" class="dim small"></p></div>
 <div class="panel section-card"><p class="eyebrow">SUA PRÓXIMA AÇÃO</p><h2 id="next-recommendation">Comece com uma sessão curta</h2><p class="dim" id="next-recommendation-detail">Depois de responder questões reais, suas prioridades aparecerão aqui.</p><button id="next-step" type="button" class="outline">Treinar minha prioridade →</button></div></div>
-<div class="panel section-card"><p class="eyebrow">SEUS DADOS</p><h2>Backup e privacidade</h2><p class="dim">O progresso de cada perfil é guardado separadamente neste navegador. Não há sincronização automática entre celulares. Exporte um backup para trocar de aparelho ou evitar perda do histórico. Nenhum arquivo é enviado a servidor.</p>
+<div class="panel section-card"><p class="eyebrow">SEUS DADOS</p><h2>Backup e privacidade</h2><p class="dim">O progresso de cada perfil é salvo neste navegador e sincronizado com os celulares conectados ao mesmo código privado. O código não vai no backup. Exporte um backup como cópia adicional dos seus estudos.</p>
 <div class="backup-actions"><button id="export-backup" class="outline" type="button">Baixar backup do meu perfil</button><button id="export-csv" class="outline light" type="button">Exportar CSV</button><button id="import-trigger" class="ghost" type="button">Restaurar backup</button><input id="import-file" class="sr-only" type="file" accept=".json,application/json"></div><p id="backup-status" class="dim small" role="status"></p></div>
 </section>
 </main>

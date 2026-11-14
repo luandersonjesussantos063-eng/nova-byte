@@ -5,6 +5,7 @@ on:
       - 'questoes/**'
       - 'scripts/tests/missao-farda.test.mjs'
       - 'scripts/tests/missao-farda-ui.test.mjs'
+      - 'scripts/tests/missao-farda-sync.test.mjs'
       - '.github/workflows/missao-farda-quality.yml'
   pull_request:
     paths:
@@ -25,10 +26,11 @@ jobs:
       - name: Validar sintaxe
         run: |
           node --check questoes/app.js
+          node --check questoes/sync.js
           node --check questoes/core.js
           node --check questoes/banco.js
           node --check questoes/sw.js
       - name: Preparar teste de interface
         run: npm install --no-save jsdom@26
       - name: Testar revisão, seleção, gabaritos e navegação
-        run: node --test scripts/tests/missao-farda.test.mjs scripts/tests/missao-farda-ui.test.mjs
+        run: node --test scripts/tests/missao-farda.test.mjs scripts/tests/missao-farda-ui.test.mjs scripts/tests/missao-farda-sync.test.mjs

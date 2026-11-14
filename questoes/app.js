@@ -38,11 +38,14 @@ return state;
 }
 let state=defaultState();
 let activeTab="home",countdown=null,remaining=0,timerPaused=false,toastTimeout=null,readerOpenKey=null;
-function save(){if(!activeProfile)return false;try{localStorage.setItem(STATEKEY,JSON.stringify(state));return true;}catch{toast("Armazenamento do navegador indisponível: exporte um backup dos seus dados.");return false;}}
+let syncClient=null;
+function save(){if(!activeProfile)return false;try{
+ if(window.MFSync)window.MFSync.touch(state,read(STATEKEY)?._sync?read(STATEKEY):defaultState());
+ localStorage.setItem(STATEKEY,JSON.stringify(state));syncClient?.schedule();return true;}catch{toast("Armazenamento do navegador indisponível: exporte um backup dos seus dados.");return false;}}
 function chooseProfile(id){
  if(!Object.hasOwn(PROFILES,id))return;
  if(activeProfile&&!save())return;
- timerStop();remaining=0;timerPaused=false;readerOpenKey=null;
+ syncClient?.stop();timerStop();remaining=0;timerPaused=false;readerOpenKey=null;
  activeProfile=id;STATEKEY=LEGACYKEY+"-"+id;state=loadProfile(id);
  if(save())try{if(!read(PROFILEKEY))localStorage.setItem(PROFILEKEY,JSON.stringify(id));}catch{}
  $("active-profile-name").textContent=PROFILES[id];
@@ -52,6 +55,28 @@ function chooseProfile(id){
  $("exam").value="pmmg2024";$("mode").value="daily";$("subject").value="all";$("grading").value="practice";$("quantity").value=String(state.settings.goal||5);fillSubjects();renderSources();
  renderHome();renderTraining();renderPath();renderInsights();show("home");
  $("switch-profile").focus();
+ syncClient?.start(id);updateSyncCode();
+}
+function updateSyncCode(){const code=syncClient?.getCode();$("sync-code").value=code||"";$("sync-connect-code").value="";}
+function initSync(){
+ if(!window.MFSync||!window.fetch){$("sync-status").textContent="Sincronização indisponível · progresso salvo neste celular";return;}
+ syncClient=window.MFSync.create({read:()=>state,status:message=>{$("sync-status").textContent=message;},apply:incoming=>{
+  localStorage.setItem(STATEKEY,JSON.stringify(incoming));state=loadProfile(activeProfile);
+  // Preserve focus and cursor while typing an essay.
+  if(document.activeElement!==$("essay"))renderAll();
+ }});
+ $("sync-copy").addEventListener("click",async()=>{
+  const code=syncClient.getCode();if(!code)return;
+  try{await navigator.clipboard.writeText(code);toast("Código copiado. No outro celular, escolha o mesmo perfil e cole em Conectar.");}
+  catch{$("sync-code").focus();$("sync-code").select();toast("Selecione e copie o código acima.");}
+ });
+ $("sync-connect").addEventListener("click",async()=>{
+  const b=$("sync-connect"),profile=activeProfile; b.disabled=true;
+  try{await syncClient.connect($("sync-connect-code").value.trim());if(profile===activeProfile){updateSyncCode();toast("Celular conectado. Seu progresso será sincronizado automaticamente.");}}
+  catch(e){toast(e.message||"Não foi possível conectar agora. Tente novamente com internet.");}finally{b.disabled=false;}
+ });
+ window.addEventListener("online",()=>syncClient.pump());
+ document.addEventListener("visibilitychange",()=>{if(!document.hidden)syncClient.pump();});
 }
 function openProfiles(){
  $("profile-picker").hidden=false;$("main").inert=true;
@@ -359,7 +384,7 @@ function restore(file){
  if(targetProfile!==activeProfile){toast("Volte ao perfil escolhido para restaurar este backup.");return;}
  const parsed=JSON.parse(String(reader.result));if(parsed.app!=="missao-farda-pmmg"||parsed.version!==3||!parsed.state||typeof parsed.state!=="object")throw Error("Arquivo não é um backup do Missão Farda");
  if(parsed.profile&&parsed.profile.id!==activeProfile){toast("Este backup pertence a "+(PROFILES[parsed.profile.id]||"outro perfil")+". Troque de perfil para restaurar.");return;}
- if(!window.confirm("Restaurar este backup substituirá apenas o progresso de "+PROFILES[activeProfile]+" neste navegador. Continuar?"))return;
+ if(!window.confirm("Restaurar este backup recuperará os dados de "+PROFILES[activeProfile]+". O histórico será unido ao que já estiver sincronizado. Continuar?"))return;
  const incoming=parsed.state;const safe=defaultState();safe.progress=C.cleanHistory(incoming.progress||{},IDS);
  safe.events=Array.isArray(incoming.events)?incoming.events.filter(e=>e&&IDS.has(e.id)&&"ABCD".includes(e.answer||"")).slice(-12000):[];
  safe.sessions=Array.isArray(incoming.sessions)?incoming.sessions.filter(x=>x&&typeof x==="object").slice(-500):[];
@@ -367,7 +392,7 @@ function restore(file){
  safe.essay=typeof incoming.essay==="string"?incoming.essay.slice(0,20000):"";
  safe.essayWeek=typeof incoming.essayWeek==="string"?incoming.essayWeek.slice(0,10):"";
  safe.settings={goal:[2,5,10].includes(Number(incoming.settings?.goal))?Number(incoming.settings.goal):5,timer:"off"};
- state=safe;save();toast("Backup restaurado com sucesso.");show("insights");
+ state=window.MFSync?window.MFSync.merge(state,window.MFSync.touch(safe,defaultState())):safe;save();toast("Backup restaurado com sucesso.");show("insights");
  }catch(e){toast("Não foi possível restaurar: formato do backup inválido.");}};
  reader.readAsText(file);
 }
@@ -422,8 +447,8 @@ function updateOnline(){
  if(!navigator.onLine)label.title="O aplicativo pode abrir sem internet, mas o caderno original de questões exige conexão.";
 }
 function boot(){
- initEvents();fillSubjects();renderSources();show("home");updateOnline();
- if("serviceWorker" in navigator)navigator.serviceWorker.register("./sw.js?v=12-pmmg-perfis").catch(()=>{});
+ initEvents();initSync();fillSubjects();renderSources();show("home");updateOnline();
+ if("serviceWorker" in navigator)navigator.serviceWorker.register("./sw.js?v=13-pmmg-sync").catch(()=>{});
  openProfiles();
 }
 boot();

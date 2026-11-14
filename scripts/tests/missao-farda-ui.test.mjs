@@ -10,7 +10,7 @@ function createApp({choose=true,seed={}}={}){
  const dom=new JSDOM(content("index.html"),{url:"https://novabytesolucoes.com.br/questoes/",runScripts:"outside-only",pretendToBeVisual:true});
  const w=dom.window;w.scrollTo=()=>{};w.confirm=()=>true;
  for(const [k,v] of Object.entries(seed))w.localStorage.setItem(k,JSON.stringify(v));
- for(const f of ["banco-transcrito.js","core.js","app.js"])w.eval(content(f));
+ for(const f of ["banco-transcrito.js","core.js","sync.js","app.js"])w.eval(content(f));
  if(choose)w.document.querySelector('[data-profile="luanderson"]').click();
  return {dom,w,document:w.document,click:(selector)=>{const x=w.document.querySelector(selector);assert.ok(x,"Missing "+selector);x.click();return x;}};
 }
