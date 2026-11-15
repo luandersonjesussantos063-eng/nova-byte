@@ -1,12 +1,12 @@
 {
-  "name": "Missão Farda — Trilha PMMG",
-  "short_name": "Missão Farda",
+  "name": "PMMG — acesso antigo",
+  "short_name": "Acesso antigo",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "background_color": "#101337",
   "theme_color": "#191d5e",
-  "description": "Preparação para Soldado PMMG: 180 questões reais, revisão espaçada e histórico local.",
+  "description": "Este acesso encaminha ao único app PMMG: ppmt.novabytesolucoes.com.br",
   "icons": [
     {
       "src": "./icon.svg",

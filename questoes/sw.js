@@ -1,20 +1,17 @@
-"use strict";
-/* Cache apenas a interface. Enunciados e cadernos de terceiros exigem internet. */
-const CACHE="missao-farda-pmmg-v14-avatares";
-const CORE=["./","./index.html","./ui.css?v=14-pmmg-avatares","./banco-transcrito.js?v=14-pmmg-avatares","./core.js?v=14-pmmg-avatares","./sync.js?v=14-pmmg-avatares","./app.js?v=14-pmmg-avatares","./manifest.webmanifest","./icon.svg","./brasao-pmmg.svg","./avatares/luanderson.webp","./avatares/jackeline.webp"];
-self.addEventListener("install",event=>{
- event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(CORE)).then(()=>self.skipWaiting()));
-});
-self.addEventListener("activate",event=>{
- event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k.startsWith("missao-farda-")&&k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim()));
-});
-self.addEventListener("fetch",event=>{
- const req=event.request;
- if(req.method!=="GET"||new URL(req.url).origin!==self.location.origin)return;
- event.respondWith(fetch(req).then(response=>{
-  if(response.ok&&new URL(req.url).pathname.includes("/questoes/")){
-   const copy=response.clone();caches.open(CACHE).then(cache=>cache.put(req,copy)).catch(()=>{});
-  }
-  return response;
- }).catch(()=>caches.match(req).then(cached=>cached||Response.error())));
+'use strict';
+// Somente o acesso de transição: não carrega mais o segundo motor de estudo.
+const CACHE='missao-farda-unificado-v15';
+const FILES=['./','./index.html','./app.js?v=15-unificado','./brasao-pmmg.svg'];
+self.addEventListener('install',event=>event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(FILES)).then(()=>self.skipWaiting())));
+self.addEventListener('activate',event=>event.waitUntil((async()=>{
+ const keys=await caches.keys();await Promise.all(keys.filter(key=>key.startsWith('missao-farda-')&&key!==CACHE).map(key=>caches.delete(key)));
+ await self.clients.claim();
+ for(const client of await self.clients.matchAll({type:'window'}))if(client.url.startsWith(self.registration.scope))await client.navigate(self.registration.scope+'?acesso=unificado');
+})()));
+self.addEventListener('fetch',event=>{
+ const request=event.request,url=new URL(request.url);
+ if(request.method!=='GET'||url.origin!==self.location.origin||!url.href.startsWith(self.registration.scope))return;
+ if(request.mode==='navigate'){event.respondWith(fetch(new URL('./index.html',self.registration.scope),{cache:'no-store'}).catch(()=>caches.match(new URL('./index.html',self.registration.scope))));return;}
+ if(!['/app.js','/brasao-pmmg.svg'].some(path=>url.pathname.endsWith(path)))return;
+ event.respondWith(fetch(request).catch(()=>caches.match(request,{ignoreSearch:true})));
 });
