@@ -1,11 +1,12 @@
 import test from 'node:test';import assert from 'node:assert/strict';import fs from 'node:fs';import vm from 'node:vm';
 const home=fs.readFileSync('index.html','utf8');const html=home+fs.readFileSync('servicos/index.html','utf8')+fs.readFileSync('projetos/index.html','utf8');const css=fs.readFileSync('studio.css','utf8');
 test('home retains business identity, integrations and honest conversion paths',()=>{
+ assert(!/\bNova[\s-]+Byte\b/i.test(html),'marca deve aparecer sempre como NovaByte');
  assert.equal((home.match(/<h1\b/g)||[]).length,1);assert.equal((html.match(/class="service-card /g)||[]).length,7);const projectCardsHome=(home.match(/class="project-card /g)||[]).length;
  const projectCardsPortfolio=(fs.readFileSync('projetos/index.html','utf8').match(/class="project-card /g)||[]).length;
  assert.equal(projectCardsHome,4,'vitrine inicial deve destacar quatro projetos');
  assert.equal(projectCardsPortfolio,10,'portfólio completo deve apresentar dez projetos');
- assert.equal((html.match(/class="project-card /g)||[]).length,projectCardsHome+projectCardsPortfolio);assert(!html.includes('digopetiscaria.com.br'));for(const name of ['Kaia Glow','W Prime Elétrica','Anuncia Lucas','NovaByte Studio','VITA ITALIA','Morada Imobiliária','NovaByte Divulga','NovaByte Frelas','Nova Byte Prospect','W Elétrica'])assert(html.includes(name),name);
+ assert.equal((html.match(/class="project-card /g)||[]).length,projectCardsHome+projectCardsPortfolio);assert(!html.includes('digopetiscaria.com.br'));for(const name of ['Kaia Glow','W Prime Elétrica','Anuncia Lucas','NovaByte Studio','VITA ITALIA','Morada Imobiliária','NovaByte Divulga','NovaByte Frelas','NovaByte Prospect','W Elétrica'])assert(html.includes(name),name);
  const portfolio=fs.readFileSync('projetos/index.html','utf8');
  for(const link of ['https://usekaiaglow.com.br/','/imobiliaria/','/divulga/'])assert(portfolio.includes(link),link);
  assert(portfolio.includes('imóveis, imagens e valores ilustrativos'),'demonstrativo imobiliário identificado');
