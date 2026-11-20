@@ -1,4 +1,5 @@
 import "./styles.css";
+import "./kaia-pink.css";
 import { SAMPLE_PRODUCTS, CATEGORIES } from "./catalog.js";
 import { brl, normalizeCart, cartTotals } from "./commerce.mjs";
 
@@ -9,7 +10,7 @@ const state = {
   cart: normalizeCart(initial.cart),
   favorites: Array.isArray(initial.favorites) ? initial.favorites : [],
   config: { pixPercent: 5, cardPercent: 0, motoboyCents: 1290, ownCents: 990, whatsapp: "", instagram: "", ...(initial.config || {}) },
-  filter: "Todos", query: "", showAll: false, showAbout: false, cartOpen: false, adminOpen: false, adminTab: "produtos", adminEdit: null,
+  filter: "Todos", query: "", showAll: false, showAbout: false, favoritesView: false, heroSlide: 0, cartOpen: false, adminOpen: false, adminTab: "produtos", adminEdit: null,
   checkoutOpen: false, payment: "pix", shipping: "motoboy", menuOpen: false, toast: ""
 };
 const icons = {
@@ -71,20 +72,64 @@ function logo() {
   return '<a href="#inicio" class="brand" aria-label="Pacífica Hair Vendas, início"><span class="brand-mark"><span class="brand-bottle" aria-hidden="true"><svg viewBox="0 0 56 72" fill="none" stroke="#74505b" stroke-width="1.5"><path d="M26 9V4h8v5M25 9h10l3 6-2 3 6 13 3 26c.3 4-2 7-7 7H15c-5 0-7-3-7-7l3-26 7-13-2-3 3-6h6Z"/><path d="M17 35q6-8 13-7m-15 14q6-6 14-6m-15 15q8-5 17-5M6 26l9-9M4 33l8-8" stroke-width="1.1"/><path d="M30 4V0M24 6l-4-3M36 6l4-3"/></svg></span><span class="brand-inside">Pacífica <em>Hair</em> Vendas<small>Cosméticos, Perfumaria,<br/>cabelos e cia</small></span></span><span class="brand-mobile-name">Pacífica Hair Vendas</span></a>';
 }
 function header() {
-  return '<div class="announcement"><div class="wrap mini-row"><span>' + icons.truck + 'Entrega na Grande BH</span><b></b><span>' + icons.shield + 'Compra Segura</span><b></b><span>' + icons.card + 'Pagamento Facilitado</span><div class="announce-social"><a href="#contato" aria-label="Instagram">' + icons.instagram + '</a><a href="#contato" aria-label="WhatsApp">' + icons.whatsapp + '</a></div></div></div>' +
-    '<header class="site-header"><div class="wrap header-row">' + logo() +
-    '<nav id="navigation" class="' + (state.menuOpen ? "shown" : "") + '"><a class="nav-home" href="#inicio">Início</a><a class="nav-products" href="#produtos">Produtos <span>⌄</span></a><a data-action="about" href="#sobre">Sobre Nós</a><a href="#produtos" data-category="Promoções">Promoções</a><a href="#contato">Contato</a></nav>' +
-    '<label class="search-box"><input id="search" type="search" placeholder="O que você procura?" value="' + esc(state.query) + '" aria-label="Buscar produtos" /><button data-action="search" aria-label="Buscar">' + icons.search + '</button></label>' +
-    '<button class="header-cart" data-action="cart" aria-label="Abrir sacola">' + icons.cart + '<span>' + count() + '</span></button>' +
-    '<button class="mobile-menu" data-action="menu" aria-label="Abrir menu"><span></span><span></span><span></span></button></div></header>';
+  const categoryNames = ["Perfumes","Cosméticos","Cabelos","Roupas íntimas","Cuidados Pessoais","Presentes","Promoções"];
+  const diamond = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6 3h12l5 6-11 12L1 9 6 3Z"/><path d="M1 9h22M6 3l6 18L18 3"/></svg>';
+  return '<div class="p-ticker" aria-label="Benefícios da Pacífica"><div class="p-ticker-track"><span>' + diamond + ' Seleção especial</span><span>' + icons.truck + ' Entrega na Grande BH</span><span>' + icons.shield + ' Compra segura</span><a href="#sobre" data-action="about">Sobre a Pacífica ↗</a></div></div>' +
+    '<header class="p-header"><div class="p-header-main">' +
+    '<button class="p-header-icon p-hamburger" data-action="menu" aria-label="Abrir menu" aria-expanded="' + state.menuOpen + '"><span></span><span></span><span></span></button>' +
+    '<div class="p-brand-wrap">' + logo() + '</div>' +
+    '<div class="p-header-actions">' +
+    '<button class="p-header-icon p-account" data-action="account" aria-label="Minha conta (em preparação)">' + icons.user + '</button>' +
+    '<button class="p-header-icon p-favorites ' + (state.favoritesView ? "selected" : "") + '" data-action="favorites" aria-label="Ver favoritos" aria-pressed="' + state.favoritesView + '">' + icons.heart + '<span class="p-count">' + state.favorites.length + '</span></button>' +
+    '<button class="p-header-icon p-bag" data-action="cart" aria-label="Abrir sacola">' + icons.bag + '<span class="p-bag-count">' + count() + '</span></button></div></div>' +
+    '<div class="p-search-row"><label class="p-search"><input id="search" type="search" placeholder="O que você procura hoje?" value="' + esc(state.query) + '" aria-label="Pesquisar produtos" /><button data-action="search" aria-label="Buscar">' + icons.search + '</button></label></div>' +
+    '<nav class="p-categories" aria-label="Categorias da loja"><div class="p-category-scroller">' +
+    categoryNames.map(name => '<button data-category="' + esc(name) + '" class="' + (state.filter===name ? "selected" : "") + '">' + esc(name) + '</button>').join("") +
+    '</div></nav>' +
+    (state.menuOpen?'<div class="p-menu-backdrop" data-action="menu-close"></div><nav class="p-menu-panel" aria-label="Menu principal"><div class="p-menu-head">Pacífica Hair Vendas <button data-action="menu-close" aria-label="Fechar menu">' + icons.close + '</button></div><a href="#inicio" data-action="menu-close">Início</a><a href="#produtos" data-action="menu-close">Todos os produtos</a><a href="#sobre" data-action="about">Nossa história</a><a href="#oferta" data-action="menu-close">Ofertas</a><a href="#contato" data-action="menu-close">Contato</a></nav>' : '') +
+    '</header>';
 }
 function hero() {
-  const perfume = '<svg class="hero-perfume" viewBox="0 0 220 270" aria-hidden="true"><defs><linearGradient id="bottlePink" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#ffefee"/><stop offset=".31" stop-color="#ff6b9e"/><stop offset=".72" stop-color="#eb377d"/><stop offset="1" stop-color="#ffbbd4"/></linearGradient><linearGradient id="goldTop" x1="0" y1="0" x2="1" y2=".5"><stop stop-color="#81521e"/><stop offset=".25" stop-color="#ffe4a1"/><stop offset=".55" stop-color="#b56f2d"/><stop offset=".84" stop-color="#fff2c3"/><stop offset="1" stop-color="#995527"/></linearGradient><radialGradient id="flowerPetal"><stop stop-color="#ffeaf8"/><stop offset="1" stop-color="#f270b2"/></radialGradient></defs><ellipse cx="92" cy="250" rx="86" ry="11" fill="#7b165b" opacity=".14"/><path d="M59 87h75v22c27 14 36 50 37 103q0 20-24 22H44q-24-1-23-22c1-58 9-90 38-103Z" fill="url(#bottlePink)" stroke="#bf3b7e" stroke-width="3"/><path d="M49 119c-18 26-18 76-17 92M132 117q25 23 25 92" fill="none" stroke="#fff9" stroke-width="9" opacity=".57"/><path d="M59 86h75v20H59z" fill="#fbb9d0"/><path d="M66 49h61v38H66z" fill="url(#goldTop)" stroke="#a46629"/><path d="M61 42h70v9H61z" fill="url(#goldTop)"/><path d="M75 29h40v13H75z" fill="url(#goldTop)"/><path d="M57 151q39-12 84 0" fill="none" stroke="#fff4" stroke-width="3"/><text x="95" y="190" text-anchor="middle" font-size="21" font-family="Georgia" fill="#91385d">Pacífica</text><g transform="translate(-9 188)"><path d="M12 42Q0 10 32 14Q36-4 53 13Q84 7 70 31Q100 46 67 56Q62 76 44 60Q19 77 12 42" fill="url(#flowerPetal)" stroke="#df469b" stroke-width="2"/><circle cx="43" cy="38" r="13" fill="#ffcc64"/><g fill="none" stroke="#f7a7d3" stroke-width="3"><path d="M43 37 19 22M43 37 59 19M43 37 69 45M43 37 26 59"/></g></g></svg>';
-  return '<section class="hero" id="inicio"><div class="hero-surface"><span class="hero-heart heart-one">♡</span><span class="hero-heart heart-two">♡</span><span class="hero-heart heart-three">♡</span>' + perfume +
-   '<div class="hero-content wrap"><div class="hero-copy"><div class="hero-left-logo"><span class="hero-line-bottle"><svg viewBox="0 0 70 90" fill="none" stroke="#280e2b" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true"><path d="M30 9V5h12v4M29 9h14l4 8-3 5 8 15 5 38c1 6-3 10-11 10H21c-8 0-12-4-11-10l5-38 8-15-3-5 4-8h5Z"/><path d="M18 45c5-9 16-11 24-6M17 52c8-9 17-11 25-8M17 62c7-8 17-10 25-8M17 71c7-7 17-9 25-7" stroke-width="1.2"/><path d="M30 4V1M41 4l5-3M36 2v5M21 14 9 9M20 20 3 22"/></svg></span><h1>Pacífica<br/>Hair<br/>Vendas</h1></div><p class="hero-subtitle">Cosméticos, Perfumaria,<br/>cabelos e cia</p><p class="hero-script">Beleza, autoestima e bem-estar<br/>em um só lugar! <span>♡</span></p></div>' +
-   '<div class="hero-photo"><img src="/assets/gleizelle.webp" alt="Gleizelle, da Pacífica Hair Vendas" /><span class="neon-ring neon-ring-a"></span><span class="neon-ring neon-ring-b"></span></div>' +
-   '<div class="hero-side"><div class="hero-side-content"><h2>Cuide de você<br/>com o melhor!</h2><ul><li>Perfumes das melhores marcas</li><li>Roupas íntimas</li><li>Cosméticos e cuidados pessoais</li><li>Tudo em um só lugar!</li></ul></div><a class="primary hero-cta" href="#produtos">' + icons.cart + ' Comprar Agora ' + icons.arrow + '</a></div></div></div></section>';
+  const slides=[
+    { tag:"PACÍFICA HAIR / BEAUTY EXPERIENCE", title:'Sua beleza<br>começa <em>aqui.</em>', description:"Perfumes, cosméticos e autocuidado para valorizar o que faz você única.",cta:"Explorar a seleção"},
+    { tag:"CUIDAR DE VOCÊ É ESSENCIAL", title:'Seu momento<br>de <em>brilhar.</em>', description:"Uma seleção com carinho de perfumes, cabelos e moda íntima.",cta:"Descobrir produtos"},
+    { tag:"BELEZA, AUTOESTIMA E BEM-ESTAR", title:'Tudo de bom<br>para <em>você.</em>',description:"Escolha seus favoritos e aproveite cada momento de autocuidado.",cta:"Ver a coleção"}
+  ];
+  const current=slides[state.heroSlide % slides.length];
+  return '<section class="p-hero" id="inicio" aria-label="Campanhas da Pacífica"><div class="p-hero-visual"><img src="/assets/gleizelle.webp" alt="Gleizelle, fundadora da Pacífica Hair Vendas" fetchpriority="high" /></div><div class="p-hero-overlay"></div><div class="p-hero-body">' +
+    '<div class="p-hero-copy"><span class="p-hero-eyebrow">' + current.tag + '</span><h1>' + current.title + '</h1><p>' + current.description + '</p><a href="#produtos" class="p-hero-cta">' + current.cta + ' <span aria-hidden="true">↗</span></a></div>' +
+    '<div class="p-hero-carousel"><button data-action="hero-prev" aria-label="Campanha anterior">←</button>' +
+    '<div class="p-hero-dots" aria-label="Escolher campanha">' +
+    slides.map((slide,i)=>'<button class="' +(state.heroSlide===i?"active":"")+'" data-action="hero-dot" data-slide="'+i+'" aria-label="Campanha '+(i+1)+'" aria-current="'+(state.heroSlide===i)+'"></button>').join("") +
+    '</div><button data-action="hero-next" aria-label="Próxima campanha">→</button><span class="p-hero-index">0'+(state.heroSlide+1)+' / 0'+slides.length+'</span></div></div>' +
+    '<span class="p-image-caption">Foto de referência da cliente · Prévia</span></section>';
 }
+function pinkBenefits() {
+  return '<section class="p-benefits" aria-label="Diferenciais da Pacífica">' +
+    '<a href="#contato"><span aria-hidden="true">↗</span>Atendimento pelo<br>WhatsApp</a>' +
+    '<a href="#produtos"><span aria-hidden="true">♡</span>Uma seleção<br>para você</a>' +
+    '<a href="#oferta"><span aria-hidden="true">☰</span>Ofertas e<br>novidades</a>' +
+    '</section>';
+}
+function pinkPromo() {
+  const pix=Number(state.config.pixPercent || 0);
+  const pixLabel=(Math.round(pix * 100)/100).toLocaleString("pt-BR");
+  return '<section class="p-promo-outer" id="oferta"><div class="p-promo"><span class="p-promo-eyebrow">UM CARINHO DA PACÍFICA</span><h2>' + (pix>0 ? pixLabel+'% OFF' : 'Um carinho especial') + '<span> no Pix</span></h2><p>Escolha seus favoritos. Desconto demonstrativo no Pix, sujeito à confirmação antes do lançamento.</p><a href="#produtos">Explorar a seleção ↗</a><span class="p-promo-glow">♡</span></div></section>';
+}
+function pinkFooter() {
+ const wa=String(state.config.whatsapp||"").replace(/\D/g,"");
+ const waUrl=wa.length>=10&&wa.length<=13 ? "https://wa.me/"+(wa.startsWith("55")?wa:"55"+wa) : "";
+ const ig=String(state.config.instagram||"").trim().replace(/^@/,"");
+ const igUrl=/^[\w.]{1,30}$/.test(ig) ? "https://instagram.com/"+ig : "";
+ return '<section class="p-contact" id="contato"><div><span class="p-contact-eyebrow">PRECISA DE AJUDA?</span><h2>Estamos por aqui.</h2><p>Uma experiência especial começa com um atendimento feito com carinho.</p><div class="p-contact-actions">' +
+ (waUrl?'<a target="_blank" rel="noopener noreferrer" href="'+waUrl+'">Conversar no WhatsApp ↗</a>':'<span>WhatsApp em configuração</span>')+
+ (igUrl?'<a target="_blank" rel="noopener noreferrer" href="'+igUrl+'">Nosso Instagram ↗</a>':'<span>Instagram em configuração</span>')+
+ '</div></div><div class="p-contact-decoration" aria-hidden="true">♡</div></section>'+
+ '<footer class="p-footer"><div class="p-footer-top"><div class="p-footer-brand">Pacífica <small>HAIR VENDAS</small></div><div><strong>Explore</strong><a href="#inicio">Início</a><a href="#produtos">Produtos</a><a href="#oferta">Ofertas</a></div><div><strong>Sobre</strong><a href="#sobre" data-action="about">Nossa história</a><a href="#contato">Atendimento</a><span>Entrega na Grande BH</span></div></div>'+
+ '<div class="p-footer-end"><span>© 2026 Pacífica Hair Vendas · Prévia de layout</span><span>Desenvolvido por NovaByte · <button class="footer-admin" data-action="admin">Painel de teste</button></span></div>'+
+ '<div class="p-footer-warning">Produtos e preços ilustrativos. Pagamentos reais não estão habilitados.</div></footer>';
+}
+
 function categories() {
   const glyphs = {
     "Perfumes":'<svg viewBox="0 0 64 64"><rect x="21" y="21" width="22" height="32" rx="5"/><path d="M27 13h10v8H27zM25 8h14v5H25z"/><path d="M26 33q6-6 12 0v12H26z"/></svg>',
@@ -101,10 +146,10 @@ function categories() {
 }
 function shop() {
   const selected = state.products.filter(p => Number(p.stock) >= 0 && (!state.query || (p.name + " " + p.category).toLowerCase().includes(state.query.toLowerCase())) &&
-    (state.filter === "Todos" || (state.filter === "Promoções" ? p.compareCents > p.priceCents : p.category === state.filter)));
+    (state.filter === "Todos" || (state.filter === "Promoções" ? p.compareCents > p.priceCents : p.category === state.filter)) && (!state.favoritesView || state.favorites.includes(p.id)));
   const visible = state.showAll || state.filter !== "Todos" || state.query ? selected : selected.slice(0, 4);
-  return '<section class="wrap shop" id="produtos"><div class="section-title"><div class="title-lines"></div><div class="title-center"><h2><span>' + icons.bag + '</span>Nossos Produtos</h2><p>Qualidade, beleza e as melhores marcas!</p></div><div class="title-lines"></div></div>' +
-    '<div class="product-grid">' + (visible.length ? visible.map(productCard).join("") : '<div class="empty-results">Não encontramos produtos nessa busca. Tente outra categoria.</div>') + '</div>' +
+  return '<section class="wrap shop" id="produtos"><div class="section-title"><div class="title-lines"></div><div class="title-center"><h2><span>' + icons.bag + '</span>' + (state.favoritesView ? "Seus Favoritos" : "Nossos Produtos") + '</h2><p>Qualidade, beleza e as melhores marcas!</p></div><div class="title-lines"></div></div>' +
+    '<div class="product-grid">' + (visible.length ? visible.map(productCard).join("") : '<div class="empty-results">Nenhum produto encontrado. Veja outras categorias ou adicione favoritos.</div>') + '</div>' +
     '<div class="catalog-actions"><span>Produtos ilustrativos para aprovação visual — não disponíveis para compra real.</span>' +
     (selected.length > 4 && state.filter === "Todos" && !state.query ? '<button class="outline-btn" data-action="toggle-all">' + (state.showAll ? "Mostrar menos" : "Ver mais produtos") + ' ' + icons.arrow + '</button>' : "") +
     '</div></section>';
@@ -170,7 +215,7 @@ function render({ retainSearch = false } = {}) {
   const active = retainSearch && document.activeElement?.id === "search";
   const pos = active ? document.getElementById("search")?.selectionStart : null;
   document.getElementById("app").innerHTML =
-    header() + '<main>' + hero() + categories() + shop() + (state.showAbout ? about() : '') + footer() + '</main>' +
+    header() + '<main class="p-site-main">' + hero() + pinkBenefits() + pinkPromo() + shop() + (state.showAbout ? about() : '') + pinkFooter() + '</main>' +
     cartDrawer() + checkoutModal() + adminPanel();
   document.body.classList.toggle("no-scroll", state.cartOpen || state.checkoutOpen || state.adminOpen);
   if (active) { const field = document.getElementById("search"); field?.focus(); field?.setSelectionRange(pos, pos); }
@@ -181,6 +226,7 @@ document.addEventListener("click", e => {
   const tab = e.target.closest("[data-admin-tab]");
   if (cat) {
     state.filter = cat.dataset.category;
+    state.favoritesView = false;
     state.showAll = true;
     state.menuOpen = false;
     render();
@@ -191,6 +237,12 @@ document.addEventListener("click", e => {
   if (!a) return;
   const action = a.dataset.action, id = a.dataset.id;
   if (action === "menu") state.menuOpen = !state.menuOpen;
+  if (action === "menu-close") { state.menuOpen = false; render(); return; }
+  if (action === "hero-prev") { state.heroSlide = (state.heroSlide + 2) % 3; render(); return; }
+  if (action === "hero-next") { state.heroSlide = (state.heroSlide + 1) % 3; render(); return; }
+  if (action === "hero-dot") { state.heroSlide = Number(a.dataset.slide || 0); render(); return; }
+  if (action === "account") { notify("Área de cliente em preparação."); return; }
+  if (action === "favorites") { state.favoritesView = !state.favoritesView; state.showAll = true; render(); document.getElementById("produtos")?.scrollIntoView({behavior:"smooth"}); return; }
   if (action === "toggle-all") { state.showAll = !state.showAll; render(); document.getElementById("produtos")?.scrollIntoView({behavior:"smooth"}); return; }
   if (action === "about") { e.preventDefault(); state.showAbout = true; state.menuOpen = false; render(); document.getElementById("sobre")?.scrollIntoView({behavior:"smooth"}); return; }
   if (action === "search") document.getElementById("produtos")?.scrollIntoView({behavior:"smooth"});
