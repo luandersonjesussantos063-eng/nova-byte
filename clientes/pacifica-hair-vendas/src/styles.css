@@ -325,3 +325,6 @@ body{background:#fffafd;color:#251121}
  .hero-line-bottle svg{width:42px;height:60px}
  .footer .brand-mark .brand-inside{font-size:16px}
 }
+
+.footer-admin{appearance:none;background:transparent;border:0;color:#f5b2dc;text-decoration:underline;font-size:10px;cursor:pointer;padding:0 5px}
+@media(max-width:560px){.footer-admin{font-size:9px}}
