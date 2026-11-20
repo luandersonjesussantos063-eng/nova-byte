@@ -1,5 +1,6 @@
 import "./styles.css";
 import "./kaia-pink.css";
+import { HERO_SLIDES, HERO_INTERVAL_MS, nextHeroIndex } from "./hero.mjs";
 import { SAMPLE_PRODUCTS, CATEGORIES } from "./catalog.js";
 import { brl, normalizeCart, cartTotals } from "./commerce.mjs";
 
@@ -90,20 +91,69 @@ function header() {
     '</header>';
 }
 function hero() {
-  const slides=[
-    { tag:"PACÍFICA HAIR / BEAUTY EXPERIENCE", title:'Sua beleza<br>começa <em>aqui.</em>', description:"Perfumes, cosméticos e autocuidado para valorizar o que faz você única.",cta:"Explorar a seleção"},
-    { tag:"CUIDAR DE VOCÊ É ESSENCIAL", title:'Seu momento<br>de <em>brilhar.</em>', description:"Uma seleção com carinho de perfumes, cabelos e moda íntima.",cta:"Descobrir produtos"},
-    { tag:"BELEZA, AUTOESTIMA E BEM-ESTAR", title:'Tudo de bom<br>para <em>você.</em>',description:"Escolha seus favoritos e aproveite cada momento de autocuidado.",cta:"Ver a coleção"}
-  ];
-  const current=slides[state.heroSlide % slides.length];
-  return '<section class="p-hero" id="inicio" aria-label="Campanhas da Pacífica"><div class="p-hero-visual"><img src="/assets/pacifica-hero-gleizelle.webp" alt="Gleizelle no banner rosa da Pacífica Hair Vendas, com perfume, flores e corações luminosos" fetchpriority="high" /></div><div class="p-hero-overlay"></div><div class="p-hero-body">' +
-    '<div class="p-hero-copy"><span class="p-hero-eyebrow">' + current.tag + '</span><h1>' + current.title + '</h1><p>' + current.description + '</p><a href="#produtos" class="p-hero-cta">' + current.cta + ' <span aria-hidden="true">↗</span></a></div>' +
-    '<div class="p-hero-carousel"><button data-action="hero-prev" aria-label="Campanha anterior">←</button>' +
-    '<div class="p-hero-dots" aria-label="Escolher campanha">' +
-    slides.map((slide,i)=>'<button class="' +(state.heroSlide===i?"active":"")+'" data-action="hero-dot" data-slide="'+i+'" aria-label="Campanha '+(i+1)+'" aria-current="'+(state.heroSlide===i)+'"></button>').join("") +
-    '</div><button data-action="hero-next" aria-label="Próxima campanha">→</button><span class="p-hero-index">0'+(state.heroSlide+1)+' / 0'+slides.length+'</span></div></div>' +
-    '<span class="p-image-caption">Foto de referência da cliente · Prévia</span></section>';
+  const current=HERO_SLIDES[state.heroSlide];
+  return '<section class="p-hero" id="inicio" aria-label="Destaques da Pacífica Hair Vendas" aria-roledescription="carrossel">' +
+    '<div class="p-hero-visual">' +
+      HERO_SLIDES.map((slide,i)=>'<img class="p-slide-image '+(i===state.heroSlide?'is-active':'')+'" src="'+slide.src+'" alt="'+slide.alt+'" '+(i===0?'fetchpriority="high"':'loading="eager"')+' decoding="async" aria-hidden="'+(i!==state.heroSlide)+'" />').join("") +
+    '</div><div class="p-hero-overlay"></div><div class="p-hero-body">' +
+    '<div class="p-hero-copy" aria-live="polite" aria-atomic="true"><span class="p-hero-eyebrow">'+current.tag+'</span><h1 class="p-hero-heading">'+current.title+'</h1><p class="p-hero-description">'+current.description+'</p><a href="#produtos" class="p-hero-cta"><span class="p-hero-cta-label">'+current.cta+'</span> <span aria-hidden="true">↗</span></a></div>' +
+    '<div class="p-hero-carousel"><button data-action="hero-prev" aria-label="Imagem anterior">←</button>' +
+    '<div class="p-hero-dots" aria-label="Escolher imagem">' +
+    HERO_SLIDES.map((slide,i)=>'<button class="'+(state.heroSlide===i?'active':'')+'" data-action="hero-dot" data-slide="'+i+'" aria-label="Imagem '+(i+1)+' de '+HERO_SLIDES.length+'" aria-current="'+(state.heroSlide===i)+'"></button>').join("") +
+    '</div><button data-action="hero-next" aria-label="Próxima imagem">→</button><span class="p-hero-index">0'+(state.heroSlide+1)+' / 0'+HERO_SLIDES.length+'</span></div></div>' +
+    '<span class="p-image-caption">Imagens ilustrativas dos produtos · Prévia</span></section>';
 }
+function setHeroSlide(nextIndex) {
+  state.heroSlide = nextHeroIndex(nextIndex,0);
+  const hero=document.getElementById("inicio");
+  if(!hero)return;
+  const current=HERO_SLIDES[state.heroSlide];
+  hero.querySelectorAll(".p-slide-image").forEach((img,i)=>{
+    img.classList.toggle("is-active",i===state.heroSlide);
+    img.setAttribute("aria-hidden",String(i!==state.heroSlide));
+  });
+  hero.querySelector(".p-hero-eyebrow").textContent=current.tag;
+  hero.querySelector(".p-hero-heading").innerHTML=current.title;
+  hero.querySelector(".p-hero-description").textContent=current.description;
+  hero.querySelector(".p-hero-cta-label").textContent=current.cta;
+  hero.querySelectorAll(".p-hero-dots button").forEach((dot,i)=>{
+    dot.classList.toggle("active",i===state.heroSlide);
+    dot.setAttribute("aria-current",String(i===state.heroSlide));
+  });
+  hero.querySelector(".p-hero-index").textContent="0"+(state.heroSlide+1)+" / 0"+HERO_SLIDES.length;
+}
+let heroPointerPaused=false;
+let heroTouchX=null;
+function activateHeroAutoplay() {
+  if(typeof window==="undefined"||typeof window.setInterval!=="function")return;
+  window.setInterval(()=>{
+    if(document.hidden || heroPointerPaused || state.cartOpen || state.checkoutOpen || state.adminOpen || state.menuOpen)return;
+    if(window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches)return;
+    setHeroSlide(nextHeroIndex(state.heroSlide));
+  },HERO_INTERVAL_MS);
+}
+document.addEventListener("pointerover",e=>{
+  if(e.pointerType==="mouse" && e.target.closest?.("#inicio"))heroPointerPaused=true;
+});
+document.addEventListener("pointerout",e=>{
+  if(e.pointerType==="mouse" && e.target.closest?.("#inicio") && !e.relatedTarget?.closest?.("#inicio"))heroPointerPaused=false;
+});
+document.addEventListener("touchstart",e=>{
+  if(e.target.closest?.("#inicio")) {
+    heroTouchX=e.changedTouches[0]?.clientX ?? null;
+    heroPointerPaused=true;
+  }
+},{passive:true});
+document.addEventListener("touchend",e=>{
+  if(heroTouchX!==null) {
+    const dx=(e.changedTouches[0]?.clientX ?? heroTouchX)-heroTouchX;
+    heroTouchX=null;
+    heroPointerPaused=false;
+    if(Math.abs(dx)>55)setHeroSlide(nextHeroIndex(state.heroSlide,dx<0?1:-1));
+  }
+},{passive:true});
+document.addEventListener("touchcancel",()=>{heroTouchX=null;heroPointerPaused=false;},{passive:true});
+
 function pinkBenefits() {
   return '<section class="p-benefits" aria-label="Diferenciais da Pacífica">' +
     '<a href="#contato"><span aria-hidden="true">↗</span>Atendimento pelo<br>WhatsApp</a>' +
@@ -238,9 +288,9 @@ document.addEventListener("click", e => {
   const action = a.dataset.action, id = a.dataset.id;
   if (action === "menu") state.menuOpen = !state.menuOpen;
   if (action === "menu-close") { state.menuOpen = false; render(); return; }
-  if (action === "hero-prev") { state.heroSlide = (state.heroSlide + 2) % 3; render(); return; }
-  if (action === "hero-next") { state.heroSlide = (state.heroSlide + 1) % 3; render(); return; }
-  if (action === "hero-dot") { state.heroSlide = Number(a.dataset.slide || 0); render(); return; }
+  if (action === "hero-prev") { setHeroSlide(nextHeroIndex(state.heroSlide,-1)); return; }
+  if (action === "hero-next") { setHeroSlide(nextHeroIndex(state.heroSlide)); return; }
+  if (action === "hero-dot") { setHeroSlide(Number(a.dataset.slide || 0)); return; }
   if (action === "account") { notify("Área de cliente em preparação."); return; }
   if (action === "favorites") { state.favoritesView = !state.favoritesView; state.showAll = true; render(); document.getElementById("produtos")?.scrollIntoView({behavior:"smooth"}); return; }
   if (action === "toggle-all") { state.showAll = !state.showAll; render(); document.getElementById("produtos")?.scrollIntoView({behavior:"smooth"}); return; }
@@ -311,3 +361,4 @@ document.addEventListener("submit", e => {
   }
 });
 render();
+activateHeroAutoplay();
