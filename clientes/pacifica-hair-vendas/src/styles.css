@@ -306,3 +306,22 @@ body{background:#fffafd;color:#251121}
  .dev-admin{right:4px;bottom:3px;padding:3px;font-size:8px}
  .dev-admin span{display:none}
 }
+
+/* Correção de especificidade herdada do primeiro tema para a marca */
+.brand-mark .brand-inside{font-size:26px}
+.brand-mark .brand-bottle{font-size:inherit}
+.hero-line-bottle{display:block;flex:0 0 70px;margin:0}
+.hero-line-bottle svg{height:91px;width:70px;display:block}
+.footer .brand-mark .brand-inside{font-size:21px}
+@media(max-width:850px){
+ .brand-mark .brand-inside{font-size:10px}
+ .hero-line-bottle{flex-basis:50px}
+ .hero-line-bottle svg{width:50px;height:67px}
+ .footer .brand-mark .brand-inside{font-size:17px}
+}
+@media(max-width:560px){
+ .brand-mark .brand-inside{font-size:8.5px}
+ .hero-line-bottle{flex-basis:42px}
+ .hero-line-bottle svg{width:42px;height:60px}
+ .footer .brand-mark .brand-inside{font-size:16px}
+}
