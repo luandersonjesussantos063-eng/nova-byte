@@ -213,3 +213,19 @@ body{background:var(--p-bg)}
  .p-hero-copy p{font-size:14px}
  .p-benefits a{font-size:11px}
 }
+
+/* Foto definitiva enviada pela cliente em 20/11/2026 — banner rosa completo. */
+.p-hero{background:#ed8cc7}
+.p-hero-visual{inset:0;width:100%;height:100%;background:#ed8cc7}
+.p-hero-visual img{object-fit:cover;object-position:50% 47%;filter:none}
+.p-hero-overlay{background:linear-gradient(90deg,rgba(43,7,36,.94) 0%,rgba(55,14,43,.84) 25%,rgba(85,22,59,.62) 43%,rgba(81,13,54,.15) 67%,transparent 100%)}
+@media(max-width:850px){
+.p-hero-visual{width:100%}
+.p-hero-visual img{object-position:50% 48%}
+.p-hero-overlay{background:linear-gradient(90deg,rgba(38,7,32,.94) 0%,rgba(48,13,39,.78) 37%,rgba(52,15,43,.34) 72%,rgba(52,15,43,.09) 100%),linear-gradient(0deg,rgba(35,6,28,.36),transparent 35%)}
+}
+@media(max-width:560px){
+.p-hero-visual{width:100%}
+.p-hero-visual img{object-position:51% center}
+.p-hero-overlay{background:linear-gradient(90deg,rgba(36,7,30,.94) 0%,rgba(45,12,34,.84) 30%,rgba(45,12,34,.38) 65%,rgba(45,12,34,.06) 100%),linear-gradient(0deg,rgba(40,7,28,.44),transparent 34%)}
+}

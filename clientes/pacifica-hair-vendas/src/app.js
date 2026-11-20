@@ -96,7 +96,7 @@ function hero() {
     { tag:"BELEZA, AUTOESTIMA E BEM-ESTAR", title:'Tudo de bom<br>para <em>você.</em>',description:"Escolha seus favoritos e aproveite cada momento de autocuidado.",cta:"Ver a coleção"}
   ];
   const current=slides[state.heroSlide % slides.length];
-  return '<section class="p-hero" id="inicio" aria-label="Campanhas da Pacífica"><div class="p-hero-visual"><img src="/assets/gleizelle.webp" alt="Gleizelle, fundadora da Pacífica Hair Vendas" fetchpriority="high" /></div><div class="p-hero-overlay"></div><div class="p-hero-body">' +
+  return '<section class="p-hero" id="inicio" aria-label="Campanhas da Pacífica"><div class="p-hero-visual"><img src="/assets/pacifica-hero-gleizelle.webp" alt="Gleizelle no banner rosa da Pacífica Hair Vendas, com perfume, flores e corações luminosos" fetchpriority="high" /></div><div class="p-hero-overlay"></div><div class="p-hero-body">' +
     '<div class="p-hero-copy"><span class="p-hero-eyebrow">' + current.tag + '</span><h1>' + current.title + '</h1><p>' + current.description + '</p><a href="#produtos" class="p-hero-cta">' + current.cta + ' <span aria-hidden="true">↗</span></a></div>' +
     '<div class="p-hero-carousel"><button data-action="hero-prev" aria-label="Campanha anterior">←</button>' +
     '<div class="p-hero-dots" aria-label="Escolher campanha">' +
