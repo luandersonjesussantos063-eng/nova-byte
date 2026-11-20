@@ -8,7 +8,7 @@ const state = {
   products: Array.isArray(initial.products) ? initial.products : structuredClone(SAMPLE_PRODUCTS),
   cart: normalizeCart(initial.cart),
   favorites: Array.isArray(initial.favorites) ? initial.favorites : [],
-  config: { pixPercent: 5, cardPercent: 0, motoboyCents: 1290, ownCents: 990, ...(initial.config || {}) },
+  config: { pixPercent: 5, cardPercent: 0, motoboyCents: 1290, ownCents: 990, whatsapp: "", instagram: "", ...(initial.config || {}) },
   filter: "Todos", query: "", cartOpen: false, adminOpen: false, adminTab: "produtos", adminEdit: null,
   checkoutOpen: false, payment: "pix", shipping: "motoboy", menuOpen: false, toast: ""
 };
@@ -88,6 +88,12 @@ function about() {
     '<div class="about-copy"><span class="eyebrow">Conheça quem está por trás da Pacífica</span><h2>Mais que produtos,<br /><em>um carinho com você.</em></h2><p>A Pacífica Hair Vendas nasceu da paixão por beleza, autoestima e autocuidado. Aqui, cada escolha é feita pensando no que faz você se sentir bem.</p><p>Sou Gleizelle e quero que sua experiência seja acolhedora, simples e especial — da escolha até a entrega.</p><a class="outline-btn" href="#contato">Fale com a gente ' + icons.arrow + '</a></div></div></section>';
 }
 function footer() {
+  const waDigits = String(state.config.whatsapp || "").replace(/\D/g, "");
+  const whatsappHref = waDigits.length >= 10 && waDigits.length <= 13 ? "https://wa.me/" + (waDigits.startsWith("55") ? waDigits : "55" + waDigits) : "";
+  const instaUser = String(state.config.instagram || "").trim().replace(/^@/, "");
+  const instaHref = /^[\w.]{1,30}$/.test(instaUser) ? "https://instagram.com/" + instaUser : "";
+  const waButton = whatsappHref ? '<a class="social-btn" target="_blank" rel="noopener noreferrer" href="' + whatsappHref + '">Falar no WhatsApp</a>' : '' + waButton + '';
+  const igButton = instaHref ? '<a class="social-btn secondary" target="_blank" rel="noopener noreferrer" href="' + instaHref + '">Seguir no Instagram</a>' : '' + igButton + '';
   return '<section class="wrap reassurance"><div>' + icons.shield + '<span><strong>Compra segura</strong><small>Processo protegido</small></span></div><div>' + icons.card + '<span><strong>Pagamento facilitado</strong><small>Pix e cartão</small></span></div><div>' + icons.truck + '<span><strong>Entrega na Grande BH</strong><small>Motoboy, entrega ou retirada</small></span></div><div>' + icons.heart + '<span><strong>Atendimento especial</strong><small>Todo cuidado importa</small></span></div></section>' +
     '<section class="wrap social-banner" id="contato"><div><span class="social-icon green">' + icons.whatsapp + '</span><span><h3>Vamos conversar?</h3><p>Tire suas dúvidas e receba um atendimento cheio de carinho.</p><span class="social-btn disabled">WhatsApp será informado em breve</span></span></div><div><span class="social-icon instagram">' + icons.instagram + '</span><span><h3>Siga nossas novidades</h3><p>Ofertas, lançamentos e dicas de beleza.</p><span class="social-btn secondary disabled">Instagram em configuração</span></span></div></section>' +
     '<footer class="footer"><div class="wrap footer-main">' + logo() + '<div class="footer-message">Beleza que abraça. <span>Obrigada por fazer parte da nossa história! ♡</span></div></div><div class="wrap footer-bottom">© 2026 Pacífica Hair Vendas · Site em preparação <span>Desenvolvimento: NovaByte</span></div></footer>';
@@ -118,7 +124,7 @@ function adminPanel() {
     '<button class="modal-close icon-btn" data-action="close-admin">' + icons.close + '</button><span class="eyebrow">NovaByte · Ambiente de prévia</span><h2>Painel administrativo</h2>' +
     '<p class="admin-warning">Modo de demonstração: alterações ficam apenas neste navegador. Login, banco de dados e Mercado Pago ainda não estão ativos.</p>' +
     '<div class="admin-tabs"><button data-admin-tab="produtos" class="' + (state.adminTab === "produtos" ? "active" : "") + '">Produtos</button><button data-admin-tab="config" class="' + (state.adminTab === "config" ? "active" : "") + '">Condições</button></div>' +
-    (state.adminTab === "config" ? '<form id="config-form" class="admin-form"><label>Desconto Pix (%)<input type="number" name="pixPercent" min="0" max="100" step="0.01" value="' + Number(state.config.pixPercent) + '" required /></label><label>Adicional cartão (%)<input type="number" name="cardPercent" min="0" max="100" step="0.01" value="' + Number(state.config.cardPercent) + '" required /></label><label>Motoboy (R$)<input name="motoboy" type="number" min="0" step="0.01" value="' + (state.config.motoboyCents / 100).toFixed(2) + '" required /></label><label>Entrega própria (R$)<input name="own" type="number" min="0" step="0.01" value="' + (state.config.ownCents / 100).toFixed(2) + '" required /></label><button class="primary">Salvar condições de demonstração</button></form>' :
+    (state.adminTab === "config" ? '<form id="config-form" class="admin-form"><label>Desconto Pix (%)<input type="number" name="pixPercent" min="0" max="100" step="0.01" value="' + Number(state.config.pixPercent) + '" required /></label><label>Adicional cartão (%)<input type="number" name="cardPercent" min="0" max="100" step="0.01" value="' + Number(state.config.cardPercent) + '" required /></label><label>Motoboy (R$)<input name="motoboy" type="number" min="0" step="0.01" value="' + (state.config.motoboyCents / 100).toFixed(2) + '" required /></label><label>Entrega própria (R$)<input name="own" type="number" min="0" step="0.01" value="' + (state.config.ownCents / 100).toFixed(2) + '" required /></label><label>WhatsApp com DDD (opcional)<input name="whatsapp" type="tel" value="' + esc(state.config.whatsapp || "") + '" placeholder="31999999999" /></label><label>Instagram (usuário, opcional)<input name="instagram" value="' + esc(state.config.instagram || "") + '" placeholder="@pacifica" /></label><button class="primary">Salvar condições de demonstração</button></form>' :
     '<div class="admin-list">' + state.products.map(item => '<div><span><strong>' + esc(item.name) + '</strong><small>' + esc(item.category) + ' · ' + brl(item.priceCents) + ' · Estoque: ' + item.stock + '</small></span><button class="edit-btn" data-action="edit" data-id="' + esc(item.id) + '">Editar</button></div>').join("") + '</div>' +
     '<button class="outline-btn" data-action="new-product">+ Novo produto</button>' +
     (state.adminEdit !== null ? '<form id="product-form" class="admin-form"><h3>' + (p ? "Editar produto" : "Adicionar produto") + '</h3><label>Nome<input required name="name" maxlength="100" value="' + esc(p?.name || "") + '" /></label><label>Categoria<select name="category">' + CATEGORIES.filter(c => c.name !== "Promoções").map(c => '<option value="' + esc(c.name) + '" ' + (p?.category === c.name ? "selected" : "") + '>' + esc(c.name) + '</option>').join("") + '</select></label><label>Preço (R$)<input required type="number" min="0.01" step="0.01" name="price" value="' + (p ? (p.priceCents / 100).toFixed(2) : "") + '" /></label><label>Estoque<input required type="number" min="0" step="1" name="stock" value="' + (p?.stock ?? 0) + '" /></label><label>Foto do produto (URL, opcional)<input type="url" name="image" placeholder="https://..." value="' + esc(p?.image || "") + '" /></label><label>Descrição<textarea name="description" rows="3">' + esc(p?.description || "") + '</textarea></label><div class="form-actions"><button class="primary">Salvar produto</button>' + (p ? '<button type="button" class="danger" data-action="delete" data-id="' + esc(p.id) + '">Excluir</button>' : "") + '</div></form>' : "") ) +
@@ -158,6 +164,7 @@ document.addEventListener("click", e => {
   if (!a) return;
   const action = a.dataset.action, id = a.dataset.id;
   if (action === "menu") state.menuOpen = !state.menuOpen;
+  if (action === "search") document.getElementById("produtos")?.scrollIntoView({behavior:"smooth"});
   if (action === "add") {
     const product = state.products.find(p => p.id === id), row = state.cart.find(x => x.id === id);
     if (!product || product.stock <= (row?.qty || 0)) { notify("Quantidade indisponível no estoque."); return; }
@@ -204,6 +211,8 @@ document.addEventListener("submit", e => {
     state.config.cardPercent = Math.max(0, Math.min(100, Number(f.get("cardPercent"))));
     state.config.motoboyCents = Math.round(Math.max(0, Number(f.get("motoboy"))) * 100);
     state.config.ownCents = Math.round(Math.max(0, Number(f.get("own"))) * 100);
+    state.config.whatsapp = String(f.get("whatsapp") || "").replace(/[^\d+]/g, "").slice(0,17);
+    state.config.instagram = String(f.get("instagram") || "").trim().replace(/^@/, "").slice(0,30);
     persist(); render(); notify("Condições salvas no modo de demonstração.");
   }
   if (e.target.id === "product-form") {

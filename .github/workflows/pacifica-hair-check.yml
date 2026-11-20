@@ -1,0 +1,26 @@
+name: Pacífica Hair - Testes sem publicação
+on:
+  push:
+    branches:
+      - feat/pacifica-hair-vendas
+    paths:
+      - "clientes/pacifica-hair-vendas/**"
+      - ".github/workflows/pacifica-hair-check.yml"
+  workflow_dispatch:
+jobs:
+  validar:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: clientes/pacifica-hair-vendas
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Instalar dependências
+        run: npm install --no-audit --no-fund
+      - name: Testes de valores e carrinho
+        run: npm test
+      - name: Compilar vitrine
+        run: npm run build
