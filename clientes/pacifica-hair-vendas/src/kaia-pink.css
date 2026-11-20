@@ -229,3 +229,35 @@ body{background:var(--p-bg)}
 .p-hero-visual img{object-position:41% center}
 .p-hero-overlay{background:linear-gradient(90deg,rgba(36,7,30,.94) 0%,rgba(45,12,34,.84) 30%,rgba(45,12,34,.38) 65%,rgba(45,12,34,.06) 100%),linear-gradient(0deg,rgba(40,7,28,.44),transparent 34%)}
 }
+
+
+/* Revisão do banner escolhido pela cliente — mantém a fotografia rosa,
+   flores, perfume e neon sem escurecer rosto ou pele. */
+.p-hero{background:#f6aed7}
+.p-hero-visual{width:100%;height:100%;inset:0;background:#f8b7df}
+.p-hero-visual img{filter:none;object-fit:cover;object-position:50% 47%}
+.p-hero-overlay{background:linear-gradient(90deg,rgba(255,229,245,.96) 0%,rgba(255,224,244,.91) 22%,rgba(255,222,244,.67) 42%,rgba(255,222,244,.15) 70%,transparent 100%)}
+.p-hero-copy,.p-hero-copy h1{color:#3e1534}
+.p-hero-copy h1{text-shadow:0 1px 12px #ffdbf1a1}
+.p-hero-eyebrow{color:#842a63}
+.p-hero-copy p{color:#5a2749;text-shadow:0 1px 9px #ffecf7a3}
+.p-hero-cta{background:#df147e;color:#fff;box-shadow:0 7px 17px #b6197938}
+.p-hero-cta:hover{background:#b60b69;color:#fff}
+.p-hero-carousel,.p-hero-carousel>button{color:#71345a}
+.p-hero-dots button{background:#9e477d55}
+.p-hero-dots button.active{background:#a31c68}
+.p-hero-index{color:#7c3760}
+.p-image-caption{color:#853e6c}
+@media(max-width:850px){
+ .p-hero-visual{width:100%}
+ .p-hero-overlay{background:linear-gradient(90deg,rgba(255,230,246,.96),rgba(255,226,243,.86) 27%,rgba(255,225,244,.53) 48%,rgba(255,220,242,.12) 78%,transparent)}
+}
+@media(max-width:560px){
+ .p-hero-visual{width:100%}
+ .p-hero-visual img{object-position:41% center}
+ .p-hero-overlay{background:linear-gradient(90deg,rgba(255,231,247,.96) 0%,rgba(255,228,246,.89) 32%,rgba(255,223,243,.50) 54%,rgba(255,225,244,.08) 80%,transparent 100%)}
+ .p-hero-copy{max-width:215px}
+ .p-hero-copy h1{font-size:clamp(37px,9.7vw,48px)}
+ .p-hero-copy p{font-size:14px;line-height:1.52;max-width:215px}
+ .p-hero-cta{min-width:0;width:auto;padding:14px 16px;font-size:13px}
+}
