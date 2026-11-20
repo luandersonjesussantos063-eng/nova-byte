@@ -39,6 +39,10 @@ function totals() {
 function productArt(p) {
   if (p.image && /^https?:\/\/|^\//i.test(p.image))
     return '<img src="' + esc(p.image) + '" alt="' + esc(p.name) + '" loading="lazy" />';
+  // Product shots cropped from the design reference for visual approval only.
+  const referenceIndex = ["demo-1", "demo-2", "demo-3", "demo-4"].indexOf(p.id);
+  if (p.demo && referenceIndex >= 0)
+    return '<div class="product-art reference-product reference-product-' + referenceIndex + '" role="img" aria-label="Imagem demonstrativa de ' + esc(p.name) + ' extraída da arte de referência"></div>';
   const id = String(p.artKind || "");
   if (id === "pink-perfume" || id === "natura-perfume") {
     const round = id === "natura-perfume";

@@ -384,3 +384,11 @@ body{background:#fffafd;color:#251121}
  .hero-script{font-size:19px}
  .hero-copy h1{font-size:28px}
 }
+
+/* Product mockups cropped from the client-supplied design for visual review.
+   Four positions share one small WebP spritesheet. No live product listing. */
+.product-art.reference-product{display:block;width:100%;height:100%;background-image:url("/assets/design-reference-products.webp");background-repeat:no-repeat;background-size:400% 100%;background-color:#fff0fa}
+.reference-product-0{background-position:0% 50%}
+.reference-product-1{background-position:33.333% 50%}
+.reference-product-2{background-position:66.666% 50%}
+.reference-product-3{background-position:100% 50%}
