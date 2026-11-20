@@ -33,6 +33,3 @@ Interface de demonstração, com catálogo inicial fictício e carrinho interati
 6. Testes de ponta a ponta, domínio, SSL e hospedagem. **Não publicar nem divulgar link antes disso.**
 
 O ambiente de protótipo usa apenas informações demonstrativas, sem coleta ou persistência de dados pessoais de compradores.
-
-## Prévia de aprovação
-Projeto Cloudflare Pages de testes: `novabyte-pacifica-hair-preview` (apenas protótipo, sem pagamentos).
