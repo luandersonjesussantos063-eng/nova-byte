@@ -2,7 +2,7 @@ import "./styles.css";
 import { SAMPLE_PRODUCTS, CATEGORIES } from "./catalog.js";
 import { brl, normalizeCart, cartTotals } from "./commerce.mjs";
 
-const KEY = "pacifica-demo-v1";
+const KEY = "pacifica-demo-v2";
 const initial = (() => { try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch { return {}; } })();
 const state = {
   products: Array.isArray(initial.products) ? initial.products : structuredClone(SAMPLE_PRODUCTS),
