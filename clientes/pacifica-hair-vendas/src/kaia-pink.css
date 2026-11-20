@@ -226,6 +226,6 @@ body{background:var(--p-bg)}
 }
 @media(max-width:560px){
 .p-hero-visual{width:100%}
-.p-hero-visual img{object-position:51% center}
+.p-hero-visual img{object-position:41% center}
 .p-hero-overlay{background:linear-gradient(90deg,rgba(36,7,30,.94) 0%,rgba(45,12,34,.84) 30%,rgba(45,12,34,.38) 65%,rgba(45,12,34,.06) 100%),linear-gradient(0deg,rgba(40,7,28,.44),transparent 34%)}
 }
