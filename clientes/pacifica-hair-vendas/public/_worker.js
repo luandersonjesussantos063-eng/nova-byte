@@ -6,10 +6,46 @@ const products=async(db,all)=>{const r=await db.prepare("SELECT id,payload,visib
 const cats=["Perfumes","Cosméticos","Cabelos","Cuidados Pessoais","Presentes","Maquiagem","Roupas íntimas","Pijamas"];
 const pathPhoto=s=>typeof s==="string"&&((/^\/assets\/[a-zA-Z0-9_./-]+\.(webp|png|jpg|jpeg)$/i.test(s)&&!s.includes(".."))||/^\/api\/photos\/[a-f0-9]{64}$/.test(s));
 async function body(r,max=2500000){if(Number(r.headers.get("Content-Length")||0)>max)throw Error("Solicitação muito grande");const s=await r.text();if(s.length>max)throw Error("Solicitação muito grande");return JSON.parse(s)}
+// Quotes only: no label, charge or checkout operation. Only PAC and SEDEX after merchant review.
+const validParcel=p=>p&&Number.isInteger(p.grams)&&p.grams>=1&&p.grams<=30000&&[p.length,p.width,p.height].every(n=>typeof n==="number"&&Number.isFinite(n)&&n>=1&&n<=100);
+function quoteItems(raw){
+ if(!Array.isArray(raw)||!raw.length||raw.length>12)throw Error("Inclua de 1 a 12 produtos.");
+ const result=new Map();
+ for(const r of raw){if(typeof r?.id!=="string"||!/^[a-zA-Z0-9_-]{1,120}$/.test(r.id)||!Number.isInteger(r.qty)||r.qty<1||r.qty>10)throw Error("Confira produtos e quantidades.");result.set(r.id,(result.get(r.id)||0)+r.qty);}
+ const items=[...result].map(([id,qty])=>({id,qty}));if(items.some(x=>x.qty>10)||items.reduce((n,r)=>n+r.qty,0)>24)throw Error("Limite de unidades para cotação excedido.");return items;
+}
+async function freight(req,env,db){
+ const fail=(error,status=422)=>out({error},status);
+ if(req.method!=="POST")return fail("Método não permitido.",405);
+ if(req.headers.get("Origin")!==new URL(req.url).origin||req.headers.get("Sec-Fetch-Site")==="cross-site")return fail("Origem inválida.",403);
+ if(!req.headers.get("Content-Type")?.startsWith("application/json"))return fail("Envie JSON.",415);
+ const from=String(env.PACIFICA_SHIP_FROM_CEP||"").replace(/\D/g,""),mode=env.PACIFICA_SF_MODE,contact=String(env.PACIFICA_SF_CONTACT||"");
+ if(!env.PACIFICA_SF_TOKEN||!/^\d{8}$/.test(from)||!["sandbox","production"].includes(mode)||! /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contact))return fail("O cálculo de frete está em configuração. Consulte o atendimento.",503);
+ let cep,items;try{const data=await body(req,6000);cep=String(data.cep||"").replace(/\D/g,"");if(!/^\d{8}$/.test(cep))throw Error("Informe um CEP de 8 números.");items=quoteItems(data.items)}catch(e){return fail("Confira o CEP e as quantidades selecionadas.")}
+ const ip=await hash("freight:"+ (req.headers.get("CF-Connecting-IP")||"unknown")),t=now();
+ const rate=await db.prepare("INSERT INTO attempts(ip,count,expires) VALUES (?,1,?) ON CONFLICT(ip) DO UPDATE SET count=CASE WHEN expires<=? THEN 1 ELSE count+1 END,expires=CASE WHEN expires<=? THEN excluded.expires ELSE expires END RETURNING count").bind(ip,t+60,t,t).first();
+ if(rate.count>12)return fail("Muitas consultas. Tente novamente em um minuto.",429);
+ const goods=[];let insurance=0;
+ for(const item of items){
+  const row=await db.prepare("SELECT payload FROM products WHERE id=? AND visible=1").bind(item.id).first();
+  if(!row)return fail("Produto indisponível para cotação.",409);
+  const p=JSON.parse(row.payload);
+  if(p.stock<item.qty||!Number.isSafeInteger(p.stock))return fail("Confira a disponibilidade e a quantidade dos produtos.",409);
+  if(p.shippingAllowed!==true||!validParcel(p.parcel))return fail("Ainda não temos as medidas ou a autorização de transporte de um dos produtos. Consulte o atendimento.",409);
+  const q=p.parcel;goods.push({quantity:item.qty,weight:q.grams/1000,length:q.length,width:q.width,height:q.height});
+  if(Number.isSafeInteger(p.priceCents)&&p.priceCents>0)insurance+=p.priceCents*item.qty;
+ }
+ const payload={from:{postal_code:from},to:{postal_code:cep},services:"1,2",products:goods,options:{receipt:false,own_hand:false,insurance_value:insurance/100,use_insurance_value:true}};
+ let data;try{const res=await fetch((mode==="sandbox"?"https://sandbox.superfrete.com":"https://api.superfrete.com")+"/api/v0/calculator",{method:"POST",headers:{Authorization:"Bearer "+env.PACIFICA_SF_TOKEN,"User-Agent":"PacificaHair/1.0 ("+contact+")","Content-Type":"application/json",Accept:"application/json"},body:JSON.stringify(payload),signal:AbortSignal.timeout(15000)});if(!res.ok)return fail("Não foi possível consultar o frete agora. Tente novamente.",503);data=await res.json()}catch{return fail("A transportadora não respondeu. Tente novamente.",503)}
+ const options=(Array.isArray(data)?data:[]).flatMap(q=>{const id=String(q?.id),price=Number(q?.price),days=Number(q?.delivery_time);if(!["1","2"].includes(id)||q?.has_error===true||q?.error||q?.price==null||q?.price===""||q?.delivery_time==null||!Number.isFinite(price)||price<=0||price>100000||!Number.isInteger(days)||days<0||days>365)return [];return [{id,name:id==="1"?"PAC":"SEDEX",carrier:"Correios",cents:Math.round(price*100),days}]});
+ if(!options.length)return fail("Não há modalidades disponíveis para este CEP e os produtos.",422);
+ return out({cep,mode,options,expiresAt:Date.now()+15*60*1000});
+}
 async function route(req,env){
  const u=new URL(req.url),p=u.pathname,db=env.PACIFICA_DB;
  if(!p.startsWith("/api/"))return env.ASSETS.fetch(req);
  if(!db)return out({error:"Banco indisponível."},503);
+ if(p==="/api/frete")return freight(req,env,db);
  if(p==="/api/catalog"&&req.method==="GET")return out({products:await products(db,false)});
  if(p.startsWith("/api/photos/")&&req.method==="GET"){const id=p.split("/").at(-1);if(!/^[a-f0-9]{64}$/.test(id))return out({error:"Foto não encontrada."},404);const row=await db.prepare("SELECT data FROM photos WHERE id=?").bind(id).first();if(!row)return out({error:"Foto não encontrada."},404);return new Response(Uint8Array.from(atob(row.data.split(",")[1]),x=>x.charCodeAt(0)),{headers:{"Content-Type":"image/webp","Cache-Control":"public,max-age=31536000,immutable","X-Content-Type-Options":"nosniff"}})}
  if(!p.startsWith("/api/admin/"))return out({error:"Não encontrado."},404);
@@ -35,11 +71,12 @@ async function route(req,env){
   if(!x||typeof x.id!=="string"||!/^[a-zA-Z0-9_-]{1,120}$/.test(x.id)||typeof x.name!=="string"||!x.name.trim()||x.name.length>200||typeof x.brand!=="string"||!x.brand.trim()||x.brand.length>100||!cats.includes(x.category)||typeof x.code!=="string"||x.code.length>60||!Number.isSafeInteger(x.priceCents)||x.priceCents<1||x.priceCents>100000000||!Number.isSafeInteger(x.compareCents)||x.compareCents<0||x.compareCents>100000000||!Number.isSafeInteger(x.stock)||x.stock<0||x.stock>100000||typeof x.visible!=="boolean"||!Array.isArray(x.images)||x.images.length>5||x.visible&&!x.images.length)return out({error:"Confira os campos e adicione uma foto para publicar."},400);
   if(x.discountPercent!==undefined){const n=x.discountPercent;if(!Number.isInteger(n)||n<0||n>99||n===0&&x.compareCents!==0||n>0&&(x.compareCents<=x.priceCents||Math.max(1,Math.round(x.compareCents*(100-n)/100))!==x.priceCents))return out({error:"Preço promocional inconsistente."},400);}
   if(x.compareCents&&x.compareCents<=x.priceCents)return out({error:"O preço normal deve ser maior que o promocional."},400);
+  if(x.parcel!==undefined&&x.parcel!==null&&!validParcel(x.parcel)||x.shippingAllowed!==undefined&&typeof x.shippingAllowed!=="boolean"||x.shippingAllowed===true&&!validParcel(x.parcel))return out({error:"Confira peso e dimensões antes de habilitar o frete."},400);
   const old=await db.prepare("SELECT payload,version FROM products WHERE id=?").bind(x.id).first();if(old?old.version!==b.version:b.version!==0)return out({error:"Produto alterado em outra sessão. Atualize."},409);
   if(x.code&&await db.prepare("SELECT id FROM products WHERE id<>? AND lower(json_extract(payload,'$.brand'))=lower(?) AND lower(json_extract(payload,'$.code'))=lower(?) LIMIT 1").bind(x.id,x.brand.trim(),x.code.trim()).first())return out({error:"Código duplicado para esta marca."},409);
   const photos=[],ops=[];
   for(const s of x.images){if(pathPhoto(s)){photos.push(s);continue}if(typeof s!=="string"||s.length>440000||!/^data:image\/webp;base64,UklG[A-Za-z0-9+/]+={0,2}$/.test(s))return out({error:"Foto inválida."},400);const id=await hash(s);ops.push(db.prepare("INSERT OR IGNORE INTO photos(id,data) VALUES (?,?)").bind(id,s));photos.push("/api/photos/"+id)}
-  const clean={...(old?JSON.parse(old.payload):{}),id:x.id,name:x.name.trim(),brand:x.brand.trim(),code:x.code.trim(),category:x.category,priceCents:x.priceCents,compareCents:x.compareCents,discountPercent:x.discountPercent??(x.compareCents>x.priceCents?Math.min(99,Math.max(1,Math.round(100*(1-x.priceCents/x.compareCents)))):0),stock:x.stock,description:String(x.description||"").slice(0,12000),image:photos[0]||"",images:photos,visible:x.visible,demo:false,reference:false,catalog:false};
+  const clean={...(old?JSON.parse(old.payload):{}),id:x.id,name:x.name.trim(),brand:x.brand.trim(),code:x.code.trim(),category:x.category,priceCents:x.priceCents,compareCents:x.compareCents,discountPercent:x.discountPercent??(x.compareCents>x.priceCents?Math.min(99,Math.max(1,Math.round(100*(1-x.priceCents/x.compareCents)))):0),stock:x.stock,description:String(x.description||"").slice(0,12000),image:photos[0]||"",images:photos,visible:x.visible,demo:false,reference:false,catalog:false,...(x.parcel!==undefined?{parcel:x.parcel,shippingAllowed:x.shippingAllowed===true}:{} )};
   ops.push(old?db.prepare("UPDATE products SET payload=?,visible=?,version=version+1,updated_at=CURRENT_TIMESTAMP WHERE id=? AND version=?").bind(JSON.stringify(clean),x.visible?1:0,x.id,b.version):db.prepare("INSERT INTO products(id,payload,visible) VALUES(?,?,?)").bind(x.id,JSON.stringify(clean),x.visible?1:0));
   const r=await db.batch(ops);if(r.at(-1)?.meta?.changes!==1)return out({error:"Alteração concorrente. Atualize."},409);return out({ok:true});
  }

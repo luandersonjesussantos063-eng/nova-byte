@@ -11,6 +11,10 @@ let visitorTools=null;
 let welcomeClaimed=false;
 try{welcomeClaimed=readWelcome(window.localStorage).claimed}catch{}
 
+import {mountFreight,validSelection,cepDigits as shippingCepDigits,formatCep as shippingFormatCep} from "./shipping.mjs";
+let freightUI=null,deliveryCep="",checkoutCep="";
+let freightSelection=null;
+try{freightSelection=JSON.parse(sessionStorage.getItem("pacifica-freight-preview")||"null");deliveryCep=freightSelection?.cep||"";}catch{}
 const KEY = "pacifica-demo-v2";
 const initial = (() => { try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch { return {}; } })();
 const state = {
@@ -40,10 +44,12 @@ function persist() {
   localStorage.setItem(KEY, JSON.stringify({ products: state.products, cart: state.cart, favorites: state.favorites, config: state.config }));
 }
 function count() { return state.cart.reduce((n, p) => n + p.qty, 0); }
-function shippingCents() { return state.shipping === "retirada" ? 0 : (state.shipping === "propria" ? Number(state.config.ownCents) : Number(state.config.motoboyCents)); }
+function cartQuoteItems(){return cartTotals(state.cart,state.products,state.config).entries.map(x=>({id:x.id,qty:x.qty}));}
+function activeFreight(){const cep=state.checkoutOpen?checkoutCep:deliveryCep;return validSelection(freightSelection,cartQuoteItems(),cep)?freightSelection:null;}
+function shippingCents() { if(state.shipping==="superfrete")return activeFreight()?.cents??null;return state.shipping === "retirada" ? 0 : (state.shipping === "propria" ? Number(state.config.ownCents) : Number(state.config.motoboyCents)); }
 function totals() {
   const t = welcomeTotals(cartTotals(state.cart, state.products, state.config),state.config,welcomeClaimed);
-  return { ...t, totalCents: (state.payment === "pix" ? t.pixTotalCents : t.cardTotalCents) + shippingCents() };
+  return { ...t, totalCents: shippingCents()===null?null:(state.payment === "pix" ? t.pixTotalCents : t.cardTotalCents) + shippingCents() };
 }
 function productArt(p) {
   if (p.image && /^https?:\/\/|^\//i.test(p.image))
@@ -261,7 +267,7 @@ function searchSuggestions(){
 function detailModal(){
  const p=catalogItems().find(x=>x.id===state.detailId);if(!p)return "";
  const href=whatsappLink("Olá! Gostaria de consultar a disponibilidade de "+p.name+(p.code?" (código "+p.code+")":"")+".");
- return '<div class="n-detail-backdrop" data-action="close-detail"><section class="n-detail-modal" role="dialog" aria-modal="true" aria-label="Detalhes do produto"><button class="n-detail-close" data-action="close-detail" aria-label="Fechar">'+icons.close+'</button><div class="n-detail-visual">'+productArt(p)+(Array.isArray(p.images)&&p.images.length>1?'<div style="display:flex;gap:6px;overflow:auto">'+p.images.map(src=>'<a href="'+esc(src)+'" target="_blank" rel="noopener noreferrer"><img style="width:54px;height:54px;object-fit:contain" src="'+esc(src)+'" alt="Foto adicional"></a>').join("")+'</div>':"")+'</div><div class="n-detail-info"><span class="n-product-brand">'+esc(p.brand||"Pacífica Hair")+'</span><h2>'+esc(p.name)+'</h2>'+(p.code?'<small>Código '+esc(p.code)+'</small>':"")+displayPrice(p)+'<p>'+esc(p.reference?"Disponibilidade a confirmar com a consultora.":p.description||"Consulte as condições de entrega.")+'</p>'+(p.catalog?'<p>Preço de referência do catálogo vigente da loja.</p>':"")+
+ return '<div class="n-detail-backdrop" data-action="close-detail"><section class="n-detail-modal" role="dialog" aria-modal="true" aria-label="Detalhes do produto"><button class="n-detail-close" data-action="close-detail" aria-label="Fechar">'+icons.close+'</button><div class="n-detail-visual">'+productArt(p)+(Array.isArray(p.images)&&p.images.length>1?'<div style="display:flex;gap:6px;overflow:auto">'+p.images.map(src=>'<a href="'+esc(src)+'" target="_blank" rel="noopener noreferrer"><img style="width:54px;height:54px;object-fit:contain" src="'+esc(src)+'" alt="Foto adicional"></a>').join("")+'</div>':"")+'</div><div class="n-detail-info"><span class="n-product-brand">'+esc(p.brand||"Pacífica Hair")+'</span><h2>'+esc(p.name)+'</h2>'+(p.code?'<small>Código '+esc(p.code)+'</small>':"")+displayPrice(p)+'<p>'+esc(p.reference?"Disponibilidade a confirmar com a consultora.":p.description||"Consulte as condições de entrega.")+'</p>'+(p.catalog?'<p>Preço de referência do catálogo vigente da loja.</p>':"")+(p.stock>0?'<button class="p-freight-trigger" type="button" data-action="freight-product" data-id="'+esc(p.id)+'">'+icons.truck+' Calcular frete pelo CEP</button>':'')+
  (p.stock>0?'<button class="primary" data-action="add" data-id="'+esc(p.id)+'">adicionar à sacola</button>':href?'<a class="primary" href="'+esc(href)+'" target="_blank" rel="noopener noreferrer">Consultar pelo WhatsApp</a>':'<a class="primary" href="#contato" data-action="contact-detail">Consultar atendimento</a>')+'<button class="n-detail-favorite" data-action="fav" data-id="'+esc(p.id)+'">'+icons.heart+(state.favorites.includes(p.id)?"Remover dos favoritos":"Salvar nos favoritos")+'</button></div></section></div>';
 }
 function revistaSelectors(){
@@ -306,7 +312,7 @@ function cartDrawer() {
   return '<div class="overlay" data-action="close-cart"><aside class="drawer" role="dialog" aria-label="Sua sacola">' +
     '<div class="drawer-head"><div><span class="eyebrow">Seu carinho em forma de escolha</span><h2>Sua sacola (' + count() + ')</h2></div><button class="icon-btn" data-action="close-cart">' + icons.close + '</button></div>' +
     '<div class="drawer-items">' + (t.entries.length ? t.entries.map(p => '<div class="cart-row">'+cartProductPhoto(p.id)+'<div><strong>' + esc(p.name) + '</strong><small>' + brl(p.unitCents) + '</small><div class="qty"><button data-action="qty-minus" data-id="' + esc(p.id) + '">−</button><span>' + p.qty + '</span><button data-action="qty-plus" data-id="' + esc(p.id) + '">+</button></div></div><strong>' + brl(p.lineCents) + '</strong></div>').join("") : '<div class="empty-cart">Sua sacola está vazia. Que tal escolher algo especial?</div>') + '</div>' +
-    '<div class="drawer-bottom"><div class="subtotal"><span>Subtotal</span><strong>' + brl(t.subtotalCents) + '</strong></div>'+(t.welcomeCents?'<div class="p-mimo-summary"><span>Mimo 5% · '+WELCOME_CODE+'</span><strong>− '+brl(t.welcomeCents)+'</strong></div><div class="subtotal p-mimo-net"><span>Subtotal com mimo</span><strong>'+brl(t.discountedSubtotalCents)+'</strong></div>':'')+'<p>Frete e desconto de pagamento serão apresentados na próxima etapa.</p><button class="primary wide" data-action="checkout" ' + (t.entries.length ? "" : "disabled") + '>Continuar pedido ' + icons.arrow + '</button><button class="ghost wide" data-action="close-cart">Continuar comprando</button></div></aside></div>';
+    '<div class="drawer-bottom"><div class="subtotal"><span>Subtotal</span><strong>' + brl(t.subtotalCents) + '</strong></div>'+(t.welcomeCents?'<div class="p-mimo-summary"><span>Mimo 5% · '+WELCOME_CODE+'</span><strong>− '+brl(t.welcomeCents)+'</strong></div><div class="subtotal p-mimo-net"><span>Subtotal com mimo</span><strong>'+brl(t.discountedSubtotalCents)+'</strong></div>':'')+''+(t.entries.length?'<button class="p-freight-trigger" type="button" data-action="freight-cart">'+icons.truck+' '+(activeFreight()?'Alterar frete':'Calcular frete pelo CEP')+'</button>'+(activeFreight()?'<div class="p-mimo-summary"><span>'+esc(activeFreight().name)+' · '+esc(shippingFormatCep(activeFreight().cep))+'</span><strong>'+brl(activeFreight().cents)+'</strong></div><p>Prazo estimado: '+activeFreight().days+' dias úteis.</p>':'<p>Consulte o frete antes de continuar.</p>'):'')+'<button class="primary wide" data-action="checkout" ' + (t.entries.length ? "" : "disabled") + '>Continuar pedido ' + icons.arrow + '</button><button class="ghost wide" data-action="close-cart">Continuar comprando</button></div></aside></div>';
 }
 function checkoutModal() {
   if (!state.checkoutOpen) return "";
@@ -315,8 +321,9 @@ function checkoutModal() {
   return '<div class="overlay modal-layer" data-action="close-checkout"><section class="modal checkout-modal" role="dialog" aria-label="Resumo do pedido">' +
     '<button class="modal-close icon-btn" data-action="close-checkout">' + icons.close + '</button><span class="eyebrow">Prévia do pedido</span><h2>Quase lá!</h2><p>Confira o resumo. O pagamento real será habilitado somente após a configuração segura do Mercado Pago.</p>' +
     '<h3>Forma de pagamento</h3><div class="radio-grid"><label><input type="radio" name="payment" value="pix" ' + (state.payment === "pix" ? "checked" : "") + '/>Pix' + (discount ? " · " + discount + "% de desconto" : "") + '</label><label><input type="radio" name="payment" value="card" ' + (state.payment === "card" ? "checked" : "") + '/>Cartão</label></div>' +
-    '<h3>Entrega na Grande BH</h3><div class="radio-grid"><label><input type="radio" name="shipping" value="motoboy" ' + (state.shipping === "motoboy" ? "checked" : "") + '/>Motoboy</label><label><input type="radio" name="shipping" value="propria" ' + (state.shipping === "propria" ? "checked" : "") + '/>Entrega própria</label><label><input type="radio" name="shipping" value="retirada" ' + (state.shipping === "retirada" ? "checked" : "") + '/>Retirada</label></div>' +
-    '<div class="summary-lines"><div><span>Produtos</span><strong>' + brl(t.subtotalCents) + '</strong></div>'+(t.welcomeCents?'<div><span>Mimo 5% · '+WELCOME_CODE+'</span><strong>− '+brl(t.welcomeCents)+'</strong></div>':'')+'<div><span>Frete ilustrativo</span><strong>' + brl(shippingCents()) + '</strong></div><div><span>' + (state.payment === "pix" ? "Desconto Pix" : "Valor no cartão") + '</span><strong>' + brl(state.payment === "pix" ? t.pixTotalCents - t.discountedSubtotalCents : t.cardTotalCents - t.discountedSubtotalCents) + '</strong></div><div class="summary-final"><span>Total estimado</span><strong>' + brl(t.totalCents) + '</strong></div></div>' +
+    '<h3>Forma de entrega</h3><div class="radio-grid"><label><input type="radio" name="shipping" value="superfrete" '+(state.shipping==="superfrete"?"checked":"")+'/>Correios · SuperFrete</label><label><input type="radio" name="shipping" value="motoboy" ' + (state.shipping === "motoboy" ? "checked" : "") + '/>Motoboy</label><label><input type="radio" name="shipping" value="propria" ' + (state.shipping === "propria" ? "checked" : "") + '/>Entrega própria</label><label><input type="radio" name="shipping" value="retirada" ' + (state.shipping === "retirada" ? "checked" : "") + '/>Retirada</label></div>' +
+    (state.shipping==="superfrete"?'<button type="button" class="p-freight-trigger" data-action="freight-cart">'+icons.truck+' '+(activeFreight()?'Alterar modalidade':'Calcular frete para o endereço cadastrado')+'</button>'+(activeFreight()?'<p>'+esc(activeFreight().name)+' · '+activeFreight().days+' dias úteis</p>':'<p>Selecione uma opção de entrega.</p>'):'')+
+    '<div class="summary-lines"><div><span>Produtos</span><strong>' + brl(t.subtotalCents) + '</strong></div>'+(t.welcomeCents?'<div><span>Mimo 5% · '+WELCOME_CODE+'</span><strong>− '+brl(t.welcomeCents)+'</strong></div>':'')+'<div><span>'+(state.shipping==="superfrete"?"Frete estimado":"Frete local ilustrativo")+'</span><strong>' + (shippingCents()===null?"A calcular":brl(shippingCents())) + '</strong></div><div><span>' + (state.payment === "pix" ? "Desconto Pix" : "Valor no cartão") + '</span><strong>' + brl(state.payment === "pix" ? t.pixTotalCents - t.discountedSubtotalCents : t.cardTotalCents - t.discountedSubtotalCents) + '</strong></div><div class="summary-final"><span>Total estimado</span><strong>' + (t.totalCents===null?"A calcular":brl(t.totalCents)) + '</strong></div></div>' +
     '<div class="locked-pay">Pagamento desabilitado durante o desenvolvimento. Nenhuma cobrança será realizada.</div><button class="primary wide" disabled>Finalizar pagamento (em breve)</button></section></div>';
 }
 function catalogImportPanel(){
@@ -373,6 +380,8 @@ document.addEventListener("click", e => {
   if (tab) { state.adminTab = tab.dataset.adminTab; state.adminEdit = null; render(); return; }
   if (!a) return;
   const action = a.dataset.action, id = a.dataset.id;
+  if(action==="freight-product"){freightUI?.open("product",[{id,qty:1}]);return;}
+  if(action==="freight-cart"){freightUI?.open("cart",cartQuoteItems(),state.checkoutOpen?checkoutCep:"");return;}
   if(action==="cookie-settings"){visitorTools?.showSettings();return;}
   if(action==="welcome-offer"){visitorTools?.showOffer();return;}
   if (a.classList?.contains("overlay") && e.target!==a) return;
@@ -407,7 +416,7 @@ document.addEventListener("click", e => {
   if (action === "fav") { state.favorites = state.favorites.includes(id) ? state.favorites.filter(x=>x!==id) : [...state.favorites,id]; persist(); }
   if (action === "cart") state.cartOpen = true;
   if (action === "close-cart") state.cartOpen = false;
-  if (action === "checkout") { (async()=>{try{const authModuleUrl=new URL("/pacifica-auth.mjs",window.location.origin).href;const a=await import(/* @vite-ignore */ authModuleUrl);const user=await a.verifiedUser();if(user&&await a.hasDeliveryDetails(user)){state.cartOpen=false;state.checkoutOpen=true;render();return;}}catch{}location.assign("/conta.html?voltar=sacola");})();return; }
+  if (action === "checkout") { (async()=>{try{const authModuleUrl=new URL("/pacifica-auth.mjs",window.location.origin).href;const a=await import(/* @vite-ignore */ authModuleUrl);const user=await a.verifiedUser();if(user&&await a.hasDeliveryDetails(user)){const sb=a.authClient();const {data,error}=await sb.from("pacifica_customer_details").select("postal_code").eq("user_id",user.id).maybeSingle();if(error||!/^\d{8}$/.test(data?.postal_code||""))throw Error();checkoutCep=data.postal_code;state.cartOpen=false;state.checkoutOpen=true;if(activeFreight()){state.shipping="superfrete";}render();return;}}catch{}location.assign("/conta.html?voltar=sacola");})();return; }
   if (action === "close-checkout") state.checkoutOpen = false;
   if (action === "qty-plus" || action === "qty-minus") {
     const r = state.cart.find(x=>x.id===id), product = state.products.find(x=>x.id===id);
@@ -468,6 +477,7 @@ document.addEventListener("submit", e => {
   }
 });
 render();
+try{freightUI=mountFreight({money:brl,getItems:cartQuoteItems,getCep:()=>deliveryCep,onSelect:choice=>{freightSelection=choice;deliveryCep=choice.cep;state.shipping="superfrete";try{sessionStorage.setItem("pacifica-freight-preview",JSON.stringify(choice))}catch{}render();notify("Frete selecionado.");}});}catch{}
 const isCartReturn=new URLSearchParams(location.search).get("sacola")==="1";
 try{visitorTools=mountVisitorOffers({storage:window.localStorage,skipWelcome:isCartReturn,onClaim:()=>{welcomeClaimed=true;render();notify("Seu mimo de 5% foi aplicado à sacola!");}});}catch(e){console.warn("Preferências da visita indisponíveis");}
 void startCustomerSession();
