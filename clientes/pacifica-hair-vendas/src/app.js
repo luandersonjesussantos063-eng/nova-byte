@@ -199,13 +199,8 @@ function pinkBenefits() {
   return '<section class="p-benefits" aria-label="Diferenciais da Pacífica">' +
     '<a href="'+esc(whatsappLink()||"#contato")+'" '+(whatsappLink()?'target="_blank" rel="noopener noreferrer"':"")+'><span aria-hidden="true">↗</span>Atendimento pelo<br>WhatsApp</a>' +
     '<a href="#produtos"><span aria-hidden="true">♡</span>Uma seleção<br>para você</a>' +
-    '<a href="#oferta"><span aria-hidden="true">☰</span>Ofertas e<br>novidades</a>' +
+    '<a href="#produtos" data-category="Promoções"><span aria-hidden="true">☰</span>Ofertas e<br>novidades</a>' +
     '</section>';
-}
-function pinkPromo() {
-  const pix=Number(state.config.pixPercent || 0);
-  const pixLabel=(Math.round(pix * 100)/100).toLocaleString("pt-BR");
-  return '<section class="p-promo-outer" id="oferta"><div class="p-promo"><span class="p-promo-eyebrow">UM CARINHO DA PACÍFICA</span><h2>' + (pix>0 ? pixLabel+'% OFF' : 'Um carinho especial') + '<span> no Pix</span></h2><p>Escolha seus favoritos. Desconto demonstrativo no Pix, sujeito à confirmação antes do lançamento.</p><a href="#produtos">Explorar a seleção ↗</a><span class="p-promo-glow">♡</span></div></section>';
 }
 function footerPayments(){
  return '<section class="p-footer-payments" aria-labelledby="footer-payment-title"><div class="p-payment-heading"><h3 id="footer-payment-title">Formas de pagamento</h3><p>Em breve, via Mercado Pago</p></div>'+
@@ -223,16 +218,12 @@ function footerPayments(){
 function pinkFooter() {
  const waUrl=whatsappLink();
  const igUrl=instagramLink();
- return '<section class="p-contact" id="contato"><div><span class="p-contact-eyebrow">PRECISA DE AJUDA?</span><h2>Estamos por aqui.</h2><p>Uma experiência especial começa com um atendimento feito com carinho.</p><div class="p-contact-actions">' +
- (waUrl?'<a target="_blank" rel="noopener noreferrer" href="'+waUrl+'">Conversar no WhatsApp ↗</a>':'<span>WhatsApp em configuração</span>')+
- (igUrl?'<a target="_blank" rel="noopener noreferrer" href="'+igUrl+'">Nosso Instagram ↗</a>':'<span>Instagram em configuração</span>')+
- '</div></div><div class="p-contact-decoration" aria-hidden="true">♡</div></section>'+
- '<footer class="p-footer"><div class="p-footer-top"><div class="p-footer-intro"><div class="p-footer-brand">Pacífica <small>HAIR</small></div><p>Beleza e autocuidado, com carinho para você.</p><div class="p-footer-social">'+
+ return '<footer class="p-footer" id="contato"><div class="p-footer-top"><div class="p-footer-intro"><div class="p-footer-brand">Pacífica <small>HAIR</small></div><p>Beleza e autocuidado, com carinho para você.</p><div class="p-footer-social">'+
  (igUrl?'<a href="'+esc(igUrl)+'" target="_blank" rel="noopener noreferrer" aria-label="Instagram">'+icons.instagram+'</a>':'')+
  (waUrl?'<a href="'+esc(waUrl)+'" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp">'+icons.whatsapp+'</a>':'')+
  '</div></div><div><strong>Explore</strong><a href="#inicio" data-action="home">Início</a><a href="#produtos">Produtos</a><a href="#produtos" data-category="Promoções">Ofertas</a>'+(welcomeClaimed?'':'<button type="button" class="p-footer-pref" data-action="welcome-offer">Meu mimo de 5%</button>')+'</div>'+
  '<div><strong>Minha conta</strong><a href="/conta.html">Meus dados</a><a href="/conta.html?aba=pedidos">Meus pedidos</a><button type="button" class="p-footer-pref" data-action="favorites">Meus favoritos</button></div>'+
- '<div><strong>Atendimento</strong><a href="#contato">Fale conosco</a><a href="#sobre" data-action="about">Nossa história</a><span>Entrega na Grande BH</span><a href="/conta.html#privacidade">Privacidade</a><button type="button" class="p-footer-pref" data-action="cookie-settings">Preferências de cookies</button></div></div>'+
+ '<div><strong>Atendimento</strong>'+(waUrl?'<a href="'+esc(waUrl)+'" target="_blank" rel="noopener noreferrer">Fale conosco</a>':'<span>Atendimento pelo menu de contato</span>')+'<a href="#sobre" data-action="about">Nossa história</a><span>Entrega na Grande BH</span><a href="/conta.html#privacidade">Privacidade</a><button type="button" class="p-footer-pref" data-action="cookie-settings">Preferências de cookies</button></div></div>'+
  footerPayments()+
  '<div class="p-footer-end"><span>© 2026 Pacífica Hair · Revenda independente</span><span>Desenvolvido por <a class="footer-admin" href="https://novabytesolucoes.com.br/" target="_blank" rel="noopener noreferrer">NovaByte</a> · <a class="footer-admin" href="/admin.html">Administração</a></span></div>'+
  '<div class="p-footer-warning">Loja em preparação para receber pagamentos reais.</div></footer>';
@@ -358,7 +349,7 @@ function render({ retainSearch = false } = {}) {
   const active = retainSearch && document.activeElement?.id === "search";
   const pos = active ? document.getElementById("search")?.selectionStart : null;
   document.getElementById("app").innerHTML =
-    header() + '<main class="p-site-main">' + hero() + categories() + featuredShelves() + shop() + pinkBenefits() + pinkPromo() + (state.showAbout ? about() : '') + pinkFooter() + floatingContact() + '</main>' +
+    header() + '<main class="p-site-main">' + hero() + categories() + featuredShelves() + shop() + pinkBenefits() + (state.showAbout ? about() : '') + pinkFooter() + floatingContact() + '</main>' +
     cartDrawer() + checkoutModal() + detailModal();
   const pause=document.querySelector('.n-hero-pause'); if(pause&&heroManuallyPaused){pause.textContent='▶';pause.setAttribute('aria-label','Reproduzir carrossel');}
   document.body.classList.toggle("no-scroll", state.cartOpen || state.checkoutOpen || state.adminOpen || !!state.detailId || state.menuOpen);
