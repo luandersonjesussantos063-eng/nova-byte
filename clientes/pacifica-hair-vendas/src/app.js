@@ -1,4 +1,4 @@
-import {discountLabel} from "../public/promotions.mjs";
+import {discountLabel} from "./promotions.mjs";
 import "./styles.css";
 import "./kaia-pink.css";
 import { HERO_SLIDES, HERO_INTERVAL_MS, nextHeroIndex } from "./hero.mjs";
@@ -84,7 +84,7 @@ function header() {
  '<button class="p-header-icon p-account" data-action="account" aria-label="Minha conta">'+icons.user+'<span>minha conta</span></button>'+
  '<button class="p-header-icon p-bag" data-action="cart" aria-label="Abrir sacola">'+icons.bag+(count()?'<span class="p-bag-count">'+count()+'</span>':"")+'</button></div>'+
  '<nav class="p-categories n-nav" aria-label="Categorias"><div class="p-category-scroller">'+navButtons()+'</div><div class="n-nav-arrows"><button data-action="nav-prev" aria-label="Categorias anteriores">‹</button><button data-action="nav-next" aria-label="Próximas categorias">›</button></div></nav>'+
- (state.menuOpen?'<div class="p-menu-backdrop" data-action="menu-close"></div><nav class="p-menu-panel" aria-label="Menu principal"><div class="p-menu-head">Pacífica Hair <button data-action="menu-close" aria-label="Fechar menu">'+icons.close+'</button></div><button data-action="home">Início</button><button data-action="account">Minha conta</button><button data-action="favorites">Meus favoritos</button><span class="n-menu-caption">Compre por categoria</span>'+navButtons()+'<a href="#sobre" data-action="about">Nossa história</a><a href="#contato" data-action="menu-close">Atendimento</a></nav>':"")+'</header>';
+ (state.menuOpen?'<div class="p-menu-backdrop" data-action="menu-close"></div><nav class="p-menu-panel" aria-label="Menu principal"><div class="p-menu-head">Pacífica Hair <button data-action="menu-close" aria-label="Fechar menu">'+icons.close+'</button></div><button data-action="home">Início</button><button data-action="account">Entrar / Minha conta</button><button data-action="signup">Criar conta</button><button data-action="favorites">Meus favoritos</button><span class="n-menu-caption">Compre por categoria</span>'+navButtons()+'<a href="#sobre" data-action="about">Nossa história</a><a href="#contato" data-action="menu-close">Atendimento</a></nav>':"")+'</header>';
 }
 function hero() {
   const current=HERO_SLIDES[state.heroSlide];
@@ -342,7 +342,8 @@ document.addEventListener("click", e => {
   if (action === "hero-prev") { setHeroSlide(nextHeroIndex(state.heroSlide,-1)); return; }
   if (action === "hero-next") { setHeroSlide(nextHeroIndex(state.heroSlide)); return; }
   if (action === "hero-dot") { setHeroSlide(Number(a.dataset.slide || 0)); return; }
-  if (action === "account") { notify("Área de cliente em preparação."); return; }
+  if (action === "account") { location.assign("/conta.html"); return; }
+  if (action === "signup") { location.assign("/conta.html?modo=cadastro"); return; }
   if (action === "favorites") { state.favoritesView = !state.favoritesView; state.menuOpen=false;state.query="";state.filter="Todos";state.brandFilter="Todas";state.priceRange="all";state.showAll = true; render(); document.getElementById("produtos")?.scrollIntoView({behavior:"smooth"}); return; }
   if (action === "toggle-all") { state.showAll = !state.showAll; render(); document.getElementById("produtos")?.scrollIntoView({behavior:"smooth"}); return; }
   if (action === "about") { e.preventDefault(); state.showAbout = true; state.menuOpen = false; render(); document.getElementById("sobre")?.scrollIntoView({behavior:"smooth"}); return; }
@@ -356,7 +357,7 @@ document.addEventListener("click", e => {
   if (action === "fav") { state.favorites = state.favorites.includes(id) ? state.favorites.filter(x=>x!==id) : [...state.favorites,id]; persist(); }
   if (action === "cart") state.cartOpen = true;
   if (action === "close-cart") state.cartOpen = false;
-  if (action === "checkout") { state.cartOpen = false; state.checkoutOpen = true; }
+  if (action === "checkout") { (async()=>{try{const a=await import(/* @vite-ignore */ "/pacifica-auth.mjs");const user=await a.verifiedUser();if(user&&await a.hasDeliveryDetails(user)){state.cartOpen=false;state.checkoutOpen=true;render();return;}}catch{}location.assign("/conta.html?voltar=sacola");})();return; }
   if (action === "close-checkout") state.checkoutOpen = false;
   if (action === "qty-plus" || action === "qty-minus") {
     const r = state.cart.find(x=>x.id===id), product = state.products.find(x=>x.id===id);
@@ -418,4 +419,6 @@ document.addEventListener("submit", e => {
 });
 render();
 activateHeroAutoplay();
+if(typeof window.fetch==="function"&&new URLSearchParams(location.search).get("sacola")==="1"){state.cartOpen=true;render();history.replaceState(null,"",location.pathname);}
+
 if(typeof window.fetch==="function")window.fetch("/api/catalog",{cache:"no-store"}).then(async r=>{if(!r.ok)throw Error("Catálogo indisponível");const data=await r.json();if(!Array.isArray(data.products))throw Error("Catálogo inválido");sharedCatalog=data.products;state.products=data.products;render({retainSearch:true});}).catch(()=>{});
