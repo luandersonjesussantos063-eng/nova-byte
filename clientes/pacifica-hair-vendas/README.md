@@ -1,4 +1,4 @@
-# Pacífica Hair Vendas — NovaByte
+# Pacífica Hair — NovaByte
 
 Loja virtual em desenvolvimento na branch \`feat/pacifica-hair-vendas\` do repositório NovaByte. **Não está publicada**.
 

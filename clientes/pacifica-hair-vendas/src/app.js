@@ -73,7 +73,7 @@ function productCard(p) {
     icons.cart + (p.stock <= 0 ? (p.catalog ? "Disponibilidade a confirmar" : "Esgotado") : "Comprar Agora") + '</button>' + (p.reference?'<a class="p-revista-source" href="'+esc(p.source)+'" target="_blank" rel="noopener noreferrer">Consultar revista ↗</a>':"")+'</div></article>';
 }
 function logo() {
-  return '<a href="#inicio" class="brand" aria-label="Pacífica Hair Vendas, início"><span class="brand-mark"><span class="brand-bottle" aria-hidden="true"><svg viewBox="0 0 56 72" fill="none" stroke="#74505b" stroke-width="1.5"><path d="M26 9V4h8v5M25 9h10l3 6-2 3 6 13 3 26c.3 4-2 7-7 7H15c-5 0-7-3-7-7l3-26 7-13-2-3 3-6h6Z"/><path d="M17 35q6-8 13-7m-15 14q6-6 14-6m-15 15q8-5 17-5M6 26l9-9M4 33l8-8" stroke-width="1.1"/><path d="M30 4V0M24 6l-4-3M36 6l4-3"/></svg></span><span class="brand-inside">Pacífica <em>Hair</em> Vendas<small>Cosméticos, Perfumaria,<br/>cabelos e cia</small></span></span><span class="brand-mobile-name">Pacífica Hair Vendas</span></a>';
+  return '<a href="#inicio" class="brand" aria-label="Pacífica Hair, início"><span class="brand-mark"><span class="brand-bottle" aria-hidden="true"><svg viewBox="0 0 56 72" fill="none" stroke="#74505b" stroke-width="1.5"><path d="M26 9V4h8v5M25 9h10l3 6-2 3 6 13 3 26c.3 4-2 7-7 7H15c-5 0-7-3-7-7l3-26 7-13-2-3 3-6h6Z"/><path d="M17 35q6-8 13-7m-15 14q6-6 14-6m-15 15q8-5 17-5M6 26l9-9M4 33l8-8" stroke-width="1.1"/><path d="M30 4V0M24 6l-4-3M36 6l4-3"/></svg></span><span class="brand-inside">Pacífica <em>Hair</em><small>Cosméticos, Perfumaria,<br/>cabelos e cia</small></span></span><span class="brand-mobile-name">Pacífica Hair</span></a>';
 }
 function header() {
   const categoryNames = ["Avon","Natura","Perfumes","Maquiagem","Cosméticos","Cabelos","Roupas íntimas","Cuidados Pessoais","Presentes","Promoções"];
@@ -90,12 +90,12 @@ function header() {
     '<nav class="p-categories" aria-label="Categorias da loja"><div class="p-category-scroller">' +
     categoryNames.map(name => '<button data-category="' + esc(name) + '" class="' + (state.filter===name ? "selected" : "") + '">' + esc(name) + '</button>').join("") +
     '</div></nav>' +
-    (state.menuOpen?'<div class="p-menu-backdrop" data-action="menu-close"></div><nav class="p-menu-panel" aria-label="Menu principal"><div class="p-menu-head">Pacífica Hair Vendas <button data-action="menu-close" aria-label="Fechar menu">' + icons.close + '</button></div><a href="#inicio" data-action="menu-close">Início</a><a href="#produtos" data-action="menu-close">Todos os produtos</a><a href="#sobre" data-action="about">Nossa história</a><a href="#oferta" data-action="menu-close">Ofertas</a><a href="#contato" data-action="menu-close">Contato</a></nav>' : '') +
+    (state.menuOpen?'<div class="p-menu-backdrop" data-action="menu-close"></div><nav class="p-menu-panel" aria-label="Menu principal"><div class="p-menu-head">Pacífica Hair <button data-action="menu-close" aria-label="Fechar menu">' + icons.close + '</button></div><a href="#inicio" data-action="menu-close">Início</a><a href="#produtos" data-action="menu-close">Todos os produtos</a><a href="#sobre" data-action="about">Nossa história</a><a href="#oferta" data-action="menu-close">Ofertas</a><a href="#contato" data-action="menu-close">Contato</a></nav>' : '') +
     '</header>';
 }
 function hero() {
   const current=HERO_SLIDES[state.heroSlide];
-  return '<section class="p-hero" id="inicio" aria-label="Destaques da Pacífica Hair Vendas" aria-roledescription="carrossel">' +
+  return '<section class="p-hero" id="inicio" aria-label="Destaques da Pacífica Hair" aria-roledescription="carrossel">' +
     '<div class="p-hero-visual">' +
       HERO_SLIDES.map((slide,i)=>'<img class="p-slide-image '+(i===state.heroSlide?'is-active':'')+'" src="'+slide.src+'" alt="'+slide.alt+'" '+(i===0?'fetchpriority="high"':'loading="eager"')+' decoding="async" aria-hidden="'+(i!==state.heroSlide)+'" />').join("") +
     '</div><div class="p-hero-overlay"></div><div class="p-hero-body">' +
@@ -178,8 +178,8 @@ function pinkFooter() {
  (waUrl?'<a target="_blank" rel="noopener noreferrer" href="'+waUrl+'">Conversar no WhatsApp ↗</a>':'<span>WhatsApp em configuração</span>')+
  (igUrl?'<a target="_blank" rel="noopener noreferrer" href="'+igUrl+'">Nosso Instagram ↗</a>':'<span>Instagram em configuração</span>')+
  '</div></div><div class="p-contact-decoration" aria-hidden="true">♡</div></section>'+
- '<footer class="p-footer"><div class="p-footer-top"><div class="p-footer-brand">Pacífica <small>HAIR VENDAS</small></div><div><strong>Explore</strong><a href="#inicio">Início</a><a href="#produtos">Produtos</a><a href="#oferta">Ofertas</a></div><div><strong>Sobre</strong><a href="#sobre" data-action="about">Nossa história</a><a href="#contato">Atendimento</a><span>Entrega na Grande BH</span></div></div>'+
- '<div class="p-footer-end"><span>© 2026 Pacífica Hair Vendas · Revenda independente · Prévia</span><span>Desenvolvido por NovaByte · <button class="footer-admin" data-action="admin">Painel de teste</button></span></div>'+
+ '<footer class="p-footer"><div class="p-footer-top"><div class="p-footer-brand">Pacífica <small>HAIR</small></div><div><strong>Explore</strong><a href="#inicio">Início</a><a href="#produtos">Produtos</a><a href="#oferta">Ofertas</a></div><div><strong>Sobre</strong><a href="#sobre" data-action="about">Nossa história</a><a href="#contato">Atendimento</a><span>Entrega na Grande BH</span></div></div>'+
+ '<div class="p-footer-end"><span>© 2026 Pacífica Hair · Revenda independente · Prévia</span><span>Desenvolvido por NovaByte · <button class="footer-admin" data-action="admin">Painel de teste</button></span></div>'+
  '<div class="p-footer-warning">Produtos e preços ilustrativos. Pagamentos reais não estão habilitados.</div></footer>';
 }
 
@@ -215,7 +215,7 @@ function shop() {
 }
 function about() {
   return '<section class="about-section" id="sobre"><div class="wrap about-grid"><div class="about-image"><div class="about-frame"><img src="/assets/gleizelle.webp" alt="Gleizelle, curadoria de beleza e autocuidado" /><div class="about-overlay"><span>Nossa história</span><h3>Gleizelle</h3><p>Beleza, cuidado e atendimento de perto.</p></div></div></div>' +
-    '<div class="about-copy"><span class="eyebrow">Conheça quem está por trás da Pacífica</span><h2>Mais que produtos,<br /><em>um carinho com você.</em></h2><p>A Pacífica Hair Vendas nasceu da paixão por beleza, autoestima e autocuidado. Aqui, cada escolha é feita pensando no que faz você se sentir bem.</p><p>Sou Gleizelle e quero que sua experiência seja acolhedora, simples e especial — da escolha até a entrega.</p><a class="outline-btn" href="#contato">Fale com a gente ' + icons.arrow + '</a></div></div></section>';
+    '<div class="about-copy"><span class="eyebrow">Conheça quem está por trás da Pacífica</span><h2>Mais que produtos,<br /><em>um carinho com você.</em></h2><p>A Pacífica Hair nasceu da paixão por beleza, autoestima e autocuidado. Aqui, cada escolha é feita pensando no que faz você se sentir bem.</p><p>Sou Gleizelle e quero que sua experiência seja acolhedora, simples e especial — da escolha até a entrega.</p><a class="outline-btn" href="#contato">Fale com a gente ' + icons.arrow + '</a></div></div></section>';
 }
 function footer() {
   const waDigits = String(state.config.whatsapp || "").replace(/\D/g, "");
@@ -226,7 +226,7 @@ function footer() {
   const igButton = instaHref ? '<a class="social-btn secondary" target="_blank" rel="noopener noreferrer" href="' + instaHref + '">Acessar o Instagram ➜</a>' : '<span class="social-btn secondary disabled">Instagram em configuração</span>';
   return '<section class="wrap reassurance"><div>' + icons.shield + '<span><strong>Compra Segura</strong><small>Seus dados protegidos</small></span></div><div>' + icons.card + '<span><strong>Pagamento Facilitado</strong><small>Pix, Cartão e Débito*</small></span></div><div>' + icons.truck + '<span><strong>Entrega na Grande BH</strong><small>Com agilidade</small></span></div><div>' + icons.user + '<span><strong>Atendimento Especializado</strong><small>Tire suas dúvidas</small></span></div></section>' +
     '<section class="wrap social-banner" id="contato"><div><span class="social-icon green">' + icons.whatsapp + '</span><span><h3>Fale Conosco Agora!</h3><p>Tire dúvidas, faça seu pedido pelo WhatsApp!</p>' + waButton + '</span></div><div><span class="social-icon instagram">' + icons.instagram + '</span><span><h3>Siga nosso Instagram</h3><p>Fique por dentro das novidades,<br/>promoções e muito mais!</p>' + igButton + '</span></div></section>' +
-    '<footer class="footer"><div class="wrap footer-main">' + logo() + '<div class="footer-connect"><p>Conecte-se conosco:</p><div><a href="#contato" aria-label="Instagram">' + icons.instagram + '</a><a href="#contato" aria-label="WhatsApp">' + icons.whatsapp + '</a></div></div><div class="footer-message">Obrigada por fazer parte<br/> da nossa história! <span>♥</span></div></div><div class="footer-neon">♡─────────────────♡─────────────────♡</div><div class="wrap footer-bottom"><span>© 2026 Pacífica Hair Vendas. Todos os direitos reservados.</span><span class="payment-logos"><strong>pix</strong><b>VISA</b><b>●●</b><b>elo</b></span></div><p class="footer-preview">* Pagamentos e vendas desativados nesta prévia. Desenvolvido por NovaByte. <button class="footer-admin" data-action="admin">Painel de teste</button></p></footer>';
+    '<footer class="footer"><div class="wrap footer-main">' + logo() + '<div class="footer-connect"><p>Conecte-se conosco:</p><div><a href="#contato" aria-label="Instagram">' + icons.instagram + '</a><a href="#contato" aria-label="WhatsApp">' + icons.whatsapp + '</a></div></div><div class="footer-message">Obrigada por fazer parte<br/> da nossa história! <span>♥</span></div></div><div class="footer-neon">♡─────────────────♡─────────────────♡</div><div class="wrap footer-bottom"><span>© 2026 Pacífica Hair. Todos os direitos reservados.</span><span class="payment-logos"><strong>pix</strong><b>VISA</b><b>●●</b><b>elo</b></span></div><p class="footer-preview">* Pagamentos e vendas desativados nesta prévia. Desenvolvido por NovaByte. <button class="footer-admin" data-action="admin">Painel de teste</button></p></footer>';
 }
 function cartDrawer() {
   if (!state.cartOpen) return "";
