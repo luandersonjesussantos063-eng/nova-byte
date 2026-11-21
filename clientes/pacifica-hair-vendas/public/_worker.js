@@ -14,8 +14,10 @@ async function route(req,env){
  if(p.startsWith("/api/photos/")&&req.method==="GET"){const id=p.split("/").at(-1);if(!/^[a-f0-9]{64}$/.test(id))return out({error:"Foto não encontrada."},404);const row=await db.prepare("SELECT data FROM photos WHERE id=?").bind(id).first();if(!row)return out({error:"Foto não encontrada."},404);return new Response(Uint8Array.from(atob(row.data.split(",")[1]),x=>x.charCodeAt(0)),{headers:{"Content-Type":"image/webp","Cache-Control":"public,max-age=31536000,immutable","X-Content-Type-Options":"nosniff"}})}
  if(!p.startsWith("/api/admin/"))return out({error:"Não encontrado."},404);
  if(req.method!=="GET"&&req.headers.get("Origin")!==u.origin)return out({error:"Origem inválida."},403);
+ if(p==="/api/admin/status"&&req.method==="GET")return out({ready:typeof env.ADMIN_PASSWORD==="string"&&env.ADMIN_PASSWORD.length>=12,reason:typeof env.ADMIN_PASSWORD!=="string"||!env.ADMIN_PASSWORD.length?"missing":env.ADMIN_PASSWORD.length<12?"too_short":"ready"});
  if(p==="/api/admin/login"&&req.method==="POST"){
-  if(typeof env.ADMIN_PASSWORD!=="string"||env.ADMIN_PASSWORD.length<16)return out({error:"Acesso da administradora ainda precisa ser ativado."},503);
+  if(typeof env.ADMIN_PASSWORD!=="string"||!env.ADMIN_PASSWORD.length)return out({error:"O segredo da administração não está disponível nesta implantação. Verifique o ambiente de produção."},503);
+  if(env.ADMIN_PASSWORD.length<12)return out({error:"A senha administrativa configurada precisa ter pelo menos 12 caracteres."},503);
   const ip=await hash(req.headers.get("CF-Connecting-IP")||"unknown"),t=now();
   const r=await db.prepare("INSERT INTO attempts(ip,count,expires) VALUES (?,1,?) ON CONFLICT(ip) DO UPDATE SET count=CASE WHEN expires<=? THEN 1 ELSE count+1 END,expires=CASE WHEN expires<=? THEN excluded.expires ELSE expires END RETURNING count").bind(ip,t+900,t,t).first();
   if(r.count>5)return out({error:"Muitas tentativas. Tente novamente em 15 minutos."},429);
