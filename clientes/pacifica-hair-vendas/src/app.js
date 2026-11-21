@@ -357,7 +357,7 @@ document.addEventListener("click", e => {
   if (action === "fav") { state.favorites = state.favorites.includes(id) ? state.favorites.filter(x=>x!==id) : [...state.favorites,id]; persist(); }
   if (action === "cart") state.cartOpen = true;
   if (action === "close-cart") state.cartOpen = false;
-  if (action === "checkout") { (async()=>{try{const a=await import(/* @vite-ignore */ "/pacifica-auth.mjs");const user=await a.verifiedUser();if(user&&await a.hasDeliveryDetails(user)){state.cartOpen=false;state.checkoutOpen=true;render();return;}}catch{}location.assign("/conta.html?voltar=sacola");})();return; }
+  if (action === "checkout") { (async()=>{try{const authModuleUrl=new URL("/pacifica-auth.mjs",window.location.origin).href;const a=await import(/* @vite-ignore */ authModuleUrl);const user=await a.verifiedUser();if(user&&await a.hasDeliveryDetails(user)){state.cartOpen=false;state.checkoutOpen=true;render();return;}}catch{}location.assign("/conta.html?voltar=sacola");})();return; }
   if (action === "close-checkout") state.checkoutOpen = false;
   if (action === "qty-plus" || action === "qty-minus") {
     const r = state.cart.find(x=>x.id===id), product = state.products.find(x=>x.id===id);
