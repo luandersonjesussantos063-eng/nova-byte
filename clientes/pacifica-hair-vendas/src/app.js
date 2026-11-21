@@ -42,7 +42,7 @@ function totals() {
 }
 function productArt(p) {
   if (p.image && /^https?:\/\/|^\//i.test(p.image))
-    return '<img src="' + esc(p.image) + '" alt="' + esc(p.name) + '" loading="lazy" />';
+    return '<img class="p-catalog-real-image" src="' + esc(p.image) + '" alt="' + esc(p.name) + '" loading="lazy" decoding="async" />';
   if(p.catalog)return '<div class="product-art p-catalog-no-photo"><span>'+esc(p.brand)+'</span><small>Foto a confirmar</small></div>';
   // Product shots cropped from the design reference for visual approval only.
   const referenceIndex = ["demo-1", "demo-2", "demo-3", "demo-4"].indexOf(p.id);
@@ -198,19 +198,19 @@ function categories() {
     '</div></section>';
 }
 function revistaSelectors(){
-  return '<div class="p-revista"><h3>Revistas Avon e Natura</h3><p>Preços de referência publicados nas revistas. Estoque, região e condições sujeitos à confirmação pela consultora. Seleção parcial de produtos nesta prévia.</p><div class="p-brand-filters" aria-label="Selecionar ciclo">'+["18/2026","17/2026"].map(c=>'<button data-action="cycle-filter" data-cycle="'+c+'" class="'+(state.cycleFilter===c?'active':'')+'" aria-pressed="'+(state.cycleFilter===c)+'">Ciclo '+c+'</button>').join("")+'</div><div class="p-revista-links">'+REVISTA_LINKS.filter(r=>r[1]===state.cycleFilter).map(r=>'<a href="'+r[2]+'" target="_blank" rel="noopener noreferrer">Consultar revista '+r[0]+' ↗</a>').join("")+'</div></div>';
+ return '<div class="p-revista"><h3>Avon e Natura — Ciclo 18/2026</h3><p>Seleção da revista 18 com fotos e preços de referência. Disponibilidade e condições sujeitas à confirmação da consultora.</p><div class="p-revista-links">'+REVISTA_LINKS.map(r=>'<a href="'+r[2]+'" target="_blank" rel="noopener noreferrer">Consultar revista '+r[0]+' ↗</a>').join("")+'</div></div>';
 }
 function shop() {
-  const confirmed = state.products.filter(p=>p.catalog&&!p.reference);
+  const confirmed = state.products.filter(p=>p.catalog&&!p.reference&&p.cycle==="18/2026");
   const referenceRows=REVISTA_REFERENCES.filter(p=>!confirmed.some(q=>q.brand===p.brand&&q.code===p.code&&q.cycle===p.cycle));
-  const products=[...confirmed,...referenceRows,...state.products.filter(p=>!p.catalog)];
-  const selected = products.filter(p => (!p.catalog || p.cycle===state.cycleFilter) && (state.brandFilter==="Todas"||p.brand===state.brandFilter) && Number(p.stock) >= 0 && (!state.query || (p.name + " " + p.category + " " + (p.brand||"") + " " + (p.code||"")).toLowerCase().includes(state.query.toLowerCase())) &&
+  const products=[...confirmed,...referenceRows,...state.products.filter(p=>!p.catalog&&!p.demo)];
+  const selected = products.filter(p => (!p.catalog || p.cycle==="18/2026") && (state.brandFilter==="Todas"||p.brand===state.brandFilter) && Number(p.stock) >= 0 && (!state.query || (p.name + " " + p.category + " " + (p.brand||"") + " " + (p.code||"")).toLowerCase().includes(state.query.toLowerCase())) &&
     (state.filter === "Todos" || (state.filter === "Promoções" ? p.compareCents > p.priceCents : p.category === state.filter)) && (!state.favoritesView || state.favorites.includes(p.id)));
-  const visible = state.showAll || state.brandFilter !== "Todas" || state.filter !== "Todos" || state.query ? selected : selected.slice(0, 4);
+  const visible = state.showAll || state.brandFilter !== "Todas" || state.filter !== "Todos" || state.query ? selected : selected.slice(0, 8);
   return '<section class="wrap shop" id="produtos"><div class="section-title"><div class="title-lines"></div><div class="title-center"><h2><span>' + icons.bag + '</span>' + (state.favoritesView ? "Seus Favoritos" : "Nossos Produtos") + '</h2><p>Qualidade, beleza e as melhores marcas!</p></div><div class="title-lines"></div></div>' +
     revistaSelectors() + '<div class="p-brand-filters" aria-label="Filtrar por marca">'+["Todas",...BRANDS].map(brand=>'<button data-action="brand-filter" data-brand="'+esc(brand)+'" aria-pressed="'+(state.brandFilter===brand)+'" class="'+(state.brandFilter===brand?'active':'')+'">'+esc(brand)+'</button>').join("")+'</div>'+(state.brandFilter!=="Todas"&&!visible.length?'<p class="p-catalog-status">Catálogo em preparação. Preços e disponibilidade serão conferidos na revista da consultora.</p>':"")+'<div class="product-grid">' + (visible.length ? visible.map(productCard).join("") : '<div class="empty-results">Nenhum produto encontrado. Veja outras categorias ou adicione favoritos.</div>') + '</div>' +
-    '<div class="catalog-actions"><span>Produtos ilustrativos para aprovação visual — não disponíveis para compra real.</span>' +
-    (selected.length > 4 && state.filter === "Todos" && !state.query ? '<button class="outline-btn" data-action="toggle-all">' + (state.showAll ? "Mostrar menos" : "Ver mais produtos") + ' ' + icons.arrow + '</button>' : "") +
+    '<div class="catalog-actions"><span>Preços do ciclo 18 conforme a fonte indicada. A prévia não aceita pagamentos reais.</span>' +
+    (selected.length > 8 && state.filter === "Todos" && !state.query ? '<button class="outline-btn" data-action="toggle-all">' + (state.showAll ? "Mostrar menos" : "Ver mais produtos") + ' ' + icons.arrow + '</button>' : "") +
     '</div></section>';
 }
 function about() {
@@ -298,7 +298,6 @@ document.addEventListener("click", e => {
   if (tab) { state.adminTab = tab.dataset.adminTab; state.adminEdit = null; render(); return; }
   if (!a) return;
   const action = a.dataset.action, id = a.dataset.id;
-  if(action==="cycle-filter"){state.cycleFilter=["17/2026","18/2026"].includes(a.dataset.cycle)?a.dataset.cycle:"18/2026";state.showAll=true;render();return;}
   if(action==="brand-filter"){state.brandFilter=["Todas",...BRANDS].includes(a.dataset.brand)?a.dataset.brand:"Todas";state.filter="Todos";state.favoritesView=false;state.showAll=true;render();return;}
   if (action === "menu") state.menuOpen = !state.menuOpen;
   if (action === "menu-close") { state.menuOpen = false; render(); return; }
