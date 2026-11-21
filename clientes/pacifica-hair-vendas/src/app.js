@@ -3,6 +3,7 @@ import "./kaia-pink.css";
 import { HERO_SLIDES, HERO_INTERVAL_MS, nextHeroIndex } from "./hero.mjs";
 import { SAMPLE_PRODUCTS, CATEGORIES } from "./catalog.js";
 import {BRANDS,parseCatalog,mergeCatalog} from "./catalog-import.mjs";
+import {REVISTA_LINKS,REVISTA_REFERENCES} from "./revista-references.mjs";
 import { brl, normalizeCart, cartTotals } from "./commerce.mjs";
 
 const KEY = "pacifica-demo-v2";
@@ -12,7 +13,7 @@ const state = {
   cart: normalizeCart(initial.cart),
   favorites: Array.isArray(initial.favorites) ? initial.favorites : [],
   config: { pixPercent: 5, cardPercent: 0, motoboyCents: 1290, ownCents: 990, whatsapp: "", instagram: "", ...(initial.config || {}) },
-  filter: "Todos", brandFilter: "Todas", query: "", showAll: false, showAbout: false, favoritesView: false, heroSlide: 0, cartOpen: false, adminOpen: false, adminTab: "produtos", adminEdit: null,
+  filter: "Todos", brandFilter: "Todas", cycleFilter: "18/2026", query: "", showAll: false, showAbout: false, favoritesView: false, heroSlide: 0, cartOpen: false, adminOpen: false, adminTab: "produtos", adminEdit: null,
   checkoutOpen: false, payment: "pix", shipping: "motoboy", menuOpen: false, toast: ""
 };
 const icons = {
@@ -65,11 +66,11 @@ function productCard(p) {
     '<div class="product-media">' + (p.compareCents > p.priceCents ? '<div class="sale-tag">Promoção</div>' : '') +
     '<button class="fav ' + (fav ? "selected" : "") + '" data-action="fav" data-id="' + esc(p.id) + '" aria-label="Favoritar">' + icons.heart + '</button>' +
     productArt(p) + '</div>' +
-    '<div class="product-info">' + (p.catalog?'<small class="p-catalog-meta">'+esc(p.brand)+' · Ciclo '+esc(p.cycle)+'</small>':p.demo?'<small class="p-catalog-meta">Exemplo de vitrine</small>':"") + '<h3>' + esc(p.name) + '</h3>' +
+    '<div class="product-info">' + (p.reference?'<small class="p-catalog-meta">Referência · Cód. '+esc(p.code)+' · Pág. '+esc(p.page)+'</small>':"") + (p.catalog?'<small class="p-catalog-meta">'+esc(p.brand)+' · Ciclo '+esc(p.cycle)+'</small>':p.demo?'<small class="p-catalog-meta">Exemplo de vitrine</small>':"") + '<h3>' + esc(p.name) + '</h3>' +
     '<div class="price-line">' + (p.compareCents > p.priceCents ? '<del>' + brl(p.compareCents) + '</del>' : '') +
     '<strong>' + brl(p.priceCents) + '</strong></div>' +
     '<button class="primary product-buy" data-action="add" data-id="' + esc(p.id) + '" ' + (p.stock <= 0 ? "disabled" : "") + '>' +
-    icons.cart + (p.stock <= 0 ? (p.catalog ? "Disponibilidade a confirmar" : "Esgotado") : "Comprar Agora") + '</button></div></article>';
+    icons.cart + (p.stock <= 0 ? (p.catalog ? "Disponibilidade a confirmar" : "Esgotado") : "Comprar Agora") + '</button>' + (p.reference?'<a class="p-revista-source" href="'+esc(p.source)+'" target="_blank" rel="noopener noreferrer">Consultar revista ↗</a>':"")+'</div></article>';
 }
 function logo() {
   return '<a href="#inicio" class="brand" aria-label="Pacífica Hair Vendas, início"><span class="brand-mark"><span class="brand-bottle" aria-hidden="true"><svg viewBox="0 0 56 72" fill="none" stroke="#74505b" stroke-width="1.5"><path d="M26 9V4h8v5M25 9h10l3 6-2 3 6 13 3 26c.3 4-2 7-7 7H15c-5 0-7-3-7-7l3-26 7-13-2-3 3-6h6Z"/><path d="M17 35q6-8 13-7m-15 14q6-6 14-6m-15 15q8-5 17-5M6 26l9-9M4 33l8-8" stroke-width="1.1"/><path d="M30 4V0M24 6l-4-3M36 6l4-3"/></svg></span><span class="brand-inside">Pacífica <em>Hair</em> Vendas<small>Cosméticos, Perfumaria,<br/>cabelos e cia</small></span></span><span class="brand-mobile-name">Pacífica Hair Vendas</span></a>';
@@ -196,12 +197,18 @@ function categories() {
     CATEGORIES.map(c => '<button class="category-tile ' + (state.filter === c.name ? "active" : "") + '" data-category="' + esc(c.name) + '"><span class="category-symbol">' + (glyphs[c.name] || '<span>✿</span>') + '</span><strong>' + esc(c.name) + '</strong></button>').join("") +
     '</div></section>';
 }
+function revistaSelectors(){
+  return '<div class="p-revista"><h3>Revistas Avon e Natura</h3><p>Preços de referência publicados nas revistas. Estoque, região e condições sujeitos à confirmação pela consultora. Seleção parcial de produtos nesta prévia.</p><div class="p-brand-filters" aria-label="Selecionar ciclo">'+["18/2026","17/2026"].map(c=>'<button data-action="cycle-filter" data-cycle="'+c+'" class="'+(state.cycleFilter===c?'active':'')+'" aria-pressed="'+(state.cycleFilter===c)+'">Ciclo '+c+'</button>').join("")+'</div><div class="p-revista-links">'+REVISTA_LINKS.filter(r=>r[1]===state.cycleFilter).map(r=>'<a href="'+r[2]+'" target="_blank" rel="noopener noreferrer">Consultar revista '+r[0]+' ↗</a>').join("")+'</div></div>';
+}
 function shop() {
-  const selected = state.products.filter(p => (state.brandFilter==="Todas"||p.brand===state.brandFilter) && Number(p.stock) >= 0 && (!state.query || (p.name + " " + p.category + " " + (p.brand||"") + " " + (p.code||"")).toLowerCase().includes(state.query.toLowerCase())) &&
+  const confirmed = state.products.filter(p=>p.catalog&&!p.reference);
+  const referenceRows=REVISTA_REFERENCES.filter(p=>!confirmed.some(q=>q.brand===p.brand&&q.code===p.code&&q.cycle===p.cycle));
+  const products=[...confirmed,...referenceRows,...state.products.filter(p=>!p.catalog)];
+  const selected = products.filter(p => (!p.catalog || p.cycle===state.cycleFilter) && (state.brandFilter==="Todas"||p.brand===state.brandFilter) && Number(p.stock) >= 0 && (!state.query || (p.name + " " + p.category + " " + (p.brand||"") + " " + (p.code||"")).toLowerCase().includes(state.query.toLowerCase())) &&
     (state.filter === "Todos" || (state.filter === "Promoções" ? p.compareCents > p.priceCents : p.category === state.filter)) && (!state.favoritesView || state.favorites.includes(p.id)));
   const visible = state.showAll || state.brandFilter !== "Todas" || state.filter !== "Todos" || state.query ? selected : selected.slice(0, 4);
   return '<section class="wrap shop" id="produtos"><div class="section-title"><div class="title-lines"></div><div class="title-center"><h2><span>' + icons.bag + '</span>' + (state.favoritesView ? "Seus Favoritos" : "Nossos Produtos") + '</h2><p>Qualidade, beleza e as melhores marcas!</p></div><div class="title-lines"></div></div>' +
-    '<div class="p-brand-filters" aria-label="Filtrar por marca">'+["Todas",...BRANDS].map(brand=>'<button data-action="brand-filter" data-brand="'+esc(brand)+'" aria-pressed="'+(state.brandFilter===brand)+'" class="'+(state.brandFilter===brand?'active':'')+'">'+esc(brand)+'</button>').join("")+'</div>'+(state.brandFilter!=="Todas"&&!visible.length?'<p class="p-catalog-status">Catálogo em preparação. Preços e disponibilidade serão conferidos na revista da consultora.</p>':"")+'<div class="product-grid">' + (visible.length ? visible.map(productCard).join("") : '<div class="empty-results">Nenhum produto encontrado. Veja outras categorias ou adicione favoritos.</div>') + '</div>' +
+    revistaSelectors() + '<div class="p-brand-filters" aria-label="Filtrar por marca">'+["Todas",...BRANDS].map(brand=>'<button data-action="brand-filter" data-brand="'+esc(brand)+'" aria-pressed="'+(state.brandFilter===brand)+'" class="'+(state.brandFilter===brand?'active':'')+'">'+esc(brand)+'</button>').join("")+'</div>'+(state.brandFilter!=="Todas"&&!visible.length?'<p class="p-catalog-status">Catálogo em preparação. Preços e disponibilidade serão conferidos na revista da consultora.</p>':"")+'<div class="product-grid">' + (visible.length ? visible.map(productCard).join("") : '<div class="empty-results">Nenhum produto encontrado. Veja outras categorias ou adicione favoritos.</div>') + '</div>' +
     '<div class="catalog-actions"><span>Produtos ilustrativos para aprovação visual — não disponíveis para compra real.</span>' +
     (selected.length > 4 && state.filter === "Todos" && !state.query ? '<button class="outline-btn" data-action="toggle-all">' + (state.showAll ? "Mostrar menos" : "Ver mais produtos") + ' ' + icons.arrow + '</button>' : "") +
     '</div></section>';
@@ -291,6 +298,7 @@ document.addEventListener("click", e => {
   if (tab) { state.adminTab = tab.dataset.adminTab; state.adminEdit = null; render(); return; }
   if (!a) return;
   const action = a.dataset.action, id = a.dataset.id;
+  if(action==="cycle-filter"){state.cycleFilter=["17/2026","18/2026"].includes(a.dataset.cycle)?a.dataset.cycle:"18/2026";state.showAll=true;render();return;}
   if(action==="brand-filter"){state.brandFilter=["Todas",...BRANDS].includes(a.dataset.brand)?a.dataset.brand:"Todas";state.filter="Todos";state.favoritesView=false;state.showAll=true;render();return;}
   if (action === "menu") state.menuOpen = !state.menuOpen;
   if (action === "menu-close") { state.menuOpen = false; render(); return; }
