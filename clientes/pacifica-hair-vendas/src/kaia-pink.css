@@ -488,3 +488,12 @@ body{background:#fafafa;font-family:"DM Sans",Arial,sans-serif}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
 
 .n-whatsapp-float{position:fixed;right:18px;bottom:22px;z-index:35;display:grid;place-items:center;width:53px;height:53px;border-radius:50%;background:#168c50;color:white;box-shadow:0 5px 18px #164b3333;border:2px solid white}.n-whatsapp-float svg{width:28px;height:28px}.n-whatsapp-float:hover{background:#117340}.n-whatsapp-float:focus-visible{outline:3px solid #ae286b;outline-offset:3px}body.no-scroll .n-whatsapp-float{display:none}@media(max-width:560px){.n-whatsapp-float{right:14px;bottom:calc(14px + env(safe-area-inset-bottom,0px));width:49px;height:49px}}
+
+/* Preço promocional com selo ao lado do valor atual. */
+.p-site-main .n-product-card .n-promo-price,.n-detail-info .n-promo-price{display:flex;flex-direction:column;align-items:flex-start;gap:5px;width:100%;margin:12px 0 10px;line-height:1.3}
+.n-promo-price del{font-size:14px;color:#4a4247;font-weight:400}
+.n-current-price{display:flex;align-items:center;flex-wrap:wrap;gap:7px}
+.p-site-main .n-product-card .n-current-price strong{font-size:20px;color:#181318;font-weight:750;white-space:nowrap}
+.n-discount-badge{display:inline-flex;align-items:center;justify-content:center;background:#e12d28;color:white;border-radius:999px;padding:5px 10px;font-size:13px;font-weight:650;line-height:1;white-space:nowrap}
+.n-detail-info .n-current-price strong{font-size:29px}
+@media(max-width:850px){.p-site-main .n-product-card .n-current-price strong{font-size:17px}.n-discount-badge{font-size:12px;padding:5px 8px}.n-promo-price del{font-size:13px}}

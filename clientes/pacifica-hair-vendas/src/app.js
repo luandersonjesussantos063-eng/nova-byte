@@ -1,3 +1,4 @@
+import {discountLabel} from "../public/promotions.mjs";
 import "./styles.css";
 import "./kaia-pink.css";
 import { HERO_SLIDES, HERO_INTERVAL_MS, nextHeroIndex } from "./hero.mjs";
@@ -60,11 +61,11 @@ function productArt(p) {
   if (id === "cream") return '<div class="product-art art-photo art-cream"><div class="cream-pot"><div class="cream-lid"></div><div class="cream-body"><span>natura<em>tododia</em><small>creme hidratante</small></span></div></div></div>';
   return '<div class="product-art art-' + esc(p.accent || "rose") + '"><div class="art-glow"></div><span>' + esc(p.symbol || "✿") + '</span><i>Pacífica</i></div>';
 }
+function displayPrice(p){const n=discountLabel(p);return '<div class="price-line n-promo-price">'+(n?'<del>'+brl(p.compareCents)+'</del>':"")+'<div class="n-current-price"><strong>'+brl(p.priceCents)+'</strong>'+(n?'<span class="n-discount-badge">-'+n+'%</span>':"")+'</div></div>';}
 function productCard(p) {
  const fav=state.favorites.includes(p.id);
- const hasDiscount=p.compareCents>p.priceCents;
- return '<article class="product-card n-product-card"><div class="product-media"><button type="button" class="n-product-image" data-action="detail" data-id="'+esc(p.id)+'" aria-label="Ver detalhes de '+esc(p.name)+'">'+productArt(p)+'</button>'+(hasDiscount?'<span class="sale-tag">-'+Math.round(100*(1-p.priceCents/p.compareCents))+'%</span>':"")+'<button class="fav '+(fav?"selected":"")+'" data-action="fav" data-id="'+esc(p.id)+'" aria-label="'+(fav?"Remover dos favoritos":"Favoritar")+'" aria-pressed="'+fav+'">'+icons.heart+'</button></div>'+
- '<div class="product-info"><small class="n-product-brand">'+esc(p.brand||"Pacífica Hair")+'</small><button class="n-product-name" data-action="detail" data-id="'+esc(p.id)+'">'+esc(p.name)+'</button><div class="price-line">'+(hasDiscount?'<del>'+brl(p.compareCents)+'</del>':"")+'<strong>'+brl(p.priceCents)+'</strong></div>'+
+  return '<article class="product-card n-product-card"><div class="product-media"><button type="button" class="n-product-image" data-action="detail" data-id="'+esc(p.id)+'" aria-label="Ver detalhes de '+esc(p.name)+'">'+productArt(p)+'</button>'+'<button class="fav '+(fav?"selected":"")+'" data-action="fav" data-id="'+esc(p.id)+'" aria-label="'+(fav?"Remover dos favoritos":"Favoritar")+'" aria-pressed="'+fav+'">'+icons.heart+'</button></div>'+
+ '<div class="product-info"><small class="n-product-brand">'+esc(p.brand||"Pacífica Hair")+'</small><button class="n-product-name" data-action="detail" data-id="'+esc(p.id)+'">'+esc(p.name)+'</button>'+displayPrice(p)+
  '<button class="primary product-buy" data-action="'+(p.stock>0?"add":"detail")+'" data-id="'+esc(p.id)+'">'+(p.stock>0?"adicionar à sacola":"consultar disponibilidade")+'</button></div></article>';
 }
 function logo() {
@@ -219,7 +220,7 @@ function searchSuggestions(){
 function detailModal(){
  const p=catalogItems().find(x=>x.id===state.detailId);if(!p)return "";
  const href=whatsappLink("Olá! Gostaria de consultar a disponibilidade de "+p.name+(p.code?" (código "+p.code+")":"")+".");
- return '<div class="n-detail-backdrop" data-action="close-detail"><section class="n-detail-modal" role="dialog" aria-modal="true" aria-label="Detalhes do produto"><button class="n-detail-close" data-action="close-detail" aria-label="Fechar">'+icons.close+'</button><div class="n-detail-visual">'+productArt(p)+(Array.isArray(p.images)&&p.images.length>1?'<div style="display:flex;gap:6px;overflow:auto">'+p.images.map(src=>'<a href="'+esc(src)+'" target="_blank" rel="noopener noreferrer"><img style="width:54px;height:54px;object-fit:contain" src="'+esc(src)+'" alt="Foto adicional"></a>').join("")+'</div>':"")+'</div><div class="n-detail-info"><span class="n-product-brand">'+esc(p.brand||"Pacífica Hair")+'</span><h2>'+esc(p.name)+'</h2>'+(p.code?'<small>Código '+esc(p.code)+'</small>':"")+'<strong class="n-detail-price">'+brl(p.priceCents)+'</strong><p>'+esc(p.reference?"Disponibilidade a confirmar com a consultora.":p.description||"Consulte as condições de entrega.")+'</p>'+(p.catalog?'<p>Preço de referência do catálogo vigente da loja.</p>':"")+
+ return '<div class="n-detail-backdrop" data-action="close-detail"><section class="n-detail-modal" role="dialog" aria-modal="true" aria-label="Detalhes do produto"><button class="n-detail-close" data-action="close-detail" aria-label="Fechar">'+icons.close+'</button><div class="n-detail-visual">'+productArt(p)+(Array.isArray(p.images)&&p.images.length>1?'<div style="display:flex;gap:6px;overflow:auto">'+p.images.map(src=>'<a href="'+esc(src)+'" target="_blank" rel="noopener noreferrer"><img style="width:54px;height:54px;object-fit:contain" src="'+esc(src)+'" alt="Foto adicional"></a>').join("")+'</div>':"")+'</div><div class="n-detail-info"><span class="n-product-brand">'+esc(p.brand||"Pacífica Hair")+'</span><h2>'+esc(p.name)+'</h2>'+(p.code?'<small>Código '+esc(p.code)+'</small>':"")+displayPrice(p)+'<p>'+esc(p.reference?"Disponibilidade a confirmar com a consultora.":p.description||"Consulte as condições de entrega.")+'</p>'+(p.catalog?'<p>Preço de referência do catálogo vigente da loja.</p>':"")+
  (p.stock>0?'<button class="primary" data-action="add" data-id="'+esc(p.id)+'">adicionar à sacola</button>':href?'<a class="primary" href="'+esc(href)+'" target="_blank" rel="noopener noreferrer">Consultar pelo WhatsApp</a>':'<a class="primary" href="#contato" data-action="contact-detail">Consultar atendimento</a>')+'<button class="n-detail-favorite" data-action="fav" data-id="'+esc(p.id)+'">'+icons.heart+(state.favorites.includes(p.id)?"Remover dos favoritos":"Salvar nos favoritos")+'</button></div></section></div>';
 }
 function revistaSelectors(){
