@@ -10,3 +10,5 @@
   Cache-Control: no-cache, must-revalidate
 /pacifica-auth.mjs
   Cache-Control: no-cache, must-revalidate
+/cep.mjs
+  Cache-Control: no-cache, must-revalidate
