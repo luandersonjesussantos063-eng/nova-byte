@@ -77,7 +77,7 @@ function navButtons(){
 }
 let customer=null, accountChecked=false, accountGeneration=0, signingOut=false;
 let authPromise;
-function storeAuth(){return authPromise??=import(/* @vite-ignore */ new URL("/pacifica-auth.mjs",location.origin).href);}
+function storeAuth(){const moduleUrl=new URL("/pacifica-auth.mjs",location.origin).href;return authPromise??=import(/* @vite-ignore */ moduleUrl);}
 function accountLinks(){
  if(!accountChecked)return '<a href="/conta.html">Minha conta</a>';
  if(!customer)return '<a href="/conta.html">Entrar</a><a href="/conta.html?modo=cadastro">Criar conta</a>';
