@@ -183,11 +183,13 @@ function pinkFooter() {
  (igUrl?'<a target="_blank" rel="noopener noreferrer" href="'+igUrl+'">Nosso Instagram ↗</a>':'<span>Instagram em configuração</span>')+
  '</div></div><div class="p-contact-decoration" aria-hidden="true">♡</div></section>'+
  '<footer class="p-footer"><div class="p-footer-top"><div class="p-footer-brand">Pacífica <small>HAIR</small></div><div><strong>Explore</strong><a href="#inicio">Início</a><a href="#produtos">Produtos</a><a href="#oferta">Ofertas</a></div><div><strong>Sobre</strong><a href="#sobre" data-action="about">Nossa história</a><a href="#contato">Atendimento</a>'+(waUrl?'<a href="'+esc(waUrl)+'" target="_blank" rel="noopener noreferrer">WhatsApp</a>':"")+(igUrl?'<a href="'+esc(igUrl)+'" target="_blank" rel="noopener noreferrer">Instagram</a>':"")+'<span>Entrega na Grande BH</span></div></div>'+
- '<div class="p-footer-end"><span>© 2026 Pacífica Hair · Revenda independente · Prévia</span><span>Desenvolvido por NovaByte · <button class="footer-admin" data-action="admin">Painel de teste</button></span></div>'+
+ '<div class="p-footer-end"><span>© 2026 Pacífica Hair · Revenda independente · Prévia</span><span>Desenvolvido por NovaByte · <a class="footer-admin" href="/admin.html">Painel administrativo</a></span></div>'+
  '<div class="p-footer-warning">Produtos e preços ilustrativos. Pagamentos reais não estão habilitados.</div></footer>';
 }
 
+let sharedCatalog=null;
 function catalogItems(){
+ if(sharedCatalog!==null)return sharedCatalog;
  const confirmed=state.products.filter(p=>p.catalog&&!p.reference&&p.cycle==="18/2026");
  const refs=REVISTA_REFERENCES.filter(p=>!confirmed.some(q=>q.brand===p.brand&&q.code===p.code&&q.cycle===p.cycle));
  return [...confirmed,...refs,...state.products.filter(p=>!p.catalog&&!p.demo)];
@@ -217,7 +219,7 @@ function searchSuggestions(){
 function detailModal(){
  const p=catalogItems().find(x=>x.id===state.detailId);if(!p)return "";
  const href=whatsappLink("Olá! Gostaria de consultar a disponibilidade de "+p.name+(p.code?" (código "+p.code+")":"")+".");
- return '<div class="n-detail-backdrop" data-action="close-detail"><section class="n-detail-modal" role="dialog" aria-modal="true" aria-label="Detalhes do produto"><button class="n-detail-close" data-action="close-detail" aria-label="Fechar">'+icons.close+'</button><div class="n-detail-visual">'+productArt(p)+'</div><div class="n-detail-info"><span class="n-product-brand">'+esc(p.brand||"Pacífica Hair")+'</span><h2>'+esc(p.name)+'</h2>'+(p.code?'<small>Código '+esc(p.code)+'</small>':"")+'<strong class="n-detail-price">'+brl(p.priceCents)+'</strong><p>'+esc(p.reference?"Disponibilidade a confirmar com a consultora.":p.description||"Consulte as condições de entrega.")+'</p>'+(p.catalog?'<p>Preço de referência do catálogo vigente da loja.</p>':"")+
+ return '<div class="n-detail-backdrop" data-action="close-detail"><section class="n-detail-modal" role="dialog" aria-modal="true" aria-label="Detalhes do produto"><button class="n-detail-close" data-action="close-detail" aria-label="Fechar">'+icons.close+'</button><div class="n-detail-visual">'+productArt(p)+(Array.isArray(p.images)&&p.images.length>1?'<div style="display:flex;gap:6px;overflow:auto">'+p.images.map(src=>'<a href="'+esc(src)+'" target="_blank" rel="noopener noreferrer"><img style="width:54px;height:54px;object-fit:contain" src="'+esc(src)+'" alt="Foto adicional"></a>').join("")+'</div>':"")+'</div><div class="n-detail-info"><span class="n-product-brand">'+esc(p.brand||"Pacífica Hair")+'</span><h2>'+esc(p.name)+'</h2>'+(p.code?'<small>Código '+esc(p.code)+'</small>':"")+'<strong class="n-detail-price">'+brl(p.priceCents)+'</strong><p>'+esc(p.reference?"Disponibilidade a confirmar com a consultora.":p.description||"Consulte as condições de entrega.")+'</p>'+(p.catalog?'<p>Preço de referência do catálogo vigente da loja.</p>':"")+
  (p.stock>0?'<button class="primary" data-action="add" data-id="'+esc(p.id)+'">adicionar à sacola</button>':href?'<a class="primary" href="'+esc(href)+'" target="_blank" rel="noopener noreferrer">Consultar pelo WhatsApp</a>':'<a class="primary" href="#contato" data-action="contact-detail">Consultar atendimento</a>')+'<button class="n-detail-favorite" data-action="fav" data-id="'+esc(p.id)+'">'+icons.heart+(state.favorites.includes(p.id)?"Remover dos favoritos":"Salvar nos favoritos")+'</button></div></section></div>';
 }
 function revistaSelectors(){
@@ -301,7 +303,7 @@ function render({ retainSearch = false } = {}) {
   const pos = active ? document.getElementById("search")?.selectionStart : null;
   document.getElementById("app").innerHTML =
     header() + '<main class="p-site-main">' + hero() + categories() + featuredShelves() + shop() + pinkBenefits() + pinkPromo() + (state.showAbout ? about() : '') + pinkFooter() + floatingContact() + '</main>' +
-    cartDrawer() + checkoutModal() + adminPanel() + detailModal();
+    cartDrawer() + checkoutModal() + detailModal();
   const pause=document.querySelector('.n-hero-pause'); if(pause&&heroManuallyPaused){pause.textContent='▶';pause.setAttribute('aria-label','Reproduzir carrossel');}
   document.body.classList.toggle("no-scroll", state.cartOpen || state.checkoutOpen || state.adminOpen || !!state.detailId || state.menuOpen);
   if (active) { const field = document.getElementById("search"); field?.focus(); field?.setSelectionRange(pos, pos); }
@@ -333,6 +335,7 @@ document.addEventListener("click", e => {
   if(action==="filters"){state.filterOpen=!state.filterOpen;render();return;}
   if(action==="clear-filters"){state.query="";state.filter="Todos";state.brandFilter="Todas";state.priceRange="all";state.favoritesView=false;state.showAll=true;render();document.getElementById("produtos")?.scrollIntoView({behavior:"smooth"});return;}
   if(action==="brand-filter"){state.brandFilter=["Todas",...BRANDS].includes(a.dataset.brand)?a.dataset.brand:"Todas";state.filter="Todos";state.favoritesView=false;state.showAll=true;render();return;}
+  if(action==="admin"){location.assign("/admin.html");return;}
   if (action === "menu") state.menuOpen = !state.menuOpen;
   if (action === "menu-close") { state.menuOpen = false; render(); return; }
   if (action === "hero-prev") { setHeroSlide(nextHeroIndex(state.heroSlide,-1)); return; }
@@ -414,3 +417,4 @@ document.addEventListener("submit", e => {
 });
 render();
 activateHeroAutoplay();
+if(typeof window.fetch==="function")window.fetch("/api/catalog",{cache:"no-store"}).then(async r=>{if(!r.ok)throw Error("Catálogo indisponível");const data=await r.json();if(!Array.isArray(data.products))throw Error("Catálogo inválido");sharedCatalog=data.products;state.products=data.products;render({retainSearch:true});}).catch(()=>{});
