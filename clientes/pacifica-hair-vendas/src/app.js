@@ -2,6 +2,7 @@ import "./styles.css";
 import "./kaia-pink.css";
 import { HERO_SLIDES, HERO_INTERVAL_MS, nextHeroIndex } from "./hero.mjs";
 import { SAMPLE_PRODUCTS, CATEGORIES } from "./catalog.js";
+import {BRANDS,parseCatalog,mergeCatalog} from "./catalog-import.mjs";
 import { brl, normalizeCart, cartTotals } from "./commerce.mjs";
 
 const KEY = "pacifica-demo-v2";
@@ -11,7 +12,7 @@ const state = {
   cart: normalizeCart(initial.cart),
   favorites: Array.isArray(initial.favorites) ? initial.favorites : [],
   config: { pixPercent: 5, cardPercent: 0, motoboyCents: 1290, ownCents: 990, whatsapp: "", instagram: "", ...(initial.config || {}) },
-  filter: "Todos", query: "", showAll: false, showAbout: false, favoritesView: false, heroSlide: 0, cartOpen: false, adminOpen: false, adminTab: "produtos", adminEdit: null,
+  filter: "Todos", brandFilter: "Todas", query: "", showAll: false, showAbout: false, favoritesView: false, heroSlide: 0, cartOpen: false, adminOpen: false, adminTab: "produtos", adminEdit: null,
   checkoutOpen: false, payment: "pix", shipping: "motoboy", menuOpen: false, toast: ""
 };
 const icons = {
@@ -41,6 +42,7 @@ function totals() {
 function productArt(p) {
   if (p.image && /^https?:\/\/|^\//i.test(p.image))
     return '<img src="' + esc(p.image) + '" alt="' + esc(p.name) + '" loading="lazy" />';
+  if(p.catalog)return '<div class="product-art p-catalog-no-photo"><span>'+esc(p.brand)+'</span><small>Foto a confirmar</small></div>';
   // Product shots cropped from the design reference for visual approval only.
   const referenceIndex = ["demo-1", "demo-2", "demo-3", "demo-4"].indexOf(p.id);
   if (p.demo && referenceIndex >= 0)
@@ -63,17 +65,17 @@ function productCard(p) {
     '<div class="product-media">' + (p.compareCents > p.priceCents ? '<div class="sale-tag">Promoção</div>' : '') +
     '<button class="fav ' + (fav ? "selected" : "") + '" data-action="fav" data-id="' + esc(p.id) + '" aria-label="Favoritar">' + icons.heart + '</button>' +
     productArt(p) + '</div>' +
-    '<div class="product-info"><h3>' + esc(p.name) + '</h3>' +
+    '<div class="product-info">' + (p.catalog?'<small class="p-catalog-meta">'+esc(p.brand)+' · Ciclo '+esc(p.cycle)+'</small>':p.demo?'<small class="p-catalog-meta">Exemplo de vitrine</small>':"") + '<h3>' + esc(p.name) + '</h3>' +
     '<div class="price-line">' + (p.compareCents > p.priceCents ? '<del>' + brl(p.compareCents) + '</del>' : '') +
     '<strong>' + brl(p.priceCents) + '</strong></div>' +
     '<button class="primary product-buy" data-action="add" data-id="' + esc(p.id) + '" ' + (p.stock <= 0 ? "disabled" : "") + '>' +
-    icons.cart + (p.stock <= 0 ? "Esgotado" : "Comprar Agora") + '</button></div></article>';
+    icons.cart + (p.stock <= 0 ? (p.catalog ? "Disponibilidade a confirmar" : "Esgotado") : "Comprar Agora") + '</button></div></article>';
 }
 function logo() {
   return '<a href="#inicio" class="brand" aria-label="Pacífica Hair Vendas, início"><span class="brand-mark"><span class="brand-bottle" aria-hidden="true"><svg viewBox="0 0 56 72" fill="none" stroke="#74505b" stroke-width="1.5"><path d="M26 9V4h8v5M25 9h10l3 6-2 3 6 13 3 26c.3 4-2 7-7 7H15c-5 0-7-3-7-7l3-26 7-13-2-3 3-6h6Z"/><path d="M17 35q6-8 13-7m-15 14q6-6 14-6m-15 15q8-5 17-5M6 26l9-9M4 33l8-8" stroke-width="1.1"/><path d="M30 4V0M24 6l-4-3M36 6l4-3"/></svg></span><span class="brand-inside">Pacífica <em>Hair</em> Vendas<small>Cosméticos, Perfumaria,<br/>cabelos e cia</small></span></span><span class="brand-mobile-name">Pacífica Hair Vendas</span></a>';
 }
 function header() {
-  const categoryNames = ["Perfumes","Cosméticos","Cabelos","Roupas íntimas","Cuidados Pessoais","Presentes","Promoções"];
+  const categoryNames = ["Avon","Natura","Perfumes","Maquiagem","Cosméticos","Cabelos","Roupas íntimas","Cuidados Pessoais","Presentes","Promoções"];
   const diamond = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6 3h12l5 6-11 12L1 9 6 3Z"/><path d="M1 9h22M6 3l6 18L18 3"/></svg>';
   return '<div class="p-ticker" aria-label="Benefícios da Pacífica"><div class="p-ticker-track"><span>' + diamond + ' Seleção especial</span><span>' + icons.truck + ' Entrega na Grande BH</span><span>' + icons.shield + ' Compra segura</span><a href="#sobre" data-action="about">Sobre a Pacífica ↗</a></div></div>' +
     '<header class="p-header"><div class="p-header-main">' +
@@ -176,7 +178,7 @@ function pinkFooter() {
  (igUrl?'<a target="_blank" rel="noopener noreferrer" href="'+igUrl+'">Nosso Instagram ↗</a>':'<span>Instagram em configuração</span>')+
  '</div></div><div class="p-contact-decoration" aria-hidden="true">♡</div></section>'+
  '<footer class="p-footer"><div class="p-footer-top"><div class="p-footer-brand">Pacífica <small>HAIR VENDAS</small></div><div><strong>Explore</strong><a href="#inicio">Início</a><a href="#produtos">Produtos</a><a href="#oferta">Ofertas</a></div><div><strong>Sobre</strong><a href="#sobre" data-action="about">Nossa história</a><a href="#contato">Atendimento</a><span>Entrega na Grande BH</span></div></div>'+
- '<div class="p-footer-end"><span>© 2026 Pacífica Hair Vendas · Prévia de layout</span><span>Desenvolvido por NovaByte · <button class="footer-admin" data-action="admin">Painel de teste</button></span></div>'+
+ '<div class="p-footer-end"><span>© 2026 Pacífica Hair Vendas · Revenda independente · Prévia</span><span>Desenvolvido por NovaByte · <button class="footer-admin" data-action="admin">Painel de teste</button></span></div>'+
  '<div class="p-footer-warning">Produtos e preços ilustrativos. Pagamentos reais não estão habilitados.</div></footer>';
 }
 
@@ -195,11 +197,11 @@ function categories() {
     '</div></section>';
 }
 function shop() {
-  const selected = state.products.filter(p => Number(p.stock) >= 0 && (!state.query || (p.name + " " + p.category).toLowerCase().includes(state.query.toLowerCase())) &&
+  const selected = state.products.filter(p => (state.brandFilter==="Todas"||p.brand===state.brandFilter) && Number(p.stock) >= 0 && (!state.query || (p.name + " " + p.category + " " + (p.brand||"") + " " + (p.code||"")).toLowerCase().includes(state.query.toLowerCase())) &&
     (state.filter === "Todos" || (state.filter === "Promoções" ? p.compareCents > p.priceCents : p.category === state.filter)) && (!state.favoritesView || state.favorites.includes(p.id)));
-  const visible = state.showAll || state.filter !== "Todos" || state.query ? selected : selected.slice(0, 4);
+  const visible = state.showAll || state.brandFilter !== "Todas" || state.filter !== "Todos" || state.query ? selected : selected.slice(0, 4);
   return '<section class="wrap shop" id="produtos"><div class="section-title"><div class="title-lines"></div><div class="title-center"><h2><span>' + icons.bag + '</span>' + (state.favoritesView ? "Seus Favoritos" : "Nossos Produtos") + '</h2><p>Qualidade, beleza e as melhores marcas!</p></div><div class="title-lines"></div></div>' +
-    '<div class="product-grid">' + (visible.length ? visible.map(productCard).join("") : '<div class="empty-results">Nenhum produto encontrado. Veja outras categorias ou adicione favoritos.</div>') + '</div>' +
+    '<div class="p-brand-filters" aria-label="Filtrar por marca">'+["Todas",...BRANDS].map(brand=>'<button data-action="brand-filter" data-brand="'+esc(brand)+'" aria-pressed="'+(state.brandFilter===brand)+'" class="'+(state.brandFilter===brand?'active':'')+'">'+esc(brand)+'</button>').join("")+'</div>'+(state.brandFilter!=="Todas"&&!visible.length?'<p class="p-catalog-status">Catálogo em preparação. Preços e disponibilidade serão conferidos na revista da consultora.</p>':"")+'<div class="product-grid">' + (visible.length ? visible.map(productCard).join("") : '<div class="empty-results">Nenhum produto encontrado. Veja outras categorias ou adicione favoritos.</div>') + '</div>' +
     '<div class="catalog-actions"><span>Produtos ilustrativos para aprovação visual — não disponíveis para compra real.</span>' +
     (selected.length > 4 && state.filter === "Todos" && !state.query ? '<button class="outline-btn" data-action="toggle-all">' + (state.showAll ? "Mostrar menos" : "Ver mais produtos") + ' ' + icons.arrow + '</button>' : "") +
     '</div></section>';
@@ -238,17 +240,20 @@ function checkoutModal() {
     '<div class="summary-lines"><div><span>Produtos</span><strong>' + brl(t.subtotalCents) + '</strong></div><div><span>Frete ilustrativo</span><strong>' + brl(shippingCents()) + '</strong></div><div><span>' + (state.payment === "pix" ? "Desconto Pix" : "Valor no cartão") + '</span><strong>' + brl(state.payment === "pix" ? t.pixTotalCents - t.subtotalCents : t.cardTotalCents - t.subtotalCents) + '</strong></div><div class="summary-final"><span>Total estimado</span><strong>' + brl(t.totalCents) + '</strong></div></div>' +
     '<div class="locked-pay">Pagamento desabilitado durante o desenvolvimento. Nenhuma cobrança será realizada.</div><button class="primary wide" disabled>Finalizar pagamento (em breve)</button></section></div>';
 }
+function catalogImportPanel(){
+ return '<form id="catalog-import-form" class="admin-form"><h3>Importar catálogo por ciclo</h3><p>Use a revista fornecida pela consultora. Preços preservados em centavos; estoque novo começa em zero.</p><label>Marca<select name="brand"><option>Avon</option><option>Natura</option></select></label><label>Ciclo<input name="cycle" required placeholder="18/2026"></label><label>Fonte da revista<input name="source" required placeholder="Nome do PDF ou endereço oficial"></label><label>Dados CSV<textarea name="csv" rows="10" required placeholder="codigo;nome;categoria;preco;foto"></textarea></label><p>Separador ponto e vírgula. Preço: 39,90. Foto HTTPS autorizada ou vazia. A importação fica somente neste navegador de teste.</p><button class="primary">Importar e atualizar produtos</button></form>';
+}
 function adminPanel() {
   if (!state.adminOpen) return "";
   const p = state.products.find(x => x.id === state.adminEdit);
   return '<div class="overlay modal-layer" data-action="close-admin"><section class="modal admin-modal" role="dialog" aria-label="Painel de demonstração" onclick="event.stopPropagation()">' +
     '<button class="modal-close icon-btn" data-action="close-admin">' + icons.close + '</button><span class="eyebrow">NovaByte · Ambiente de prévia</span><h2>Painel administrativo</h2>' +
     '<p class="admin-warning">Modo de demonstração: alterações ficam apenas neste navegador. Login, banco de dados e Mercado Pago ainda não estão ativos.</p>' +
-    '<div class="admin-tabs"><button data-admin-tab="produtos" class="' + (state.adminTab === "produtos" ? "active" : "") + '">Produtos</button><button data-admin-tab="config" class="' + (state.adminTab === "config" ? "active" : "") + '">Condições</button></div>' +
+    '<div class="admin-tabs"><button data-admin-tab="produtos" class="' + (state.adminTab === "produtos" ? "active" : "") + '">Produtos</button><button data-admin-tab="config" class="' + (state.adminTab === "catalogos" ? catalogImportPanel() : state.adminTab === "config" ? "active" : "") + '">Condições</button><button data-admin-tab="catalogos" class="' + (state.adminTab === "catalogos" ? "active" : "") + '">Catálogos</button></div>' +
     (state.adminTab === "config" ? '<form id="config-form" class="admin-form"><label>Desconto Pix (%)<input type="number" name="pixPercent" min="0" max="100" step="0.01" value="' + Number(state.config.pixPercent) + '" required /></label><label>Adicional cartão (%)<input type="number" name="cardPercent" min="0" max="100" step="0.01" value="' + Number(state.config.cardPercent) + '" required /></label><label>Motoboy (R$)<input name="motoboy" type="number" min="0" step="0.01" value="' + (state.config.motoboyCents / 100).toFixed(2) + '" required /></label><label>Entrega própria (R$)<input name="own" type="number" min="0" step="0.01" value="' + (state.config.ownCents / 100).toFixed(2) + '" required /></label><label>WhatsApp com DDD (opcional)<input name="whatsapp" type="tel" value="' + esc(state.config.whatsapp || "") + '" placeholder="31999999999" /></label><label>Instagram (usuário, opcional)<input name="instagram" value="' + esc(state.config.instagram || "") + '" placeholder="@pacifica" /></label><button class="primary">Salvar condições de demonstração</button></form>' :
     '<div class="admin-list">' + state.products.map(item => '<div><span><strong>' + esc(item.name) + '</strong><small>' + esc(item.category) + ' · ' + brl(item.priceCents) + ' · Estoque: ' + item.stock + '</small></span><button class="edit-btn" data-action="edit" data-id="' + esc(item.id) + '">Editar</button></div>').join("") + '</div>' +
     '<button class="outline-btn" data-action="new-product">+ Novo produto</button>' +
-    (state.adminEdit !== null ? '<form id="product-form" class="admin-form"><h3>' + (p ? "Editar produto" : "Adicionar produto") + '</h3><label>Nome<input required name="name" maxlength="100" value="' + esc(p?.name || "") + '" /></label><label>Categoria<select name="category">' + CATEGORIES.filter(c => c.name !== "Promoções").map(c => '<option value="' + esc(c.name) + '" ' + (p?.category === c.name ? "selected" : "") + '>' + esc(c.name) + '</option>').join("") + '</select></label><label>Preço (R$)<input required type="number" min="0.01" step="0.01" name="price" value="' + (p ? (p.priceCents / 100).toFixed(2) : "") + '" /></label><label>Estoque<input required type="number" min="0" step="1" name="stock" value="' + (p?.stock ?? 0) + '" /></label><label>Foto do produto (URL, opcional)<input type="url" name="image" placeholder="https://..." value="' + esc(p?.image || "") + '" /></label><label>Descrição<textarea name="description" rows="3">' + esc(p?.description || "") + '</textarea></label><div class="form-actions"><button class="primary">Salvar produto</button>' + (p ? '<button type="button" class="danger" data-action="delete" data-id="' + esc(p.id) + '">Excluir</button>' : "") + '</div></form>' : "") ) +
+    (state.adminEdit !== null ? '<form id="product-form" class="admin-form"><h3>' + (p ? "Editar produto" : "Adicionar produto") + '</h3><label>Nome<input required name="name" maxlength="100" value="' + esc(p?.name || "") + '" /></label><label>Categoria<select name="category">' + [...CATEGORIES,{name:"Maquiagem"}].filter(c => c.name !== "Promoções").map(c => '<option value="' + esc(c.name) + '" ' + (p?.category === c.name ? "selected" : "") + '>' + esc(c.name) + '</option>').join("") + '</select></label><label>Preço (R$)<input required type="number" min="0.01" step="0.01" name="price" value="' + (p ? (p.priceCents / 100).toFixed(2) : "") + '" /></label><label>Estoque<input required type="number" min="0" step="1" name="stock" value="' + (p?.stock ?? 0) + '" /></label><label>Foto do produto (URL, opcional)<input type="url" name="image" placeholder="https://..." value="' + esc(p?.image || "") + '" /></label><label>Descrição<textarea name="description" rows="3">' + esc(p?.description || "") + '</textarea></label><div class="form-actions"><button class="primary">Salvar produto</button>' + (p ? '<button type="button" class="danger" data-action="delete" data-id="' + esc(p.id) + '">Excluir</button>' : "") + '</div></form>' : "") ) +
     '</section></div>';
 }
 function notify(msg) {
@@ -275,7 +280,7 @@ document.addEventListener("click", e => {
   const cat = e.target.closest("[data-category]");
   const tab = e.target.closest("[data-admin-tab]");
   if (cat) {
-    state.filter = cat.dataset.category;
+    if(BRANDS.includes(cat.dataset.category)){state.brandFilter=cat.dataset.category;state.filter="Todos";}else{state.filter=cat.dataset.category;state.brandFilter="Todas";}
     state.favoritesView = false;
     state.showAll = true;
     state.menuOpen = false;
@@ -286,6 +291,7 @@ document.addEventListener("click", e => {
   if (tab) { state.adminTab = tab.dataset.adminTab; state.adminEdit = null; render(); return; }
   if (!a) return;
   const action = a.dataset.action, id = a.dataset.id;
+  if(action==="brand-filter"){state.brandFilter=["Todas",...BRANDS].includes(a.dataset.brand)?a.dataset.brand:"Todas";state.filter="Todos";state.favoritesView=false;state.showAll=true;render();return;}
   if (action === "menu") state.menuOpen = !state.menuOpen;
   if (action === "menu-close") { state.menuOpen = false; render(); return; }
   if (action === "hero-prev") { setHeroSlide(nextHeroIndex(state.heroSlide,-1)); return; }
@@ -336,6 +342,7 @@ document.addEventListener("change", e => {
  if (e.target.name === "shipping") { state.shipping = e.target.value; render(); }
 });
 document.addEventListener("submit", e => {
+  if(e.target.id==="catalog-import-form"){e.preventDefault();try{const f=new FormData(e.target);const rows=parseCatalog(f.get("csv"),{brand:String(f.get("brand")),cycle:String(f.get("cycle")).trim(),source:String(f.get("source"))});state.products=mergeCatalog(state.products,rows);persist();render();notify(rows.length+" itens importados/atualizados nesta prévia.");}catch(error){notify(error.message);}return;}
   if (e.target.id === "config-form") {
     e.preventDefault();
     const f = new FormData(e.target);
@@ -351,7 +358,7 @@ document.addEventListener("submit", e => {
     e.preventDefault();
     const f = new FormData(e.target);
     const previous = state.products.find(p=>p.id===state.adminEdit);
-    const p = { id: previous?.id || "local-" + crypto.randomUUID(), name: String(f.get("name")).trim(),
+    const p = {...previous, id: previous?.id || "local-" + crypto.randomUUID(), name: String(f.get("name")).trim(),
       category: String(f.get("category")), priceCents: Math.round(Number(f.get("price")) * 100),
       compareCents: previous?.compareCents || 0, stock: Number(f.get("stock")), description: String(f.get("description")).trim(),
       image: String(f.get("image")).trim(), accent: previous?.accent || "rose", symbol: previous?.symbol || "✿", demo: false };

@@ -294,3 +294,5 @@ body{background:var(--p-bg)}
  .p-hero-visual .p-slide-image{transition:none;transform:none}
  .p-hero-visual .p-slide-image.is-active{transform:none}
 }
+
+.p-brand-filters{display:flex;gap:10px;flex-wrap:wrap;margin:0 0 20px}.p-brand-filters button{background:white;border:1px solid #e8c3d8;color:#7f2e59;padding:9px 18px;border-radius:999px;font-weight:700}.p-brand-filters button.active{background:#ad1a69;color:white}.p-catalog-meta{color:#87516e;font-size:11px;display:block;margin-bottom:6px}.p-catalog-status{font-size:14px;color:#74405d}.p-catalog-no-photo{display:flex;flex-direction:column;justify-content:center;align-items:center;gap:8px;background:#f9e8f0;color:#985574}.p-catalog-no-photo span{font-size:24px}.p-catalog-no-photo small{font-size:12px}.admin-form p{font-size:13px;line-height:1.5}
