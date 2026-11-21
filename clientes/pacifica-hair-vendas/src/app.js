@@ -207,6 +207,19 @@ function pinkPromo() {
   const pixLabel=(Math.round(pix * 100)/100).toLocaleString("pt-BR");
   return '<section class="p-promo-outer" id="oferta"><div class="p-promo"><span class="p-promo-eyebrow">UM CARINHO DA PACÍFICA</span><h2>' + (pix>0 ? pixLabel+'% OFF' : 'Um carinho especial') + '<span> no Pix</span></h2><p>Escolha seus favoritos. Desconto demonstrativo no Pix, sujeito à confirmação antes do lançamento.</p><a href="#produtos">Explorar a seleção ↗</a><span class="p-promo-glow">♡</span></div></section>';
 }
+function footerPayments(){
+ return '<section class="p-footer-payments" aria-labelledby="footer-payment-title"><div class="p-payment-heading"><h3 id="footer-payment-title">Formas de pagamento</h3><p>Em breve, via Mercado Pago</p></div>'+
+ '<div class="p-payment-brands" role="list" aria-label="Bandeiras e formas de pagamento previstas">'+
+ '<span class="p-pay-brand p-pay-visa" role="listitem">VISA</span>'+
+ '<span class="p-pay-brand p-pay-master" role="listitem"><span aria-hidden="true" class="p-master-circles"><i></i><i></i></span><small>Mastercard</small></span>'+
+ '<span class="p-pay-brand p-pay-elo" role="listitem"><strong>elo</strong><span aria-hidden="true" class="p-elo-colors"><i></i><i></i><i></i></span></span>'+
+ '<span class="p-pay-brand p-pay-amex" role="listitem">AMERICAN<br>EXPRESS</span>'+
+ '<span class="p-pay-brand p-pay-hiper" role="listitem">Hipercard</span>'+
+ '<span class="p-pay-brand p-pay-caixa" role="listitem">CAIXA<small>Débito virtual</small></span>'+
+ '<span class="p-pay-brand p-pay-pix" role="listitem"><svg aria-hidden="true" viewBox="0 0 32 32" fill="none"><path d="M16 3 28 15 16 28 4 16Z" fill="#32bcad"/><path d="m8 11 6 6q2 2 4 0l6-6M8 21l6-6q2-2 4 0l6 6" stroke="white" stroke-width="1.6"/></svg>Pix</span>'+
+ '<span class="p-pay-brand p-pay-boleto" role="listitem"><svg aria-hidden="true" viewBox="0 0 40 18" stroke="currentColor"><path d="M2 1v16M5 1v16M9 1v16M12 1v16M17 1v16M21 1v16M24 1v16M29 1v16M32 1v16M37 1v16" stroke-width="1.8"/></svg><small>Boleto</small></span></div>'+
+ '<p class="p-pay-note">Cartões de crédito, débito elegível, Pix e boleto. A disponibilidade será confirmada no checkout após a ativação dos pagamentos.</p></section>';
+}
 function pinkFooter() {
  const waUrl=whatsappLink();
  const igUrl=instagramLink();
@@ -214,9 +227,15 @@ function pinkFooter() {
  (waUrl?'<a target="_blank" rel="noopener noreferrer" href="'+waUrl+'">Conversar no WhatsApp ↗</a>':'<span>WhatsApp em configuração</span>')+
  (igUrl?'<a target="_blank" rel="noopener noreferrer" href="'+igUrl+'">Nosso Instagram ↗</a>':'<span>Instagram em configuração</span>')+
  '</div></div><div class="p-contact-decoration" aria-hidden="true">♡</div></section>'+
- '<footer class="p-footer"><div class="p-footer-top"><div class="p-footer-brand">Pacífica <small>HAIR</small></div><div><strong>Explore</strong><a href="#inicio">Início</a><a href="#produtos">Produtos</a><a href="#oferta">Ofertas</a>'+(welcomeClaimed?'':'<button type="button" class="p-footer-pref" data-action="welcome-offer">Meu mimo de 5%</button>')+'</div><div><strong>Sobre</strong><a href="#sobre" data-action="about">Nossa história</a><a href="#contato">Atendimento</a>'+(waUrl?'<a href="'+esc(waUrl)+'" target="_blank" rel="noopener noreferrer">WhatsApp</a>':"")+(igUrl?'<a href="'+esc(igUrl)+'" target="_blank" rel="noopener noreferrer">Instagram</a>':"")+'<span>Entrega na Grande BH</span><button type="button" class="p-footer-pref" data-action="cookie-settings">Preferências de cookies</button></div></div>'+
- '<div class="p-footer-end"><span>© 2026 Pacífica Hair · Revenda independente · Prévia</span><span>Desenvolvido por NovaByte · <a class="footer-admin" href="/admin.html">Painel administrativo</a></span></div>'+
- '<div class="p-footer-warning">Produtos e preços ilustrativos. Pagamentos reais não estão habilitados.</div></footer>';
+ '<footer class="p-footer"><div class="p-footer-top"><div class="p-footer-intro"><div class="p-footer-brand">Pacífica <small>HAIR</small></div><p>Beleza e autocuidado, com carinho para você.</p><div class="p-footer-social">'+
+ (igUrl?'<a href="'+esc(igUrl)+'" target="_blank" rel="noopener noreferrer" aria-label="Instagram">'+icons.instagram+'</a>':'')+
+ (waUrl?'<a href="'+esc(waUrl)+'" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp">'+icons.whatsapp+'</a>':'')+
+ '</div></div><div><strong>Explore</strong><a href="#inicio" data-action="home">Início</a><a href="#produtos">Produtos</a><a href="#produtos" data-category="Promoções">Ofertas</a>'+(welcomeClaimed?'':'<button type="button" class="p-footer-pref" data-action="welcome-offer">Meu mimo de 5%</button>')+'</div>'+
+ '<div><strong>Minha conta</strong><a href="/conta.html">Meus dados</a><a href="/conta.html?aba=pedidos">Meus pedidos</a><button type="button" class="p-footer-pref" data-action="favorites">Meus favoritos</button></div>'+
+ '<div><strong>Atendimento</strong><a href="#contato">Fale conosco</a><a href="#sobre" data-action="about">Nossa história</a><span>Entrega na Grande BH</span><a href="/conta.html#privacidade">Privacidade</a><button type="button" class="p-footer-pref" data-action="cookie-settings">Preferências de cookies</button></div></div>'+
+ footerPayments()+
+ '<div class="p-footer-end"><span>© 2026 Pacífica Hair · Revenda independente</span><span>Desenvolvido por <a class="footer-admin" href="https://novabytesolucoes.com.br/" target="_blank" rel="noopener noreferrer">NovaByte</a> · <a class="footer-admin" href="/admin.html">Administração</a></span></div>'+
+ '<div class="p-footer-warning">Loja em preparação para receber pagamentos reais.</div></footer>';
 }
 
 let sharedCatalog=null;

@@ -522,3 +522,22 @@ body.no-scroll .p-cookie-banner{display:none}.p-cookie-copy{flex:1}.p-cookie-cop
 .p-cookies-dialog h2{font:600 25px/1.2 Georgia,serif;margin:6px 30px 12px 0}.p-cookie-choice{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:12px 0;border-bottom:1px solid #eedbe6}.p-cookie-choice small{display:block;margin-top:4px;color:#85697a;font-size:11px;line-height:1.5}.p-cookie-choice strong{font-size:13px}.p-cookie-choice input{width:21px;height:21px;accent-color:#b8206e;flex-shrink:0}.p-cookie-always{font-size:10px;font-weight:700;white-space:nowrap;color:#86516d}.p-cookies-dialog .p-cookie-actions{margin-top:10px}.p-cookies-dialog .p-cookie-note{font-size:11px}
 .p-mimo-summary{display:flex;justify-content:space-between;gap:10px;font-size:13px;align-items:center;color:#a91f65;margin:10px 0}.p-mimo-net{font-size:15px}
 @media(max-width:600px){.p-cookie-banner{flex-direction:column;align-items:stretch;gap:10px;bottom:calc(10px + env(safe-area-inset-bottom,0px));padding:13px}.p-cookie-actions{width:100%}.p-welcome-dialog,.p-cookies-dialog{padding:24px 19px 18px}.p-welcome-dialog p{margin:9px 0 14px}}
+
+/* Compact, responsive institutional and payment footer. */
+.p-footer{padding-bottom:40px}
+.p-footer-top{grid-template-columns:1.5fr 1fr 1fr 1.2fr;gap:28px;padding-bottom:28px}
+.p-footer-intro p{font-size:12px;line-height:1.6;color:#dfbfd3;max-width:210px;margin:14px 0}
+.p-footer-social{display:flex;gap:10px;margin-top:10px}.p-footer-social a{width:36px;height:36px;display:grid;place-items:center;border:1px solid #ffffff45;border-radius:50%}.p-footer-social svg{width:19px;height:19px}
+.p-footer-top .p-footer-pref{font-size:13px;color:#e7c4d6;text-decoration:none;line-height:1.45}.p-footer-top a,.p-footer-top span{line-height:1.45}.p-footer-top strong{line-height:1.4}
+.p-footer-payments{border-bottom:1px solid #ffffff38;padding:24px 0 20px}
+.p-payment-heading{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}.p-payment-heading h3{margin:0;font-size:15px;color:#fff;letter-spacing:.2px}.p-payment-heading p{margin:0;color:#dcb9cf;font-size:11px;text-align:right}
+.p-payment-brands{display:flex;flex-wrap:wrap;gap:8px}
+.p-pay-brand{box-sizing:border-box;width:65px;height:42px;background:#fff;color:#20212a;border-radius:7px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;line-height:1.03;font-family:Arial,sans-serif;font-weight:700;overflow:hidden}
+.p-pay-brand small{font-size:8px;font-weight:700;line-height:1.1}.p-pay-visa{font-style:italic;color:#1a1f71;font-size:18px;letter-spacing:-1.3px}
+.p-master-circles{display:flex;align-items:center;height:20px}.p-master-circles i{width:20px;height:20px;background:#eb001b;border-radius:50%}.p-master-circles i+i{background:#ff9f00;margin-left:-8px;opacity:.93}.p-pay-master small{font-size:7.5px}
+.p-pay-elo strong{font-size:22px;letter-spacing:-2px}.p-elo-colors{display:flex;gap:2px}.p-elo-colors i{height:3px;width:10px;background:#ffcb05}.p-elo-colors i:nth-child(2){background:#00a4e0}.p-elo-colors i:nth-child(3){background:#ef4136}
+.p-pay-amex{background:#1767a8;color:#fff;font-size:9px;letter-spacing:.1px;text-align:center}.p-pay-hiper{font-size:10px;background:#ae2030;color:#fff;font-style:italic}.p-pay-caixa{color:#0069aa;font-size:13px}.p-pay-caixa small{font-size:7px;color:#464646}
+.p-pay-pix{flex-direction:row;color:#23534f;font-size:14px;gap:3px}.p-pay-pix svg{width:20px;height:20px}.p-pay-boleto svg{width:34px;height:16px}
+.p-pay-note{font-size:11px;line-height:1.5;color:#dcb9cf;margin:12px 0 0;max-width:650px}
+.p-footer-end{align-items:flex-start;flex-wrap:wrap;line-height:1.6;padding-top:16px}.p-footer-warning{text-align:left;line-height:1.5;color:#d3a2c2}
+@media(max-width:720px){.p-footer{padding:28px 18px calc(70px + env(safe-area-inset-bottom,0px))}.p-footer-top{grid-template-columns:1fr 1fr;gap:20px 18px;padding-bottom:23px}.p-footer-top>div:first-child{grid-column:1/-1}.p-footer-intro p{max-width:100%;margin:8px 0}.p-footer-top>div:not(:first-child){gap:9px}.p-footer-top strong{font-size:13px}.p-footer-top a,.p-footer-top span,.p-footer-top .p-footer-pref{font-size:12px}.p-footer-payments{padding:20px 0 16px}.p-payment-heading{align-items:baseline}.p-payment-brands{gap:6px}.p-pay-brand{width:60px;height:39px}.p-footer-end{gap:5px;font-size:11px}.p-footer-warning{font-size:10px}}
