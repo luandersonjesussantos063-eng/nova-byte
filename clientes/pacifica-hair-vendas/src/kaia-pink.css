@@ -497,3 +497,8 @@ body{background:#fafafa;font-family:"DM Sans",Arial,sans-serif}
 .n-discount-badge{display:inline-flex;align-items:center;justify-content:center;background:#e12d28;color:white;border-radius:999px;padding:5px 10px;font-size:13px;font-weight:650;line-height:1;white-space:nowrap}
 .n-detail-info .n-current-price strong{font-size:29px}
 @media(max-width:850px){.p-site-main .n-product-card .n-current-price strong{font-size:17px}.n-discount-badge{font-size:12px;padding:5px 8px}.n-promo-price del{font-size:13px}}
+
+/* Client navigation uses the verified Supabase session, never a local fake login. */
+.n-header .p-customer-links>a,.n-header .p-customer-links>button{display:block;width:100%;text-align:left;background:none;border:0;border-bottom:1px solid #eee0e8;color:#412738;font-size:15px;padding:13px 2px;text-decoration:none;font-family:inherit;cursor:pointer}
+.n-header .p-customer-greeting{margin:0;padding:13px 2px 8px;color:#ad1762;font-weight:700;font-size:15px;overflow-wrap:anywhere}
+.n-header .p-account.is-signed-in::after{content:"";position:absolute;top:3px;right:3px;width:8px;height:8px;border-radius:50%;background:#38845c;border:2px solid #fff;box-sizing:content-box}

@@ -75,16 +75,43 @@ const NAV_CATEGORIES=[["Todos","para você"],["Promoções","promoções"],["Pre
 function navButtons(){
  return NAV_CATEGORIES.map(([key,label])=>'<button type="button" data-category="'+esc(key)+'" class="'+(key==="Promoções"?'nav-offer ':"")+((BRANDS.includes(key)?state.brandFilter===key:state.filter===key&&state.brandFilter==="Todas")?'selected':"")+'">'+esc(label)+'</button>').join("");
 }
+let customer=null, accountChecked=false, accountGeneration=0, signingOut=false;
+let authPromise;
+function storeAuth(){return authPromise??=import(/* @vite-ignore */ new URL("/pacifica-auth.mjs",location.origin).href);}
+function accountLinks(){
+ if(!accountChecked)return '<a href="/conta.html">Minha conta</a>';
+ if(!customer)return '<a href="/conta.html">Entrar</a><a href="/conta.html?modo=cadastro">Criar conta</a>';
+ const name=String(customer.user_metadata?.pacifica_name||"").trim().split(/\s+/)[0].slice(0,40);
+ return (name?'<p class="p-customer-greeting">Olá, '+esc(name)+'!</p>':'<p class="p-customer-greeting">Olá! Você está conectado.</p>')+'<a href="/conta.html">Minha conta</a><a href="/conta.html?aba=pedidos">Meus pedidos</a><button type="button" data-action="customer-logout">Sair da conta</button>';
+}
+function updateAccountMenu(){
+ const links=document.querySelector('[data-customer-links]');if(links)links.innerHTML=accountLinks();
+ const icon=document.querySelector('.p-account');if(icon){icon.classList.toggle('is-signed-in',!!customer);icon.setAttribute('aria-label',customer?'Minha conta, conectado':'Minha conta');}
+}
+async function refreshCustomer(){
+ const generation=++accountGeneration;
+ try{const a=await storeAuth();if(!a.authClient())return;const user=await a.verifiedUser();if(generation!==accountGeneration)return;customer=user;accountChecked=true;updateAccountMenu();}
+ catch{if(generation===accountGeneration){customer=null;accountChecked=false;updateAccountMenu();}}
+}
+async function startCustomerSession(){
+ try{const a=await storeAuth(),sb=a.authClient();if(!sb)return;sb.auth.onAuthStateChange(event=>{if(event==="SIGNED_OUT"){++accountGeneration;customer=null;accountChecked=true;updateAccountMenu();}else if(event==="SIGNED_IN"||event==="TOKEN_REFRESHED"||event==="INITIAL_SESSION"||event==="USER_UPDATED")setTimeout(refreshCustomer,0);});await refreshCustomer();}
+ catch{}
+}
+async function logoutCustomer(){
+ if(signingOut)return;signingOut=true;
+ try{const a=await storeAuth(),sb=a.authClient();if(!sb)throw Error();const {error}=await sb.auth.signOut({scope:"local"});if(error)throw error;++accountGeneration;customer=null;accountChecked=true;updateAccountMenu();notify("Você saiu da sua conta.");}
+ catch{notify("Não foi possível sair. Tente novamente.");}finally{signingOut=false;}
+}
 function header() {
  return '<header class="p-header n-header"><div class="n-top-links"><a href="#inicio" data-action="home">pacífica hair</a><a href="#sobre" data-action="about">sobre a loja</a><a href="#produtos" data-category="Avon">avon</a><a href="#produtos" data-category="Natura">natura</a><a href="#contato">atendimento</a><span>Entrega na Grande BH</span></div>'+
  '<div class="p-header-main n-pill"><button class="p-header-icon p-hamburger" data-action="menu" aria-label="Abrir menu" aria-expanded="'+state.menuOpen+'"><span></span><span></span><span></span></button>'+
  '<button class="p-header-icon p-favorites '+(state.favoritesView?"selected":"")+'" data-action="favorites" aria-label="Favoritos" aria-pressed="'+state.favoritesView+'">'+icons.heart+(state.favorites.length?'<span class="p-count">'+state.favorites.length+'</span>':"")+'</button>'+
  '<div class="p-brand-wrap">'+logo()+'</div>'+
  '<div class="p-search-row"><form class="p-search" id="n-search-form" role="search"><input id="search" type="search" placeholder="o que está buscando hoje?" aria-label="Pesquisar produtos" autocomplete="off" value="'+esc(state.query)+'"><button type="submit" aria-label="Buscar">'+icons.search+'</button></form><div id="n-suggestions" class="n-suggestions" hidden></div></div>'+
- '<a class="p-header-icon p-account" href="/conta.html" aria-label="Minha conta">'+icons.user+'<span>minha conta</span></a>'+
+ '<a class="p-header-icon p-account '+(customer?'is-signed-in':'')+'" href="/conta.html" aria-label="'+(customer?'Minha conta, conectado':'Minha conta')+'">'+icons.user+'<span>minha conta</span></a>'+
  '<button class="p-header-icon p-bag" data-action="cart" aria-label="Abrir sacola">'+icons.bag+(count()?'<span class="p-bag-count">'+count()+'</span>':"")+'</button></div>'+
  '<nav class="p-categories n-nav" aria-label="Categorias"><div class="p-category-scroller">'+navButtons()+'</div><div class="n-nav-arrows"><button data-action="nav-prev" aria-label="Categorias anteriores">‹</button><button data-action="nav-next" aria-label="Próximas categorias">›</button></div></nav>'+
- (state.menuOpen?'<div class="p-menu-backdrop" data-action="menu-close"></div><nav class="p-menu-panel" aria-label="Menu principal"><div class="p-menu-head">Pacífica Hair <button data-action="menu-close" aria-label="Fechar menu">'+icons.close+'</button></div><button data-action="home">Início</button><a href="/conta.html">Entrar / Minha conta</a><a href="/conta.html?modo=cadastro">Criar conta</a><button data-action="favorites">Meus favoritos</button><span class="n-menu-caption">Compre por categoria</span>'+navButtons()+'<a href="#sobre" data-action="about">Nossa história</a><a href="#contato" data-action="menu-close">Atendimento</a></nav>':"")+'</header>';
+ (state.menuOpen?'<div class="p-menu-backdrop" data-action="menu-close"></div><nav class="p-menu-panel" aria-label="Menu principal"><div class="p-menu-head">Pacífica Hair <button data-action="menu-close" aria-label="Fechar menu">'+icons.close+'</button></div><button data-action="home">Início</button><div class="p-customer-links" data-customer-links>'+accountLinks()+'</div><button data-action="favorites">Meus favoritos</button><span class="n-menu-caption">Compre por categoria</span>'+navButtons()+'<a href="#sobre" data-action="about">Nossa história</a><a href="#contato" data-action="menu-close">Atendimento</a></nav>':"")+'</header>';
 }
 function hero() {
   const current=HERO_SLIDES[state.heroSlide];
@@ -337,7 +364,8 @@ document.addEventListener("click", e => {
   if(action==="clear-filters"){state.query="";state.filter="Todos";state.brandFilter="Todas";state.priceRange="all";state.favoritesView=false;state.showAll=true;render();document.getElementById("produtos")?.scrollIntoView({behavior:"smooth"});return;}
   if(action==="brand-filter"){state.brandFilter=["Todas",...BRANDS].includes(a.dataset.brand)?a.dataset.brand:"Todas";state.filter="Todos";state.favoritesView=false;state.showAll=true;render();return;}
   if(action==="admin"){location.assign("/admin.html");return;}
-  if (action === "menu") state.menuOpen = !state.menuOpen;
+  if(action==="customer-logout"){void logoutCustomer();return;}
+  if (action === "menu") {state.menuOpen = !state.menuOpen;if(state.menuOpen)void refreshCustomer();}
   if (action === "menu-close") { state.menuOpen = false; render(); return; }
   if (action === "hero-prev") { setHeroSlide(nextHeroIndex(state.heroSlide,-1)); return; }
   if (action === "hero-next") { setHeroSlide(nextHeroIndex(state.heroSlide)); return; }
@@ -418,6 +446,9 @@ document.addEventListener("submit", e => {
   }
 });
 render();
+void startCustomerSession();
+window.addEventListener("pageshow",e=>{if(e.persisted)void refreshCustomer();});
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")void refreshCustomer();});
 activateHeroAutoplay();
 if(typeof window.fetch==="function"&&new URLSearchParams(location.search).get("sacola")==="1"){state.cartOpen=true;render();history.replaceState(null,"",location.pathname);}
 
