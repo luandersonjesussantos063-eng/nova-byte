@@ -12,7 +12,7 @@ const state = {
   products: Array.isArray(initial.products) ? initial.products : structuredClone(SAMPLE_PRODUCTS),
   cart: normalizeCart(initial.cart),
   favorites: Array.isArray(initial.favorites) ? initial.favorites : [],
-  config: { pixPercent: 5, cardPercent: 0, motoboyCents: 1290, ownCents: 990, whatsapp: "", instagram: "", ...(initial.config || {}) },
+  config: { pixPercent: 5, cardPercent: 0, motoboyCents: 1290, ownCents: 990, ...(initial.config || {}), whatsapp: initial.config?.whatsapp || "553180482304", instagram: initial.config?.instagram || "pacificahair_vendas" },
   filter: "Todos", brandFilter: "Todas", cycleFilter: "18/2026", query: "", showAll: false, showAbout: false, favoritesView: false, heroSlide: 0, cartOpen: false, adminOpen: false, adminTab: "produtos", adminEdit: null,
   checkoutOpen: false, payment: "pix", shipping: "motoboy", menuOpen: false, detailId: null, sortBy: "featured", priceRange: "all", filterOpen: false, toast: ""
 };
@@ -150,9 +150,22 @@ document.addEventListener("touchend",e=>{
 },{passive:true});
 document.addEventListener("touchcancel",()=>{heroTouchX=null;heroPointerPaused=false;},{passive:true});
 
+function whatsappLink(message="Olá! Gostaria de saber mais sobre os produtos da Pacífica Hair.") {
+ const digits=String(state.config.whatsapp||"").replace(/\D/g,"");
+ const phone=digits.length===10||digits.length===11?"55"+digits:digits;
+ return /^55\d{10,11}$/.test(phone)?"https://wa.me/"+phone+(message?"?text="+encodeURIComponent(message):""):"";
+}
+function instagramLink(){
+ const user=String(state.config.instagram||"").trim().replace(/^@/,"");
+ return /^[\w.]{1,30}$/.test(user)?"https://www.instagram.com/"+user+"/":"";
+}
+function floatingContact(){
+ const url=whatsappLink();
+ return url?'<a class="n-whatsapp-float" href="'+esc(url)+'" target="_blank" rel="noopener noreferrer" aria-label="Fale com a Pacífica Hair pelo WhatsApp">'+icons.whatsapp+'</a>':"";
+}
 function pinkBenefits() {
   return '<section class="p-benefits" aria-label="Diferenciais da Pacífica">' +
-    '<a href="#contato"><span aria-hidden="true">↗</span>Atendimento pelo<br>WhatsApp</a>' +
+    '<a href="'+esc(whatsappLink()||"#contato")+'" '+(whatsappLink()?'target="_blank" rel="noopener noreferrer"':"")+'><span aria-hidden="true">↗</span>Atendimento pelo<br>WhatsApp</a>' +
     '<a href="#produtos"><span aria-hidden="true">♡</span>Uma seleção<br>para você</a>' +
     '<a href="#oferta"><span aria-hidden="true">☰</span>Ofertas e<br>novidades</a>' +
     '</section>';
@@ -163,15 +176,13 @@ function pinkPromo() {
   return '<section class="p-promo-outer" id="oferta"><div class="p-promo"><span class="p-promo-eyebrow">UM CARINHO DA PACÍFICA</span><h2>' + (pix>0 ? pixLabel+'% OFF' : 'Um carinho especial') + '<span> no Pix</span></h2><p>Escolha seus favoritos. Desconto demonstrativo no Pix, sujeito à confirmação antes do lançamento.</p><a href="#produtos">Explorar a seleção ↗</a><span class="p-promo-glow">♡</span></div></section>';
 }
 function pinkFooter() {
- const wa=String(state.config.whatsapp||"").replace(/\D/g,"");
- const waUrl=wa.length>=10&&wa.length<=13 ? "https://wa.me/"+(wa.startsWith("55")?wa:"55"+wa) : "";
- const ig=String(state.config.instagram||"").trim().replace(/^@/,"");
- const igUrl=/^[\w.]{1,30}$/.test(ig) ? "https://instagram.com/"+ig : "";
+ const waUrl=whatsappLink();
+ const igUrl=instagramLink();
  return '<section class="p-contact" id="contato"><div><span class="p-contact-eyebrow">PRECISA DE AJUDA?</span><h2>Estamos por aqui.</h2><p>Uma experiência especial começa com um atendimento feito com carinho.</p><div class="p-contact-actions">' +
  (waUrl?'<a target="_blank" rel="noopener noreferrer" href="'+waUrl+'">Conversar no WhatsApp ↗</a>':'<span>WhatsApp em configuração</span>')+
  (igUrl?'<a target="_blank" rel="noopener noreferrer" href="'+igUrl+'">Nosso Instagram ↗</a>':'<span>Instagram em configuração</span>')+
  '</div></div><div class="p-contact-decoration" aria-hidden="true">♡</div></section>'+
- '<footer class="p-footer"><div class="p-footer-top"><div class="p-footer-brand">Pacífica <small>HAIR</small></div><div><strong>Explore</strong><a href="#inicio">Início</a><a href="#produtos">Produtos</a><a href="#oferta">Ofertas</a></div><div><strong>Sobre</strong><a href="#sobre" data-action="about">Nossa história</a><a href="#contato">Atendimento</a><span>Entrega na Grande BH</span></div></div>'+
+ '<footer class="p-footer"><div class="p-footer-top"><div class="p-footer-brand">Pacífica <small>HAIR</small></div><div><strong>Explore</strong><a href="#inicio">Início</a><a href="#produtos">Produtos</a><a href="#oferta">Ofertas</a></div><div><strong>Sobre</strong><a href="#sobre" data-action="about">Nossa história</a><a href="#contato">Atendimento</a>'+(waUrl?'<a href="'+esc(waUrl)+'" target="_blank" rel="noopener noreferrer">WhatsApp</a>':"")+(igUrl?'<a href="'+esc(igUrl)+'" target="_blank" rel="noopener noreferrer">Instagram</a>':"")+'<span>Entrega na Grande BH</span></div></div>'+
  '<div class="p-footer-end"><span>© 2026 Pacífica Hair · Revenda independente · Prévia</span><span>Desenvolvido por NovaByte · <button class="footer-admin" data-action="admin">Painel de teste</button></span></div>'+
  '<div class="p-footer-warning">Produtos e preços ilustrativos. Pagamentos reais não estão habilitados.</div></footer>';
 }
@@ -205,8 +216,7 @@ function searchSuggestions(){
 }
 function detailModal(){
  const p=catalogItems().find(x=>x.id===state.detailId);if(!p)return "";
- const wa=String(state.config.whatsapp||"").replace(/\D/g,"");
- const href=wa.length>=10&&wa.length<=13?"https://wa.me/"+(wa.startsWith("55")?wa:"55"+wa)+"?text="+encodeURIComponent("Olá! Gostaria de consultar a disponibilidade de "+p.name+" (código "+(p.code||"") +")."):"";
+ const href=whatsappLink("Olá! Gostaria de consultar a disponibilidade de "+p.name+(p.code?" (código "+p.code+")":"")+".");
  return '<div class="n-detail-backdrop" data-action="close-detail"><section class="n-detail-modal" role="dialog" aria-modal="true" aria-label="Detalhes do produto"><button class="n-detail-close" data-action="close-detail" aria-label="Fechar">'+icons.close+'</button><div class="n-detail-visual">'+productArt(p)+'</div><div class="n-detail-info"><span class="n-product-brand">'+esc(p.brand||"Pacífica Hair")+'</span><h2>'+esc(p.name)+'</h2>'+(p.code?'<small>Código '+esc(p.code)+'</small>':"")+'<strong class="n-detail-price">'+brl(p.priceCents)+'</strong><p>'+esc(p.reference?"Disponibilidade a confirmar com a consultora.":p.description||"Consulte as condições de entrega.")+'</p>'+(p.catalog?'<p>Preço de referência do catálogo vigente da loja.</p>':"")+
  (p.stock>0?'<button class="primary" data-action="add" data-id="'+esc(p.id)+'">adicionar à sacola</button>':href?'<a class="primary" href="'+esc(href)+'" target="_blank" rel="noopener noreferrer">Consultar pelo WhatsApp</a>':'<a class="primary" href="#contato" data-action="contact-detail">Consultar atendimento</a>')+'<button class="n-detail-favorite" data-action="fav" data-id="'+esc(p.id)+'">'+icons.heart+(state.favorites.includes(p.id)?"Remover dos favoritos":"Salvar nos favoritos")+'</button></div></section></div>';
 }
@@ -290,7 +300,7 @@ function render({ retainSearch = false } = {}) {
   const active = retainSearch && document.activeElement?.id === "search";
   const pos = active ? document.getElementById("search")?.selectionStart : null;
   document.getElementById("app").innerHTML =
-    header() + '<main class="p-site-main">' + hero() + categories() + featuredShelves() + shop() + pinkBenefits() + pinkPromo() + (state.showAbout ? about() : '') + pinkFooter() + '</main>' +
+    header() + '<main class="p-site-main">' + hero() + categories() + featuredShelves() + shop() + pinkBenefits() + pinkPromo() + (state.showAbout ? about() : '') + pinkFooter() + floatingContact() + '</main>' +
     cartDrawer() + checkoutModal() + adminPanel() + detailModal();
   const pause=document.querySelector('.n-hero-pause'); if(pause&&heroManuallyPaused){pause.textContent='▶';pause.setAttribute('aria-label','Reproduzir carrossel');}
   document.body.classList.toggle("no-scroll", state.cartOpen || state.checkoutOpen || state.adminOpen || !!state.detailId || state.menuOpen);
