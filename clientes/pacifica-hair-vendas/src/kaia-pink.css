@@ -502,3 +502,23 @@ body{background:#fafafa;font-family:"DM Sans",Arial,sans-serif}
 .n-header .p-customer-links>a,.n-header .p-customer-links>button{display:block;width:100%;text-align:left;background:none;border:0;border-bottom:1px solid #eee0e8;color:#412738;font-size:15px;padding:13px 2px;text-decoration:none;font-family:inherit;cursor:pointer}
 .n-header .p-customer-greeting{margin:0;padding:13px 2px 8px;color:#ad1762;font-weight:700;font-size:15px;overflow-wrap:anywhere}
 .n-header .p-account.is-signed-in::after{content:"";position:absolute;top:3px;right:3px;width:8px;height:8px;border-radius:50%;background:#38845c;border:2px solid #fff;box-sizing:content-box}
+
+/* Boas-vindas e preferências: diálogo nativo com foco e fechamento por Esc. */
+#pacifica-visitor-tools [hidden]{display:none!important}
+.p-welcome-dialog,.p-cookies-dialog{border:0;border-radius:24px;background:#fff8fc;color:#492038;width:min(440px,calc(100% - 32px));max-height:calc(100dvh - 36px);padding:30px 26px 22px;box-shadow:0 18px 90px #42072f55;overflow:auto;position:fixed;inset:0;margin:auto}
+.p-welcome-dialog::backdrop,.p-cookies-dialog::backdrop{background:#2a1028a6;backdrop-filter:blur(2px)}
+.p-welcome-dialog{text-align:center;background:radial-gradient(circle at 50% 18%,#ffe1ef 0,transparent 44%),#fff8fc}
+.p-visitor-close{position:absolute;right:14px;top:12px;border:0;background:#f4e2ee;color:#63244a;width:36px;height:36px;border-radius:50%;font-size:25px;line-height:1;cursor:pointer}
+.p-gift-icon{margin:4px auto 16px;width:66px;height:66px;background:#f8d3e7;border:1px solid #f5bdd9;border-radius:50%;color:#b71c70;display:grid;place-items:center}.p-gift-icon svg{width:43px;height:43px}
+.p-welcome-eyebrow{letter-spacing:.14em;color:#a31d66;font-size:10px;font-weight:800}
+.p-welcome-dialog h2{font:600 clamp(26px,6vw,34px)/1.13 "Playfair Display",Georgia,serif;margin:12px 0 14px;color:#4d1740}
+.p-welcome-percent{font:800 clamp(56px,13vw,74px)/.91 "DM Sans",Arial,sans-serif;color:#cc0872;margin:16px auto}.p-welcome-percent small{display:block;letter-spacing:.17em;font-size:12px;line-height:1.8;margin-top:8px}
+.p-welcome-dialog p,.p-cookies-dialog p{font-size:14px;line-height:1.6;margin:12px 0 18px;color:#684858}.p-welcome-dialog>small{display:block;color:#896d7e;font-size:10px;line-height:1.5;margin-top:10px}
+.p-visitor-primary,.p-visitor-secondary{width:100%;min-height:46px;border-radius:999px;padding:12px 14px;font:700 14px/1.4 inherit;cursor:pointer}
+.p-visitor-primary{background:linear-gradient(100deg,#ed168a,#ce006c);border:1px solid #ce006c;color:#fff;font-size:15px;font-weight:700}.p-visitor-secondary{border:0;background:transparent;color:#874269;font-weight:600;margin-top:4px}
+.p-cookie-banner{position:fixed;bottom:12px;left:12px;right:12px;max-width:820px;margin:0 auto;z-index:97;background:#fff;border:1px solid #eed2e2;border-radius:16px;padding:16px 17px;box-shadow:0 6px 30px #3b113426;display:flex;align-items:center;gap:15px;color:#492038}
+body.no-scroll .p-cookie-banner{display:none}.p-cookie-copy{flex:1}.p-cookie-copy strong{font-size:14px}.p-cookie-copy p{font-size:12px;line-height:1.45;margin:5px 0;color:#775c6b}.p-cookie-link,.p-footer-pref{background:none;border:0;padding:0;color:#a91f65;cursor:pointer;text-decoration:underline;text-align:left;font:inherit}.p-footer-pref{color:inherit;font-size:inherit}
+.p-cookie-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}.p-cookie-actions button{flex:1;min-height:40px;background:#fff;color:#a91f65;border:1px solid #c77da6;border-radius:8px;padding:9px 10px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap}
+.p-cookies-dialog h2{font:600 25px/1.2 Georgia,serif;margin:6px 30px 12px 0}.p-cookie-choice{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:12px 0;border-bottom:1px solid #eedbe6}.p-cookie-choice small{display:block;margin-top:4px;color:#85697a;font-size:11px;line-height:1.5}.p-cookie-choice strong{font-size:13px}.p-cookie-choice input{width:21px;height:21px;accent-color:#b8206e;flex-shrink:0}.p-cookie-always{font-size:10px;font-weight:700;white-space:nowrap;color:#86516d}.p-cookies-dialog .p-cookie-actions{margin-top:10px}.p-cookies-dialog .p-cookie-note{font-size:11px}
+.p-mimo-summary{display:flex;justify-content:space-between;gap:10px;font-size:13px;align-items:center;color:#a91f65;margin:10px 0}.p-mimo-net{font-size:15px}
+@media(max-width:600px){.p-cookie-banner{flex-direction:column;align-items:stretch;gap:10px;bottom:calc(10px + env(safe-area-inset-bottom,0px));padding:13px}.p-cookie-actions{width:100%}.p-welcome-dialog,.p-cookies-dialog{padding:24px 19px 18px}.p-welcome-dialog p{margin:9px 0 14px}}

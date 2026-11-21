@@ -6,6 +6,10 @@ import { SAMPLE_PRODUCTS, CATEGORIES } from "./catalog.js";
 import {BRANDS,parseCatalog,mergeCatalog} from "./catalog-import.mjs";
 import {REVISTA_LINKS,REVISTA_REFERENCES} from "./revista-references.mjs";
 import { brl, normalizeCart, cartTotals } from "./commerce.mjs";
+import {mountVisitorOffers,readWelcome,welcomeTotals,WELCOME_CODE} from "./visitor-offers.mjs";
+let visitorTools=null;
+let welcomeClaimed=false;
+try{welcomeClaimed=readWelcome(window.localStorage).claimed}catch{}
 
 const KEY = "pacifica-demo-v2";
 const initial = (() => { try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch { return {}; } })();
@@ -38,7 +42,7 @@ function persist() {
 function count() { return state.cart.reduce((n, p) => n + p.qty, 0); }
 function shippingCents() { return state.shipping === "retirada" ? 0 : (state.shipping === "propria" ? Number(state.config.ownCents) : Number(state.config.motoboyCents)); }
 function totals() {
-  const t = cartTotals(state.cart, state.products, state.config);
+  const t = welcomeTotals(cartTotals(state.cart, state.products, state.config),state.config,welcomeClaimed);
   return { ...t, totalCents: (state.payment === "pix" ? t.pixTotalCents : t.cardTotalCents) + shippingCents() };
 }
 function productArt(p) {
@@ -210,7 +214,7 @@ function pinkFooter() {
  (waUrl?'<a target="_blank" rel="noopener noreferrer" href="'+waUrl+'">Conversar no WhatsApp ↗</a>':'<span>WhatsApp em configuração</span>')+
  (igUrl?'<a target="_blank" rel="noopener noreferrer" href="'+igUrl+'">Nosso Instagram ↗</a>':'<span>Instagram em configuração</span>')+
  '</div></div><div class="p-contact-decoration" aria-hidden="true">♡</div></section>'+
- '<footer class="p-footer"><div class="p-footer-top"><div class="p-footer-brand">Pacífica <small>HAIR</small></div><div><strong>Explore</strong><a href="#inicio">Início</a><a href="#produtos">Produtos</a><a href="#oferta">Ofertas</a></div><div><strong>Sobre</strong><a href="#sobre" data-action="about">Nossa história</a><a href="#contato">Atendimento</a>'+(waUrl?'<a href="'+esc(waUrl)+'" target="_blank" rel="noopener noreferrer">WhatsApp</a>':"")+(igUrl?'<a href="'+esc(igUrl)+'" target="_blank" rel="noopener noreferrer">Instagram</a>':"")+'<span>Entrega na Grande BH</span></div></div>'+
+ '<footer class="p-footer"><div class="p-footer-top"><div class="p-footer-brand">Pacífica <small>HAIR</small></div><div><strong>Explore</strong><a href="#inicio">Início</a><a href="#produtos">Produtos</a><a href="#oferta">Ofertas</a>'+(welcomeClaimed?'':'<button type="button" class="p-footer-pref" data-action="welcome-offer">Meu mimo de 5%</button>')+'</div><div><strong>Sobre</strong><a href="#sobre" data-action="about">Nossa história</a><a href="#contato">Atendimento</a>'+(waUrl?'<a href="'+esc(waUrl)+'" target="_blank" rel="noopener noreferrer">WhatsApp</a>':"")+(igUrl?'<a href="'+esc(igUrl)+'" target="_blank" rel="noopener noreferrer">Instagram</a>':"")+'<span>Entrega na Grande BH</span><button type="button" class="p-footer-pref" data-action="cookie-settings">Preferências de cookies</button></div></div>'+
  '<div class="p-footer-end"><span>© 2026 Pacífica Hair · Revenda independente · Prévia</span><span>Desenvolvido por NovaByte · <a class="footer-admin" href="/admin.html">Painel administrativo</a></span></div>'+
  '<div class="p-footer-warning">Produtos e preços ilustrativos. Pagamentos reais não estão habilitados.</div></footer>';
 }
@@ -292,7 +296,7 @@ function cartDrawer() {
   return '<div class="overlay" data-action="close-cart"><aside class="drawer" role="dialog" aria-label="Sua sacola">' +
     '<div class="drawer-head"><div><span class="eyebrow">Seu carinho em forma de escolha</span><h2>Sua sacola (' + count() + ')</h2></div><button class="icon-btn" data-action="close-cart">' + icons.close + '</button></div>' +
     '<div class="drawer-items">' + (t.entries.length ? t.entries.map(p => '<div class="cart-row">'+cartProductPhoto(p.id)+'<div><strong>' + esc(p.name) + '</strong><small>' + brl(p.unitCents) + '</small><div class="qty"><button data-action="qty-minus" data-id="' + esc(p.id) + '">−</button><span>' + p.qty + '</span><button data-action="qty-plus" data-id="' + esc(p.id) + '">+</button></div></div><strong>' + brl(p.lineCents) + '</strong></div>').join("") : '<div class="empty-cart">Sua sacola está vazia. Que tal escolher algo especial?</div>') + '</div>' +
-    '<div class="drawer-bottom"><div class="subtotal"><span>Subtotal</span><strong>' + brl(t.subtotalCents) + '</strong></div><p>Frete e desconto serão apresentados na próxima etapa.</p><button class="primary wide" data-action="checkout" ' + (t.entries.length ? "" : "disabled") + '>Continuar pedido ' + icons.arrow + '</button><button class="ghost wide" data-action="close-cart">Continuar comprando</button></div></aside></div>';
+    '<div class="drawer-bottom"><div class="subtotal"><span>Subtotal</span><strong>' + brl(t.subtotalCents) + '</strong></div>'+(t.welcomeCents?'<div class="p-mimo-summary"><span>Mimo 5% · '+WELCOME_CODE+'</span><strong>− '+brl(t.welcomeCents)+'</strong></div><div class="subtotal p-mimo-net"><span>Subtotal com mimo</span><strong>'+brl(t.discountedSubtotalCents)+'</strong></div>':'')+'<p>Frete e desconto de pagamento serão apresentados na próxima etapa.</p><button class="primary wide" data-action="checkout" ' + (t.entries.length ? "" : "disabled") + '>Continuar pedido ' + icons.arrow + '</button><button class="ghost wide" data-action="close-cart">Continuar comprando</button></div></aside></div>';
 }
 function checkoutModal() {
   if (!state.checkoutOpen) return "";
@@ -302,7 +306,7 @@ function checkoutModal() {
     '<button class="modal-close icon-btn" data-action="close-checkout">' + icons.close + '</button><span class="eyebrow">Prévia do pedido</span><h2>Quase lá!</h2><p>Confira o resumo. O pagamento real será habilitado somente após a configuração segura do Mercado Pago.</p>' +
     '<h3>Forma de pagamento</h3><div class="radio-grid"><label><input type="radio" name="payment" value="pix" ' + (state.payment === "pix" ? "checked" : "") + '/>Pix' + (discount ? " · " + discount + "% de desconto" : "") + '</label><label><input type="radio" name="payment" value="card" ' + (state.payment === "card" ? "checked" : "") + '/>Cartão</label></div>' +
     '<h3>Entrega na Grande BH</h3><div class="radio-grid"><label><input type="radio" name="shipping" value="motoboy" ' + (state.shipping === "motoboy" ? "checked" : "") + '/>Motoboy</label><label><input type="radio" name="shipping" value="propria" ' + (state.shipping === "propria" ? "checked" : "") + '/>Entrega própria</label><label><input type="radio" name="shipping" value="retirada" ' + (state.shipping === "retirada" ? "checked" : "") + '/>Retirada</label></div>' +
-    '<div class="summary-lines"><div><span>Produtos</span><strong>' + brl(t.subtotalCents) + '</strong></div><div><span>Frete ilustrativo</span><strong>' + brl(shippingCents()) + '</strong></div><div><span>' + (state.payment === "pix" ? "Desconto Pix" : "Valor no cartão") + '</span><strong>' + brl(state.payment === "pix" ? t.pixTotalCents - t.subtotalCents : t.cardTotalCents - t.subtotalCents) + '</strong></div><div class="summary-final"><span>Total estimado</span><strong>' + brl(t.totalCents) + '</strong></div></div>' +
+    '<div class="summary-lines"><div><span>Produtos</span><strong>' + brl(t.subtotalCents) + '</strong></div>'+(t.welcomeCents?'<div><span>Mimo 5% · '+WELCOME_CODE+'</span><strong>− '+brl(t.welcomeCents)+'</strong></div>':'')+'<div><span>Frete ilustrativo</span><strong>' + brl(shippingCents()) + '</strong></div><div><span>' + (state.payment === "pix" ? "Desconto Pix" : "Valor no cartão") + '</span><strong>' + brl(state.payment === "pix" ? t.pixTotalCents - t.discountedSubtotalCents : t.cardTotalCents - t.discountedSubtotalCents) + '</strong></div><div class="summary-final"><span>Total estimado</span><strong>' + brl(t.totalCents) + '</strong></div></div>' +
     '<div class="locked-pay">Pagamento desabilitado durante o desenvolvimento. Nenhuma cobrança será realizada.</div><button class="primary wide" disabled>Finalizar pagamento (em breve)</button></section></div>';
 }
 function catalogImportPanel(){
@@ -359,6 +363,8 @@ document.addEventListener("click", e => {
   if (tab) { state.adminTab = tab.dataset.adminTab; state.adminEdit = null; render(); return; }
   if (!a) return;
   const action = a.dataset.action, id = a.dataset.id;
+  if(action==="cookie-settings"){visitorTools?.showSettings();return;}
+  if(action==="welcome-offer"){visitorTools?.showOffer();return;}
   if (a.classList?.contains("overlay") && e.target!==a) return;
   if(action==="close-detail" && a.classList?.contains("n-detail-backdrop") && e.target!==a)return;
   if(action==="home"){e.preventDefault();state.filter="Todos";state.brandFilter="Todas";state.query="";state.showAll=false;state.favoritesView=false;state.priceRange="all";state.menuOpen=false;render();window.scrollTo({top:0,behavior:"smooth"});return;}
@@ -452,6 +458,8 @@ document.addEventListener("submit", e => {
   }
 });
 render();
+const isCartReturn=new URLSearchParams(location.search).get("sacola")==="1";
+try{visitorTools=mountVisitorOffers({storage:window.localStorage,skipWelcome:isCartReturn,onClaim:()=>{welcomeClaimed=true;render();notify("Seu mimo de 5% foi aplicado à sacola!");}});}catch(e){console.warn("Preferências da visita indisponíveis");}
 void startCustomerSession();
 window.addEventListener("pageshow",e=>{if(e.persisted)void refreshCustomer();});
 document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")void refreshCustomer();});
