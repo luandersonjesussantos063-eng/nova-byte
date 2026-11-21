@@ -392,3 +392,9 @@ body{background:#fffafd;color:#251121}
 .reference-product-1{background-position:33.333% 50%}
 .reference-product-2{background-position:66.666% 50%}
 .reference-product-3{background-position:100% 50%}
+
+/* Real product thumbnails in the shopping bag; keep an unobtrusive fallback. */
+.cart-icon{position:relative;overflow:hidden;width:55px;height:55px;flex-shrink:0}
+.cart-photo{background:#fff;border:1px solid #f2e1ea;box-sizing:border-box}
+.cart-photo img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#fff;display:block}
+.cart-photo-fallback{display:grid;place-items:center;width:100%;height:100%}

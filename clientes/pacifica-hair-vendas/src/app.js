@@ -281,12 +281,17 @@ function footer() {
     '<section class="wrap social-banner" id="contato"><div><span class="social-icon green">' + icons.whatsapp + '</span><span><h3>Fale Conosco Agora!</h3><p>Tire dúvidas, faça seu pedido pelo WhatsApp!</p>' + waButton + '</span></div><div><span class="social-icon instagram">' + icons.instagram + '</span><span><h3>Siga nosso Instagram</h3><p>Fique por dentro das novidades,<br/>promoções e muito mais!</p>' + igButton + '</span></div></section>' +
     '<footer class="footer"><div class="wrap footer-main">' + logo() + '<div class="footer-connect"><p>Conecte-se conosco:</p><div><a href="#contato" aria-label="Instagram">' + icons.instagram + '</a><a href="#contato" aria-label="WhatsApp">' + icons.whatsapp + '</a></div></div><div class="footer-message">Obrigada por fazer parte<br/> da nossa história! <span>♥</span></div></div><div class="footer-neon">♡─────────────────♡─────────────────♡</div><div class="wrap footer-bottom"><span>© 2026 Pacífica Hair. Todos os direitos reservados.</span><span class="payment-logos"><strong>pix</strong><b>VISA</b><b>●●</b><b>elo</b></span></div><p class="footer-preview">* Pagamentos e vendas desativados nesta prévia. Desenvolvido por NovaByte. <button class="footer-admin" data-action="admin">Painel de teste</button></p></footer>';
 }
+function cartProductPhoto(id) {
+  const product=state.products.find(p=>p.id===id);
+  const image=product&&[product.image,...(Array.isArray(product.images)?product.images:[])].find(src=>typeof src==="string"&&(/^(https:\/\/|\/(?!\/))/i.test(src)));
+  return '<span class="cart-icon'+(image?' cart-photo':'')+'"><span class="cart-photo-fallback" aria-hidden="true">✿</span>'+(image?'<img src="'+esc(image)+'" alt="" width="55" height="55" decoding="async" />':'')+'</span>';
+}
 function cartDrawer() {
   if (!state.cartOpen) return "";
   const t = totals();
   return '<div class="overlay" data-action="close-cart"><aside class="drawer" role="dialog" aria-label="Sua sacola">' +
     '<div class="drawer-head"><div><span class="eyebrow">Seu carinho em forma de escolha</span><h2>Sua sacola (' + count() + ')</h2></div><button class="icon-btn" data-action="close-cart">' + icons.close + '</button></div>' +
-    '<div class="drawer-items">' + (t.entries.length ? t.entries.map(p => '<div class="cart-row"><span class="cart-icon">✿</span><div><strong>' + esc(p.name) + '</strong><small>' + brl(p.unitCents) + '</small><div class="qty"><button data-action="qty-minus" data-id="' + esc(p.id) + '">−</button><span>' + p.qty + '</span><button data-action="qty-plus" data-id="' + esc(p.id) + '">+</button></div></div><strong>' + brl(p.lineCents) + '</strong></div>').join("") : '<div class="empty-cart">Sua sacola está vazia. Que tal escolher algo especial?</div>') + '</div>' +
+    '<div class="drawer-items">' + (t.entries.length ? t.entries.map(p => '<div class="cart-row">'+cartProductPhoto(p.id)+'<div><strong>' + esc(p.name) + '</strong><small>' + brl(p.unitCents) + '</small><div class="qty"><button data-action="qty-minus" data-id="' + esc(p.id) + '">−</button><span>' + p.qty + '</span><button data-action="qty-plus" data-id="' + esc(p.id) + '">+</button></div></div><strong>' + brl(p.lineCents) + '</strong></div>').join("") : '<div class="empty-cart">Sua sacola está vazia. Que tal escolher algo especial?</div>') + '</div>' +
     '<div class="drawer-bottom"><div class="subtotal"><span>Subtotal</span><strong>' + brl(t.subtotalCents) + '</strong></div><p>Frete e desconto serão apresentados na próxima etapa.</p><button class="primary wide" data-action="checkout" ' + (t.entries.length ? "" : "disabled") + '>Continuar pedido ' + icons.arrow + '</button><button class="ghost wide" data-action="close-cart">Continuar comprando</button></div></aside></div>';
 }
 function checkoutModal() {
@@ -336,6 +341,7 @@ function render({ retainSearch = false } = {}) {
   document.body.classList.toggle("no-scroll", state.cartOpen || state.checkoutOpen || state.adminOpen || !!state.detailId || state.menuOpen);
   if (active) { const field = document.getElementById("search"); field?.focus(); field?.setSelectionRange(pos, pos); }
 }
+document.addEventListener("error",e=>{if(e.target instanceof HTMLImageElement&&e.target.closest(".cart-photo"))e.target.remove();},true);
 document.addEventListener("click", e => {
   const a = e.target.closest("[data-action]");
   const cat = e.target.closest("[data-category]");
