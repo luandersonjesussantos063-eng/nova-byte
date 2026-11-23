@@ -36,3 +36,10 @@ body{background:linear-gradient(120deg,#f8d6eb,#f9edfa 57%,#f8d6e8);color:#2d153
 @media(max-width:1100px){.ph-cards{grid-template-columns:repeat(2,minmax(0,1fr))}.ph-dashboard-grid{grid-template-columns:1fr}.p-work{grid-template-columns:205px minmax(0,1fr)}}
 @media(max-width:730px){.admin-shell{padding:12px}.p-work{display:block}.p-side{min-height:0;border-radius:20px;padding:18px;display:flex;flex-direction:row;flex-wrap:wrap;gap:5px;margin-bottom:12px}.p-side>.eyebrow,.p-side>strong{display:none}.p-side button,.p-side a{font-size:12px;padding:10px}.p-content{padding:6px 0}.ph-heading{align-items:flex-start;flex-direction:column}.ph-cards{gap:9px}.ph-card{padding:16px 10px;gap:8px}.ph-card .ph-emoji{font-size:28px}.ph-card small{font-size:11px}.ph-card strong{font-size:22px}.ph-panel{padding:16px}.ph-actions{grid-template-columns:1fr}}
 @media(max-width:380px){.ph-cards{grid-template-columns:1fr}}
+
+.ph-order{display:flex;align-items:center;justify-content:space-between;gap:16px;border-bottom:1px solid #efd9e8;padding:13px 6px}
+.ph-order:last-child{border-bottom:0}
+.ph-order>div{min-width:0}
+.ph-order strong{color:#562047}
+.ph-order small{display:block;color:#806a7b;margin-top:6px;line-height:1.5;font-size:12px;overflow-wrap:anywhere}
+#ordersStatus{font-weight:600}
