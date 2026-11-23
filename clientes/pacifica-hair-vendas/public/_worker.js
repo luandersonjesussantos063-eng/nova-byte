@@ -41,6 +41,57 @@ async function freight(req,env,db){
  if(!options.length)return fail("Não há modalidades disponíveis para este CEP e os produtos.",422);
  return out({cep,mode,options,expiresAt:Date.now()+15*60*1000});
 }
+const validId=x=>typeof x==="string"&&/^[a-f0-9-]{36}$/.test(x);
+const cleanText=(x,max)=>typeof x==="string"?x.trim().slice(0,max):"";
+const positiveCents=x=>Number.isSafeInteger(x)&&x>0&&x<=100000000;
+const dateISO=x=>typeof x==="string"&&/^\\d{4}-\\d{2}-\\d{2}$/.test(x)&&!Number.isNaN(Date.parse(x+"T12:00:00Z"))&&new Date(x+"T12:00:00Z").toISOString().slice(0,10)===x;
+async function manage(req,db){
+ if(req.method==="GET"){
+  try{
+   const [customers,credit,receipts,movements,suppliers,expenses,balances]=await Promise.all([
+    db.prepare("SELECT * FROM ph_customers ORDER BY name COLLATE NOCASE LIMIT 500").all(),
+    db.prepare("SELECT c.*,u.name AS customer_name, c.original_cents-COALESCE((SELECT SUM(r.amount_cents) FROM ph_credit_receipts r WHERE r.credit_id=c.id),0) AS balance_cents FROM ph_credit c JOIN ph_customers u ON u.id=c.customer_id ORDER BY c.created_at DESC LIMIT 500").all(),
+    db.prepare("SELECT * FROM ph_credit_receipts ORDER BY created_at DESC LIMIT 1000").all(),
+    db.prepare("SELECT * FROM ph_stock_movements ORDER BY created_at DESC LIMIT 250").all(),
+    db.prepare("SELECT * FROM ph_suppliers ORDER BY name COLLATE NOCASE LIMIT 500").all(),
+    db.prepare("SELECT * FROM ph_expenses ORDER BY spent_on DESC,created_at DESC LIMIT 500").all(),
+    db.prepare("SELECT COALESCE(SUM(c.original_cents-COALESCE((SELECT SUM(r.amount_cents) FROM ph_credit_receipts r WHERE r.credit_id=c.id),0)),0) AS receivable_cents,COUNT(*) AS total_credits FROM ph_credit c").first()
+   ]);
+   return out({customers:customers.results,credits:credit.results,receipts:receipts.results,movements:movements.results,suppliers:suppliers.results,expenses:expenses.results,summary:balances});
+  }catch(e){if(/no such table|no such trigger/i.test(String(e)))return out({error:"Módulos administrativos não configurados: aplique backend/management.sql no D1 da Pacífica Hair."},503);throw e}
+ }
+ if(req.method!=="POST")return out({error:"Método não permitido."},405);
+ const b=await body(req,12000),a=b.action,id=crypto.randomUUID();
+ try{
+  if(a==="customer.create"){
+   const name=cleanText(b.name,120),phone=cleanText(b.phone,20),email=cleanText(b.email,180),notes=cleanText(b.notes,1000);
+   if(name.length<2||b.name?.length>120||b.phone?.length>20||b.email?.length>180||b.notes?.length>1000||email&&!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email))return out({error:"Confira os dados da cliente."},400);
+   await db.prepare("INSERT INTO ph_customers(id,name,phone,email,notes) VALUES(?,?,?,?,?)").bind(id,name,phone,email,notes).run();
+  }else if(a==="credit.create"){
+   if(!validId(b.customerId)||!positiveCents(b.amountCents)||!dateISO(b.dueDate)||cleanText(b.description,500).length>500||typeof b.description==="string"&&b.description.length>500)return out({error:"Confira o fiado, valor e vencimento."},400);
+   const r=await db.prepare("INSERT INTO ph_credit(id,customer_id,original_cents,due_date,description) SELECT ?,id,?,?,? FROM ph_customers WHERE id=?").bind(id,b.amountCents,b.dueDate,cleanText(b.description,500),b.customerId).run();
+   if(r.meta.changes!==1)return out({error:"Cliente não encontrada."},404);
+  }else if(a==="credit.receipt"){
+   if(!validId(b.creditId)||!positiveCents(b.amountCents)||typeof b.note==="string"&&b.note.length>500)return out({error:"Informe o valor recebido."},400);
+   const r=await db.prepare("INSERT INTO ph_credit_receipts(id,credit_id,amount_cents,note) SELECT ?,c.id,?,? FROM ph_credit c WHERE c.id=? AND (SELECT COALESCE(SUM(amount_cents),0) FROM ph_credit_receipts WHERE credit_id=c.id)+?<=c.original_cents").bind(id,b.amountCents,cleanText(b.note,500),b.creditId,b.amountCents).run();
+   if(r.meta.changes!==1)return out({error:"Fiado não localizado ou recebimento maior que o saldo pendente."},409);
+  }else if(a==="stock.move"){
+   if(typeof b.productId!=="string"||!/^[a-zA-Z0-9_-]{1,120}$/.test(b.productId)||!Number.isInteger(b.delta)||b.delta===0||Math.abs(b.delta)>100000||!Number.isSafeInteger(b.version)||b.version<0)return out({error:"Confira produto, quantidade e tipo da movimentação."},400);
+   const r=await db.prepare("UPDATE products SET payload=json_set(payload,'$.stock',CAST(json_extract(payload,'$.stock') AS INTEGER)+?),version=version+1,updated_at=CURRENT_TIMESTAMP WHERE id=? AND version=? AND CAST(json_extract(payload,'$.stock') AS INTEGER)+? BETWEEN 0 AND 100000").bind(b.delta,b.productId,b.version,b.delta).run();
+   if(r.meta.changes!==1)return out({error:"Estoque insuficiente ou alterado em outra sessão. Atualize os produtos."},409);
+  }else if(a==="supplier.create"){
+   const name=cleanText(b.name,120),contact=cleanText(b.contact,180),notes=cleanText(b.notes,1000);
+   if(name.length<2||b.name?.length>120||b.contact?.length>180||b.notes?.length>1000)return out({error:"Confira os dados do fornecedor."},400);
+   await db.prepare("INSERT INTO ph_suppliers(id,name,contact,notes) VALUES(?,?,?,?)").bind(id,name,contact,notes).run();
+  }else if(a==="expense.create"){
+   const category=cleanText(b.category,80),description=cleanText(b.description,200);
+   if(category.length<2||description.length<2||b.category?.length>80||b.description?.length>200||!positiveCents(b.amountCents)||!dateISO(b.spentOn))return out({error:"Confira categoria, descrição, valor e data do gasto."},400);
+   await db.prepare("INSERT INTO ph_expenses(id,category,description,amount_cents,spent_on) VALUES(?,?,?,?,?)").bind(id,category,description,b.amountCents,b.spentOn).run();
+  }else return out({error:"Operação não permitida."},400);
+  return out({ok:true,id});
+ }catch(e){if(/no such table|no such trigger/i.test(String(e)))return out({error:"Módulos administrativos não configurados: aplique backend/management.sql."},503);throw e}
+}
+
 async function route(req,env){
  const u=new URL(req.url),p=u.pathname,db=env.PACIFICA_DB;
  if(!p.startsWith("/api/"))return env.ASSETS.fetch(req);
@@ -64,6 +115,8 @@ async function route(req,env){
  }
  const m=(req.headers.get("Cookie")||"").match(/(?:^|;\s*)__Host-pacifica_admin=([a-f0-9]{64})(?:;|$)/),session=m?await hash(m[1]):"";
  if(!session||!(await db.prepare("SELECT hash FROM sessions WHERE hash=? AND expires>?").bind(session,now()).first()))return out({error:"Entre no painel."},401);
+ if(p==="/api/admin/manage")return manage(req,db);
+ if(p==="/api/admin/health"&&req.method==="GET")return out({database:!!db,adminSession:true,mercadoPagoConfigured:!!(env.PACIFICA_MP_ACCESS_TOKEN),checkoutReady:false});
  if(p==="/api/admin/logout"&&req.method==="POST"){await db.prepare("DELETE FROM sessions WHERE hash=?").bind(session).run();return out({ok:true},200,{"Set-Cookie":cookie("",0)})}
  if(p==="/api/admin/orders"&&req.method==="GET"){
   // Never return fake orders. A missing migration is explicitly reported.
