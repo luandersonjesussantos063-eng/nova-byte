@@ -55,7 +55,7 @@ async function manage(req,db){
     db.prepare("SELECT * FROM ph_stock_movements ORDER BY created_at DESC LIMIT 250").all(),
     db.prepare("SELECT * FROM ph_suppliers ORDER BY name COLLATE NOCASE LIMIT 500").all(),
     db.prepare("SELECT * FROM ph_expenses ORDER BY spent_on DESC,created_at DESC LIMIT 500").all(),
-    db.prepare("SELECT COALESCE(SUM(c.original_cents-COALESCE((SELECT SUM(r.amount_cents) FROM ph_credit_receipts r WHERE r.credit_id=c.id),0)),0) AS receivable_cents,COUNT(*) AS total_credits FROM ph_credit c").first()
+    db.prepare("SELECT COALESCE(SUM(c.original_cents-COALESCE((SELECT SUM(r.amount_cents) FROM ph_credit_receipts r WHERE r.credit_id=c.id),0)),0) AS receivable_cents,COUNT(*) AS total_credits,(SELECT COALESCE(SUM(amount_cents),0) FROM ph_credit_receipts) AS received_cents,(SELECT COALESCE(SUM(amount_cents),0) FROM ph_expenses) AS spent_cents FROM ph_credit c").first()
    ]);
    return out({customers:customers.results,credits:credit.results,receipts:receipts.results,movements:movements.results,suppliers:suppliers.results,expenses:expenses.results,summary:balances});
   }catch(e){if(/no such table|no such trigger/i.test(String(e)))return out({error:"Módulos administrativos não configurados: aplique backend/management.sql no D1 da Pacífica Hair."},503);throw e}
