@@ -22,7 +22,7 @@ test("monetary registers have checks and audit trail",()=>{
  for(const tbl of ["ph_customers","ph_credit","ph_credit_receipts","ph_stock_movements","ph_suppliers","ph_expenses"])
   assert.match(schema,new RegExp("CREATE TABLE IF NOT EXISTS "+tbl));
  assert.match(schema,/CREATE TRIGGER IF NOT EXISTS ph_log_stock_changes/);
- assert.match(worker,/amount_cents\),0\)\+\?<=c\.original_cents/);
+ assert.ok(worker.includes("FROM ph_credit_receipts WHERE credit_id=c.id)+?<=c.original_cents"));
  assert.match(worker,/credit\.receipt/);
  assert.match(worker,/validId\(b\.requestId\)/);
 });
