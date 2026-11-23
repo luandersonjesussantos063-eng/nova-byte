@@ -76,11 +76,12 @@ export function createManagement({api,getProducts,goTab,reloadProducts,editProdu
  }
  function renderFinance(sales){
   if(!data)return;
-  const spent=data.expenses.reduce((sum,e)=>sum+e.amount_cents,0);
+  const spent=data.summary?.spent_cents??data.expenses.reduce((sum,e)=>sum+e.amount_cents,0),received=data.summary?.received_cents??0;
+  notify("#financeReceipts",brl(received));
   notify("#financeExpenses",brl(spent));
   const revenue=sales?.summary?.paidTotalCents;
   notify("#financeRevenue",Number.isSafeInteger(revenue)?brl(revenue):"—");
-  notify("#financeBalance",Number.isSafeInteger(revenue)?brl(revenue-spent):"—");
+  notify("#financeBalance",Number.isSafeInteger(revenue)?brl(revenue+received-spent):"—");
   const list=$("#expenseRows");list.replaceChildren();
   if(!data.expenses.length)empty(list,"Nenhuma despesa registrada.");
   for(const e of data.expenses){const d=el("div",undefined,"ph-row"),info=el("div");info.append(el("strong",e.description),el("small",e.category+" · "+new Date(e.spent_on+"T12:00:00Z").toLocaleDateString("pt-BR")));d.append(info,el("strong",brl(e.amount_cents)));list.append(d)}
