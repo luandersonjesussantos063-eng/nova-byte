@@ -61,7 +61,8 @@ async function manage(req,db){
   }catch(e){if(/no such table|no such trigger/i.test(String(e)))return out({error:"Módulos administrativos não configurados: aplique backend/management.sql no D1 da Pacífica Hair."},503);throw e}
  }
  if(req.method!=="POST")return out({error:"Método não permitido."},405);
- const b=await body(req,12000),a=b.action,id=crypto.randomUUID();
+ const b=await body(req,12000),a=b.action,id=validId(b.requestId)?b.requestId:crypto.randomUUID();
+ if(["credit.create","credit.receipt","expense.create"].includes(a)&&!validId(b.requestId))return out({error:"Identificador da operação inválido."},400);
  try{
   if(a==="customer.create"){
    const name=cleanText(b.name,120),phone=cleanText(b.phone,20),email=cleanText(b.email,180),notes=cleanText(b.notes,1000);
@@ -76,6 +77,8 @@ async function manage(req,db){
    const r=await db.prepare("INSERT INTO ph_credit_receipts(id,credit_id,amount_cents,note) SELECT ?,c.id,?,? FROM ph_credit c WHERE c.id=? AND (SELECT COALESCE(SUM(amount_cents),0) FROM ph_credit_receipts WHERE credit_id=c.id)+?<=c.original_cents").bind(id,b.amountCents,cleanText(b.note,500),b.creditId,b.amountCents).run();
    if(r.meta.changes!==1)return out({error:"Fiado não localizado ou recebimento maior que o saldo pendente."},409);
   }else if(a==="stock.move"){
+   const audit=await db.prepare("SELECT name FROM sqlite_master WHERE type='trigger' AND name='ph_log_stock_changes'").first();
+   if(!audit)return out({error:"Ative o histórico de estoque aplicando backend/management.sql."},503);
    if(typeof b.productId!=="string"||!/^[a-zA-Z0-9_-]{1,120}$/.test(b.productId)||!Number.isInteger(b.delta)||b.delta===0||Math.abs(b.delta)>100000||!Number.isSafeInteger(b.version)||b.version<0)return out({error:"Confira produto, quantidade e tipo da movimentação."},400);
    const r=await db.prepare("UPDATE products SET payload=json_set(payload,'$.stock',CAST(json_extract(payload,'$.stock') AS INTEGER)+?),version=version+1,updated_at=CURRENT_TIMESTAMP WHERE id=? AND version=? AND CAST(json_extract(payload,'$.stock') AS INTEGER)+? BETWEEN 0 AND 100000").bind(b.delta,b.productId,b.version,b.delta).run();
    if(r.meta.changes!==1)return out({error:"Estoque insuficiente ou alterado em outra sessão. Atualize os produtos."},409);
@@ -89,7 +92,7 @@ async function manage(req,db){
    await db.prepare("INSERT INTO ph_expenses(id,category,description,amount_cents,spent_on) VALUES(?,?,?,?,?)").bind(id,category,description,b.amountCents,b.spentOn).run();
   }else return out({error:"Operação não permitida."},400);
   return out({ok:true,id});
- }catch(e){if(/no such table|no such trigger/i.test(String(e)))return out({error:"Módulos administrativos não configurados: aplique backend/management.sql."},503);throw e}
+ }catch(e){if(/no such table|no such trigger/i.test(String(e)))return out({error:"Módulos administrativos não configurados: aplique backend/management.sql."},503);if(/UNIQUE constraint failed|PRIMARY KEY|constraint failed/i.test(String(e)))return out({error:"Operação já registrada ou dados duplicados. Atualize o painel antes de tentar novamente."},409);throw e}
 }
 
 async function route(req,env){
