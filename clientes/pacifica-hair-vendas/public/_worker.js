@@ -82,4 +82,44 @@ async function route(req,env){
  }
  return out({error:"Não encontrado."},404);
 }
-export default {async fetch(req,env){try{return await route(req,env)}catch(e){console.error("Pacifica API",e.message);return out({error:"Não foi possível concluir a solicitação."},500)}}};
+// Security policy applies to ALL Pages responses, including assets served by env.ASSETS.
+// Cloudflare Pages advanced-mode _worker.js does not automatically enforce _headers.
+const securityPolicy=[
+ "default-src 'self'",
+ "base-uri 'self'",
+ "object-src 'none'",
+ "frame-ancestors 'none'",
+ "form-action 'self'",
+ "script-src 'self' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js",
+ "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+ "font-src 'self' data: https://fonts.gstatic.com",
+ "img-src 'self' data: https:",
+ "media-src 'self' https:",
+ "connect-src 'self' https://nifvycrvqnzbxgglhlky.supabase.co https://viacep.com.br",
+ "upgrade-insecure-requests"
+].join("; ");
+const privateAsset=/^\/(?:conta|admin)\.html$|^\/(?:auth-config|pacifica-auth|conta|admin-pacifica|cep)\.(?:mjs|js)$/;
+function securityHeaders(req,response){
+ const pathname=new URL(req.url).pathname;
+ const headers=new Headers(response.headers);
+ headers.set("Content-Security-Policy",securityPolicy);
+ headers.set("X-Frame-Options","DENY");
+ headers.set("X-Content-Type-Options","nosniff");
+ headers.set("Strict-Transport-Security","max-age=31536000");
+ headers.set("Permissions-Policy","camera=(), microphone=(), geolocation=()");
+ headers.set("Referrer-Policy",privateAsset.test(pathname)||pathname.startsWith("/api/")?"no-referrer":"strict-origin-when-cross-origin");
+ if(privateAsset.test(pathname)){
+  headers.set("Cache-Control","no-store, max-age=0");
+  headers.set("Pragma","no-cache");
+  headers.set("X-Robots-Tag","noindex, nofollow");
+  headers.delete("Access-Control-Allow-Origin");
+ }
+ if(pathname.startsWith("/api/")&&!pathname.startsWith("/api/photos/"))headers.set("Cache-Control","no-store");
+ return new Response(response.body,{status:response.status,statusText:response.statusText,headers});
+}
+export default {async fetch(req,env){
+ let response;
+ try{response=await route(req,env)}
+ catch(e){console.error("Pacifica API",e?.message||"Error");response=out({error:"Não foi possível concluir a solicitação."},500)}
+ return securityHeaders(req,response);
+}};
