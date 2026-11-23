@@ -1,6 +1,6 @@
 # Pacífica Hair — NovaByte
 
-Loja virtual em desenvolvimento na branch \`feat/pacifica-hair-vendas\` do repositório NovaByte. **Não está publicada**.
+Loja virtual na branch \`feat/pacifica-hair-vendas\`. **Prévia publicada:** https://novabyte-pacifica-hair-preview.pages.dev (checkout de pagamento real permanece desativado).
 
 ## Identidade
 Referência fornecida pela cliente: rosa, magenta, lilás, roxo profundo, banners com chamadas de beleza/autocuidado, categorias ilustradas, vitrines, seção da fundadora Gleizelle, WhatsApp e Instagram. Atendimento **na Região Metropolitana de Belo Horizonte** (não "todo o Brasil"). A fotografia da proprietária foi extraída da captura fornecida — solicitar a foto original em alta resolução antes do lançamento.
