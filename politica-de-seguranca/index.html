@@ -12,7 +12,7 @@
 <body><main>
 <a href="/">NovaByte Soluções</a>
 <h1>Política de Segurança da Informação</h1>
-<p class="meta">Versão 1.1 · Atualizada em 23 de novembro de 2026</p>
+<p class="meta">Versão 1.2 · Atualizada em 23 de novembro de 2026</p>
 <h2>Finalidade e abrangência</h2>
 <p>Esta política estabelece como a NovaByte protege as informações tratadas na operação e no suporte do NovaByte Estoque. Aplica-se às contas do painel, aos registros de estoque e aos dados recebidos de canais de venda quando houver integração autorizada.</p>
 <h2>Controle de acesso</h2>
@@ -26,6 +26,16 @@
 <li><strong>Mesa limpa.</strong> Guarde documentos com dados de clientes quando saírem de uso e recolha impressões. Mantenha senhas, códigos de recuperação e dados de clientes fora de anotações visíveis e de telas desprotegidas.</li>
 </ul>
 <p>A administração da NovaByte deve orientar quem tem acesso ao painel e verificar essas configurações ao conceder acesso e durante as revisões da política.</p>
+<h2>Classificação de dados</h2>
+<p>A administração da NovaByte deve classificar os dados do NovaByte Estoque antes de armazená-los, compartilhá-los ou exportá-los. Quando um conjunto incluir dados de classes diferentes, aplique as regras da classe mais restritiva. Em caso de dúvida, trate o dado como confidencial até confirmar a classificação.</p>
+<ul>
+<li><strong>Público.</strong> Informações aprovadas para divulgação, como a documentação pública e esta política. Podem ser publicadas após revisão da administração.</li>
+<li><strong>Interno.</strong> Procedimentos de operação e dados técnicos de rotina que não incluam segredos, dados pessoais ou informações comerciais de clientes. Compartilhe apenas com pessoas autorizadas que precisem deles para trabalhar.</li>
+<li><strong>Confidencial.</strong> Dados pessoais, informações comerciais das lojas, saldos e movimentações, pedidos, credenciais, chaves de API e tokens. Restrinja o acesso por necessidade e por loja. Exija criptografia em trânsito e em repouso.</li>
+</ul>
+<h2>Criptografia e cópias</h2>
+<p>O acesso ao painel usa HTTPS. O banco de produção é o Cloudflare D1, que protege a transferência de dados entre o Worker e o banco com TLS e aplica criptografia AES-256 em repouso aos objetos armazenados no D1, com chaves gerenciadas pelo provedor. Consulte a <a href="https://developers.cloudflare.com/d1/reference/data-security/">documentação de segurança do Cloudflare D1</a>.</p>
+<p>Exporte dados confidenciais apenas quando necessário e com autorização. Transfira o arquivo por canal criptografado e armazene-o em local igualmente criptografado e com acesso restrito. A mesma regra vale para cópias de segurança externas. Elimine cópias quando deixarem de ser necessárias, conforme a seção de retenção e descarte.</p>
 <h2>Proteção e uso dos dados</h2>
 <p>O acesso web ao painel utiliza HTTPS. A NovaByte deve limitar a coleta e o uso de dados ao necessário para prestar o serviço. Credenciais, chaves de API e tokens devem ser armazenados em configurações restritas e mantidos fora de código público, registros de diagnóstico e mensagens de atendimento. Avaliações externas do painel devem usar contas e dados fictícios em ambiente separado.</p>
 <h2>Integrações com canais de venda</h2>
