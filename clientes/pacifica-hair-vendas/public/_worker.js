@@ -44,7 +44,7 @@ async function freight(req,env,db){
 const validId=x=>typeof x==="string"&&/^[a-f0-9-]{36}$/.test(x);
 const cleanText=(x,max)=>typeof x==="string"?x.trim().slice(0,max):"";
 const positiveCents=x=>Number.isSafeInteger(x)&&x>0&&x<=100000000;
-const dateISO=x=>typeof x==="string"&&/^\\d{4}-\\d{2}-\\d{2}$/.test(x)&&!Number.isNaN(Date.parse(x+"T12:00:00Z"))&&new Date(x+"T12:00:00Z").toISOString().slice(0,10)===x;
+const dateISO=x=>typeof x==="string"&&/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(x)&&!Number.isNaN(Date.parse(x+"T12:00:00Z"))&&new Date(x+"T12:00:00Z").toISOString().slice(0,10)===x;
 async function manage(req,db){
  if(req.method==="GET"){
   try{
@@ -65,7 +65,7 @@ async function manage(req,db){
  try{
   if(a==="customer.create"){
    const name=cleanText(b.name,120),phone=cleanText(b.phone,20),email=cleanText(b.email,180),notes=cleanText(b.notes,1000);
-   if(name.length<2||b.name?.length>120||b.phone?.length>20||b.email?.length>180||b.notes?.length>1000||email&&!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email))return out({error:"Confira os dados da cliente."},400);
+   if(name.length<2||b.name?.length>120||b.phone?.length>20||b.email?.length>180||b.notes?.length>1000||email&&!/^[^ @]+@[^ @]+[.][^ @]+$/.test(email))return out({error:"Confira os dados da cliente."},400);
    await db.prepare("INSERT INTO ph_customers(id,name,phone,email,notes) VALUES(?,?,?,?,?)").bind(id,name,phone,email,notes).run();
   }else if(a==="credit.create"){
    if(!validId(b.customerId)||!positiveCents(b.amountCents)||!dateISO(b.dueDate)||cleanText(b.description,500).length>500||typeof b.description==="string"&&b.description.length>500)return out({error:"Confira o fiado, valor e vencimento."},400);
@@ -164,7 +164,7 @@ const securityPolicy=[
  "connect-src 'self' https://nifvycrvqnzbxgglhlky.supabase.co https://viacep.com.br",
  "upgrade-insecure-requests"
 ].join("; ");
-const privateAsset=/^\/(?:conta|admin)\.html$|^\/(?:auth-config|pacifica-auth|conta|admin-pacifica|cep)\.(?:mjs|js)$/;
+const privateAsset=/^\/(?:conta|admin)\.html$|^\/(?:auth-config|pacifica-auth|conta|admin-pacifica|pacifica-management|cep)\.(?:mjs|js)$/;
 function securityHeaders(req,response){
  const pathname=new URL(req.url).pathname;
  const headers=new Headers(response.headers);
