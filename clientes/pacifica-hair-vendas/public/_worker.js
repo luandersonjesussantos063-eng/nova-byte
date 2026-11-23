@@ -65,6 +65,19 @@ async function route(req,env){
  const m=(req.headers.get("Cookie")||"").match(/(?:^|;\s*)__Host-pacifica_admin=([a-f0-9]{64})(?:;|$)/),session=m?await hash(m[1]):"";
  if(!session||!(await db.prepare("SELECT hash FROM sessions WHERE hash=? AND expires>?").bind(session,now()).first()))return out({error:"Entre no painel."},401);
  if(p==="/api/admin/logout"&&req.method==="POST"){await db.prepare("DELETE FROM sessions WHERE hash=?").bind(session).run();return out({ok:true},200,{"Set-Cookie":cookie("",0)})}
+ if(p==="/api/admin/orders"&&req.method==="GET"){
+  // Never return fake orders. A missing migration is explicitly reported.
+  let data;try{
+   data=await db.prepare("SELECT id,customer_name,status,payment_status,payment_method,total_cents,created_at,paid_at FROM orders ORDER BY created_at DESC LIMIT 100").all();
+  }catch(e){if(/no such table: orders/i.test(String(e)))return out({error:"Base de pedidos não configurada. Aplique backend/orders.sql."},503);throw e}
+  return out({orders:data.results});
+ }
+ if(p==="/api/admin/sales-summary"&&req.method==="GET"){
+  let summary;try{
+   summary=await db.prepare("SELECT COUNT(*) AS total_orders, SUM(CASE WHEN payment_status='pending' THEN 1 ELSE 0 END) AS pending_orders, SUM(CASE WHEN payment_status='approved' THEN 1 ELSE 0 END) AS paid_orders, COALESCE(SUM(CASE WHEN payment_status='approved' AND status NOT IN ('cancelled','refunded') THEN total_cents ELSE 0 END),0) AS paid_total_cents FROM orders").first();
+  }catch(e){if(/no such table: orders/i.test(String(e)))return out({error:"Base de pedidos não configurada. Aplique backend/orders.sql."},503);throw e}
+  return out({summary:{totalOrders:summary.total_orders,pendingOrders:summary.pending_orders,paidOrders:summary.paid_orders,paidTotalCents:summary.paid_total_cents}});
+ }
  if(p==="/api/admin/products"&&req.method==="GET")return out({products:await products(db,true)});
  if(p==="/api/admin/products"&&req.method==="POST"){
   const b=await body(req),x=b.product;
