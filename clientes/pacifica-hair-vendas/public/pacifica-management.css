@@ -1,0 +1,48 @@
+/* Pacífica Hair: management tabs from the client's four-screen reference. */
+.p-side{position:sticky;top:95px;max-height:calc(100dvh - 112px);overflow:auto}
+.p-side button,.p-side a{flex-shrink:0}
+.ph-mini-cards{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+.ph-mini-cards .ph-card{padding:18px;min-height:110px}
+.ph-mini-cards .ph-card strong{font-size:clamp(21px,2.5vw,34px)}
+.ph-mini-cards .ph-card:nth-child(2){background:linear-gradient(130deg,#e9f9e9,#f4fff7)}
+.ph-mini-cards .ph-card:nth-child(3){background:linear-gradient(130deg,#ffe2e3,#fff2f4)}
+.ph-tabs{display:flex;flex-wrap:wrap;gap:7px;margin:18px 0}
+.ph-tabs button{background:#ffe5f5;border:1px solid #f0c9e3;border-radius:13px;color:#752658;font-weight:700;min-height:42px;padding:10px 17px}
+.ph-tabs button.is-selected{background:linear-gradient(110deg,#e51491,#ab096b);color:#fff;box-shadow:0 5px 13px #af196f40}
+.ph-data-table{width:100%;border-collapse:separate;border-spacing:0;text-align:left;font-size:13px}
+.ph-table-wrap{width:100%;overflow-x:auto;margin-top:15px}
+.ph-data-table th{background:#f9d0ea;color:#512346;padding:13px 12px;white-space:nowrap}
+.ph-data-table td{border-bottom:1px solid #f0dcec;background:#fffafe9a;padding:12px;color:#50314b;vertical-align:middle}
+.ph-data-table tr:nth-child(2n) td{background:#fff4fb}
+.ph-data-table th:first-child{border-radius:10px 0 0 0}
+.ph-data-table th:last-child{border-radius:0 10px 0 0}
+.ph-data-table td img{width:40px;height:44px;object-fit:contain;vertical-align:middle;border-radius:8px;margin-right:8px}
+.ph-data-table td .ph-product-name{display:flex;align-items:center;gap:9px;min-width:160px;font-weight:650}
+.ph-data-table td button,.ph-row button{border:1px solid #f0c9e2;border-radius:9px;padding:7px 10px;background:#fff1fb;color:#8a0b65;font-weight:700;min-height:36px;margin:3px}
+.ph-data-table td button:hover,.ph-row button:hover{background:#f5c8e4}
+.ph-status{display:inline-block;border-radius:30px;font-weight:700;padding:6px 12px;font-size:12px;white-space:nowrap;background:#e3f8e9;color:#17682e}
+.ph-status.low{background:#fff0bc;color:#8a5a00}
+.ph-status.zero,.ph-status.overdue{background:#ffe0e2;color:#ad123d}
+.ph-status.inactive{background:#eae4f3;color:#685476}
+.ph-form{margin-bottom:18px}
+.ph-form h3,.ph-panel h3{font:700 18px Arial,sans-serif;color:#4d1740;margin:0 0 14px}
+.ph-form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.ph-form-grid label,#stockCurrent>label,#customerCurrent>label{display:grid;gap:6px;color:#5b3050;font-weight:650;font-size:13px}
+.ph-form input,.ph-form select,#stockSearch,#customerSearch{width:100%;padding:12px;border:1px solid #dfb9d2;background:#fff;border-radius:10px;font-size:14px;min-height:45px}
+.ph-form-actions{display:flex;flex-wrap:wrap;gap:9px;margin:16px 0}
+.ph-feedback{min-height:18px;color:#7a185b;font-size:12px}
+.ph-row{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;padding:12px;border-bottom:1px solid #f1dbe8}
+.ph-row:last-child{border:0}.ph-row strong{color:#491438}.ph-row small{display:block;margin-top:5px;color:#80546f}
+.ph-empty{padding:16px;color:#79566c;font-size:13px}
+.ph-action-inline{display:flex;gap:5px;flex-wrap:wrap}
+#products .product-layout{grid-template-columns:minmax(0,1fr)!important}
+#products .product-picker{width:100%}
+#products #editor{max-width:900px;margin-top:12px}
+#products .product-list{max-height:none}
+#products .product-option{display:flex}
+#products .product-picker>label{display:inline-grid;min-width:240px;margin-right:12px}
+#products .product-picker>label select{display:block;min-height:44px;width:100%;padding:10px;border:1px solid #dfb9d2;border-radius:9px;margin-top:6px}
+#products .product-option small{font-size:12px}
+.ph-error{color:#a92348!important}
+@media(max-width:900px){.p-side{position:static;max-height:none}.ph-mini-cards{grid-template-columns:repeat(3,minmax(0,1fr))!important}}
+@media(max-width:630px){.ph-mini-cards{grid-template-columns:1fr 1fr!important}.ph-mini-cards .ph-card{min-height:90px}.ph-form-grid{grid-template-columns:1fr}.ph-mini-cards .ph-card strong{font-size:21px}.ph-data-table{min-width:600px}#products .product-picker>label{display:grid;width:100%;min-width:0;margin:0 0 9px}}
