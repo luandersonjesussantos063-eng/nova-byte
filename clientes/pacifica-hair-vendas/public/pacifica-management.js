@@ -18,7 +18,7 @@ export function createManagement({api,getProducts,goTab,reloadProducts,editProdu
   const ps=getProducts();
   notify("#productTotal",String(ps.length));notify("#productActive",String(ps.filter(p=>p.visible).length));notify("#productInactive",String(ps.filter(p=>!p.visible).length));
   notify("#stockUnits",ps.reduce((s,p)=>s+Math.max(0,p.stock||0),0).toLocaleString("pt-BR"));
-  notify("#stockAvailable",ps.reduce((s,p)=>s+Math.max(0,p.stock||0),0).toLocaleString("pt-BR"));
+  notify("#stockAvailable",ps.filter(p=>p.visible).reduce((s,p)=>s+Math.max(0,p.stock||0),0).toLocaleString("pt-BR"));
   notify("#stockLow",ps.filter(low).length);
   const picker=$("#movementProduct"),current=picker.value;picker.replaceChildren(el("option","Selecione um produto"));
   picker.firstChild.value="";
@@ -116,7 +116,7 @@ export function createManagement({api,getProducts,goTab,reloadProducts,editProdu
  }
  async function submit(e,action,payload,section){
   e.preventDefault();const form=e.currentTarget,button=form.querySelector('button[type="submit"],button:not([type])');if(button)button.disabled=true;
-  try{await api("manage",{action,...payload(new FormData(form))});notify(section,"Salvo no servidor.");form.reset();form.hidden=true;await reloadProducts();await refresh(lastTab)}
+  try{const requestId=form.dataset.requestId||(form.dataset.requestId=crypto.randomUUID());await api("manage",{action,...payload(new FormData(form)),requestId});delete form.dataset.requestId;notify(section,"Salvo no servidor.");form.reset();form.hidden=true;await reloadProducts();await refresh(lastTab)}
   catch(err){notify(section,err.message)}finally{if(button)button.disabled=false}
  }
  function selectCustomerTab(view){
