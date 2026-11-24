@@ -594,3 +594,47 @@ body.no-scroll .p-cookie-banner{display:none}.p-cookie-copy{flex:1}.p-cookie-cop
  .p-footer .p-footer-end{flex-direction:column;align-items:flex-start;gap:6px;padding:18px 0 4px}
 }
 @media(max-width:350px){.p-footer{padding-left:16px;padding-right:16px}.p-footer-top{column-gap:12px}}
+
+
+/* Rodapé compacto: informação essencial, sem repetição e com leitura rápida. */
+.p-footer.p-footer-compact{background:#291423;color:#f5e8ef;padding:0 22px}
+.p-footer-compact .p-footer-inner{width:100%;max-width:1120px;margin:0 auto}
+.p-footer-compact .p-footer-trust{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;padding:21px 0;border-bottom:1px solid #ffffff2a}
+.p-footer-trust>span,.p-footer-trust>a{display:flex;align-items:center;gap:9px;font:600 12px/1.45 "DM Sans",Arial,sans-serif;color:#ffedf5;text-decoration:none;min-width:0}
+.p-footer-trust svg{width:18px;height:18px;flex-shrink:0;stroke:#f1a9d1}
+.p-footer-compact .p-footer-core{display:grid;grid-template-columns:1.6fr repeat(3,minmax(130px,1fr));align-items:start;gap:clamp(18px,3vw,42px);padding:32px 0 30px}
+.p-footer-compact .p-footer-identity{display:flex;flex-direction:column;align-items:flex-start;gap:18px;min-width:0}
+.p-footer-compact .p-footer-brand{font:500 29px/1.08 "Playfair Display",Georgia,serif;color:#fff1f7;text-decoration:none}
+.p-footer-compact .p-footer-brand small{display:block;font:600 10px/1.5 "DM Sans",Arial,sans-serif;letter-spacing:3px;margin-top:4px;color:#dfadca}
+.p-footer-compact .p-footer-social{display:flex;align-items:center;gap:9px;margin:0}
+.p-footer-compact .p-footer-social a{display:inline-flex;align-items:center;justify-content:center;width:37px;height:37px;border:1px solid #ffffff45;border-radius:10px;color:#fff4f9;background:transparent}
+.p-footer-compact .p-footer-social svg{width:18px;height:18px}
+.p-footer-compact .p-footer-column{display:flex;flex-direction:column;align-items:flex-start;gap:11px;min-width:0}
+.p-footer-compact .p-footer-column strong{font:700 12px/1.4 "DM Sans",Arial,sans-serif;color:#fff4f8;letter-spacing:.25px;margin:0 0 3px;text-transform:none}
+.p-footer-compact .p-footer-column a,.p-footer-compact .p-footer-column span{font:400 12px/1.5 "DM Sans",Arial,sans-serif;color:#e5ccda;text-decoration:none;overflow-wrap:break-word;max-width:100%}
+.p-footer-compact .p-footer-column a:hover,.p-footer-compact .p-footer-bottom a:hover,.p-footer-compact .p-footer-bottom button:hover,.p-footer-compact .p-footer-trust a:hover{color:white;text-decoration:underline;text-underline-offset:3px}
+.p-footer-compact .p-footer-bottom{display:flex;justify-content:space-between;align-items:center;gap:12px 24px;border-top:1px solid #ffffff2a;padding:16px 0 20px;color:#d6b8c8;font:400 11px/1.5 "DM Sans",Arial,sans-serif}
+.p-footer-compact .p-footer-legal{display:flex;align-items:center;gap:11px;flex-wrap:wrap}
+.p-footer-compact .p-footer-bottom a,.p-footer-compact .p-footer-bottom button{color:#efd5e4;font:inherit;text-decoration:none}
+.p-footer-compact .p-footer-bottom button{padding:0;margin:0;background:none;border:0;cursor:pointer}
+.p-footer-compact a:focus-visible,.p-footer-compact button:focus-visible{outline:2px solid #ffb2dc;outline-offset:3px;border-radius:3px}
+@media(max-width:850px){
+ /* Evita que a busca fixa cubra o conteúdo e o rodapé durante a rolagem. */
+ .n-header{position:relative}
+ .p-footer-compact .p-footer-core{grid-template-columns:repeat(3,minmax(0,1fr));gap:23px 15px}
+ .p-footer-compact .p-footer-identity{grid-column:1/-1;flex-direction:row;justify-content:space-between;align-items:center}
+}
+@media(max-width:600px){
+ .p-footer.p-footer-compact{padding:0 18px calc(14px + env(safe-area-inset-bottom,0px))}
+ .p-footer-compact .p-footer-trust{gap:6px;padding:15px 0}
+ .p-footer-trust>span,.p-footer-trust>a{font-size:10px;line-height:1.25;gap:5px;flex-direction:column;text-align:center;justify-content:center}
+ .p-footer-trust svg{width:19px;height:19px}
+ .p-footer-compact .p-footer-core{padding:24px 0;grid-template-columns:repeat(3,minmax(0,1fr));gap:19px 11px}
+ .p-footer-compact .p-footer-identity{grid-column:1/-1;gap:14px}
+ .p-footer-compact .p-footer-brand{font-size:25px}
+ .p-footer-compact .p-footer-column{gap:9px}
+ .p-footer-compact .p-footer-column strong{font-size:11px}
+ .p-footer-compact .p-footer-column a{font-size:11px;line-height:1.4}
+ .p-footer-compact .p-footer-bottom{flex-direction:column;align-items:flex-start;padding:13px 0 7px;font-size:10px;gap:6px}
+ .p-footer-compact .p-footer-legal{gap:8px}
+}
