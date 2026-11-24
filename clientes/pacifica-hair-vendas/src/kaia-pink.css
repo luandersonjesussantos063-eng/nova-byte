@@ -548,3 +548,49 @@ body.no-scroll .p-cookie-banner{display:none}.p-cookie-copy{flex:1}.p-cookie-cop
 /* Auditoria de lançamento: aviso claro, discreto e responsivo. */
 .p-prelaunch-notice{padding:10px 18px;text-align:center;background:#fff0f9;color:#6b224f;border-bottom:1px solid #e7c2d9;font:600 13px/1.5 'DM Sans',Arial,sans-serif}
 @media(max-width:600px){.p-prelaunch-notice{font-size:12px;padding:9px 16px}}
+
+
+/* Pacífica Hair | rodapé institucional definitivo */
+.p-footer{padding:0 28px;background:#291423;color:#ead8e4}
+.p-footer-inner{width:100%;max-width:1160px;margin:0 auto}
+.p-footer-top{display:grid;grid-template-columns:minmax(235px,1.48fr) repeat(3,minmax(145px,1fr));gap:clamp(22px,3.2vw,46px);padding:47px 0 39px;border-bottom:1px solid #ffffff25;align-items:start}
+.p-footer-intro{min-width:0}
+.p-footer-top .p-footer-brand{display:inline-block;font-family:"Playfair Display",Georgia,serif;font-size:32px;font-weight:500;line-height:1.1;color:#fff3fa;text-decoration:none}
+.p-footer-top .p-footer-brand small{display:block;font-family:"DM Sans",Arial,sans-serif;letter-spacing:3px;font-size:11px;margin:7px 0 0;color:#f2c5da}
+.p-footer-intro p{margin:16px 0 0;max-width:265px;font-size:13px;line-height:1.7;color:#dfc3d3}
+.p-footer-intro .p-footer-location{margin-top:11px;color:#d9a7c2;font-size:12px}
+.p-footer .p-footer-social{display:flex;align-items:center;gap:10px;margin-top:18px}
+.p-footer .p-footer-social a{width:40px;height:40px;display:inline-flex;align-items:center;justify-content:center;border:1px solid #ffffff48;border-radius:12px;color:#fff0f7;background:#ffffff08;transition:background .2s ease,border-color .2s ease}
+.p-footer .p-footer-social a:hover{background:#ffffff20;border-color:#ffcae2}
+.p-footer .p-footer-social svg{width:19px;height:19px}
+.p-footer-column{min-width:0;display:flex;flex-direction:column;align-items:flex-start;gap:12px}
+.p-footer-top .p-footer-column strong{color:#fff5fa;font-size:12px;font-weight:800;letter-spacing:.75px;text-transform:uppercase;margin:2px 0 6px;line-height:1.4}
+.p-footer-top .p-footer-column a,.p-footer-top .p-footer-column span,.p-footer-top .p-footer-column .p-footer-pref{display:inline-block;max-width:100%;font-family:"DM Sans",Arial,sans-serif;font-size:13px;font-weight:500;color:#e7d1df;line-height:1.55;text-decoration:none;text-align:left;overflow-wrap:break-word}
+.p-footer-top .p-footer-column .p-footer-pref{border:0;background:none;padding:0;margin:0;cursor:pointer}
+.p-footer-top .p-footer-column a:hover,.p-footer-top .p-footer-column .p-footer-pref:hover{color:#fff;text-decoration:underline;text-underline-offset:4px}
+.p-footer-top a:focus-visible,.p-footer-top button:focus-visible,.p-footer-end a:focus-visible{outline:2px solid #ffaad5;outline-offset:4px;border-radius:3px}
+.p-footer-service{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:22px;padding:23px 0;border-bottom:1px solid #ffffff25}
+.p-footer-service>div{display:flex;flex-direction:column;gap:6px;min-width:0}
+.p-footer-service strong{font-size:12px;font-weight:800;color:#fff1f8}
+.p-footer-service span{font-size:12px;line-height:1.6;color:#d9bfcf}
+.p-footer .p-footer-end{display:flex;align-items:center;justify-content:space-between;gap:12px 30px;padding:18px 0 25px;font-size:11px;line-height:1.6;color:#c7a7bc}
+.p-footer .p-footer-credit a{color:#f0c5dc;text-decoration:none;font-weight:700}
+.p-footer .p-footer-credit a:hover{text-decoration:underline;text-underline-offset:3px}
+@media(max-width:900px){
+ .p-footer-top{grid-template-columns:repeat(3,minmax(0,1fr));gap:30px 25px}
+ .p-footer-intro{grid-column:1/-1}
+ .p-footer-intro p{max-width:470px}
+}
+@media(max-width:650px){
+ .p-footer{padding:0 20px calc(64px + env(safe-area-inset-bottom,0px))}
+ .p-footer-top{grid-template-columns:repeat(2,minmax(0,1fr));gap:30px 18px;padding:36px 0 31px}
+ .p-footer-intro{grid-column:1/-1}
+ .p-footer-top .p-footer-brand{font-size:30px}
+ .p-footer-column{gap:11px}
+ .p-footer-top .p-footer-column strong{margin-bottom:3px;font-size:11px}
+ .p-footer-top .p-footer-column a,.p-footer-top .p-footer-column span,.p-footer-top .p-footer-column .p-footer-pref{font-size:12px}
+ .p-footer-service{grid-template-columns:1fr;gap:17px;padding:24px 0}
+ .p-footer-service>div{gap:3px}
+ .p-footer .p-footer-end{flex-direction:column;align-items:flex-start;gap:6px;padding:18px 0 4px}
+}
+@media(max-width:350px){.p-footer{padding-left:16px;padding-right:16px}.p-footer-top{column-gap:12px}}
