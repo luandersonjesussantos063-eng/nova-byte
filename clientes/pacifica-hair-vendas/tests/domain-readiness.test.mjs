@@ -7,15 +7,16 @@ const sitemap=read("../public/sitemap.xml");
 const robots=read("../public/robots.txt");
 const footer=read("../src/app.js");
 const info=[read("../public/privacidade.html"),read("../public/entregas-e-trocas.html")];
-test("commercial domain has canonical and social metadata",()=>{
- assert.match(html,/rel="canonical" href="https:\/\/pacificahair\.com\.br\/"/);
- assert.match(html,/property="og:url" content="https:\/\/pacificahair\.com\.br\/"/);
+test("purchased accented IDN domain has canonical and social metadata",()=>{
+ assert.match(html,/rel="canonical" href="https:\/\/xn--pacficahair-qcb\.com\.br\/"/);
+ assert.match(html,/property="og:url" content="https:\/\/xn--pacficahair-qcb\.com\.br\/"/);
  assert.match(html,/rel="icon" href="\/favicon\.svg"/);
 });
 test("sitemap and robots use commercial domain without demo URL",()=>{
- assert.match(robots,/Sitemap: https:\/\/pacificahair\.com\.br\/sitemap\.xml/);
- assert.match(sitemap,/https:\/\/pacificahair\.com\.br\//);
+ assert.match(robots,/Sitemap: https:\/\/xn--pacficahair-qcb\.com\.br\/sitemap\.xml/);
+ assert.match(sitemap,/https:\/\/xn--pacficahair-qcb\.com\.br\//);
  assert.doesNotMatch(sitemap,/pages\.dev/);
+ assert.doesNotMatch(sitemap,/https:\/\/pacificahair\.com\.br/);
 });
 test("policy pages exist and storefront has clear links",()=>{
  for(const item of info){assert.match(item,/<html lang="pt-BR">/);assert.match(item,/Pacífica Hair/);}
