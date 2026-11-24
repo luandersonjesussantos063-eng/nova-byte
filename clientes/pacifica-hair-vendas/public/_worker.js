@@ -6,8 +6,8 @@ const now=()=>Math.floor(Date.now()/1000),cookie=(s,t)=>"__Host-pacifica_admin="
 const RECOVERY_AUTH_URL="https://nifvycrvqnzbxgglhlky.supabase.co";
 const RECOVERY_AUTH_PUBLIC_KEY="sb_publishable_lVUXjlOgo46IhibFMiCAtw_nAIzVUCz"; // Public browser key, not a service-role secret.
 const recoveryEmail=async(db,env)=>{const stored=await db.prepare("SELECT email FROM ph_admin_recovery_config WHERE id=1").first();return String(stored?.email||env.ADMIN_RECOVERY_EMAIL||"").trim().toLowerCase()};
-const recoveryEnabled=async(db,env)=>/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(await recoveryEmail(db,env));
-const strongAdminPassword=s=>typeof s==="string"&&s.length>=12&&s.length<=128&&/[a-zA-Z]/.test(s)&&/\\d/.test(s);
+const recoveryEnabled=async(db,env)=>/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(await recoveryEmail(db,env));
+const strongAdminPassword=s=>typeof s==="string"&&s.length>=12&&s.length<=128&&/[a-zA-Z]/.test(s)&&/\d/.test(s);
 const randomHex=n=>Array.from(crypto.getRandomValues(new Uint8Array(n)),x=>x.toString(16).padStart(2,"0")).join("");
 async function adminPasswordHash(password,salt,iterations=210000){
  const key=await crypto.subtle.importKey("raw",new TextEncoder().encode(password),"PBKDF2",false,["deriveBits"]);
@@ -169,7 +169,7 @@ async function route(req,env){
  if(p==="/api/admin/manage")return manage(req,db);
  if(p==="/api/admin/recovery/configure"&&req.method==="POST"){
   const b=await body(req,1500),email=String(b.email||"").trim().toLowerCase();
-  if(!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)||email.length>254)return out({error:"Informe um e-mail válido."},400);
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)||email.length>254)return out({error:"Informe um e-mail válido."},400);
   if(typeof b.password!=="string"||!(await adminPasswordValid(db,env,b.password)))return out({error:"Confirme sua senha administrativa atual."},403);
   await db.prepare("INSERT INTO ph_admin_recovery_config(id,email) VALUES(1,?) ON CONFLICT(id) DO UPDATE SET email=excluded.email,configured_at=CURRENT_TIMESTAMP").bind(email).run();
   return out({ok:true,recoveryEmail:email});
