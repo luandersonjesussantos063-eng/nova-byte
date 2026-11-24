@@ -280,3 +280,19 @@ html{font-family:'Segoe UI',Arial,sans-serif}.admin-top{height:82px;backdrop-fil
 .admin-recovery-config h3{margin:0}
 .admin-recovery-config p{margin:0}
 .admin-recovery-config button{justify-self:start}
+
+
+/* Giro: entrada clara para integrações externas, sem simular sincronização. */
+.giro-connection{display:flex;flex-direction:column;align-items:flex-start;gap:14px;max-width:850px}
+.giro-connection-head{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;width:100%}
+.giro-brand{display:inline-flex;align-items:baseline;gap:8px;font:800 23px/1.2 system-ui,sans-serif;letter-spacing:1.1px;color:#8b1d5a}
+.giro-brand small{font:600 11px/1.2 system-ui,sans-serif;letter-spacing:0;color:#765567}
+.giro-status{padding:6px 10px;border-radius:20px;border:1px solid #dec9d5;background:#fdf5f9;font:600 11px/1.4 system-ui,sans-serif;color:#6d4d60}
+.giro-connection h3{margin:0;font-size:clamp(18px,3vw,23px);color:#402335}
+.giro-connection>p{margin:0;color:#79556b;font-size:13px;line-height:1.55}
+.giro-channels{display:flex;gap:8px;flex-wrap:wrap}
+.giro-channels span{padding:8px 11px;border:1px solid #ead5e1;background:#fff8fc;border-radius:10px;font:600 12px/1.3 system-ui,sans-serif;color:#623b52}
+.giro-open{display:inline-flex;align-items:center;justify-content:center;min-height:46px;padding:12px 22px;border-radius:10px;text-decoration:none}
+.giro-signup{color:#8f1c63;font-weight:700;font-size:12px;text-underline-offset:3px}
+.giro-connection .giro-note{padding-top:10px;border-top:1px solid #f0e2e9;font-size:12px;color:#80667a}
+@media(max-width:600px){.giro-connection{padding:20px 15px}.giro-open{width:100%}.giro-channels span{font-size:11px}}
