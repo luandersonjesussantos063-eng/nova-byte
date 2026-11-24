@@ -12,7 +12,7 @@ test("admin login shows recovery entry without exposing admin on storefront",()=
 });
 test("recovery requires verified dedicated Supabase account and enrolled email",()=>{
  assert.match(worker,/\/auth\/v1\/user/);
- assert.match(worker,/user\.email_confirmed_at/);
+ assert.match(worker,/user\?\.email_confirmed_at/);
  assert.match(worker,/user\.email\.toLowerCase\(\)!==expected/);
  assert.match(worker,/ph_admin_recovery_config/);
  assert.match(worker,/adminPasswordValid\(db,env,b\.password\)/);
