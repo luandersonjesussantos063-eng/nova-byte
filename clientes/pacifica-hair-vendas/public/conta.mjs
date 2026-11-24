@@ -78,6 +78,17 @@ $("#profileForm").onsubmit=async e=>{e.preventDefault();if(!user||!sb)return;can
 document.querySelectorAll("[data-tab]").forEach(b=>b.onclick=()=>{for(const k of ["details","orders"])$("#"+k).hidden=k!==b.dataset.tab;document.querySelectorAll("[data-tab]").forEach(x=>x.setAttribute("aria-current",x===b?"page":"false"));});
 showMode(mode);
 if(!sb){status("Área de acesso em preparação. O cadastro será liberado após a configuração do servidor.",true);$("#authSubmit").disabled=true;$("#resend").disabled=true;}else{
- sb.auth.onAuthStateChange((event)=>{if(event==="PASSWORD_RECOVERY"){recovering=true;showMode("reset");status("Escolha sua nova senha.");}else if(event==="SIGNED_IN"&&!recovering&&!params.has("redefinir"))setTimeout(loadAccount,0);});
+ sb.auth.onAuthStateChange((event)=>{
+  if(event==="PASSWORD_RECOVERY"){recovering=true;showMode("reset");status("Escolha sua nova senha.");return;}
+  if(event==="SIGNED_IN"&&!recovering&&!params.has("redefinir")){
+   // Auth emails for the ADM return to this already authorized account URL.
+   // A local, short-lived marker sends the confirmed administrator back to the reset screen.
+   // The server still verifies the identity against the registered recovery email.
+   let pending=false;
+   try{const t=Number(localStorage.getItem("pacifica-admin-recovery-pending"));pending=Number.isFinite(t)&&t>0&&Date.now()-t<20*60*1000}catch{}
+   if(pending){setTimeout(()=>location.replace("/admin.html?recuperar=1"),0);return}
+   setTimeout(loadAccount,0);
+  }
+ });
  if(params.has("redefinir")){status("Validando o link de recuperação…");setTimeout(()=>{if(!recovering){showMode("forgot");status("Link inválido ou expirado. Solicite outro e-mail.",true)}},3000);}else{loadAccount().then(()=>{if(!user&&!emailReady())status("A confirmação de e-mail ainda está em configuração.");else if(!user)status("");}).catch(()=>status("Serviço de acesso indisponível.",true));}
 }
