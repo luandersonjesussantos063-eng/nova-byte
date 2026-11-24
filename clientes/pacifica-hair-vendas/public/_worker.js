@@ -5,7 +5,8 @@ const now=()=>Math.floor(Date.now()/1000),cookie=(s,t)=>"__Host-pacifica_admin="
 
 const RECOVERY_AUTH_URL="https://nifvycrvqnzbxgglhlky.supabase.co";
 const RECOVERY_AUTH_PUBLIC_KEY="sb_publishable_lVUXjlOgo46IhibFMiCAtw_nAIzVUCz"; // Public browser key, not a service-role secret.
-const recoveryEnabled=env=>/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(String(env.ADMIN_RECOVERY_EMAIL||"").trim());
+const recoveryEmail=async(db,env)=>{const stored=await db.prepare("SELECT email FROM ph_admin_recovery_config WHERE id=1").first();return String(stored?.email||env.ADMIN_RECOVERY_EMAIL||"").trim().toLowerCase()};
+const recoveryEnabled=async(db,env)=>/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(await recoveryEmail(db,env));
 const strongAdminPassword=s=>typeof s==="string"&&s.length>=12&&s.length<=128&&/[a-zA-Z]/.test(s)&&/\\d/.test(s);
 const randomHex=n=>Array.from(crypto.getRandomValues(new Uint8Array(n)),x=>x.toString(16).padStart(2,"0")).join("");
 async function adminPasswordHash(password,salt,iterations=210000){
@@ -19,7 +20,7 @@ async function adminPasswordValid(db,env,password){
  return typeof env.ADMIN_PASSWORD==="string"&&env.ADMIN_PASSWORD.length>=12&&eq(await hash(password),await hash(env.ADMIN_PASSWORD));
 }
 async function recoverAdmin(req,env,db){
- if(!recoveryEnabled(env))return out({error:"Recuperação ainda não configurada. Fale com a responsável pela loja."},503);
+ if(!(await recoveryEnabled(db,env)))return out({error:"Recuperação ainda não configurada. A administradora deve cadastrar o e-mail de recuperação em Configurações."},503);
  const ip=await hash("admin-recovery:"+(req.headers.get("CF-Connecting-IP")||"unknown")),t=now();
  const attempt=await db.prepare("INSERT INTO attempts(ip,count,expires) VALUES (?,1,?) ON CONFLICT(ip) DO UPDATE SET count=CASE WHEN expires<=? THEN 1 ELSE count+1 END,expires=CASE WHEN expires<=? THEN excluded.expires ELSE expires END RETURNING count").bind(ip,t+900,t,t).first();
  if(attempt.count>5)return out({error:"Muitas tentativas. Tente novamente em 15 minutos."},429);
@@ -31,7 +32,7 @@ async function recoverAdmin(req,env,db){
   if(!r.ok)return out({error:"Link expirado ou conta não autorizada. Solicite outro e-mail."},403);
   user=await r.json();
  }catch{return out({error:"Não foi possível validar seu e-mail agora."},503)}
- const expected=String(env.ADMIN_RECOVERY_EMAIL).trim().toLowerCase();
+ const expected=await recoveryEmail(db,env);
  if(!user?.id||!user?.email_confirmed_at||user?.is_anonymous===true||typeof user.email!=="string"||user.email.toLowerCase()!==expected)return out({error:"Conta não autorizada para recuperar este painel."},403);
  const tokenHash=await hash(b.accessToken),salt=randomHex(16),passwordHash=await adminPasswordHash(b.password,salt);
  try{
@@ -150,7 +151,7 @@ async function route(req,env){
  if(p.startsWith("/api/photos/")&&req.method==="GET"){const id=p.split("/").at(-1);if(!/^[a-f0-9]{64}$/.test(id))return out({error:"Foto não encontrada."},404);const row=await db.prepare("SELECT data FROM photos WHERE id=?").bind(id).first();if(!row)return out({error:"Foto não encontrada."},404);return new Response(Uint8Array.from(atob(row.data.split(",")[1]),x=>x.charCodeAt(0)),{headers:{"Content-Type":"image/webp","Cache-Control":"public,max-age=31536000,immutable","X-Content-Type-Options":"nosniff"}})}
  if(!p.startsWith("/api/admin/"))return out({error:"Não encontrado."},404);
  if(req.method!=="GET"&&req.headers.get("Origin")!==u.origin)return out({error:"Origem inválida."},403);
- if(p==="/api/admin/status"&&req.method==="GET"){const exists=await db.prepare("SELECT id FROM ph_admin_credentials WHERE id=1").first();return out({ready:!!exists||(typeof env.ADMIN_PASSWORD==="string"&&env.ADMIN_PASSWORD.length>=12),recoveryReady:recoveryEnabled(env)});}
+ if(p==="/api/admin/status"&&req.method==="GET"){const exists=await db.prepare("SELECT id FROM ph_admin_credentials WHERE id=1").first();return out({ready:!!exists||(typeof env.ADMIN_PASSWORD==="string"&&env.ADMIN_PASSWORD.length>=12),recoveryReady:await recoveryEnabled(db,env)});}
  if(p==="/api/admin/recover"&&req.method==="POST")return recoverAdmin(req,env,db);
  if(p==="/api/admin/login"&&req.method==="POST"){
   const stored=await db.prepare("SELECT id FROM ph_admin_credentials WHERE id=1").first();
@@ -166,7 +167,14 @@ async function route(req,env){
  const m=(req.headers.get("Cookie")||"").match(/(?:^|;\s*)__Host-pacifica_admin=([a-f0-9]{64})(?:;|$)/),session=m?await hash(m[1]):"";
  if(!session||!(await db.prepare("SELECT hash FROM sessions WHERE hash=? AND expires>?").bind(session,now()).first()))return out({error:"Entre no painel."},401);
  if(p==="/api/admin/manage")return manage(req,db);
- if(p==="/api/admin/health"&&req.method==="GET")return out({database:!!db,adminSession:true,mercadoPagoConfigured:!!(env.PACIFICA_MP_ACCESS_TOKEN),checkoutReady:false});
+ if(p==="/api/admin/recovery/configure"&&req.method==="POST"){
+  const b=await body(req,1500),email=String(b.email||"").trim().toLowerCase();
+  if(!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)||email.length>254)return out({error:"Informe um e-mail válido."},400);
+  if(typeof b.password!=="string"||!(await adminPasswordValid(db,env,b.password)))return out({error:"Confirme sua senha administrativa atual."},403);
+  await db.prepare("INSERT INTO ph_admin_recovery_config(id,email) VALUES(1,?) ON CONFLICT(id) DO UPDATE SET email=excluded.email,configured_at=CURRENT_TIMESTAMP").bind(email).run();
+  return out({ok:true,recoveryEmail:email});
+ }
+ if(p==="/api/admin/health"&&req.method==="GET")return out({database:!!db,adminSession:true,mercadoPagoConfigured:!!(env.PACIFICA_MP_ACCESS_TOKEN),checkoutReady:false,recoveryReady:await recoveryEnabled(db,env),recoveryEmail:await recoveryEmail(db,env)});
  if(p==="/api/admin/logout"&&req.method==="POST"){await db.prepare("DELETE FROM sessions WHERE hash=?").bind(session).run();return out({ok:true},200,{"Set-Cookie":cookie("",0)})}
  if(p==="/api/admin/orders"&&req.method==="GET"){
   // Never return fake orders. A missing migration is explicitly reported.
