@@ -21,7 +21,8 @@ const state = {
   products: [],
   cart: normalizeCart(initial.cart),
   favorites: Array.isArray(initial.favorites) ? initial.favorites : [],
-  config: { pixPercent: 5, cardPercent: 0, motoboyCents: 1290, ownCents: 990, ...(initial.config || {}), whatsapp: initial.config?.whatsapp || "553180482304", instagram: initial.config?.instagram || "pacificahair_vendas" },
+  // Public store terms and contact are not editable by visitor localStorage.
+  config: { pixPercent: 5, cardPercent: 0, motoboyCents: 1290, ownCents: 990, whatsapp: "553180482304", instagram: "pacificahair_vendas" },
   filter: "Todos", brandFilter: "Todas", cycleFilter: "18/2026", query: "", showAll: false, showAbout: false, favoritesView: false, heroSlide: 0, cartOpen: false, adminOpen: false, adminTab: "produtos", adminEdit: null,
   checkoutOpen: false, payment: "pix", shipping: "motoboy", menuOpen: false, detailId: null, sortBy: "featured", priceRange: "all", filterOpen: false, toast: ""
 };
@@ -487,7 +488,7 @@ activateHeroAutoplay();
 if(typeof window.fetch==="function"&&new URLSearchParams(location.search).get("sacola")==="1"){state.cartOpen=true;render();history.replaceState(null,"",location.pathname);}
 
 async function loadCatalog(){
- try{const r=await window.fetch("/api/catalog",{cache:"no-store"});if(!r.ok)throw Error("Catálogo indisponível");const data=await r.json();if(!Array.isArray(data.products))throw Error("Catálogo inválido");sharedCatalog=data.products;state.products=data.products;catalogLoadError=false;render({retainSearch:true});}
+ try{const r=await window.fetch("/api/catalog",{cache:"no-store"});if(!r.ok)throw Error("Catálogo indisponível");const data=await r.json();if(!Array.isArray(data.products))throw Error("Catálogo inválido");sharedCatalog=data.products.slice().sort((a,b)=>Number(b.stock>0)-Number(a.stock>0));state.products=sharedCatalog;catalogLoadError=false;render({retainSearch:true});}
  catch{sharedCatalog=null;state.products=[];catalogLoadError=true;render({retainSearch:true});}
 }
 if(typeof window.fetch==="function")void loadCatalog();
