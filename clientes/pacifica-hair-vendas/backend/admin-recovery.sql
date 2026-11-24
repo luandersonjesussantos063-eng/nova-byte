@@ -13,3 +13,10 @@ CREATE TABLE IF NOT EXISTS ph_admin_recovery_used (
   used_at INTEGER NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_ph_admin_recovery_used_at ON ph_admin_recovery_used (used_at);
+
+-- The current administrator can enroll a verified mailbox from Settings.
+CREATE TABLE IF NOT EXISTS ph_admin_recovery_config (
+ id INTEGER PRIMARY KEY CHECK (id=1),
+ email TEXT NOT NULL,
+ configured_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
