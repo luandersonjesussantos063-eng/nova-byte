@@ -4,7 +4,7 @@ const $=q=>document.querySelector(q),status=(id,msg)=>$(id).textContent=msg;
 const el=(tag,t,cls)=>{const n=document.createElement(tag);if(t!==undefined)n.textContent=t;if(cls)n.className=cls;return n};
 let rows=[],selected=null,images=[],busy=false,management=null;
 async function api(path,data){const r=await fetch("/api/admin/"+path,data===undefined?{cache:"no-store"}:{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(data)});const j=await r.json();if(!r.ok)throw Error(j.error||"Falha na comunicação");return j}
-function tab(s){for(const k of ["overview","products","stock","orders","customers","finance","reports","suppliers","settings"])$("#"+k).hidden=k!==s;document.querySelectorAll(".p-side button").forEach(b=>b.classList.toggle("active",b.dataset.tab===s));if(s==="orders")loadOrders();else management?.refresh(s)}
+function tab(s){for(const k of ["overview","products","stock","orders","customers","finance","reports","suppliers","integrations","settings"])$("#"+k).hidden=k!==s;document.querySelectorAll(".p-side button").forEach(b=>b.classList.toggle("active",b.dataset.tab===s));if(s==="orders")loadOrders();else management?.refresh(s)}
 function picture(src){const i=el("img");i.alt="Foto do produto";if(src)i.src=src;else i.style.visibility="hidden";return i}
 const money=n=>(n/100).toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
 function draw(){
