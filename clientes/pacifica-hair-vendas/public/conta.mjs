@@ -50,7 +50,17 @@ cepInput.addEventListener("change",()=>{onCepChange();if(cepDigits(cepInput.valu
 cepInput.addEventListener("blur",()=>{if(cepDigits(cepInput.value).length===8){clearTimeout(cepTimer);void findAddress()}});
 
 async function loadProfile(){const {data,error}=await sb.from("pacifica_customer_details").select(fields.join(",")).eq("user_id",user.id).maybeSingle();if(error){status("Não conseguimos carregar os dados de entrega.",true);return false;}const f=$("#profileForm");for(const k of fields)f.elements[k].value=data?.[k]||(k==="full_name"?user.user_metadata?.pacifica_name||"":"");resetCepLookup();return !!data&&/^\d{8}$/.test(data.postal_code||"")}
-async function loadAccount(){if(recovering)return;user=await verifiedUser();if(!user){showMode(mode==="signup"?"signup":"login");return;}$("#authPanel").hidden=true;$("#memberPanel").hidden=false;$("#memberName").textContent=user.user_metadata?.pacifica_name||"Sua conta";$("#memberEmail").textContent=user.email||"";status("");if(params.get("aba")==="pedidos")document.querySelector('[data-tab="orders"]')?.click();const ready=await loadProfile();if(ready)resume();else if(returnCart)status("Complete seus dados de entrega antes de continuar o pedido.")}
+async function loadAccount(){
+ // A verified email link can return to this already-allowlisted account page.
+ // Return to the admin reset screen only when this browser requested recovery.
+ if(sessionStorage.getItem("pacifica-admin-recovery-pending")==="1"&&sb){
+  const {data}=await sb.auth.getSession();
+  if(data?.session?.access_token){
+   sessionStorage.removeItem("pacifica-admin-recovery-pending");
+   location.replace("/admin.html?recuperar=1");return;
+  }
+ }
+if(recovering)return;user=await verifiedUser();if(!user){showMode(mode==="signup"?"signup":"login");return;}$("#authPanel").hidden=true;$("#memberPanel").hidden=false;$("#memberName").textContent=user.user_metadata?.pacifica_name||"Sua conta";$("#memberEmail").textContent=user.email||"";status("");if(params.get("aba")==="pedidos")document.querySelector('[data-tab="orders"]')?.click();const ready=await loadProfile();if(ready)resume();else if(returnCart)status("Complete seus dados de entrega antes de continuar o pedido.")}
 function checkEmailReady(){if(!emailReady()){status("O envio de e-mails ainda está em configuração. O cadastro e a recuperação ficarão disponíveis após a validação do serviço.",true);return false}return true}
 document.querySelectorAll("[data-mode]").forEach(b=>b.onclick=()=>{status("");showMode(b.dataset.mode)});
 $("#back").onclick=()=>showMode("login");$("#forgot").onclick=()=>showMode("forgot");
