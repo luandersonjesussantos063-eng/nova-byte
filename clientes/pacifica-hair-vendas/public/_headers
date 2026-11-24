@@ -12,3 +12,33 @@
   Cache-Control: no-cache, must-revalidate
 /cep.mjs
   Cache-Control: no-cache, must-revalidate
+
+# Defense in depth for static files when the advanced Worker does not serve a route.
+/*
+  Content-Security-Policy: default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; script-src 'self' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: https:; media-src 'self' https:; connect-src 'self' https://nifvycrvqnzbxgglhlky.supabase.co https://viacep.com.br; upgrade-insecure-requests
+  X-Frame-Options: DENY
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=()
+  Strict-Transport-Security: max-age=31536000
+/admin.html
+  Cache-Control: no-store
+  Referrer-Policy: no-referrer
+  X-Robots-Tag: noindex, nofollow
+/admin-pacifica.js
+  Cache-Control: no-store
+/admin-pacifica.css
+  Cache-Control: no-store
+/pacifica-management.js
+  Cache-Control: no-store
+/pacifica-management.css
+  Cache-Control: no-store
+/pacifica-dashboard.css
+  Cache-Control: no-store
+/conta.html
+  Referrer-Policy: no-referrer
+  X-Robots-Tag: noindex, nofollow
+https://novabyte-pacifica-hair-preview.pages.dev/*
+  X-Robots-Tag: noindex, nofollow
+https://pacifica-hair-preview.pages.dev/*
+  X-Robots-Tag: noindex, nofollow
