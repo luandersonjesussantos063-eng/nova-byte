@@ -169,8 +169,10 @@ const securityPolicy=[
 ].join("; ");
 const privateAsset=/^\/(?:conta|admin)\.html$|^\/(?:auth-config|pacifica-auth|conta|admin-pacifica|pacifica-management|cep)\.(?:mjs|js)$/;
 function securityHeaders(req,response){
- const pathname=new URL(req.url).pathname;
+ const requestURL=new URL(req.url),pathname=requestURL.pathname;
  const headers=new Headers(response.headers);
+ // Prevent pre-launch Pages previews from being indexed; custom domains remain eligible later.
+ if(requestURL.hostname.endsWith(".pages.dev"))headers.set("X-Robots-Tag","noindex, nofollow");
  headers.set("Content-Security-Policy",securityPolicy);
  headers.set("X-Frame-Options","DENY");
  headers.set("X-Content-Type-Options","nosniff");
