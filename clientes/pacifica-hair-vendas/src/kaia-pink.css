@@ -638,3 +638,38 @@ body.no-scroll .p-cookie-banner{display:none}.p-cookie-copy{flex:1}.p-cookie-cop
  .p-footer-compact .p-footer-bottom{flex-direction:column;align-items:flex-start;padding:13px 0 7px;font-size:10px;gap:6px}
  .p-footer-compact .p-footer-legal{gap:8px}
 }
+
+
+/* Pacífica Hair — confirmação ao adicionar à sacola (referência de UX da Kaia Glow). */
+.p-added-backdrop{position:fixed;inset:0;z-index:1900;display:flex;justify-content:center;align-items:flex-end;background:rgba(29,17,27,.64);backdrop-filter:blur(2px)}
+.p-added-dialog{width:min(560px,100%);max-height:min(88dvh,870px);overflow:auto;overscroll-behavior:contain;border-radius:22px 22px 0 0;background:#fff;color:#382735;box-shadow:0 15px 65px #32132944}
+.p-added-header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:20px 22px 15px}
+.p-added-header h2{font-size:clamp(17px,4.4vw,22px);font-weight:750;line-height:1.25;color:#57263f;margin:0}
+.p-added-header button{display:grid;place-items:center;width:38px;height:38px;flex-shrink:0;border:0;border-radius:50%;background:#f9eff4;color:#672b4d;cursor:pointer}
+.p-added-header svg{width:20px;height:20px}
+.p-added-product{display:flex;align-items:center;gap:15px;padding:0 22px 18px;border-bottom:1px solid #eedce5}
+.p-added-product .cart-icon{flex:0 0 73px;width:73px;height:80px;display:grid;place-items:center;border-radius:11px;background:#fcf5f9;overflow:hidden}
+.p-added-product .cart-icon img{width:100%;height:100%;object-fit:contain}
+.p-added-product>div{min-width:0}
+.p-added-product strong{display:block;font-size:13px;line-height:1.45}
+.p-added-product small{display:block;margin-top:5px;font-size:11px;color:#917286}
+.p-added-product b{display:block;margin-top:7px;font-size:17px;color:#922e65}
+.p-added-more{padding:18px 0 15px;background:#fdf7fa}
+.p-added-more h3{font-size:16px;margin:0 18px 4px;color:#4d2b40}
+.p-added-more>p{font-size:12px;margin:0 18px 14px;color:#81677a}
+.p-added-track{display:flex;gap:10px;padding:0 17px 12px;overflow-x:auto;scroll-snap-type:x mandatory}
+.p-added-offer{flex:0 0 153px;min-width:0;border:1px solid #f0dde7;border-radius:13px;background:white;overflow:hidden;scroll-snap-align:start}
+.p-added-offer-image{display:block;width:100%;height:115px;padding:9px;border:0;background:#fffbfd;cursor:pointer}
+.p-added-offer-image img{display:block;width:100%;height:100%;object-fit:contain}
+.p-added-offer-body{display:flex;flex-direction:column;gap:7px;padding:10px;min-height:158px}
+.p-added-offer-body small{font-size:10px;color:#90778a}
+.p-added-offer-body strong{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:12px;line-height:1.4;min-height:34px}
+.p-added-offer-body b{margin-top:auto;font-size:14px;color:#8f2e63}
+.p-added-offer-body button{min-height:34px;border:0;border-radius:8px;background:#872a62;color:white;font-size:12px;font-weight:700;cursor:pointer}
+.p-added-actions{position:sticky;bottom:0;z-index:2;display:grid;gap:9px;padding:13px 22px max(16px,env(safe-area-inset-bottom));background:#fff;border-top:1px solid #eedce5}
+.p-added-actions small{text-align:center;font-size:11px;color:#866e7b}
+.p-added-actions button{min-height:45px;border-radius:10px;font-size:13px;font-weight:750;cursor:pointer}
+.p-added-go{border:0;background:#8f2c63;color:white}
+.p-added-keep{border:1px solid #e3cbd7;background:white;color:#713954}
+@media(min-width:800px){.p-added-backdrop{justify-content:flex-end;align-items:center}.p-added-dialog{margin-right:5vw;border-radius:20px;max-height:84dvh}}
+@media(max-width:600px){.p-added-header{padding:17px 16px 13px}.p-added-product{padding:0 16px 15px}.p-added-actions{padding-left:16px;padding-right:16px}}
