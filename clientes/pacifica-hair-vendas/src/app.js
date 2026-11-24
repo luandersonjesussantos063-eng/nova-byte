@@ -18,7 +18,7 @@ try{freightSelection=JSON.parse(sessionStorage.getItem("pacifica-freight-preview
 const KEY = "pacifica-demo-v2";
 const initial = (() => { try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch { return {}; } })();
 const state = {
-  products: Array.isArray(initial.products) ? initial.products : structuredClone(SAMPLE_PRODUCTS),
+  products: [],
   cart: normalizeCart(initial.cart),
   favorites: Array.isArray(initial.favorites) ? initial.favorites : [],
   config: { pixPercent: 5, cardPercent: 0, motoboyCents: 1290, ownCents: 990, ...(initial.config || {}), whatsapp: initial.config?.whatsapp || "553180482304", instagram: initial.config?.instagram || "pacificahair_vendas" },
@@ -41,7 +41,7 @@ const icons = {
 };
 const esc = s => String(s ?? "").replace(/[&<>"']/g, m => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[m]));
 function persist() {
-  localStorage.setItem(KEY, JSON.stringify({ products: state.products, cart: state.cart, favorites: state.favorites, config: state.config }));
+  localStorage.setItem(KEY, JSON.stringify({ cart: state.cart, favorites: state.favorites }));
 }
 function count() { return state.cart.reduce((n, p) => n + p.qty, 0); }
 function cartQuoteItems(){return cartTotals(state.cart,state.products,state.config).entries.map(x=>({id:x.id,qty:x.qty}));}
@@ -235,12 +235,10 @@ function pinkFooter() {
  '<div class="p-footer-warning">Loja em preparação para receber pagamentos reais.</div></footer>';
 }
 
-let sharedCatalog=null;
+let sharedCatalog=null,catalogLoadError=false;
 function catalogItems(){
- if(sharedCatalog!==null)return sharedCatalog;
- const confirmed=state.products.filter(p=>p.catalog&&!p.reference&&p.cycle==="18/2026");
- const refs=REVISTA_REFERENCES.filter(p=>!confirmed.some(q=>q.brand===p.brand&&q.code===p.code&&q.cycle===p.cycle));
- return [...confirmed,...refs,...state.products.filter(p=>!p.catalog&&!p.demo)];
+ // Display only confirmed server data; never substitute demo catalog when API is unavailable.
+ return Array.isArray(sharedCatalog)?sharedCatalog:[];
 }
 function categories(){
  const rows=catalogItems();
@@ -283,7 +281,7 @@ function shop(){
  const opts=(list,current)=>list.map(([v,l])=>'<option value="'+v+'" '+(current===v?"selected":"")+'>'+l+'</option>').join("");
  return '<section class="wrap shop n-shop" id="produtos"><div class="n-breadcrumb"><button data-action="home">início</button> › '+esc(title)+'</div><h2 class="n-shop-title">'+esc(title)+'</h2><div class="n-shop-toolbar"><span>'+selected.length+' produtos encontrados</span><button class="n-filter-toggle" data-action="filters" aria-expanded="'+state.filterOpen+'">☷ filtros</button><label>ordenar por <select name="catalog-sort">'+opts([["featured","Destaques"],["low","Menor preço"],["high","Maior preço"],["name","Nome A–Z"]],state.sortBy)+'</select></label></div>'+
  (state.filterOpen?'<div class="n-filter-panel"><label>Preço <select name="catalog-price">'+opts([["all","Todos"],["low","Até R$ 50"],["mid","R$ 50 a R$ 100"],["high","Acima de R$ 100"]],state.priceRange)+'</select></label><button data-action="clear-filters">Limpar filtros</button></div>':"")+
- '<div class="p-brand-filters" aria-label="Filtrar por marca">'+["Todas",...BRANDS].map(b=>'<button data-action="brand-filter" data-brand="'+esc(b)+'" class="'+(state.brandFilter===b?"active":"")+'" aria-pressed="'+(state.brandFilter===b)+'">'+esc(b)+'</button>').join("")+'</div><div class="product-grid">'+(visible.length?visible.map(productCard).join(""):'<div class="empty-results">Nenhum produto encontrado. <button data-action="clear-filters">Ver todos os produtos</button></div>')+'</div>'+
+ '<div class="p-brand-filters" aria-label="Filtrar por marca">'+["Todas",...BRANDS].map(b=>'<button data-action="brand-filter" data-brand="'+esc(b)+'" class="'+(state.brandFilter===b?"active":"")+'" aria-pressed="'+(state.brandFilter===b)+'">'+esc(b)+'</button>').join("")+'</div><div class="product-grid">'+(visible.length?visible.map(productCard).join(""):(catalogLoadError?'<div class="empty-results" role="status">Não foi possível carregar o catálogo. Nenhum produto de exemplo será exibido. <button type="button" data-action="reload-catalog">Tentar novamente</button></div>':sharedCatalog===null?'<div class="empty-results" role="status">Carregando produtos da loja...</div>':'<div class="empty-results">Nenhum produto encontrado. <button data-action="clear-filters">Ver todos os produtos</button></div>'))+'</div>'+
  (selected.length>visible.length?'<div class="n-more"><button class="outline-btn" data-action="toggle-all">ver todos os produtos ›</button></div>':"")+'</section>';
 }
 function about() {
@@ -309,10 +307,11 @@ function cartProductPhoto(id) {
 function cartDrawer() {
   if (!state.cartOpen) return "";
   const t = totals();
+  const consultation=whatsappLink("Olá! Gostaria de consultar a disponibilidade destes itens na Pacífica Hair:\n"+t.entries.map(p=>p.qty+"x "+p.name+" — "+brl(p.lineCents)).join("\n")+"\nFavor confirmar preço, estoque e entrega antes do pedido.");
   return '<div class="overlay" data-action="close-cart"><aside class="drawer" role="dialog" aria-label="Sua sacola">' +
     '<div class="drawer-head"><div><span class="eyebrow">Seu carinho em forma de escolha</span><h2>Sua sacola (' + count() + ')</h2></div><button class="icon-btn" data-action="close-cart">' + icons.close + '</button></div>' +
     '<div class="drawer-items">' + (t.entries.length ? t.entries.map(p => '<div class="cart-row">'+cartProductPhoto(p.id)+'<div><strong>' + esc(p.name) + '</strong><small>' + brl(p.unitCents) + '</small><div class="qty"><button data-action="qty-minus" data-id="' + esc(p.id) + '">−</button><span>' + p.qty + '</span><button data-action="qty-plus" data-id="' + esc(p.id) + '">+</button></div></div><strong>' + brl(p.lineCents) + '</strong></div>').join("") : '<div class="empty-cart">Sua sacola está vazia. Que tal escolher algo especial?</div>') + '</div>' +
-    '<div class="drawer-bottom"><div class="subtotal"><span>Subtotal</span><strong>' + brl(t.subtotalCents) + '</strong></div>'+(t.welcomeCents?'<div class="p-mimo-summary"><span>Mimo 5% · '+WELCOME_CODE+'</span><strong>− '+brl(t.welcomeCents)+'</strong></div><div class="subtotal p-mimo-net"><span>Subtotal com mimo</span><strong>'+brl(t.discountedSubtotalCents)+'</strong></div>':'')+''+(t.entries.length?'<button class="p-freight-trigger" type="button" data-action="freight-cart">'+icons.truck+' '+(activeFreight()?'Alterar frete':'Calcular frete pelo CEP')+'</button>'+(activeFreight()?'<div class="p-mimo-summary"><span>'+esc(activeFreight().name)+' · '+esc(shippingFormatCep(activeFreight().cep))+'</span><strong>'+brl(activeFreight().cents)+'</strong></div><p>Prazo estimado: '+activeFreight().days+' dias úteis.</p>':'<p>Consulte o frete antes de continuar.</p>'):'')+'<button class="primary wide" data-action="checkout" ' + (t.entries.length ? "" : "disabled") + '>Continuar pedido ' + icons.arrow + '</button><button class="ghost wide" data-action="close-cart">Continuar comprando</button></div></aside></div>';
+    '<div class="drawer-bottom"><div class="subtotal"><span>Subtotal</span><strong>' + brl(t.subtotalCents) + '</strong></div>'+(t.welcomeCents?'<div class="p-mimo-summary"><span>Mimo 5% · '+WELCOME_CODE+'</span><strong>− '+brl(t.welcomeCents)+'</strong></div><div class="subtotal p-mimo-net"><span>Subtotal com mimo</span><strong>'+brl(t.discountedSubtotalCents)+'</strong></div>':'')+''+(t.entries.length?'<button class="p-freight-trigger" type="button" data-action="freight-cart">'+icons.truck+' '+(activeFreight()?'Alterar frete':'Calcular frete pelo CEP')+'</button>'+(activeFreight()?'<div class="p-mimo-summary"><span>'+esc(activeFreight().name)+' · '+esc(shippingFormatCep(activeFreight().cep))+'</span><strong>'+brl(activeFreight().cents)+'</strong></div><p>Prazo estimado: '+activeFreight().days+' dias úteis.</p>':'<p>Consulte o frete antes de continuar.</p>'):'')+(t.entries.length&&consultation?'<a class="primary wide" href="'+esc(consultation)+'" target="_blank" rel="noopener noreferrer">Consultar sacola pelo WhatsApp '+icons.arrow+'</a>':'<button class="primary wide" type="button" disabled>Pedido online indisponível</button>')+'<p>Valores informativos. Não há pagamento ou pedido automático nesta prévia.</p>'<button class="ghost wide" data-action="close-cart">Continuar comprando</button></div></aside></div>';
 }
 function checkoutModal() {
   if (!state.checkoutOpen) return "";
@@ -356,7 +355,7 @@ function render({ retainSearch = false } = {}) {
   const active = retainSearch && document.activeElement?.id === "search";
   const pos = active ? document.getElementById("search")?.selectionStart : null;
   document.getElementById("app").innerHTML =
-    header() + '<main class="p-site-main">' + hero() + categories() + featuredShelves() + shop() + pinkBenefits() + (state.showAbout ? about() : '') + pinkFooter() + floatingContact() + '</main>' +
+    header() + '<div class="p-prelaunch-notice" role="status">Loja em preparação: pagamentos online ainda não estão ativos. Consulte disponibilidade pelo WhatsApp.</div><main class="p-site-main">' + hero() + categories() + featuredShelves() + shop() + pinkBenefits() + (state.showAbout ? about() : '') + pinkFooter() + floatingContact() + '</main>' +
     cartDrawer() + checkoutModal() + detailModal();
   const pause=document.querySelector('.n-hero-pause'); if(pause&&heroManuallyPaused){pause.textContent='▶';pause.setAttribute('aria-label','Reproduzir carrossel');}
   document.body.classList.toggle("no-scroll", state.cartOpen || state.checkoutOpen || state.adminOpen || !!state.detailId || state.menuOpen);
@@ -383,6 +382,7 @@ document.addEventListener("click", e => {
   if(action==="freight-product"){freightUI?.open("product",[{id,qty:1}]);return;}
   if(action==="freight-cart"){freightUI?.open("cart",cartQuoteItems(),state.checkoutOpen?checkoutCep:"");return;}
   if(action==="cookie-settings"){visitorTools?.showSettings();return;}
+  if(action==="reload-catalog"){void loadCatalog();return;}
   if(action==="welcome-offer"){visitorTools?.showOffer();return;}
   if (a.classList?.contains("overlay") && e.target!==a) return;
   if(action==="close-detail" && a.classList?.contains("n-detail-backdrop") && e.target!==a)return;
@@ -486,4 +486,8 @@ document.addEventListener("visibilitychange",()=>{if(document.visibilityState===
 activateHeroAutoplay();
 if(typeof window.fetch==="function"&&new URLSearchParams(location.search).get("sacola")==="1"){state.cartOpen=true;render();history.replaceState(null,"",location.pathname);}
 
-if(typeof window.fetch==="function")window.fetch("/api/catalog",{cache:"no-store"}).then(async r=>{if(!r.ok)throw Error("Catálogo indisponível");const data=await r.json();if(!Array.isArray(data.products))throw Error("Catálogo inválido");sharedCatalog=data.products;state.products=data.products;render({retainSearch:true});}).catch(()=>{});
+async function loadCatalog(){
+ try{const r=await window.fetch("/api/catalog",{cache:"no-store"});if(!r.ok)throw Error("Catálogo indisponível");const data=await r.json();if(!Array.isArray(data.products))throw Error("Catálogo inválido");sharedCatalog=data.products;state.products=data.products;catalogLoadError=false;render({retainSearch:true});}
+ catch{sharedCatalog=null;state.products=[];catalogLoadError=true;render({retainSearch:true});}
+}
+if(typeof window.fetch==="function")void loadCatalog();
