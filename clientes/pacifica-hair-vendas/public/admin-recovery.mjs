@@ -3,6 +3,10 @@ const $=s=>document.querySelector(s),client=authClient(true);
 const form=$("#adminRecoveryEmailForm"),reset=$("#adminRecoveryPasswordForm"),box=$("#adminRecovery"),forgot=$("#adminForgot"),back=$("#adminRecoveryBack"),config=$("#adminRecoveryConfigForm");
 const message=(el,text,err=false)=>{el.textContent=text;el.classList.toggle("error",!!err)};
 const recoveryStatus=$("#adminRecoveryStatus"),configStatus=$("#adminRecoveryConfigStatus");
+const PENDING_KEY="pacifica-admin-recovery-pending",PENDING_MAX_AGE=20*60*1000;
+const pendingRecovery=()=>{try{const t=Number(localStorage.getItem(PENDING_KEY));if(!Number.isFinite(t)||t<=0)return false;if(Date.now()-t>PENDING_MAX_AGE){localStorage.removeItem(PENDING_KEY);return false}return true}catch{return false}};
+const markPending=()=>{try{localStorage.setItem(PENDING_KEY,String(Date.now()))}catch{}};
+const clearPending=()=>{try{localStorage.removeItem(PENDING_KEY)}catch{}};
 function showRecovery(show){box.hidden=!show;$("#loginForm").hidden=show;forgot.hidden=show;if(!show){reset.hidden=true;form.hidden=false;message(recoveryStatus,"")}}
 forgot.onclick=async()=>{showRecovery(true);try{const r=await fetch("/api/admin/status",{cache:"no-store"}),j=await r.json();if(!j.recoveryReady)message(recoveryStatus,"A recuperação ainda não foi ativada. A administradora precisa cadastrar um e-mail em Configurações.",true)}catch{message(recoveryStatus,"Não foi possível conferir a recuperação agora.",true)}};
 back.onclick=()=>{history.replaceState(null,"",location.pathname);showRecovery(false)};
@@ -15,8 +19,8 @@ form.onsubmit=async e=>{
   const email=String(new FormData(form).get("email")||"").trim();
   const {error}=await client.auth.signInWithOtp({email,options:{shouldCreateUser:false,emailRedirectTo:location.origin+"/conta.html"}});
   if(error)throw Error("Não foi possível enviar o link. Confirme que esse e-mail possui uma conta validada na loja.");
-  sessionStorage.setItem("pacifica-admin-recovery-pending","1");
-  message(recoveryStatus,"Se o e-mail estiver autorizado, você receberá um link. Abra-o no mesmo navegador e retorne para criar a nova senha.");
+  markPending();
+  message(recoveryStatus,"Se o e-mail estiver autorizado, você receberá um link. Abra-o no mesmo navegador e volte ao painel para criar a nova senha.");
  }catch(e){message(recoveryStatus,e.message,true)}
  finally{button.disabled=false}
 };
@@ -30,18 +34,18 @@ reset.onsubmit=async e=>{
   if(sessionError||!session?.session?.access_token)throw Error("Link expirado. Solicite outro e-mail.");
   const r=await fetch("/api/admin/recover",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({accessToken:session.session.access_token,password})});
   const j=await r.json();if(!r.ok)throw Error(j.error||"Falha na recuperação");
-  reset.reset();await client.auth.signOut();sessionStorage.removeItem("pacifica-admin-recovery-pending");
+  reset.reset();await client.auth.signOut({scope:"local"});clearPending();
   message(recoveryStatus,"Senha redefinida. Você já pode entrar com a nova senha.");reset.hidden=true;form.hidden=true;
   history.replaceState(null,"",location.pathname);
  }catch(e){message(recoveryStatus,e.message,true)}
  finally{button.disabled=false}
 };
 async function showResetOnReturn(){
- if(!new URLSearchParams(location.search).has("recuperar"))return;
+ if(!new URLSearchParams(location.search).has("recuperar")&&!pendingRecovery())return;
  showRecovery(true);form.hidden=true;reset.hidden=false;message(recoveryStatus,"Confirmando o link de recuperação...");
- if(!client){message(recoveryStatus,"Serviço de autenticação indisponível.",true);return}
- try{const {data,error}=await client.auth.getSession();if(error||!data?.session?.access_token)throw Error("Não encontramos uma sessão válida. Solicite novo link.");
- message(recoveryStatus,"Identidade confirmada. Escolha uma nova senha administrativa.");
+ if(!client){reset.hidden=true;form.hidden=false;message(recoveryStatus,"Serviço de autenticação indisponível.",true);return}
+ try{const {data,error}=await client.auth.getSession();if(error||!data?.session?.access_token||!data?.session?.user?.email_confirmed_at)throw Error("Não encontramos a confirmação do e-mail. Abra o link recebido ou solicite outro.");
+ message(recoveryStatus,"E-mail confirmado. Escolha uma nova senha administrativa.");
  }catch(e){reset.hidden=true;form.hidden=false;message(recoveryStatus,e.message,true)}
 }
 config.onsubmit=async e=>{
