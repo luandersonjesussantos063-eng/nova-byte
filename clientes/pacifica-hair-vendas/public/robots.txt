@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /admin.html
+Disallow: /conta.html
+Disallow: /api/
+Sitemap: https://pacificahair.com.br/sitemap.xml
