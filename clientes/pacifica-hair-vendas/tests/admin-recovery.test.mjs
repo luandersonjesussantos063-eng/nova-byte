@@ -30,6 +30,7 @@ test("password rotation uses salted PBKDF2, replay protection and revokes sessio
 test("magic link uses already-approved account URL and returns to admin recovery",()=>{
  assert.match(recovery,/emailRedirectTo:location\.origin\+"\/conta\.html"/);
  assert.match(account,/pacifica-admin-recovery-pending/);
+ assert.match(account,/localStorage\.getItem\("pacifica-admin-recovery-pending"\)/);
  assert.match(account,/location\.replace\("\/admin\.html\?recuperar=1"\)/);
  assert.match(recovery,/client\.auth\.signOut\(\{scope:"local"\}\)/);
  assert.match(recovery,/PENDING_MAX_AGE=20\*60\*1000/);
