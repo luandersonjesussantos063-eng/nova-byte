@@ -210,30 +210,25 @@ function pinkBenefits() {
     '</section>';
 }
 function footerPayments(){
- return '<section class="p-footer-payments" aria-labelledby="footer-payment-title"><div class="p-payment-heading"><h3 id="footer-payment-title">Formas de pagamento</h3><p>Em breve, via Mercado Pago</p></div>'+
- '<div class="p-payment-brands" role="list" aria-label="Bandeiras e formas de pagamento previstas">'+
- '<span class="p-pay-brand p-pay-visa" role="listitem">VISA</span>'+
- '<span class="p-pay-brand p-pay-master" role="listitem"><span aria-hidden="true" class="p-master-circles"><i></i><i></i></span><small>Mastercard</small></span>'+
- '<span class="p-pay-brand p-pay-elo" role="listitem"><strong>elo</strong><span aria-hidden="true" class="p-elo-colors"><i></i><i></i><i></i></span></span>'+
- '<span class="p-pay-brand p-pay-amex" role="listitem">AMERICAN<br>EXPRESS</span>'+
- '<span class="p-pay-brand p-pay-hiper" role="listitem">Hipercard</span>'+
- '<span class="p-pay-brand p-pay-caixa" role="listitem">CAIXA<small>Débito virtual</small></span>'+
- '<span class="p-pay-brand p-pay-pix" role="listitem"><svg aria-hidden="true" viewBox="0 0 32 32" fill="none"><path d="M16 3 28 15 16 28 4 16Z" fill="#32bcad"/><path d="m8 11 6 6q2 2 4 0l6-6M8 21l6-6q2-2 4 0l6 6" stroke="white" stroke-width="1.6"/></svg>Pix</span>'+
- '<span class="p-pay-brand p-pay-boleto" role="listitem"><svg aria-hidden="true" viewBox="0 0 40 18" stroke="currentColor"><path d="M2 1v16M5 1v16M9 1v16M12 1v16M17 1v16M21 1v16M24 1v16M29 1v16M32 1v16M37 1v16" stroke-width="1.8"/></svg><small>Boleto</small></span></div>'+
- '<p class="p-pay-note">Cartões de crédito, débito elegível, Pix e boleto. A disponibilidade será confirmada no checkout após a ativação dos pagamentos.</p></section>';
+ return '<section class="p-footer-service" aria-label="Informações de atendimento e compra">' +
+ '<div><strong>Atendimento</strong><span>Orientações e disponibilidade pelo WhatsApp</span></div>' +
+ '<div><strong>Região atendida</strong><span>Grande Belo Horizonte, mediante consulta</span></div>' +
+ '<div><strong>Pedidos online</strong><span>Pagamentos pelo site ainda indisponíveis</span></div>' +
+ '</section>';
 }
-function pinkFooter() {
+function pinkFooter(){
  const waUrl=whatsappLink();
  const igUrl=instagramLink();
- return '<footer class="p-footer" id="contato"><div class="p-footer-top"><div class="p-footer-intro"><div class="p-footer-brand">Pacífica <small>HAIR</small></div><p>Beleza e autocuidado, com carinho para você.</p><div class="p-footer-social">'+
- (igUrl?'<a href="'+esc(igUrl)+'" target="_blank" rel="noopener noreferrer" aria-label="Instagram">'+icons.instagram+'</a>':'')+
- (waUrl?'<a href="'+esc(waUrl)+'" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp">'+icons.whatsapp+'</a>':'')+
- '</div></div><div><strong>Explore</strong><a href="#inicio" data-action="home">Início</a><a href="#produtos">Produtos</a><a href="#produtos" data-category="Promoções">Ofertas</a>'+(welcomeClaimed?'':'<button type="button" class="p-footer-pref" data-action="welcome-offer">Meu mimo de 5%</button>')+'</div>'+
- '<div><strong>Minha conta</strong><a href="/conta.html">Meus dados</a><a href="/conta.html?aba=pedidos">Meus pedidos</a><button type="button" class="p-footer-pref" data-action="favorites">Meus favoritos</button></div>'+
- '<div><strong>Atendimento</strong>'+(waUrl?'<a href="'+esc(waUrl)+'" target="_blank" rel="noopener noreferrer">Fale conosco</a>':'<span>Atendimento pelo menu de contato</span>')+'<a href="#sobre" data-action="about">Nossa história</a><span>Entrega na Grande BH</span><a href="/entregas-e-trocas.html">Entregas e trocas</a><a href="/privacidade.html">Privacidade</a><button type="button" class="p-footer-pref" data-action="cookie-settings">Preferências de cookies</button></div></div>'+
- footerPayments()+
- '<div class="p-footer-end"><span>© 2026 Pacífica Hair · Revenda independente</span><span>Desenvolvido por <a class="footer-admin" href="https://novabytesolucoes.com.br/" target="_blank" rel="noopener noreferrer">NovaByte</a> · <a class="footer-admin" href="/admin.html">Administração</a></span></div>'+
- '<div class="p-footer-warning">Loja em preparação para receber pagamentos reais.</div></footer>';
+ return '<footer class="p-footer" id="contato"><div class="p-footer-inner"><div class="p-footer-top">'+
+ '<div class="p-footer-intro"><a class="p-footer-brand" href="#inicio" data-action="home" aria-label="Pacífica Hair, voltar ao início">Pacífica <small>HAIR</small></a><p>Beleza, bem-estar e autocuidado com atendimento próximo e dedicado.</p><p class="p-footer-location">Atendimento na Grande Belo Horizonte</p><div class="p-footer-social">'+
+ (igUrl?'<a href="'+esc(igUrl)+'" target="_blank" rel="noopener noreferrer" aria-label="Instagram da Pacífica Hair">'+icons.instagram+'</a>':'')+
+ (waUrl?'<a href="'+esc(waUrl)+'" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp da Pacífica Hair">'+icons.whatsapp+'</a>':'')+
+ '</div></div>'+
+ '<nav class="p-footer-column" aria-label="Institucional"><strong>Institucional</strong><a href="#inicio" data-action="home">Início</a><a href="#produtos">Produtos</a><a href="#sobre" data-action="about">Nossa história</a><a href="#produtos" data-category="Promoções">Ofertas</a></nav>'+
+ '<nav class="p-footer-column" aria-label="Ajuda e informações"><strong>Ajuda e informações</strong>'+(waUrl?'<a href="'+esc(waUrl)+'" target="_blank" rel="noopener noreferrer">Fale conosco</a>':'<span>Atendimento pelo WhatsApp</span>')+'<a href="/entregas-e-trocas.html">Entregas, trocas e devoluções</a><a href="/privacidade.html">Política de privacidade</a><button type="button" class="p-footer-pref" data-action="cookie-settings">Preferências de cookies</button></nav>'+
+ '<nav class="p-footer-column" aria-label="Área do cliente"><strong>Minha conta</strong><a href="/conta.html">Entrar ou cadastrar</a><a href="/conta.html">Meus dados</a><a href="/conta.html?aba=pedidos">Meus pedidos</a><button type="button" class="p-footer-pref" data-action="favorites">Meus favoritos</button></nav>'+
+ '</div>'+footerPayments()+
+ '<div class="p-footer-end"><span>© 2026 Pacífica Hair. Todos os direitos reservados.</span><span class="p-footer-credit">Desenvolvido por <a href="https://novabytesolucoes.com.br/" target="_blank" rel="noopener noreferrer">NovaByte</a></span></div></div></footer>';
 }
 
 let sharedCatalog=null,catalogLoadError=false;
@@ -288,17 +283,6 @@ function shop(){
 function about() {
   return '<section class="about-section" id="sobre"><div class="wrap about-grid"><div class="about-image"><div class="about-frame"><img src="/assets/gleizelle.webp" alt="Gleizelle, curadoria de beleza e autocuidado" /><div class="about-overlay"><span>Nossa história</span><h3>Gleizelle</h3><p>Beleza, cuidado e atendimento de perto.</p></div></div></div>' +
     '<div class="about-copy"><span class="eyebrow">Conheça quem está por trás da Pacífica</span><h2>Mais que produtos,<br /><em>um carinho com você.</em></h2><p>A Pacífica Hair nasceu da paixão por beleza, autoestima e autocuidado. Aqui, cada escolha é feita pensando no que faz você se sentir bem.</p><p>Sou Gleizelle e quero que sua experiência seja acolhedora, simples e especial — da escolha até a entrega.</p><a class="outline-btn" href="#contato">Fale com a gente ' + icons.arrow + '</a></div></div></section>';
-}
-function footer() {
-  const waDigits = String(state.config.whatsapp || "").replace(/\D/g, "");
-  const whatsappHref = waDigits.length >= 10 && waDigits.length <= 13 ? "https://wa.me/" + (waDigits.startsWith("55") ? waDigits : "55" + waDigits) : "";
-  const instaUser = String(state.config.instagram || "").trim().replace(/^@/, "");
-  const instaHref = /^[\w.]{1,30}$/.test(instaUser) ? "https://instagram.com/" + instaUser : "";
-  const waButton = whatsappHref ? '<a class="social-btn" target="_blank" rel="noopener noreferrer" href="' + whatsappHref + '">Ir para o WhatsApp ➜</a>' : '<span class="social-btn disabled">WhatsApp em configuração</span>';
-  const igButton = instaHref ? '<a class="social-btn secondary" target="_blank" rel="noopener noreferrer" href="' + instaHref + '">Acessar o Instagram ➜</a>' : '<span class="social-btn secondary disabled">Instagram em configuração</span>';
-  return '<section class="wrap reassurance"><div>' + icons.shield + '<span><strong>Compra Segura</strong><small>Seus dados protegidos</small></span></div><div>' + icons.card + '<span><strong>Pagamento Facilitado</strong><small>Pix, Cartão e Débito*</small></span></div><div>' + icons.truck + '<span><strong>Entrega na Grande BH</strong><small>Com agilidade</small></span></div><div>' + icons.user + '<span><strong>Atendimento Especializado</strong><small>Tire suas dúvidas</small></span></div></section>' +
-    '<section class="wrap social-banner" id="contato"><div><span class="social-icon green">' + icons.whatsapp + '</span><span><h3>Fale Conosco Agora!</h3><p>Tire dúvidas, faça seu pedido pelo WhatsApp!</p>' + waButton + '</span></div><div><span class="social-icon instagram">' + icons.instagram + '</span><span><h3>Siga nosso Instagram</h3><p>Fique por dentro das novidades,<br/>promoções e muito mais!</p>' + igButton + '</span></div></section>' +
-    '<footer class="footer"><div class="wrap footer-main">' + logo() + '<div class="footer-connect"><p>Conecte-se conosco:</p><div><a href="#contato" aria-label="Instagram">' + icons.instagram + '</a><a href="#contato" aria-label="WhatsApp">' + icons.whatsapp + '</a></div></div><div class="footer-message">Obrigada por fazer parte<br/> da nossa história! <span>♥</span></div></div><div class="footer-neon">♡─────────────────♡─────────────────♡</div><div class="wrap footer-bottom"><span>© 2026 Pacífica Hair. Todos os direitos reservados.</span><span class="payment-logos"><strong>pix</strong><b>VISA</b><b>●●</b><b>elo</b></span></div><p class="footer-preview">* Pagamentos e vendas desativados nesta prévia. Desenvolvido por NovaByte. <a class="footer-admin" href="/admin.html" rel="nofollow">Acessar gestão da loja</a></p></footer>';
 }
 function cartProductPhoto(id) {
   const product=state.products.find(p=>p.id===id);
