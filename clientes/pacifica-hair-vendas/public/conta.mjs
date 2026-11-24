@@ -53,11 +53,17 @@ async function loadProfile(){const {data,error}=await sb.from("pacifica_customer
 async function loadAccount(){
  // A verified email link can return to this already-allowlisted account page.
  // Return to the admin reset screen only when this browser requested recovery.
- if(sessionStorage.getItem("pacifica-admin-recovery-pending")==="1"&&sb){
-  const {data}=await sb.auth.getSession();
-  if(data?.session?.access_token){
-   sessionStorage.removeItem("pacifica-admin-recovery-pending");
-   location.replace("/admin.html?recuperar=1");return;
+ if(sb){
+  // The email link lands here because this URL is already approved in Supabase.
+  // Honor only a recent password-recovery request from this same browser.
+  let pendingAt=0;
+  try{pendingAt=Number(localStorage.getItem("pacifica-admin-recovery-pending")||0)}catch{}
+  if(pendingAt>0&&Date.now()-pendingAt<20*60*1000){
+   const {data}=await sb.auth.getSession();
+   if(data?.session?.access_token&&data.session.user?.email_confirmed_at){
+    try{localStorage.removeItem("pacifica-admin-recovery-pending")}catch{}
+    location.replace("/admin.html?recuperar=1");return;
+   }
   }
  }
 if(recovering)return;user=await verifiedUser();if(!user){showMode(mode==="signup"?"signup":"login");return;}$("#authPanel").hidden=true;$("#memberPanel").hidden=false;$("#memberName").textContent=user.user_metadata?.pacifica_name||"Sua conta";$("#memberEmail").textContent=user.email||"";status("");if(params.get("aba")==="pedidos")document.querySelector('[data-tab="orders"]')?.click();const ready=await loadProfile();if(ready)resume();else if(returnCart)status("Complete seus dados de entrega antes de continuar o pedido.")}
