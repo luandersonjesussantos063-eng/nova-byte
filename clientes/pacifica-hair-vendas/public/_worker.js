@@ -2,6 +2,52 @@ const out=(x,status=200,h={})=>new Response(JSON.stringify(x),{status,headers:{"
 const hash=async s=>Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256",new TextEncoder().encode(s))),x=>x.toString(16).padStart(2,"0")).join("");
 const eq=(a,b)=>{if(a.length!==b.length)return false;let x=0;for(let i=0;i<a.length;i++)x|=a.charCodeAt(i)^b.charCodeAt(i);return x===0};
 const now=()=>Math.floor(Date.now()/1000),cookie=(s,t)=>"__Host-pacifica_admin="+s+"; Path=/; Max-Age="+t+"; Secure; HttpOnly; SameSite=Strict";
+
+const RECOVERY_AUTH_URL="https://nifvycrvqnzbxgglhlky.supabase.co";
+const RECOVERY_AUTH_PUBLIC_KEY="sb_publishable_lVUXjlOgo46IhibFMiCAtw_nAIzVUCz"; // Public browser key, not a service-role secret.
+const recoveryEnabled=env=>/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(String(env.ADMIN_RECOVERY_EMAIL||"").trim());
+const strongAdminPassword=s=>typeof s==="string"&&s.length>=12&&s.length<=128&&/[a-zA-Z]/.test(s)&&/\\d/.test(s);
+const randomHex=n=>Array.from(crypto.getRandomValues(new Uint8Array(n)),x=>x.toString(16).padStart(2,"0")).join("");
+async function adminPasswordHash(password,salt,iterations=210000){
+ const key=await crypto.subtle.importKey("raw",new TextEncoder().encode(password),"PBKDF2",false,["deriveBits"]);
+ const bits=await crypto.subtle.deriveBits({name:"PBKDF2",salt:Uint8Array.from(salt.match(/.{2}/g),v=>parseInt(v,16)),iterations,hash:"SHA-256"},key,256);
+ return Array.from(new Uint8Array(bits),x=>x.toString(16).padStart(2,"0")).join("");
+}
+async function adminPasswordValid(db,env,password){
+ const c=await db.prepare("SELECT salt,password_hash,iterations FROM ph_admin_credentials WHERE id=1").first();
+ if(c)return eq(await adminPasswordHash(password,c.salt,c.iterations),c.password_hash);
+ return typeof env.ADMIN_PASSWORD==="string"&&env.ADMIN_PASSWORD.length>=12&&eq(await hash(password),await hash(env.ADMIN_PASSWORD));
+}
+async function recoverAdmin(req,env,db){
+ if(!recoveryEnabled(env))return out({error:"Recuperação ainda não configurada. Fale com a responsável pela loja."},503);
+ const ip=await hash("admin-recovery:"+(req.headers.get("CF-Connecting-IP")||"unknown")),t=now();
+ const attempt=await db.prepare("INSERT INTO attempts(ip,count,expires) VALUES (?,1,?) ON CONFLICT(ip) DO UPDATE SET count=CASE WHEN expires<=? THEN 1 ELSE count+1 END,expires=CASE WHEN expires<=? THEN excluded.expires ELSE expires END RETURNING count").bind(ip,t+900,t,t).first();
+ if(attempt.count>5)return out({error:"Muitas tentativas. Tente novamente em 15 minutos."},429);
+ const b=await body(req,6000);
+ if(!strongAdminPassword(b.password)||typeof b.accessToken!=="string"||b.accessToken.length<60||b.accessToken.length>4096)return out({error:"A nova senha deve conter ao menos 12 caracteres, letras e números."},400);
+ let user;
+ try{
+  const r=await fetch(RECOVERY_AUTH_URL+"/auth/v1/user",{headers:{apikey:RECOVERY_AUTH_PUBLIC_KEY,Authorization:"Bearer "+b.accessToken},signal:AbortSignal.timeout(8000)});
+  if(!r.ok)return out({error:"Link expirado ou conta não autorizada. Solicite outro e-mail."},403);
+  user=await r.json();
+ }catch{return out({error:"Não foi possível validar seu e-mail agora."},503)}
+ const expected=String(env.ADMIN_RECOVERY_EMAIL).trim().toLowerCase();
+ if(!user?.id||!user?.email_confirmed_at||user?.is_anonymous===true||typeof user.email!=="string"||user.email.toLowerCase()!==expected)return out({error:"Conta não autorizada para recuperar este painel."},403);
+ const tokenHash=await hash(b.accessToken),salt=randomHex(16),passwordHash=await adminPasswordHash(b.password,salt);
+ try{
+  await db.batch([
+   db.prepare("INSERT INTO ph_admin_recovery_used(token_hash,used_at) VALUES (?,?)").bind(tokenHash,t),
+   db.prepare("INSERT INTO ph_admin_credentials(id,salt,password_hash,iterations,updated_at) VALUES(1,?,?,210000,CURRENT_TIMESTAMP) ON CONFLICT(id) DO UPDATE SET salt=excluded.salt,password_hash=excluded.password_hash,iterations=excluded.iterations,updated_at=CURRENT_TIMESTAMP").bind(salt,passwordHash),
+   db.prepare("DELETE FROM sessions"),
+   db.prepare("DELETE FROM ph_admin_recovery_used WHERE used_at<?").bind(t-86400)
+  ]);
+ }catch(e){
+  if(/UNIQUE constraint failed/.test(String(e)))return out({error:"Este link de recuperação já foi utilizado. Solicite outro."},409);
+  throw e;
+ }
+ return out({ok:true,message:"Senha alterada. Entre novamente no painel."},200,{"Set-Cookie":cookie("",0)});
+}
+
 const products=async(db,all)=>{const r=await db.prepare("SELECT id,payload,visible,version FROM products "+(all?"":"WHERE visible=1 ")+"ORDER BY rowid").all();return r.results.map(p=>({...JSON.parse(p.payload),id:p.id,visible:!!p.visible,version:p.version}))};
 const cats=["Perfumes","Cosméticos","Cabelos","Cuidados Pessoais","Presentes","Maquiagem","Roupas íntimas","Pijamas"];
 const pathPhoto=s=>typeof s==="string"&&((/^\/assets\/[a-zA-Z0-9_./-]+\.(webp|png|jpg|jpeg)$/i.test(s)&&!s.includes(".."))||/^\/api\/photos\/[a-f0-9]{64}$/.test(s));
@@ -104,14 +150,15 @@ async function route(req,env){
  if(p.startsWith("/api/photos/")&&req.method==="GET"){const id=p.split("/").at(-1);if(!/^[a-f0-9]{64}$/.test(id))return out({error:"Foto não encontrada."},404);const row=await db.prepare("SELECT data FROM photos WHERE id=?").bind(id).first();if(!row)return out({error:"Foto não encontrada."},404);return new Response(Uint8Array.from(atob(row.data.split(",")[1]),x=>x.charCodeAt(0)),{headers:{"Content-Type":"image/webp","Cache-Control":"public,max-age=31536000,immutable","X-Content-Type-Options":"nosniff"}})}
  if(!p.startsWith("/api/admin/"))return out({error:"Não encontrado."},404);
  if(req.method!=="GET"&&req.headers.get("Origin")!==u.origin)return out({error:"Origem inválida."},403);
- if(p==="/api/admin/status"&&req.method==="GET")return out({ready:typeof env.ADMIN_PASSWORD==="string"&&env.ADMIN_PASSWORD.length>=12,reason:typeof env.ADMIN_PASSWORD!=="string"||!env.ADMIN_PASSWORD.length?"missing":env.ADMIN_PASSWORD.length<12?"too_short":"ready"});
+ if(p==="/api/admin/status"&&req.method==="GET"){const exists=await db.prepare("SELECT id FROM ph_admin_credentials WHERE id=1").first();return out({ready:!!exists||(typeof env.ADMIN_PASSWORD==="string"&&env.ADMIN_PASSWORD.length>=12),recoveryReady:recoveryEnabled(env)});}
+ if(p==="/api/admin/recover"&&req.method==="POST")return recoverAdmin(req,env,db);
  if(p==="/api/admin/login"&&req.method==="POST"){
-  if(typeof env.ADMIN_PASSWORD!=="string"||!env.ADMIN_PASSWORD.length)return out({error:"O segredo da administração não está disponível nesta implantação. Verifique o ambiente de produção."},503);
-  if(env.ADMIN_PASSWORD.length<12)return out({error:"A senha administrativa configurada precisa ter pelo menos 12 caracteres."},503);
+  const stored=await db.prepare("SELECT id FROM ph_admin_credentials WHERE id=1").first();
+  if(!stored&&(!env.ADMIN_PASSWORD||env.ADMIN_PASSWORD.length<12))return out({error:"O acesso administrativo ainda não está configurado."},503);
   const ip=await hash(req.headers.get("CF-Connecting-IP")||"unknown"),t=now();
   const r=await db.prepare("INSERT INTO attempts(ip,count,expires) VALUES (?,1,?) ON CONFLICT(ip) DO UPDATE SET count=CASE WHEN expires<=? THEN 1 ELSE count+1 END,expires=CASE WHEN expires<=? THEN excluded.expires ELSE expires END RETURNING count").bind(ip,t+900,t,t).first();
   if(r.count>5)return out({error:"Muitas tentativas. Tente novamente em 15 minutos."},429);
-  const b=await body(req,2000);if(typeof b.password!=="string"||b.password.length>300||!eq(await hash(b.password),await hash(env.ADMIN_PASSWORD)))return out({error:"Senha incorreta."},401);
+  const b=await body(req,2000);if(typeof b.password!=="string"||b.password.length>300||!(await adminPasswordValid(db,env,b.password)))return out({error:"Senha incorreta."},401);
   const key=Array.from(crypto.getRandomValues(new Uint8Array(32)),x=>x.toString(16).padStart(2,"0")).join("");
   await db.batch([db.prepare("DELETE FROM sessions WHERE expires<=?").bind(t),db.prepare("INSERT INTO sessions(hash,expires) VALUES (?,?)").bind(await hash(key),t+28800),db.prepare("DELETE FROM attempts WHERE ip=?").bind(ip)]);
   return out({ok:true},200,{"Set-Cookie":cookie(key,28800)});
