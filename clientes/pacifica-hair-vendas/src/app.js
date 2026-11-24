@@ -24,7 +24,7 @@ const state = {
   // Public store terms and contact are not editable by visitor localStorage.
   config: { pixPercent: 5, cardPercent: 0, motoboyCents: 1290, ownCents: 990, whatsapp: "553180482304", instagram: "pacificahair_vendas" },
   filter: "Todos", brandFilter: "Todas", cycleFilter: "18/2026", query: "", showAll: false, showAbout: false, favoritesView: false, heroSlide: 0, cartOpen: false, adminOpen: false, adminTab: "produtos", adminEdit: null,
-  checkoutOpen: false, payment: "pix", shipping: "motoboy", menuOpen: false, detailId: null, sortBy: "featured", priceRange: "all", filterOpen: false, toast: ""
+  addedProductId: null, checkoutOpen: false, payment: "pix", shipping: "motoboy", menuOpen: false, detailId: null, sortBy: "featured", priceRange: "all", filterOpen: false, toast: ""
 };
 const icons = {
   bag: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h16l-1 13H5L4 8Z"/><path d="M9 9V6a3 3 0 0 1 6 0v3"/></svg>',
@@ -292,6 +292,21 @@ function cartProductPhoto(id) {
   const image=product&&[product.image,...(Array.isArray(product.images)?product.images:[])].find(src=>typeof src==="string"&&(/^(https:\/\/|\/(?!\/))/i.test(src)));
   return '<span class="cart-icon'+(image?' cart-photo':'')+'"><span class="cart-photo-fallback" aria-hidden="true">✿</span>'+(image?'<img src="'+esc(image)+'" alt="" width="55" height="55" decoding="async" />':'')+'</span>';
 }
+function addedProductModal() {
+ const p=state.products.find(item=>item.id===state.addedProductId);
+ if(!p)return "";
+ const inCart=new Set(state.cart.map(row=>String(row.id)));
+ const suggestions=state.products.filter(item=>item.id!==p.id&&item.stock>0&&item.priceCents>0&&!inCart.has(String(item.id))&&item.image).sort((a,b)=>Number(b.category===p.category)-Number(a.category===p.category)).slice(0,6);
+ const cards=suggestions.map(item=>'<article class="p-added-offer">'+
+ '<button class="p-added-offer-image" type="button" data-action="added-view" data-id="'+esc(item.id)+'" aria-label="Ver '+esc(item.name)+'"><img src="'+esc(item.image)+'" alt="" loading="lazy" /></button>'+
+ '<div class="p-added-offer-body"><small>'+esc(item.brand||"Pacífica Hair")+'</small><strong>'+esc(item.name)+'</strong><b>'+brl(item.priceCents)+'</b>'+
+ '<button type="button" data-action="added-recommend" data-id="'+esc(item.id)+'" aria-label="Adicionar '+esc(item.name)+' à sacola">+ Adicionar</button></div></article>').join("");
+ return '<div class="p-added-backdrop" data-action="added-close"><section class="p-added-dialog" role="dialog" aria-modal="true" aria-labelledby="p-added-title">'+
+ '<header class="p-added-header"><h2 id="p-added-title">✓ Adicionado à sacola!</h2><button type="button" data-action="added-close" aria-label="Fechar">'+icons.close+'</button></header>'+
+ '<div class="p-added-product">'+cartProductPhoto(p.id)+'<div><strong>'+esc(p.name)+'</strong><small>'+esc(p.brand||"Pacífica Hair")+'</small><b>'+brl(p.priceCents)+'</b></div></div>'+
+ (cards?'<div class="p-added-more"><h3>Aproveite e adicione à sua sacola</h3><p>Outros produtos selecionados para você.</p><div class="p-added-track">'+cards+'</div></div>':'')+
+ '<footer class="p-added-actions"><small>'+count()+' '+(count()===1?'item':'itens')+' na sua sacola</small><button type="button" class="p-added-go" data-action="added-bag">Ir para a sacola →</button><button type="button" class="p-added-keep" data-action="added-close">Continuar comprando</button></footer></section></div>';
+}
 function cartDrawer() {
   if (!state.cartOpen) return "";
   const t = totals();
@@ -344,9 +359,9 @@ function render({ retainSearch = false } = {}) {
   const pos = active ? document.getElementById("search")?.selectionStart : null;
   document.getElementById("app").innerHTML =
     header() + '<div class="p-prelaunch-notice" role="status">Loja em preparação: pagamentos online ainda não estão ativos. Consulte disponibilidade pelo WhatsApp.</div><main class="p-site-main">' + hero() + categories() + featuredShelves() + shop() + pinkBenefits() + (state.showAbout ? about() : '') + pinkFooter() + floatingContact() + '</main>' +
-    cartDrawer() + checkoutModal() + detailModal();
+    cartDrawer() + checkoutModal() + detailModal() + addedProductModal();
   const pause=document.querySelector('.n-hero-pause'); if(pause&&heroManuallyPaused){pause.textContent='▶';pause.setAttribute('aria-label','Reproduzir carrossel');}
-  document.body.classList.toggle("no-scroll", state.cartOpen || state.checkoutOpen || state.adminOpen || !!state.detailId || state.menuOpen);
+  document.body.classList.toggle("no-scroll", state.cartOpen || !!state.addedProductId || state.checkoutOpen || state.adminOpen || !!state.detailId || state.menuOpen);
   if (active) { const field = document.getElementById("search"); field?.focus(); field?.setSelectionRange(pos, pos); }
 }
 document.addEventListener("error",e=>{if(e.target instanceof HTMLImageElement&&e.target.closest(".cart-photo"))e.target.remove();},true);
@@ -373,6 +388,11 @@ document.addEventListener("click", e => {
   if(action==="reload-catalog"){void loadCatalog();return;}
   if(action==="welcome-offer"){visitorTools?.showOffer();return;}
   if (a.classList?.contains("overlay") && e.target!==a) return;
+  if(action==="added-close" && a.classList?.contains("p-added-backdrop") && e.target!==a)return;
+  if(action==="added-close"){state.addedProductId=null;render();return;}
+  if(action==="added-bag"){state.addedProductId=null;state.detailId=null;state.cartOpen=true;render();return;}
+  if(action==="added-view"){state.addedProductId=null;state.detailId=id;render();return;}
+  if(action==="added-recommend"){const product=state.products.find(p=>p.id===id),row=state.cart.find(x=>x.id===id);if(!product||product.stock<=(row?.qty||0)){notify("Quantidade indisponível no estoque.");return;}if(row)row.qty++;else state.cart.push({id,qty:1});persist();state.addedProductId=id;render();return;}
   if(action==="close-detail" && a.classList?.contains("n-detail-backdrop") && e.target!==a)return;
   if(action==="home"){e.preventDefault();state.filter="Todos";state.brandFilter="Todas";state.query="";state.showAll=false;state.favoritesView=false;state.priceRange="all";state.menuOpen=false;render();window.scrollTo({top:0,behavior:"smooth"});return;}
   if(action==="nav-prev"||action==="nav-next"){document.querySelector(".p-category-scroller")?.scrollBy({left:action==="nav-prev"?-260:260,behavior:"smooth"});return;}
@@ -399,7 +419,7 @@ document.addEventListener("click", e => {
     const product = state.products.find(p => p.id === id), row = state.cart.find(x => x.id === id);
     if (!product || product.stock <= (row?.qty || 0)) { notify("Quantidade indisponível no estoque."); return; }
     if (row) row.qty += 1; else state.cart.push({id,qty:1});
-    persist(); notify("Produto adicionado à sacola! ♡");
+    persist(); state.addedProductId=id;state.detailId=null;state.cartOpen=false;
   }
   if (action === "fav") { state.favorites = state.favorites.includes(id) ? state.favorites.filter(x=>x!==id) : [...state.favorites,id]; persist(); }
   if (action === "cart") state.cartOpen = true;
@@ -430,7 +450,7 @@ document.addEventListener("input", e => {
    if (section) section.outerHTML = shop();
  }
 });
-document.addEventListener("keydown",e=>{if(e.key==="Escape"){if(state.detailId||state.menuOpen){state.detailId=null;state.menuOpen=false;render();}const suggestions=document.getElementById("n-suggestions");if(suggestions)suggestions.hidden=true;}});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"){if(state.detailId||state.menuOpen||state.addedProductId){state.detailId=null;state.menuOpen=false;state.addedProductId=null;render();}const suggestions=document.getElementById("n-suggestions");if(suggestions)suggestions.hidden=true;}});
 document.addEventListener("change", e => {
  if(e.target.name==="catalog-sort"){state.sortBy=e.target.value;document.getElementById("produtos").outerHTML=shop();return;}
  if(e.target.name==="catalog-price"){state.priceRange=e.target.value;document.getElementById("produtos").outerHTML=shop();return;}
