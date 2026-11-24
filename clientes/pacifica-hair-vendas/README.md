@@ -61,3 +61,19 @@ A aba `/admin.html` foi ampliada para refletir o modelo rosa da Pacífica Hair:
 - Confirmar endereços, cidades e tarifas de entrega; realizar testes de ponta a ponta e publicação controlada.
 
 Alterações desenvolvidas na branch `feat/pacifica-hair-vendas`; **não foram aplicadas ao banco de produção e não foram publicadas**.
+
+## Recuperação da senha administrativa
+
+A tela `/admin.html` exibe **Esqueci minha senha** e utiliza o Supabase Auth exclusivo da Pacífica Hair para confirmar, por e-mail, a identidade autorizada. A conta do e-mail escolhido precisa estar cadastrada e confirmada no Supabase `pacifica-hair`. Os e-mails são enviados pelo SMTP de autenticação já configurado; nenhum segredo SMTP ou Resend é colocado no navegador.
+
+**Ativação inicial (somente a administradora atual):**
+1. Entre no ADM com a senha que já está ativa.
+2. Em **Configurações > Recuperação de acesso**, informe o e-mail que deve ser o único autorizado a redefinir a senha administrativa.
+3. Confirme a senha atual do ADM e salve. O e-mail é registrado na D1 (`ph_admin_recovery_config`). Opcionalmente, `ADMIN_RECOVERY_EMAIL` pode ser definido no ambiente do Pages, mas a configuração feita no ADM tem prioridade.
+4. Confira que o endereço registrado possui uma conta com e-mail confirmado na área de clientes da própria Pacífica Hair.
+
+**Recuperação:** Clique em **Esqueci minha senha**, informe o e-mail, abra o link de confirmação no mesmo navegador e escolha uma nova senha administrativa (mínimo de 12 caracteres, letras e números). Para evitar permitir redirecionamentos fora da lista de URLs do Supabase, a confirmação retorna pela rota `/conta.html` já autorizada e o aplicativo encaminha para `/admin.html?recuperar=1`.
+
+O Worker confere o access token diretamente em `/auth/v1/user` do projeto Pacífica Hair e verifica o e-mail confirmado contra o e-mail autorizado no servidor. A senha é armazenada somente como PBKDF2-SHA256 com salt aleatório e 210.000 iterações; o token usado só pode redefinir uma vez, e todas as sessões ADM são revogadas após a alteração. **A senha antiga `ADMIN_PASSWORD` deixa de dar acesso quando a nova credencial é salva na D1.** Requer tabelas de `backend/admin-recovery.sql` aplicadas.
+
+O painel não implementa envio arbitrário de links por e-mail, não permite autoinscrição de administradores e nunca devolve a senha em texto. Caso o administrador perca acesso ao e-mail autorizado, a troca do e-mail requer login válido no ADM ou intervenção controlada na infraestrutura pelo titular da conta.
