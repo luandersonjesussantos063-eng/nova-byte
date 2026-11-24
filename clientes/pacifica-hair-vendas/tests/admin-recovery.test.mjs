@@ -31,7 +31,15 @@ test("magic link uses already-approved account URL and returns to admin recovery
  assert.match(recovery,/emailRedirectTo:location\.origin\+"\/conta\.html"/);
  assert.match(account,/pacifica-admin-recovery-pending/);
  assert.match(account,/location\.replace\("\/admin\.html\?recuperar=1"\)/);
- assert.match(recovery,/client\.auth\.signOut\(\)/);
+ assert.match(recovery,/client\.auth\.signOut\(\{scope:"local"\}\)/);
+ assert.match(recovery,/PENDING_MAX_AGE=20\*60\*1000/);
+ assert.match(recovery,/localStorage\.setItem\(PENDING_KEY/);
+});
+test("server validates ordinary email addresses and passwords with digits",()=>{
+ const validMail=String.raw`/^[^\s@]+@[^\s@]+\.[^\s@]+$/`;
+ assert.ok(worker.includes(validMail),"normal email validation must use regex escapes exactly once");
+ assert.ok(worker.includes(String.raw`/\d/`),"password must require a numeric digit");
+ assert.ok(!worker.includes(String.raw`/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/`));
 });
 test("server code parses as plain JavaScript",()=>{
  assert.doesNotThrow(()=>new Function(worker.replace("export default {async fetch(","const worker = {async fetch(")));
