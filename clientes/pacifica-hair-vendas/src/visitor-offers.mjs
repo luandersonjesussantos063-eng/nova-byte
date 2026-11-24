@@ -63,7 +63,8 @@ export function mountVisitorOffers({storage,onClaim,skipWelcome=false}){
   else if(key==="reject")saveConsent(false,false);
   else if(key==="save-settings")saveConsent(host.querySelector("#p-cookie-analytics").checked,host.querySelector("#p-cookie-marketing").checked);
  });
- if(!welcome.seen&&!skipWelcome)showOffer();
+ // Pre-launch usability: do not interrupt the first visit with a modal. The welcome offer remains available from the footer.
+ // Explicit user interaction can still call showOffer(); no automatic modal is opened.
  syncBanner();
  return {showOffer,showSettings};
 }
