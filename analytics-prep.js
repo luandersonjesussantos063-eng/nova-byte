@@ -119,8 +119,17 @@
       var u=new URL(a.href,location.href);
       var text=u.searchParams.get("text")||"";
       if(text.indexOf(leadId)===-1){
-        text=text.replace(/\s+$/,"")+"\n\nRef: "+leadId;
-        u.searchParams.set("text",text);
+        var source=(attribution.utm_source||"").toLowerCase();
+        var medium=(attribution.utm_medium||"").toLowerCase();
+        var host=(attribution.referrer_host||"").toLowerCase();
+        var origin="Site NovaByte";
+        if(source==="google" && attribution.utm_campaign==="perfil_empresa") origin="Perfil da Empresa no Google";
+        else if(/^(cpc|ppc|paid_search|paid_social|paid)$/.test(medium) || attribution.gclid) origin="Anúncio";
+        else if(source==="instagram" || /(^|\.)instagram\.com$/.test(host)) origin="Instagram";
+        else if(source==="facebook" || /(^|\.)facebook\.com$/.test(host)) origin="Facebook";
+        else if(source==="google" || /^www\.google\.[a-z.]+$/.test(host)) origin="Pesquisa Google";
+        var note="Origem: "+origin+" · Ref: "+leadId;
+        u.searchParams.set("text",text ? text.trimEnd()+"\n\n"+note : "Olá, NovaByte! Gostaria de pedir um orçamento.\n\n"+note);
         a.href=u.toString();
       }
     }catch(e){}
@@ -135,7 +144,7 @@
     if(/wa\.me\//i.test(href)){
       appendLeadRefToWhatsApp(a);
       track("whatsapp_click",Object.assign({
-        link_url:a.href,
+        link_url:href.split("?")[0],
         conversion_type:"lead_whatsapp"
       },meta));
     } else if(/search\.google\.com\/local\/writereview/i.test(href)){
