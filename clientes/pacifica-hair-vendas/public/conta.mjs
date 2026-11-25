@@ -83,7 +83,7 @@ $("#changePassword").onclick=async()=>{if(!user||!checkEmailReady())return;const
 $("#profileForm").onsubmit=async e=>{e.preventDefault();if(!user||!sb)return;cancelCepLookup();const f=new FormData(e.target),row={user_id:user.id};for(const k of fields)row[k]=String(f.get(k)||"").trim();row.postal_code=row.postal_code.replace(/\D/g,"");row.phone=row.phone.replace(/\D/g,"");row.state=row.state.toUpperCase();if(!/^\d{8}$/.test(row.postal_code)||!/^\d{10,11}$/.test(row.phone)||!/^[A-Z]{2}$/.test(row.state)){status("Confira CEP, telefone e UF.",true);return;}const b=e.target.querySelector("button");b.disabled=true;try{const {error}=await sb.from("pacifica_customer_details").upsert(row,{onConflict:"user_id"});if(error)throw error;status("Dados salvos com sucesso.");resume()}catch(err){status(friendly(err),true)}finally{b.disabled=false}};
 document.querySelectorAll("[data-tab]").forEach(b=>b.onclick=()=>{for(const k of ["details","orders"])$("#"+k).hidden=k!==b.dataset.tab;document.querySelectorAll("[data-tab]").forEach(x=>x.setAttribute("aria-current",x===b?"page":"false"));});
 showMode(mode);
-if(!sb){status("Área de acesso em preparação. O cadastro será liberado após a configuração do servidor.",true);$("#authSubmit").disabled=true;$("#resend").disabled=true;}else{
+if(!sb){status("O acesso à conta está temporariamente indisponível. Tente novamente mais tarde ou entre em contato com nosso atendimento.",true);$("#authSubmit").disabled=true;$("#resend").disabled=true;}else{
  sb.auth.onAuthStateChange((event)=>{
   if(event==="PASSWORD_RECOVERY"){recovering=true;showMode("reset");status("Escolha sua nova senha.");return;}
   if(event==="SIGNED_IN"&&!recovering&&!params.has("redefinir")){
