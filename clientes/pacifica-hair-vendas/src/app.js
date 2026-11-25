@@ -59,7 +59,7 @@ function productArt(p) {
   // Product shots cropped from the design reference for visual approval only.
   const referenceIndex = ["demo-1", "demo-2", "demo-3", "demo-4"].indexOf(p.id);
   if (p.demo && referenceIndex >= 0)
-    return '<div class="product-art reference-product reference-product-' + referenceIndex + '" role="img" aria-label="Imagem demonstrativa de ' + esc(p.name) + ' extraída da arte de referência"></div>';
+    return '<div class="product-art reference-product reference-product-' + referenceIndex + '" role="img" aria-label="Imagem ilustrativa de ' + esc(p.name) + '"></div>';
   const id = String(p.artKind || "");
   if (id === "pink-perfume" || id === "natura-perfume") {
     const round = id === "natura-perfume";
@@ -129,13 +129,13 @@ function hero() {
   return '<section class="p-hero" id="inicio" aria-label="Destaques da Pacífica Hair" aria-roledescription="carrossel">' +
     '<div class="p-hero-visual">' +
       HERO_SLIDES.map((slide,i)=>'<img class="p-slide-image '+(i===state.heroSlide?'is-active':'')+'" src="'+slide.src+'" alt="'+slide.alt+'" '+(i===0?'fetchpriority="high"':'loading="eager"')+' decoding="async" aria-hidden="'+(i!==state.heroSlide)+'" />').join("") +
-    '</div><div class="p-hero-overlay"></div><div class="p-hero-body">' +
+    '</div><div class="p-hero-overlay"></div><button class="p-hero-next-tap" type="button" data-action="hero-next" aria-label="Ver próxima foto do destaque"></button><div class="p-hero-body">' +
     '<div class="p-hero-copy" aria-live="off" aria-atomic="true"><span class="p-hero-eyebrow">'+current.tag+'</span><h1 class="p-hero-heading">'+current.title+'</h1><p class="p-hero-description">'+current.description+'</p><a href="#produtos" class="p-hero-cta"><span class="p-hero-cta-label">'+current.cta+'</span> <span aria-hidden="true">↗</span></a></div>' +
-    '<div class="p-hero-carousel"><button data-action="hero-prev" aria-label="Imagem anterior">←</button>' +
+    '<div class="p-hero-carousel">' +
     '<div class="p-hero-dots" aria-label="Escolher imagem">' +
     HERO_SLIDES.map((slide,i)=>'<button class="'+(state.heroSlide===i?'active':'')+'" data-action="hero-dot" data-slide="'+i+'" aria-label="Imagem '+(i+1)+' de '+HERO_SLIDES.length+'" aria-current="'+(state.heroSlide===i)+'"></button>').join("") +
-    '</div><button data-action="hero-next" aria-label="Próxima imagem">→</button><button class="n-hero-pause" data-action="hero-pause" aria-label="Pausar carrossel">Ⅱ</button><span class="p-hero-index">0'+(state.heroSlide+1)+' / 0'+HERO_SLIDES.length+'</span></div></div>' +
-    '<span class="p-image-caption">Imagens ilustrativas dos produtos · Prévia</span></section>';
+    '</div><span class="p-hero-index">0'+(state.heroSlide+1)+' / 0'+HERO_SLIDES.length+'</span></div></div>' +
+    '</section>';
 }
 function setHeroSlide(nextIndex) {
   state.heroSlide = nextHeroIndex(nextIndex,0);
@@ -314,19 +314,19 @@ function cartDrawer() {
   return '<div class="overlay" data-action="close-cart"><aside class="drawer" role="dialog" aria-label="Sua sacola">' +
     '<div class="drawer-head"><div><span class="eyebrow">Seu carinho em forma de escolha</span><h2>Sua sacola (' + count() + ')</h2></div><button class="icon-btn" data-action="close-cart">' + icons.close + '</button></div>' +
     '<div class="drawer-items">' + (t.entries.length ? t.entries.map(p => '<div class="cart-row">'+cartProductPhoto(p.id)+'<div><strong>' + esc(p.name) + '</strong><small>' + brl(p.unitCents) + '</small><div class="qty"><button data-action="qty-minus" data-id="' + esc(p.id) + '">−</button><span>' + p.qty + '</span><button data-action="qty-plus" data-id="' + esc(p.id) + '">+</button></div></div><strong>' + brl(p.lineCents) + '</strong></div>').join("") : '<div class="empty-cart">Sua sacola está vazia. Que tal escolher algo especial?</div>') + '</div>' +
-    '<div class="drawer-bottom"><div class="subtotal"><span>Subtotal</span><strong>' + brl(t.subtotalCents) + '</strong></div>'+(t.welcomeCents?'<div class="p-mimo-summary"><span>Mimo 5% · '+WELCOME_CODE+'</span><strong>− '+brl(t.welcomeCents)+'</strong></div><div class="subtotal p-mimo-net"><span>Subtotal com mimo</span><strong>'+brl(t.discountedSubtotalCents)+'</strong></div>':'')+''+(t.entries.length?'<button class="p-freight-trigger" type="button" data-action="freight-cart">'+icons.truck+' '+(activeFreight()?'Alterar frete':'Calcular frete pelo CEP')+'</button>'+(activeFreight()?'<div class="p-mimo-summary"><span>'+esc(activeFreight().name)+' · '+esc(shippingFormatCep(activeFreight().cep))+'</span><strong>'+brl(activeFreight().cents)+'</strong></div><p>Prazo estimado: '+activeFreight().days+' dias úteis.</p>':'<p>Consulte o frete antes de continuar.</p>'):'')+(t.entries.length?'<button class="primary wide" type="button" data-action="delivery-checkout">Continuar para entrega '+icons.arrow+'</button>'+(consultation?'<a class="p-cart-whatsapp" href="'+esc(consultation)+'" target="_blank" rel="noopener noreferrer">Consultar sacola pelo WhatsApp</a>':''):'<button class="primary wide" type="button" disabled>Adicione um produto para continuar</button>')+'<p>Valores informativos. Não há pagamento ou pedido automático nesta prévia.</p>'+'<button class="ghost wide" data-action="close-cart">Continuar comprando</button></div></aside></div>';
+    '<div class="drawer-bottom"><div class="subtotal"><span>Subtotal</span><strong>' + brl(t.subtotalCents) + '</strong></div>'+(t.welcomeCents?'<div class="p-mimo-summary"><span>Mimo 5% · '+WELCOME_CODE+'</span><strong>− '+brl(t.welcomeCents)+'</strong></div><div class="subtotal p-mimo-net"><span>Subtotal com mimo</span><strong>'+brl(t.discountedSubtotalCents)+'</strong></div>':'')+''+(t.entries.length?'<button class="p-freight-trigger" type="button" data-action="freight-cart">'+icons.truck+' '+(activeFreight()?'Alterar frete':'Calcular frete pelo CEP')+'</button>'+(activeFreight()?'<div class="p-mimo-summary"><span>'+esc(activeFreight().name)+' · '+esc(shippingFormatCep(activeFreight().cep))+'</span><strong>'+brl(activeFreight().cents)+'</strong></div><p>Prazo estimado: '+activeFreight().days+' dias úteis.</p>':'<p>Consulte o frete antes de continuar.</p>'):'')+(t.entries.length?'<button class="primary wide" type="button" data-action="delivery-checkout">Continuar para entrega '+icons.arrow+'</button>'+(consultation?'<a class="p-cart-whatsapp" href="'+esc(consultation)+'" target="_blank" rel="noopener noreferrer">Consultar sacola pelo WhatsApp</a>':''):'<button class="primary wide" type="button" disabled>Adicione um produto para continuar</button>')+'<p>Consulte o frete e confirme a disponibilidade antes da compra. O pagamento online não está habilitado.</p>'+'<button class="ghost wide" data-action="close-cart">Continuar comprando</button></div></aside></div>';
 }
 function checkoutModal() {
   if (!state.checkoutOpen) return "";
   const t = totals();
   const discount = Number(state.config.pixPercent || 0);
   return '<div class="overlay modal-layer" data-action="close-checkout"><section class="modal checkout-modal" role="dialog" aria-label="Resumo do pedido">' +
-    '<button class="modal-close icon-btn" data-action="close-checkout">' + icons.close + '</button><span class="eyebrow">Prévia do pedido</span><h2>Quase lá!</h2><p>Confira o resumo. O pagamento real será habilitado somente após a configuração segura do Mercado Pago.</p>' +
+    '<button class="modal-close icon-btn" data-action="close-checkout">' + icons.close + '</button><span class="eyebrow">Resumo do pedido</span><h2>Quase lá!</h2><p>Confira o resumo. O pagamento online está temporariamente indisponível.</p>' +
     '<h3>Forma de pagamento</h3><div class="radio-grid"><label><input type="radio" name="payment" value="pix" ' + (state.payment === "pix" ? "checked" : "") + '/>Pix' + (discount ? " · " + discount + "% de desconto" : "") + '</label><label><input type="radio" name="payment" value="card" ' + (state.payment === "card" ? "checked" : "") + '/>Cartão</label></div>' +
     '<h3>Forma de entrega</h3><div class="radio-grid"><label><input type="radio" name="shipping" value="superfrete" '+(state.shipping==="superfrete"?"checked":"")+'/>Correios · SuperFrete</label><label><input type="radio" name="shipping" value="motoboy" ' + (state.shipping === "motoboy" ? "checked" : "") + '/>Motoboy</label><label><input type="radio" name="shipping" value="propria" ' + (state.shipping === "propria" ? "checked" : "") + '/>Entrega própria</label><label><input type="radio" name="shipping" value="retirada" ' + (state.shipping === "retirada" ? "checked" : "") + '/>Retirada</label></div>' +
     (state.shipping==="superfrete"?'<button type="button" class="p-freight-trigger" data-action="freight-cart">'+icons.truck+' '+(activeFreight()?'Alterar modalidade':'Calcular frete para o endereço cadastrado')+'</button>'+(activeFreight()?'<p>'+esc(activeFreight().name)+' · '+activeFreight().days+' dias úteis</p>':'<p>Selecione uma opção de entrega.</p>'):'')+
     '<div class="summary-lines"><div><span>Produtos</span><strong>' + brl(t.subtotalCents) + '</strong></div>'+(t.welcomeCents?'<div><span>Mimo 5% · '+WELCOME_CODE+'</span><strong>− '+brl(t.welcomeCents)+'</strong></div>':'')+'<div><span>'+(state.shipping==="superfrete"?"Frete estimado":"Frete local ilustrativo")+'</span><strong>' + (shippingCents()===null?"A calcular":brl(shippingCents())) + '</strong></div><div><span>' + (state.payment === "pix" ? "Desconto Pix" : "Valor no cartão") + '</span><strong>' + brl(state.payment === "pix" ? t.pixTotalCents - t.discountedSubtotalCents : t.cardTotalCents - t.discountedSubtotalCents) + '</strong></div><div class="summary-final"><span>Total estimado</span><strong>' + (t.totalCents===null?"A calcular":brl(t.totalCents)) + '</strong></div></div>' +
-    '<div class="locked-pay">Pagamento desabilitado durante o desenvolvimento. Nenhuma cobrança será realizada.</div><button class="primary wide" disabled>Finalizar pagamento (em breve)</button></section></div>';
+    '<div class="locked-pay">Pagamento online temporariamente indisponível. Nenhuma cobrança será realizada.</div><button class="primary wide" disabled>Finalizar pagamento (em breve)</button></section></div>';
 }
 function catalogImportPanel(){
  return '<form id="catalog-import-form" class="admin-form"><h3>Importar catálogo por ciclo</h3><p>Use a revista fornecida pela consultora. Preços preservados em centavos; estoque novo começa em zero.</p><label>Marca<select name="brand"><option>Avon</option><option>Natura</option></select></label><label>Ciclo<input name="cycle" required placeholder="18/2026"></label><label>Fonte da revista<input name="source" required placeholder="Nome do PDF ou endereço oficial"></label><label>Dados CSV<textarea name="csv" rows="10" required placeholder="codigo;nome;categoria;preco;foto"></textarea></label><p>Separador ponto e vírgula. Preço: 39,90. Foto HTTPS autorizada ou vazia. A importação fica somente neste navegador de teste.</p><button class="primary">Importar e atualizar produtos</button></form>';
@@ -334,11 +334,11 @@ function catalogImportPanel(){
 function adminPanel() {
   if (!state.adminOpen) return "";
   const p = state.products.find(x => x.id === state.adminEdit);
-  return '<div class="overlay modal-layer" data-action="close-admin"><section class="modal admin-modal" role="dialog" aria-label="Painel de demonstração">' +
-    '<button class="modal-close icon-btn" data-action="close-admin">' + icons.close + '</button><span class="eyebrow">NovaByte · Ambiente de prévia</span><h2>Painel administrativo</h2>' +
-    '<p class="admin-warning">Modo de demonstração: alterações ficam apenas neste navegador. Login, banco de dados e Mercado Pago ainda não estão ativos.</p>' +
+  return '<div class="overlay modal-layer" data-action="close-admin"><section class="modal admin-modal" role="dialog" aria-label="Painel de gestão">' +
+    '<button class="modal-close icon-btn" data-action="close-admin">' + icons.close + '</button><span class="eyebrow">NovaByte · Gestão da loja</span><h2>Painel administrativo</h2>' +
+    '<p class="admin-warning">Esta área é de uso interno. Os pagamentos online permanecem indisponíveis.</p>' +
     '<div class="admin-tabs"><button data-admin-tab="produtos" class="' + (state.adminTab === "produtos" ? "active" : "") + '">Produtos</button><button data-admin-tab="config" class="' + (state.adminTab === "catalogos" ? catalogImportPanel() : state.adminTab === "config" ? "active" : "") + '">Condições</button><button data-admin-tab="catalogos" class="' + (state.adminTab === "catalogos" ? "active" : "") + '">Catálogos</button></div>' +
-    (state.adminTab === "config" ? '<form id="config-form" class="admin-form"><label>Desconto Pix (%)<input type="number" name="pixPercent" min="0" max="100" step="0.01" value="' + Number(state.config.pixPercent) + '" required /></label><label>Adicional cartão (%)<input type="number" name="cardPercent" min="0" max="100" step="0.01" value="' + Number(state.config.cardPercent) + '" required /></label><label>Motoboy (R$)<input name="motoboy" type="number" min="0" step="0.01" value="' + (state.config.motoboyCents / 100).toFixed(2) + '" required /></label><label>Entrega própria (R$)<input name="own" type="number" min="0" step="0.01" value="' + (state.config.ownCents / 100).toFixed(2) + '" required /></label><label>WhatsApp com DDD (opcional)<input name="whatsapp" type="tel" value="' + esc(state.config.whatsapp || "") + '" placeholder="31999999999" /></label><label>Instagram (usuário, opcional)<input name="instagram" value="' + esc(state.config.instagram || "") + '" placeholder="@pacifica" /></label><button class="primary">Salvar condições de demonstração</button></form>' :
+    (state.adminTab === "config" ? '<form id="config-form" class="admin-form"><label>Desconto Pix (%)<input type="number" name="pixPercent" min="0" max="100" step="0.01" value="' + Number(state.config.pixPercent) + '" required /></label><label>Adicional cartão (%)<input type="number" name="cardPercent" min="0" max="100" step="0.01" value="' + Number(state.config.cardPercent) + '" required /></label><label>Motoboy (R$)<input name="motoboy" type="number" min="0" step="0.01" value="' + (state.config.motoboyCents / 100).toFixed(2) + '" required /></label><label>Entrega própria (R$)<input name="own" type="number" min="0" step="0.01" value="' + (state.config.ownCents / 100).toFixed(2) + '" required /></label><label>WhatsApp com DDD (opcional)<input name="whatsapp" type="tel" value="' + esc(state.config.whatsapp || "") + '" placeholder="31999999999" /></label><label>Instagram (usuário, opcional)<input name="instagram" value="' + esc(state.config.instagram || "") + '" placeholder="@pacifica" /></label><button class="primary">Salvar condições</button></form>' :
     '<div class="admin-list">' + state.products.map(item => '<div><span><strong>' + esc(item.name) + '</strong><small>' + esc(item.category) + ' · ' + brl(item.priceCents) + ' · Estoque: ' + item.stock + '</small></span><button class="edit-btn" data-action="edit" data-id="' + esc(item.id) + '">Editar</button></div>').join("") + '</div>' +
     '<button class="outline-btn" data-action="new-product">+ Novo produto</button>' +
     (state.adminEdit !== null ? '<form id="product-form" class="admin-form"><h3>' + (p ? "Editar produto" : "Adicionar produto") + '</h3><label>Nome<input required name="name" maxlength="100" value="' + esc(p?.name || "") + '" /></label><label>Categoria<select name="category">' + [...CATEGORIES,{name:"Maquiagem"}].filter(c => c.name !== "Promoções").map(c => '<option value="' + esc(c.name) + '" ' + (p?.category === c.name ? "selected" : "") + '>' + esc(c.name) + '</option>').join("") + '</select></label><label>Preço (R$)<input required type="number" min="0.01" step="0.01" name="price" value="' + (p ? (p.priceCents / 100).toFixed(2) : "") + '" /></label><label>Estoque<input required type="number" min="0" step="1" name="stock" value="' + (p?.stock ?? 0) + '" /></label><label>Foto do produto (URL, opcional)<input type="url" name="image" placeholder="https://..." value="' + esc(p?.image || "") + '" /></label><label>Descrição<textarea name="description" rows="3">' + esc(p?.description || "") + '</textarea></label><div class="form-actions"><button class="primary">Salvar produto</button>' + (p ? '<button type="button" class="danger" data-action="delete" data-id="' + esc(p.id) + '">Excluir</button>' : "") + '</div></form>' : "") ) +
@@ -358,9 +358,9 @@ function render({ retainSearch = false } = {}) {
   const active = retainSearch && document.activeElement?.id === "search";
   const pos = active ? document.getElementById("search")?.selectionStart : null;
   document.getElementById("app").innerHTML =
-    header() + '<div class="p-prelaunch-notice" role="status">Loja em preparação: pagamentos online ainda não estão ativos. Consulte disponibilidade pelo WhatsApp.</div><main class="p-site-main">' + hero() + categories() + featuredShelves() + shop() + pinkBenefits() + (state.showAbout ? about() : '') + pinkFooter() + floatingContact() + '</main>' +
+    header() + '<div class="p-prelaunch-notice" role="status">Pagamento online indisponível no momento. Para comprar, fale com nossa equipe pelo WhatsApp.</div><main class="p-site-main">' + hero() + categories() + featuredShelves() + shop() + pinkBenefits() + (state.showAbout ? about() : '') + pinkFooter() + floatingContact() + '</main>' +
     cartDrawer() + checkoutModal() + detailModal() + addedProductModal();
-  const pause=document.querySelector('.n-hero-pause'); if(pause&&heroManuallyPaused){pause.textContent='▶';pause.setAttribute('aria-label','Reproduzir carrossel');}
+
   document.body.classList.toggle("no-scroll", state.cartOpen || !!state.addedProductId || state.checkoutOpen || state.adminOpen || !!state.detailId || state.menuOpen);
   if (active) { const field = document.getElementById("search"); field?.focus(); field?.setSelectionRange(pos, pos); }
 }
@@ -443,7 +443,7 @@ document.addEventListener("click", e => {
   if (action === "new-product") { state.adminEdit = "__new__"; state.adminTab = "produtos"; }
   if (action === "edit") state.adminEdit = id;
   if (action === "delete") {
-    if (!window.confirm("Remover este produto da prévia?")) return;
+    if (!window.confirm("Remover este produto?")) return;
     state.products = state.products.filter(p=>p.id!==id);
     state.cart = state.cart.filter(r=>r.id!==id);
     state.adminEdit = null; persist();
@@ -467,7 +467,7 @@ document.addEventListener("change", e => {
 });
 document.addEventListener("submit", e => {
   if(e.target.id==="n-search-form"){e.preventDefault();const el=document.getElementById("n-suggestions");if(el)el.hidden=true;render();document.getElementById("produtos")?.scrollIntoView({behavior:"smooth"});return;}
-  if(e.target.id==="catalog-import-form"){e.preventDefault();try{const f=new FormData(e.target);const rows=parseCatalog(f.get("csv"),{brand:String(f.get("brand")),cycle:String(f.get("cycle")).trim(),source:String(f.get("source"))});state.products=mergeCatalog(state.products,rows);persist();render();notify(rows.length+" itens importados/atualizados nesta prévia.");}catch(error){notify(error.message);}return;}
+  if(e.target.id==="catalog-import-form"){e.preventDefault();try{const f=new FormData(e.target);const rows=parseCatalog(f.get("csv"),{brand:String(f.get("brand")),cycle:String(f.get("cycle")).trim(),source:String(f.get("source"))});state.products=mergeCatalog(state.products,rows);persist();render();notify(rows.length+" itens importados/atualizados nesta sessão.");}catch(error){notify(error.message);}return;}
   if (e.target.id === "config-form") {
     e.preventDefault();
     const f = new FormData(e.target);
@@ -477,7 +477,7 @@ document.addEventListener("submit", e => {
     state.config.ownCents = Math.round(Math.max(0, Number(f.get("own"))) * 100);
     state.config.whatsapp = String(f.get("whatsapp") || "").replace(/[^\d+]/g, "").slice(0,17);
     state.config.instagram = String(f.get("instagram") || "").trim().replace(/^@/, "").slice(0,30);
-    persist(); render(); notify("Condições salvas no modo de demonstração.");
+    persist(); render(); notify("Condições atualizadas nesta sessão.");
   }
   if (e.target.id === "product-form") {
     e.preventDefault();
@@ -489,7 +489,7 @@ document.addEventListener("submit", e => {
       image: String(f.get("image")).trim(), accent: previous?.accent || "rose", symbol: previous?.symbol || "✿", demo: false };
     if (!p.name || !Number.isSafeInteger(p.priceCents) || p.priceCents < 1 || !Number.isSafeInteger(p.stock) || p.stock < 0) return notify("Confira os dados do produto.");
     state.products = previous ? state.products.map(x=>x.id===previous.id?p:x) : [...state.products,p];
-    state.adminEdit = null; persist(); render(); notify("Produto salvo somente nesta prévia.");
+    state.adminEdit = null; persist(); render(); notify("Alteração realizada apenas nesta sessão.");
   }
 });
 render();
@@ -499,7 +499,7 @@ try{visitorTools=mountVisitorOffers({storage:window.localStorage,skipWelcome:isC
 void startCustomerSession();
 window.addEventListener("pageshow",e=>{if(e.persisted)void refreshCustomer();});
 document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")void refreshCustomer();});
-activateHeroAutoplay();
+// Os destaques mudam apenas quando a pessoa toca na foto ou escolhe um indicador.
 if(typeof window.fetch==="function"&&new URLSearchParams(location.search).get("sacola")==="1"){state.cartOpen=true;render();history.replaceState(null,"",location.pathname);}
 
 async function loadCatalog(){
