@@ -5,10 +5,26 @@ test('home retains business identity, integrations and honest conversion paths',
  assert.equal((home.match(/<h1\b/g)||[]).length,1);assert.equal((html.match(/class="service-card /g)||[]).length,7);const projectCardsHome=(home.match(/class="project-card /g)||[]).length;
  const projectCardsPortfolio=(fs.readFileSync('projetos/index.html','utf8').match(/class="project-card /g)||[]).length;
  assert.equal(projectCardsHome,4,'vitrine inicial deve destacar quatro projetos');
- assert.equal(projectCardsPortfolio,10,'portfólio completo deve apresentar dez projetos');
+ assert.equal(projectCardsPortfolio,12,'portfólio completo deve apresentar doze projetos');
  assert.equal((html.match(/class="project-card /g)||[]).length,projectCardsHome+projectCardsPortfolio);assert(!html.includes('digopetiscaria.com.br'));for(const name of ['Kaia Glow','W Prime Elétrica','Anuncia Lucas','NovaByte Studio','VITA ITALIA','Morada Imobiliária','NovaByte Divulga','NovaByte Frelas','NovaByte Prospect','W Elétrica'])assert(html.includes(name),name);
  const portfolio=fs.readFileSync('projetos/index.html','utf8');
  for(const link of ['https://usekaiaglow.com.br/','/imobiliaria/','/divulga/'])assert(portfolio.includes(link),link);
+ for (const page of [home, portfolio]) {
+  const cards = page.match(/<article class="project-card\b[^>]*>[\s\S]*?<\/article>/g);
+  for (const [name, category, url] of [
+   ['Pacífica Hair', 'sites', 'https://xn--pacficahair-qcb.com.br/'],
+   ['Giro', 'sistemas', 'https://painel-estoque.novabytesolucoes.com.br/'],
+  ]) {
+   const matches = cards.filter(card => card.includes(`<h3>${name}</h3>`));
+   assert.equal(matches.length, 1, name);
+   assert(matches[0].includes(`data-category="${category}"`), name);
+   assert(matches[0].includes(`href="${url}"`), name);
+   assert(matches[0].includes('Projeto concluído'), name);
+  }
+ }
+ for (const name of ['VITA ITALIA', 'Morada Imobiliária']) {
+  assert(portfolio.includes(`<h3>${name}</h3>`), name);
+ }
  assert(portfolio.includes('imóveis, imagens e valores ilustrativos'),'demonstrativo imobiliário identificado');
  assert(portfolio.includes('acesso não público'),'sistemas internos protegidos');
  for(const phrase of ['Tecnologia para','amanhã <span>melhor.','Lucas do Rio Verde','todo o Brasil','Design e identidade visual','Edição de vídeos','Marketing e conteúdo digital'])assert(html.includes(phrase),phrase);

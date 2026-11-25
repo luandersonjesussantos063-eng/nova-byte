@@ -83,3 +83,34 @@ body.nb-home{color:#eff3f9;background:#0b1526!important}.nb-home:not(.nb-inner) 
 
 /* Portfolio link for Kaia Glow points exclusively to the official store; old demo removed. */
 .nb-home .nb-official-kaia-logo{object-fit:contain;background:#2c0e1e;padding:1.25rem}
+
+.nb-home .nb-completed-preview {
+  display: grid;
+  align-content: center;
+  gap: 10px;
+  padding: clamp(22px, 5vw, 40px);
+  color: #fff;
+}
+
+.nb-home .nb-completed-preview > strong {
+  font-size: clamp(30px, 5vw, 46px);
+  line-height: 1.05;
+}
+
+.nb-home .nb-completed-preview > span {
+  font-size: 0.875rem;
+  line-height: 1.4;
+}
+
+.nb-home .nb-completed-preview--pacifica {
+  background: radial-gradient(ellipse at top right, #a63e77, transparent 70%), #4f1a3a;
+}
+
+.nb-home .nb-completed-preview--pacifica > strong {
+  font-family: Georgia, serif;
+  font-weight: 500;
+}
+
+.nb-home .nb-completed-preview--giro {
+  background: radial-gradient(ellipse at top right, #235b9c, transparent 70%), #101d38;
+}
