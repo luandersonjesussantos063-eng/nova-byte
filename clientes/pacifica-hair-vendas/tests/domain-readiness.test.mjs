@@ -24,6 +24,6 @@ test("policy pages exist and storefront has clear links",()=>{
  assert.match(footer,/href="\/entregas-e-trocas\.html"/);
 });
 test("prelaunch language stays honest about payment readiness",()=>{
- assert.match(footer,/pagamentos online ainda não estão ativos/);
- assert.match(info[1],/não representa pedido confirmado/);
+ assert.match(footer,/Pagamento online indisponível/);
+ assert.match(info[1],/não constitui, por si só, um pedido/);
 });
