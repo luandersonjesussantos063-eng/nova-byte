@@ -618,7 +618,21 @@ async function submitPreorder(p,quantity){
  }catch(e){message(e.message||'Não foi possível registrar a encomenda.');}
  finally{preorderBusy=false;syncDetailPurchase();}
 }
+function refreshReelProducts(){
+ for(const slot of all('[data-reel-product]')){
+  const product=catalog.find(p=>String(p.id)===slot.dataset.reelProduct);
+  slot.hidden=!product;
+  if(!product){slot.replaceChildren();continue;}
+  const id=esc(product.id),name=esc(product.name);
+  const canAdd=purchaseState(product)==='buy';
+  slot.innerHTML=`<a class="kg-reel-product-link" href="#produto-${id}" data-product="${id}">
+   <img src="${esc(product.images[0])}" alt="" loading="lazy" width="54" height="54">
+   <span><strong>${name}</strong><small>${money(variantFor(product).price)}</small></span>
+  </a>${canAdd?`<button type="button" class="kg-reel-shop" data-quick="${id}" aria-label="Adicionar ${name} à sacola">Adicionar à sacola</button>`:`<a class="kg-reel-shop" href="#produto-${id}" data-product="${id}">Ver produto</a>`}`;
+ }
+}
 function refreshShoppingHighlights(){
+ refreshReelProducts();
  const presentation=window.KaiaCatalogPresentation;
  // Hide empty destinations, but automatically restore them when products are added.
  all('[data-cat]').filter(b=>['Maquiagem','Perfumaria'].includes(b.dataset.cat)).forEach(b=>{

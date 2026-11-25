@@ -264,6 +264,37 @@ button:focus-visible,a:focus-visible,input:focus-visible,summary:focus-visible{o
  border:0;display:block;background:#fff;
  transform:scale(1.43);transform-origin:50% 0;
 }
+/* The collaboration is a landscape video. Let Instagram frame it naturally. */
+.kg-reel-card--wide .kg-reel-embed iframe{
+ top:0;height:100%;transform:none
+}
+.kg-reel-product{
+ padding:12px;background:#fbf7f8;
+ border-top:1px solid #eadde2
+}
+.kg-reel-product[hidden]{display:none}
+.kg-reel-product-link{
+ display:grid;grid-template-columns:54px minmax(0,1fr);align-items:center;
+ gap:10px;color:#4c293d;text-decoration:none
+}
+.kg-reel-product-link img{
+ display:block;width:54px;height:54px;object-fit:contain;
+ border-radius:7px;background:#fff
+}
+.kg-reel-product-link strong,.kg-reel-product-link small{display:block}
+.kg-reel-product-link strong{font-size:13px;line-height:1.35;overflow-wrap:anywhere}
+.kg-reel-product-link small{margin-top:3px;color:#66374d;font-size:13px}
+.kg-reel-shop{
+ display:flex;align-items:center;justify-content:center;min-height:42px;
+ width:100%;margin-top:10px;padding:7px 10px;
+ border:0;border-radius:7px;background:#542640;color:#fff;
+ font:700 13px/1.25 'DM Sans',Arial,sans-serif;text-align:center;text-decoration:none;
+ cursor:pointer
+}
+.kg-reel-shop:hover{background:#68354f}
+.kg-reel-shop:focus-visible,.kg-reel-product-link:focus-visible{
+ outline:2px solid #854563;outline-offset:2px
+}
 .kg-reel-original{
  display:block;padding:12px 12px 13px;
  text-align:center;border-top:1px solid #f0e5e9;
