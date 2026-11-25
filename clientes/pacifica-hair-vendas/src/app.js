@@ -425,10 +425,10 @@ document.addEventListener("click", e => {
   if (action === "cart") state.cartOpen = true;
   if (action === "close-cart") state.cartOpen = false;
   if(action==="delivery-checkout"){
-   const items=cartQuoteItems(),subtotalCents=totals().discountedSubtotalCents;
+   const items=cartQuoteItems(),subtotalCents=totals().discountedSubtotalCents,selectedFreight=activeFreight();
    const savedScrollY=window.scrollY;
    void import(/* @vite-ignore */new URL("/pacifica-checkout-delivery.mjs",location.origin).href)
-    .then(async module=>{const opened=await module.openDelivery({items,subtotalCents,onClose:()=>{window.scrollTo({top:savedScrollY})}});if(!opened)return;})
+    .then(async module=>{const opened=await module.openDelivery({items,subtotalCents,selectedFreight,onClose:()=>{window.scrollTo({top:savedScrollY})}});if(!opened)return;})
     .catch(error=>notify(error.message||"Não foi possível abrir a entrega. Tente novamente."));
    return;
   }
