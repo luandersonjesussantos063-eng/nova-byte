@@ -65,9 +65,9 @@ if(article){
      if(schema['@type']==='Product'){
       schema.name=product.name;schema.description=product.description;schema.brand={"@type":"Brand",name:product.brand};
       if(photo)schema.image=photos;
-      // Offer schema is published only after the commerce endpoint confirms the price.
+      // Keep the server-verified offer when the browser cannot refresh the commercial catalogue.
       if(available)schema.offers={"@type":"Offer",url:schema.url,priceCurrency:'BRL',price:product.price.toFixed(2),availability:'https://schema.org/InStock'};
-      else delete schema.offers;
+      else if(eligible instanceof Map||!product.available||schema.offers?.price!==product.price.toFixed(2))delete schema.offers;
      }
      if(schema['@type']==='BreadcrumbList')schema.itemListElement.at(-1).name=product.name;
     }
