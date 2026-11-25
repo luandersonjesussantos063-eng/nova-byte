@@ -996,14 +996,16 @@ counts();
 const reelPlayButton=document.querySelector('.kg-reel-play');
 if(reelPlayButton){
  const reelVideo=reelPlayButton.previousElementSibling;
+ reelVideo.controls=false;
  reelPlayButton.addEventListener('click',()=>{
   reelVideo.play().catch(()=>toast('Não foi possível reproduzir o vídeo. Toque para tentar novamente.'));
  });
  reelVideo.addEventListener('playing',()=>{
   const moveFocus=document.activeElement===reelPlayButton;
   reelPlayButton.hidden=true;
+  reelVideo.controls=true;
   if(moveFocus)reelVideo.focus({preventScroll:true});
- });
+ },{once:true});
  reelPlayButton.hidden=false;
 }
 

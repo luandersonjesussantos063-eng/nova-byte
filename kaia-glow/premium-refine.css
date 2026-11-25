@@ -274,7 +274,10 @@ button:focus-visible,a:focus-visible,input:focus-visible,summary:focus-visible{o
 }
 .kg-reel-play{
  position:absolute;inset:0;width:100%;height:100%;display:grid;place-items:center;
- padding:0;border:0;background:transparent;cursor:pointer
+ padding:0;border:0;cursor:pointer;color:#fff;
+ background:
+  linear-gradient(180deg,transparent 38%,#35142636 60%,#351426f7 100%),
+  #542640 url("assets/reel-medicube-capa.webp") 52% center / cover no-repeat
 }
 .kg-reel-play[hidden]{display:none}
 .kg-reel-play::before,.kg-reel-play::after{content:"";grid-area:1 / 1}
@@ -284,6 +287,16 @@ button:focus-visible,a:focus-visible,input:focus-visible,summary:focus-visible{o
 }
 .kg-reel-play::after{
  border-block:12px solid transparent;border-left:19px solid #fff;transform:translateX(2px)
+}
+.kg-reel-cover-title{
+ position:absolute;inset:auto 18px 24px;text-align:left
+}
+.kg-reel-cover-title small{
+ display:block;margin-bottom:5px;color:#ffd6e5;font:700 11px/1.4 'DM Sans',Arial,sans-serif;
+ letter-spacing:.14em;text-transform:uppercase
+}
+.kg-reel-cover-title strong{
+ display:block;max-width:12ch;font:600 clamp(24px,7vw,34px)/1.03 Georgia,serif
 }
 .kg-reel-play:focus-visible{outline:2px solid #fff;outline-offset:-4px}
 .kg-reel-product{
