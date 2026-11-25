@@ -944,7 +944,7 @@ const featuredSkus=[
 ];
 const desirePicks=featuredSkus.map(sku=>catalog.find(p=>p.sku===sku)).filter(Boolean);
 if(desirePicks.length!==4)console.warn('Kaia Glow: seleção editorial incompleta; conferir SKUs de destaque.');
-$('#desireGrid').innerHTML=desirePicks.map((p,i)=>`<article class="product desire-product"><div class="desire-number">0${i+1} / THE KAIA EDIT</div><div class="product-photo"><a href="#produto-${p.id}" data-product="${p.id}" aria-label="Descobrir ${esc(p.name)}"><img src="${esc(p.id==='351521227'?p.images[8]:p.images[0])}" alt="${esc(p.name)}" loading="eager"></a><button class="wish" data-wish="${p.id}" aria-label="Favoritar ${esc(p.name)}">♡</button></div><span class="product-brand">${esc(p.brand.toUpperCase())}</span><h3><a href="#produto-${p.id}" data-product="${p.id}">${esc(p.name)}</a></h3><div class="desire-purchase"><span>${money(p.price)}</span><button data-quick="${p.id}" aria-label="Adicionar ${esc(p.name)} à sacola">Eu quero <span>↗</span></button></div></article>`).join('');
+$('#desireGrid').innerHTML=desirePicks.map((p,i)=>`<article class="product desire-product"><div class="desire-number">0${i+1} / THE KAIA EDIT</div><div class="product-photo"><a href="#produto-${p.id}" data-product="${p.id}" aria-label="Descobrir ${esc(p.name)}"><img src="${esc(p.images[0])}" alt="${esc(p.name)}" loading="eager"></a><button class="wish" data-wish="${p.id}" aria-label="Favoritar ${esc(p.name)}">♡</button></div><span class="product-brand">${esc(p.brand.toUpperCase())}</span><h3><a href="#produto-${p.id}" data-product="${p.id}">${esc(p.name)}</a></h3><div class="desire-purchase"><span>${money(p.price)}</span><button data-quick="${p.id}" aria-label="Adicionar ${esc(p.name)} à sacola">Eu quero <span>↗</span></button></div></article>`).join('');
 counts();
 
 // Four editorial campaigns; rotate every three seconds while in view.
@@ -971,7 +971,7 @@ counts();
   index=(next+slides.length)%slides.length;const s=slides[index];
   photos.forEach((im,i)=>im.classList.toggle('active',i===index));
   $('#campaignHeadline').innerHTML=s.headline;$('#campaignDescription').innerHTML=s.description;
-  $('#heroImage').src=s.product.id==='351521227'?s.product.images[8]:s.product.images[0];
+  $('#heroImage').src=s.product.images[0];
   $('#heroImage').alt=s.product.name;$('#heroName').textContent=s.product.name;
   $('#heroProduct').onclick=()=>openProduct(s.product.id);
   $('#heroExplore').href='#produto-'+s.product.id;

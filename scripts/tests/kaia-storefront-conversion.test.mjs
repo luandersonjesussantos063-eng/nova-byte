@@ -27,3 +27,22 @@ test('pending photos do not masquerade as product photography',()=>{
  assert.equal(presentation.hasPhoto({images:['assets/kaia-product-photo-pending.svg']}),false);
  assert.equal(presentation.hasPhoto({images:['assets/catalog/real.webp']}),true);
 });
+test('São Paulo and brand pages are discoverable and the image sitemap only references shipped files',()=>{
+ const root='dist/kaia-glow';
+ const origin='https://usekaiaglow.com.br';
+ const sitemap=readFileSync(root+'/sitemap.xml','utf8');
+ const home=readFileSync(root+'/index.html','utf8');
+ const local=readFileSync(root+'/cosmeticos-em-sao-paulo/index.html','utf8');
+ assert.match(home,/href="\/cosmeticos-em-sao-paulo\/"/);
+ for(const page of ['/cosmeticos-em-sao-paulo/','/marcas/medicube/','/marcas/celimax/','/marcas/skin1004/']){
+  assert(sitemap.includes('<loc>'+origin+page+'</loc>'),page);
+  assert(existsSync(root+page+'index.html'),page);
+  if(page.startsWith('/marcas/'))assert(local.includes('href="'+page+'"'),page);
+ }
+ const images=[...sitemap.matchAll(/<image:loc>([^<]+)<\/image:loc>/g)].map(m=>new URL(m[1]));
+ assert(images.some(url=>url.pathname.includes('celimax-retinal-booster-15ml')));
+ for(const image of images){
+  assert.equal(image.origin,origin);
+  assert(existsSync(root+image.pathname),image.pathname);
+ }
+});

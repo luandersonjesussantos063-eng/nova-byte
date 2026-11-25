@@ -12,12 +12,13 @@ try{
 const canBuy=p=>eligible instanceof Map&&p.sku&&p.available&&eligible.get(p.sku)===Math.round(p.price*100);
 const assistedSkus=new Set(['KG-MIS-PERFSER-ORI-80ML','KG-ABI-COL-EYE-JER-90G']);
 const assisted=p=>p.available&&assistedSkus.has(p.sku)&&!canBuy(p);
-const imageUrl=p=>{
- const src=p.images?.find(s=>!s.includes('photo-pending'));
- if(!src)return null;
- const url=new URL(src,location.origin);
- return url.protocol==='https:'||url.origin===location.origin?url.href:null;
-};
+const imageUrls=p=>[...new Set((p.images||[]).flatMap(src=>{
+ if(!src||/photo-pending|placeholder/i.test(src))return [];
+ try{
+  const url=new URL(src,location.origin);
+  return url.protocol==='https:'||url.origin===location.origin?[url.href]:[];
+ }catch{return [];}
+}))];
 for(const card of document.querySelectorAll('article.item[data-product-id]')){
  const p=products.find(p=>String(p.id)===card.dataset.productId);
  if(!p){card.hidden=true;continue;}
@@ -25,7 +26,7 @@ for(const card of document.querySelectorAll('article.item[data-product-id]')){
  const brand=card.querySelector('.brand-name');if(brand)brand.textContent=p.brand;
  const price=card.querySelector('.landing-price');if(price)price.textContent=money(p.price);
  const stock=card.querySelector('.landing-stock');if(stock)stock.textContent=canBuy(p)?'Pronta entrega':assisted(p)?'Em estoque · compra assistida':eligible instanceof Map?'Sob encomenda':'Confira disponibilidade na loja';
- const photo=imageUrl(p);
+ const [photo]=imageUrls(p);
  if(photo){const img=document.createElement('img');img.src=photo;img.alt=p.name;img.loading='lazy';card.querySelector('img,.photo-none')?.replaceWith(img);}
 }
 const article=document.querySelector('article.product-detail[data-product-id]');
@@ -46,7 +47,7 @@ if(article){
   document.getElementById('landingPrice').textContent=money(product.price);
   const description=article.nextElementSibling?.querySelector('p');if(description)description.textContent=product.description;
   article.querySelector('.eyebrow').textContent=product.brand+' · '+product.category;
-  const photo=imageUrl(product);
+  const photos=imageUrls(product),[photo]=photos;
   if(photo){const img=document.createElement('img');img.src=photo;img.alt=product.name;img.fetchPriority='high';article.querySelector('.visual').replaceChildren(img);}
   const available=canBuy(product);
   buy.textContent=available?'Adicionar à sacola':assisted(product)?'Comprar pelo WhatsApp':eligible instanceof Map?'Solicitar encomenda':'Ver opções na loja';
@@ -63,9 +64,9 @@ if(article){
     for(const schema of Array.isArray(schemas)?schemas:[schemas]){
      if(schema['@type']==='Product'){
       schema.name=product.name;schema.description=product.description;schema.brand={"@type":"Brand",name:product.brand};
-      if(photo)schema.image=[photo];
+      if(photo)schema.image=photos;
       // Offer schema is published only after the commerce endpoint confirms the price.
-      if(available)schema.offers={"@type":"Offer",url:location.href,priceCurrency:'BRL',price:product.price.toFixed(2),availability:'https://schema.org/InStock'};
+      if(available)schema.offers={"@type":"Offer",url:schema.url,priceCurrency:'BRL',price:product.price.toFixed(2),availability:'https://schema.org/InStock'};
       else delete schema.offers;
      }
      if(schema['@type']==='BreadcrumbList')schema.itemListElement.at(-1).name=product.name;

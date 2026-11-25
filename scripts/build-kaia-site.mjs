@@ -11,6 +11,7 @@ try{await access(output);await access(marker);await rm(output,{recursive:true});
 await mkdir(output,{recursive:true});await writeFile(marker,'Kaia Glow generated static deployment\n');let count=0;
 async function copy(relative){const src=path.join(source,relative),dest=path.join(output,relative),stat=await lstat(src);if(stat.isSymbolicLink()||!stat.isFile())throw Error('Arquivo de origem inválido: '+relative);await mkdir(path.dirname(dest),{recursive:true});await copyFile(src,dest);count++;}
 for(const file of [...pages,...scripts,...styles])await copy(file);
+await copy('kaia-icon.svg');
 async function assets(relative='assets'){for(const entry of await readdir(path.join(source,relative),{withFileTypes:true})){const file=path.join(relative,entry.name);if(entry.isSymbolicLink())throw Error('Link simbólico não permitido: '+file);if(entry.isDirectory())await assets(file);else{if(!/\.(?:png|jpe?g|webp|avif|gif|svg|ico|mp4|webm|woff2?)$/i.test(file))throw Error('Tipo de arquivo não permitido nos assets: '+file);await copy(file)}}}
 await assets();
 // Content hashes invalidate browser caches whenever checkout or other local assets change.
