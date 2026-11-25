@@ -993,6 +993,20 @@ counts();
  show(0);updatePlayback();
 })();
 
+const reelPlayButton=document.querySelector('.kg-reel-play');
+if(reelPlayButton){
+ const reelVideo=reelPlayButton.previousElementSibling;
+ reelPlayButton.addEventListener('click',()=>{
+  reelVideo.play().catch(()=>toast('Não foi possível reproduzir o vídeo. Toque para tentar novamente.'));
+ });
+ reelVideo.addEventListener('playing',()=>{
+  const moveFocus=document.activeElement===reelPlayButton;
+  reelPlayButton.hidden=true;
+  if(moveFocus)reelVideo.focus({preventScroll:true});
+ });
+ reelPlayButton.hidden=false;
+}
+
 const ritualFilm=document.querySelector('#chronologisteVideo');
 if(ritualFilm){
  const soundButton=document.querySelector('#ritualSound');
