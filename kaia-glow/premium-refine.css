@@ -264,9 +264,13 @@ button:focus-visible,a:focus-visible,input:focus-visible,summary:focus-visible{o
  border:0;display:block;background:#fff;
  transform:scale(1.43);transform-origin:50% 0;
 }
-/* The collaboration is a landscape video. Let Instagram frame it naturally. */
-.kg-reel-card--wide .kg-reel-embed iframe{
- top:0;height:100%;transform:none
+.kg-reel-embed--medicube::before{
+ content:"";position:absolute;inset:-24px;
+ background:linear-gradient(#2717228c,#271722ad),url("assets/reel-medicube-grwm.webp") center / cover;
+ filter:blur(16px)
+}
+.kg-reel-embed video{
+ position:relative;display:block;width:100%;height:100%;object-fit:contain
 }
 .kg-reel-product{
  padding:12px;background:#fbf7f8;
