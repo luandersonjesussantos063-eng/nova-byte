@@ -716,3 +716,15 @@ body.no-scroll .p-cookie-banner{display:none}.p-cookie-copy{flex:1}.p-cookie-cop
 .p-cart-whatsapp{display:block;text-align:center;margin-top:10px;font-weight:650;font-size:13px;color:#873565}
 @media(min-width:800px){.p-delivery-overlay{align-items:center}.p-delivery-shell{height:min(90dvh,850px);border-radius:20px}}
 @media(max-width:520px){.p-delivery-scroll{padding:17px 15px max(20px,env(safe-area-inset-bottom))}.p-delivery-fields{gap:10px}.p-delivery-head{padding:12px 16px}.p-delivery-scroll>h2{font-size:26px}.p-delivery-fields label{font-size:11px}.p-delivery-fields input{font-size:13px}}
+
+
+/* Carrossel Pacífica: sem setas; toque na foto para avançar, indicadores acessíveis. */
+.p-hero{isolation:isolate}
+.p-hero-next-tap{position:absolute;inset:0;z-index:1;display:block;width:100%;height:100%;border:0;background:transparent;color:transparent;cursor:pointer;touch-action:manipulation}
+.p-hero-next-tap:focus-visible{outline:3px solid #fff;outline-offset:-7px}
+.p-hero-body{z-index:2;pointer-events:none}
+.p-hero-body .p-hero-cta,.p-hero-body .p-hero-dots,.p-hero-body .p-hero-dots button{pointer-events:auto}
+.p-hero-carousel>button[data-action="hero-prev"],.p-hero-carousel>button[data-action="hero-next"],.p-hero-carousel .n-hero-pause{display:none!important}
+.p-hero-carousel{pointer-events:none}
+.p-hero-carousel .p-hero-dots{pointer-events:auto}
+.p-hero-next-tap:hover{background:transparent}
