@@ -17,7 +17,7 @@ test("public contact and prices cannot be replaced from localStorage config",()=
  assert.doesNotMatch(app,/\.\.\.\(initial\.config \|\| \{\}\)/);
  assert.doesNotMatch(app,/initial\.config\?\.whatsapp/);
  assert.match(app,/Consult(ar|ar sacola) pelo WhatsApp/);
- assert.match(app,/pagamentos online ainda não estão ativos/);
+ assert.match(app,/Pagamento online indisponível/);
 });
 test("promotional dialog never interrupts initial visit",()=>{
  assert.match(offers,/return \{showOffer,showSettings\}/);
