@@ -47,7 +47,6 @@ body.nb-home{color:#eff3f9;background:#0b1526!important}.nb-home:not(.nb-inner) 
 
 
 /* Portfolio expansion (Nov 2026): real campaign photos or clearly labeled conceptual visuals. */
-.nb-home .site-preview-window.nb-kaia-showcase,
 .nb-home .site-preview-window.nb-morada-showcase{background:#e7dce5}
 .nb-home .nb-portfolio-photo{display:block;width:100%;height:100%;object-fit:cover;object-position:center;transition:transform .4s ease}
 .nb-home .site-scroll-preview:hover .nb-portfolio-photo{transform:scale(1.035)}
@@ -55,7 +54,6 @@ body.nb-home{color:#eff3f9;background:#0b1526!important}.nb-home:not(.nb-inner) 
 .nb-home .nb-preview-label>span{font-size:10px;letter-spacing:.17em;font-weight:750}
 .nb-home .nb-preview-label strong{font:500 24px/1.2 Georgia,serif;color:#fff}
 .nb-home .nb-preview-label small{font-size:11px;color:#f2dde6}
-.nb-home .nb-preview-kaia{background:#4e233edc;border:1px solid #d4b9bc55}
 .nb-home .nb-preview-morada{background:#153c31e0;border:1px solid #b4d2b555}
 .nb-home .nb-divulga-showcase{background:linear-gradient(140deg,#0b1526,#183b62)}
 .nb-home .nb-preview-app{height:100%;display:flex;flex-direction:column;justify-content:center;align-items:flex-start;padding:30px 36px;gap:10px;color:#fff}
@@ -82,7 +80,6 @@ body.nb-home{color:#eff3f9;background:#0b1526!important}.nb-home:not(.nb-inner) 
 @media(prefers-reduced-motion:reduce){.nb-home .nb-portfolio-photo{transition:none}.nb-home .site-scroll-preview:hover .nb-portfolio-photo{transform:none}}
 
 /* Portfolio link for Kaia Glow points exclusively to the official store; old demo removed. */
-.nb-home .nb-official-kaia-logo{object-fit:contain;background:#2c0e1e;padding:1.25rem}
 
 .nb-home .site-preview-window.nb-completed-preview {
   display: grid;
@@ -98,16 +95,16 @@ body.nb-home{color:#eff3f9;background:#0b1526!important}.nb-home:not(.nb-inner) 
   min-height: 0;
 }
 
-.nb-home .nb-completed-preview--pacifica {
+.nb-home .nb-completed-preview--store {
   grid-template-rows: 65% 35%;
   background: #f8f7f7;
 }
 
-.nb-completed-preview--pacifica img {
+.nb-completed-preview--store img {
   object-fit: cover;
 }
 
-.nb-completed-preview--pacifica img:last-child {
+.nb-completed-preview--store img:last-child {
   object-position: top center;
   border-top: 2px solid #eebed3;
 }
@@ -130,4 +127,17 @@ body.nb-home{color:#eff3f9;background:#0b1526!important}.nb-home:not(.nb-inner) 
 
 .nb-completed-preview--giro img:last-child {
   border-radius: 8px;
+}
+
+.nb-completed-preview--kaia img:first-child {
+  object-position: left center;
+}
+
+.nb-completed-preview--kaia img:last-child {
+  object-position: center;
+  border-top-color: #d7b8c9;
+}
+
+.nb-completed-preview--wprime img {
+  object-fit: cover;
 }
