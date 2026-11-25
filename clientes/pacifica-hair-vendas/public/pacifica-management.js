@@ -1,10 +1,11 @@
 // Pacífica Hair | management UI. No mock sales, no client-side financial truth.
+import {storeToday,classifyCreditDue,creditDueTotals} from './credit-status.mjs';
 export function createManagement({api,getProducts,goTab,reloadProducts,editProduct}){
  const $=q=>document.querySelector(q);
  const el=(tag,value,cls)=>{const x=document.createElement(tag);if(value!==undefined)x.textContent=value;if(cls)x.className=cls;return x};
  const brl=c=>(Number(c||0)/100).toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
  const cents=s=>Math.round(Number(s)*100);
- const today=()=>new Intl.DateTimeFormat("sv-SE",{timeZone:"America/Sao_Paulo",year:"numeric",month:"2-digit",day:"2-digit"}).format(new Date());
+ const today=storeToday;
  const low=p=>p.stock>0&&p.stock<=Math.max(0,Number.isInteger(p.minStock)?p.minStock:5);
  let data=null,stockView="current",customerView="customers",lastTab="overview",lastError="";
  const notify=(id,msg)=>{const x=$(id);if(x)x.textContent=msg};
@@ -53,9 +54,8 @@ export function createManagement({api,getProducts,goTab,reloadProducts,editProdu
   if(!data)return;
   const q=$("#customerSearch").value.toLocaleLowerCase("pt-BR"),customers=$("#customerRows"),credits=$("#creditRows");
   customers.replaceChildren();credits.replaceChildren();
-  let past=0,soon=0;const now=today(),horizon=new Date(now+"T12:00:00Z");horizon.setUTCDate(horizon.getUTCDate()+7);const until=horizon.toISOString().slice(0,10);
-  for(const c of data.credits){if(c.balance_cents>0){if(c.due_date<now)past+=c.balance_cents;else if(c.due_date<=until)soon+=c.balance_cents}}
-  notify("#creditOverdue",brl(past));notify("#creditSoon",brl(soon));notify("#creditTotal",brl(data.summary?.receivable_cents));
+  const now=today(),dueTotals=creditDueTotals(data.credits,now);
+  notify("#creditOverdue",brl(dueTotals.overdue));notify("#creditToday",brl(dueTotals.todayCents));notify("#creditSoon",brl(dueTotals.soon));notify("#creditTotal",brl(data.summary?.receivable_cents));
   const select=$("#creditCustomer"),v=select.value;select.replaceChildren();const def=el("option","Selecione um cliente");def.value="";select.append(def);
   for(const c of data.customers){const o=el("option",c.name);o.value=c.id;select.append(o)}
   select.value=data.customers.some(c=>c.id===v)?v:"";
@@ -69,9 +69,9 @@ export function createManagement({api,getProducts,goTab,reloadProducts,editProdu
   const active=data.credits.filter(x=>x.balance_cents>0);
   if(!active.length){const td=el("td","Nenhum fiado em aberto.");td.colSpan=5;const r=el("tr");r.append(td);credits.append(r)}
   for(const c of active){
-   const r=el("tr"),due=c.due_date<now?"Atrasado":c.due_date<=until?"A vencer":"Em dia";
+   const r=el("tr"),due=classifyCreditDue(c.due_date,now);
    const button=el("button","Receber");button.type="button";button.onclick=()=>{$("#receiptForm").elements.creditId.value=c.id;$("#receiptHint").textContent=c.customer_name+" · Saldo: "+brl(c.balance_cents);$("#receiptForm").elements.amount.value=(c.balance_cents/100).toFixed(2);setForm("#receiptForm",true)};
-   credits.append(columns(r,[c.customer_name,brl(c.balance_cents),new Date(c.due_date+"T12:00:00Z").toLocaleDateString("pt-BR"),label(due,c.due_date<now?"overdue":""),button]));
+   credits.append(columns(r,[c.customer_name,brl(c.balance_cents),new Date(c.due_date+"T12:00:00Z").toLocaleDateString("pt-BR"),label(due,due==="Atrasado"?"overdue":due==="Vence hoje"?"due-today":""),button]));
   }
  }
  function renderFinance(sales){
