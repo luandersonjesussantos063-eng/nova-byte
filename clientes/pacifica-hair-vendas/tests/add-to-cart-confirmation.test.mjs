@@ -22,7 +22,7 @@ test('Recommendations only include in-stock real products and exclude already ca
  assert.match(app,/persist\(\);state\.addedProductId=id;render\(\)/);
 });
 test('Confirmation does not enable payments or change order processing',()=>{
- assert.match(app,/pagamentos online ainda não estão ativos/);
+ assert.match(app,/Pagamento online indisponível/);
  assert.match(app,/state\.cartOpen=true;render\(\)/);
  assert.match(css,/@media\(max-width:600px\)/);
 });
