@@ -36,7 +36,7 @@ function draw(){
  input("neighborhood","Bairro",'required maxlength="100"')+
  input("city","Cidade",'required autocomplete="address-level2" maxlength="100"')+
  input("state","UF",'required autocomplete="address-level1" maxlength="2"')+
- '</div><div class="p-delivery-freight"><h3>Frete para seu endereço</h3><button type="button" data-checkout="quote">Calcular opções de entrega</button><p id="p-delivery-quote-status" role="status"></p><div id="p-delivery-quote-options" class="p-delivery-quote-options"></div></div>'+
+ '</div><div class="p-delivery-freight"><h3>Frete para seu endereço</h3><button type="button" data-checkout="quote">Calcular opções de entrega</button><p id="p-delivery-quote-status" role="status">'+(current.freight?'Frete selecionado: '+safe(current.freight.name)+' · '+money(current.freight.cents):'')+'</p><div id="p-delivery-quote-options" class="p-delivery-quote-options"></div></div>'+
  '<p id="p-checkout-delivery-error" class="p-delivery-error" role="alert"></p>'+
  '<button class="p-delivery-primary" type="submit">Salvar endereço e ir para pagamento →</button></form></div>':
  '<div class="p-delivery-scroll"><h2>Pagamento</h2><p>Seu endereço foi salvo. Confira os valores antes de pagar.</p>'+
@@ -128,7 +128,7 @@ async function saveDelivery(e){
  }catch(err){dStatus("p-checkout-delivery-error",err.message||"Não foi possível salvar o endereço.")}
  finally{button.disabled=false}
 }
-export async function openDelivery({items,subtotalCents,onClose}){
+export async function openDelivery({items,subtotalCents,selectedFreight,onClose}){
  const user=await verifiedUser();
  if(!user){location.assign("/conta.html?voltar=sacola");return false;}
  const sb=authClient();
@@ -136,9 +136,13 @@ export async function openDelivery({items,subtotalCents,onClose}){
  if(error)throw Error("Não conseguimos carregar seu endereço. Tente novamente.");
  closeDelivery();
  current={items,subtotalCents,onClose,stage:"address",address:Object.fromEntries(fields.map(k=>[k,data?.[k]||""])),freight:null};
+ if(!current.address.postal_code&&selectedFreight?.cep)current.address.postal_code=selectedFreight.cep;
+ if(selectedFreight?.cep===cepDigits(current.address.postal_code)&&Number.isSafeInteger(selectedFreight.cents))current.freight=selectedFreight;
  if(!current.address.full_name)current.address.full_name=user.user_metadata?.pacifica_name||"";
  const layer=document.createElement("div");layer.className="p-delivery-overlay";layer.id="pacifica-delivery-dialog";
  layer.addEventListener("click",e=>{if(e.target===layer){const cb=current?.onClose;closeDelivery();cb?.()}});
  document.body.append(layer);document.body.classList.add("p-delivery-active");draw();
+ const postal=cepDigits(current.address.postal_code);
+ if(postal.length===8&&!current.address.street)void lookupAndFill(postal,++sequence);
  return true;
 }
