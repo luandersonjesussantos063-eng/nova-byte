@@ -15,7 +15,7 @@ test("storefront footer does not reveal an administration shortcut",()=>{
 test("footer provides real visitor information and a responsive structure",()=>{
  for(const text of ["Atendimento","Minha conta","Informações","Entregas e trocas","Privacidade","WhatsApp","Instagram","Cookies","Navegação protegida"])assert.ok(app.includes(text),text);
  for(const rule of [".p-footer-inner",".p-footer-column",".p-footer-trust",".p-footer-core","@media(max-width:600px)"])assert.ok(css.includes(rule),rule);
- assert.match(app,/pagamentos online ainda não estão ativos/);
+ assert.match(app,/Pagamento online indisponível/);
  assert.doesNotMatch(app,/function footerPayments\(/);
  assert.doesNotMatch(app,/<div class="p-footer-service"/);
  assert.match(css,/\.n-header\{position:relative\}/);
