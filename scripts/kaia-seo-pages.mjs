@@ -20,7 +20,7 @@ const productPath=p=>{
 };
 const pageLayout=({title,description,pathname,body,data,photo})=>{
  const canonical=SITE+pathname;
- const schema=data?'<script type="application/ld+json">'+JSON.stringify(data).replace(/</g,'\\u003c')+'</script>':'';
+ const schema=data?'<script type="application/ld+json"'+(data.some(item=>item['@type']==='Product')?' data-kaia-product':'')+'>'+JSON.stringify(data).replace(/</g,'\\u003c')+'</script>':'';
  const imageMeta=photo?'<meta property="og:image" content="'+html(asset(photo))+'">':'';
  return '<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'
  +'<meta name="robots" content="index,follow"><meta name="theme-color" content="#54233d">'
@@ -95,7 +95,7 @@ export async function generateKaiaSeoPages(source,output){
   ];
   const related=products.filter(p=>p.id!==product.id&&(p.brand===product.brand||p.category===product.category)).slice(0,4);
   const paragraphs=description;
-  const body=crumbs(crumbsList)+'<article class="product-detail" data-product-id="'+html(product.id)+'" data-product-key="'+html(product.sku||'legacy:'+product.id)+'"><div class="visual">'
+  const body=crumbs(crumbsList)+'<article class="product-detail" data-product-id="'+html(product.id)+'" data-product-key="'+html(product.sku||'legacy:'+product.id)+'" data-product-price-cents="'+Math.round(product.price*100)+'"><div class="visual">'
    +(img(product)?'<img src="'+html('/'+img(product))+'" alt="'+html(product.name)+'" fetchpriority="high">':'<div class="photo-none large">Imagem do produto em atualização</div>')
    +'</div><div class="details"><span class="eyebrow">'+html(product.brand)+' · '+html(product.category)+'</span><h1>'+html(product.name)+'</h1>'
    +'<p class="intro">'+html(shorten(description,240))+'</p>'
