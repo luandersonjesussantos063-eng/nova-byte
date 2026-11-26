@@ -31,6 +31,7 @@ for(const card of document.querySelectorAll('article.item[data-product-id]')){
 }
 const article=document.querySelector('article.product-detail[data-product-id]');
 if(article){
+ const structuredScripts='script[type="application/ld+json"],script[data-kaia-product]';
  const product=products.find(p=>String(p.id)===article.dataset.productId);
  const buy=document.getElementById('landingBuy'),notice=document.getElementById('landingAvailability');
  if(!product){
@@ -39,7 +40,7 @@ if(article){
   article.replaceChildren();
   const title=document.createElement('h1');title.textContent='Este produto não está disponível na vitrine.';
   const link=document.createElement('a');link.className='button';link.href='/';link.textContent='Conhecer outros produtos';article.append(title,link);
-  document.querySelectorAll('script[type="application/ld+json"]').forEach(s=>s.remove());
+  document.querySelectorAll(structuredScripts).forEach(s=>s.remove());
  }else{
   presentation.normalize(product);
   article.querySelector('h1').textContent=product.name;document.title=product.name+' | Kaia Glow';
@@ -58,7 +59,7 @@ if(article){
   notice.textContent=available?'Pronta entrega. Consulte o frete pelo CEP na sacola. O pagamento é processado pelo Mercado Pago.':assisted(product)?'Em estoque. A compra é finalizada pela equipe no WhatsApp enquanto o frete do checkout online é configurado.':eligible instanceof Map?'Sob encomenda, sem pagamento antecipado. Previsão de disponibilização em até 7 dias corridos, sujeita à confirmação da loja. O transporte será combinado separadamente.':'Consulte a disponibilidade na loja. Confira o endereço, o frete e o total antes de pagar.';
   for(const [selector,value] of [['meta[name=description]',product.description.slice(0,155)],['meta[property="og:title"]',document.title],['meta[property="og:description"]',product.description.slice(0,155)]])document.querySelector(selector)?.setAttribute('content',value);
   if(photo)document.querySelector('meta[property="og:image"]')?.setAttribute('content',photo);
-  for(const script of document.querySelectorAll('script[type="application/ld+json"]')){
+  for(const script of document.querySelectorAll(structuredScripts)){
    try{
     const schemas=JSON.parse(script.textContent);
     for(const schema of Array.isArray(schemas)?schemas:[schemas]){
@@ -72,6 +73,10 @@ if(article){
      if(schema['@type']==='BreadcrumbList')schema.itemListElement.at(-1).name=product.name;
     }
     script.textContent=JSON.stringify(schemas).replace(/</g,'\\u003c');
+    if(script.hasAttribute('data-kaia-product')){
+     script.type=schemas.some(schema=>schema['@type']==='Product'&&schema.offers)
+      ?'application/ld+json':'application/json';
+    }
    }catch{}
   }
  }

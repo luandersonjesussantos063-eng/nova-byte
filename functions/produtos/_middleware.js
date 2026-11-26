@@ -1,13 +1,13 @@
 import {database} from '../api/kaia/comercial/_core.js';
 import {onRequestGet as commercialCatalog} from '../api/kaia/comercial/catalogo.js';
 
-const productSchema=/<script type="application\/ld\+json" data-kaia-product>([\s\S]*?)<\/script>/;
+const productSchema=/<script type="application\/json" data-kaia-product>([\s\S]*?)<\/script>/;
 
 export async function onRequestGet(context){
  const {request,env}=context;
  const url=new URL(request.url);
  const original=await context.next();
- if(url.hostname!=='usekaiaglow.com.br'||!/^\/produtos\/[a-z0-9-]+\/$/.test(url.pathname)||
+ if(!['usekaiaglow.com.br','www.usekaiaglow.com.br'].includes(url.hostname)||!/^\/produtos\/[a-z0-9-]+\/$/.test(url.pathname)||
   !original.ok||!original.headers.get('content-type')?.startsWith('text/html'))return original;
 
  try{
@@ -39,6 +39,7 @@ export async function onRequestGet(context){
   const headers=new Headers(original.headers);
   for(const key of ['content-length','content-encoding','etag','last-modified'])headers.delete(key);
   headers.set('Cache-Control','no-store');
-  return new Response(markup.replace(script[1],()=>structured),{status:original.status,headers});
+  const published='<script type="application/ld+json" data-kaia-product>'+structured+'</script>';
+  return new Response(markup.replace(productSchema,()=>published),{status:original.status,headers});
  }catch{return original;}
 }

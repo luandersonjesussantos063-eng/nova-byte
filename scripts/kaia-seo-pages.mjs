@@ -20,7 +20,10 @@ const productPath=p=>{
 };
 const pageLayout=({title,description,pathname,body,data,photo})=>{
  const canonical=SITE+pathname;
- const schema=data?'<script type="application/ld+json"'+(data.some(item=>item['@type']==='Product')?' data-kaia-product':'')+'>'+JSON.stringify(data).replace(/</g,'\\u003c')+'</script>':'';
+ const serialize=items=>JSON.stringify(items).replace(/</g,'\\u003c');
+ const product=data?.find(item=>item['@type']==='Product');
+ const schema=(data?'<script type="application/ld+json">'+serialize(data.filter(item=>item!==product))+'</script>':'')
+  +(product?'<script type="application/json" data-kaia-product>'+serialize([product])+'</script>':'');
  const imageMeta=photo?'<meta property="og:image" content="'+html(asset(photo))+'">':'';
  return '<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'
  +'<meta name="robots" content="index,follow"><meta name="theme-color" content="#54233d">'

@@ -26,8 +26,6 @@ function documentFor(product,override){
  || /^assets\/catalog\/[A-Za-z0-9_-]+\.(webp|jpg|jpeg|png|avif)$/.test(img));
  const photo=validImage?(img.startsWith('https:')?img:'https://usekaiaglow.com.br/'+img):null;
  const schema=[
-  {'@context':'https://schema.org','@type':'Product',name,description,
-   brand:{'@type':'Brand',name:brand},sku:product.sku,url,...(photo?{image:[photo]}:{})},
   {'@context':'https://schema.org','@type':'BreadcrumbList',itemListElement:[
    {'@type':'ListItem',position:1,name:'Kaia Glow',item:'https://usekaiaglow.com.br/'},
    {'@type':'ListItem',position:2,name:category,item:'https://usekaiaglow.com.br/#colecao'},
