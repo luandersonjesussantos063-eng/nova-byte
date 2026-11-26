@@ -167,7 +167,7 @@ function afterBagRender({cart,eligible,onAdd}){
  }
  const delivery=$('.kc-delivery-section');
  if(delivery)delivery.insertBefore(el('p','kg-cep-note',
-  'Calcule o frete com seu CEP para conferir valores e prazos reais.'),$('#shippingQuoteForm'));
+  'Informe seu CEP e confirme o endereço para ver o valor e o prazo do frete.'),$('#shippingQuoteForm'));
  const payment=$('.kc-payment-section');
  const giftSection=el('section','kg-gift-choice'),heading=el('div','kg-gift-title');
  heading.append(el('h3','','Adicionar embalagem para presente?'),el('small','','Opcional'));

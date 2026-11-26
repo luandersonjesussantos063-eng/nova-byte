@@ -365,13 +365,13 @@ function checkoutEligibility(){
  const deliveryConfirmed=window.kaiaDeliveryAddress?.isConfirmed()===true;
  const prepared=!!($('#commercePaymentOptions')||$('#commercePendingOrder'));
  btn.hidden=prepared;btn.disabled=!eligible||!shippingValid||!deliveryConfirmed||!applied.valid||prepared;
- btn.textContent=!eligible?'Produto indisponível':!shippingValid?'Escolha o frete':
-  !deliveryConfirmed?'Confirme o endereço':!applied.valid?'Verifique seu cupom':isFree?'Confirmar pedido grátis':'Continuar para pagamento';
+ btn.textContent=!eligible?'Produto indisponível':!deliveryConfirmed?'Confirme o endereço':
+  !shippingValid?'Escolha o frete':!applied.valid?'Verifique seu cupom':isFree?'Confirmar pedido grátis':'Continuar para pagamento';
  const note=$('#commerceEligibility');if(!note||prepared)return;
  note.hidden=false;note.style.color='';note.style.fontWeight='';
  note.textContent=!eligible?'Um ou mais itens ainda não estão liberados para compra.':
+  !deliveryConfirmed?'Confirme seu endereço de entrega antes de escolher o frete.':
   !shippingValid?'Selecione o frete para continuar.':
-  !deliveryConfirmed?'Confirme seu endereço de entrega antes de pagar.':
   !applied.valid?'O cupom aplicado não é válido para esta sacola.':
   isFree?'100% de desconto e frete grátis. O pedido será confirmado sem cobrar pagamento.':
   coupon?'Cupom '+coupon+': desconto de '+money(discount)+' nos produtos. Frete normal.':'';
@@ -774,7 +774,7 @@ let renderedBagAuthState=null;
 function renderBag(){renderedBagAuthState=window.kaiaCheckoutGate?.isAuthenticated()===true;
  window.kaiaCartExperience?.beforeBagRender();counts();if(!cart.length){window.kaiaCartExperience?.closeBagIfEmpty();$('#bagContent').innerHTML='<div class="bag-body empty"><h2>Sua próxima descoberta<br>está te esperando.</h2><p>Explore a coleção e monte sua sacola.</p><button class="button" id="backShopping">Continuar explorando ↗</button></div>';$('#backShopping').onclick=()=>$('#bagDialog').close();return}
 const subtotal=cart.reduce((a,r)=>a+variantFor(catalog.find(p=>p.id===r.id),r.variantId).price*r.qty,0);
-$('#bagContent').innerHTML=`<div class="bag-body kc-checkout"><section class="kc-cart-section"><div class="kc-section-title"><h3>Seu pedido</h3><span>${cart.length} ${cart.length===1?'item':'itens'}</span></div>${cart.map(r=>{const p=catalog.find(p=>p.id===r.id),v=variantFor(p,r.variantId);return `<div class="bag-item"><img src="${esc(p.images[0])}" alt="${esc(p.name)}"><div><h3>${esc(p.name)}</h3>${p.variants.length>1?`<small>${esc(v.label)}</small>`:''}<small>${money(v.price)}</small><div class="quantity"><button data-step="-1" data-key="${r.key}" aria-label="Diminuir ${esc(p.name)}">−</button><output>${r.qty}</output><button data-step="1" data-key="${r.key}" aria-label="Aumentar ${esc(p.name)}">+</button></div><button class="remove" data-remove="${r.key}">Remover</button></div></div>`}).join('')}</section><section class="kc-delivery-section"><div class="kc-section-title"><h3>Entrega</h3><a class="kc-account-link" href="/conta.html?aba=dados" target="_blank" rel="noopener noreferrer">Meu endereço ↗</a></div><form id="shippingQuoteForm" class="kc-cep-form" aria-label="Calcular frete"><label for="shippingPostalCode">CEP</label><input id="shippingPostalCode" name="cep" inputmode="numeric" autocomplete="postal-code" maxlength="9" placeholder="00000-000" aria-label="CEP de entrega" required><button type="submit">Calcular</button></form><p class="kc-inline-hint" id="shippingQuoteResult" role="status" aria-live="polite">Informe seu CEP para ver as opções de entrega.</p><div id="kgDeliveryAddressMount"></div><div id="kcShippingChoices" class="kc-shipping-choices" aria-label="Modalidades de entrega"></div></section><section class="kc-payment-section"><div class="kc-section-title"><h3>Pagamento</h3><span id="kcPaymentProvider">Mercado Pago</span></div>
+$('#bagContent').innerHTML=`<div class="bag-body kc-checkout"><section class="kc-cart-section"><div class="kc-section-title"><h3>Seu pedido</h3><span>${cart.length} ${cart.length===1?'item':'itens'}</span></div>${cart.map(r=>{const p=catalog.find(p=>p.id===r.id),v=variantFor(p,r.variantId);return `<div class="bag-item"><img src="${esc(p.images[0])}" alt="${esc(p.name)}"><div><h3>${esc(p.name)}</h3>${p.variants.length>1?`<small>${esc(v.label)}</small>`:''}<small>${money(v.price)}</small><div class="quantity"><button data-step="-1" data-key="${r.key}" aria-label="Diminuir ${esc(p.name)}">−</button><output>${r.qty}</output><button data-step="1" data-key="${r.key}" aria-label="Aumentar ${esc(p.name)}">+</button></div><button class="remove" data-remove="${r.key}">Remover</button></div></div>`}).join('')}</section><section class="kc-delivery-section"><div class="kc-section-title"><h3>Entrega</h3><a class="kc-account-link" href="/conta.html?aba=dados" target="_blank" rel="noopener noreferrer">Meu endereço ↗</a></div><form id="shippingQuoteForm" class="kc-cep-form" aria-label="Buscar endereço pelo CEP"><label for="shippingPostalCode">CEP</label><input id="shippingPostalCode" name="cep" inputmode="numeric" autocomplete="postal-code" maxlength="9" placeholder="00000-000" aria-label="CEP de entrega" required><button type="submit">Buscar endereço</button></form><p class="kc-inline-hint" id="shippingQuoteResult" role="status" aria-live="polite"></p><div id="kgDeliveryAddressMount"></div><div id="kcShippingChoices" class="kc-shipping-choices" aria-label="Modalidades de entrega"></div></section><section class="kc-payment-section"><div class="kc-section-title"><h3>Pagamento</h3><span id="kcPaymentProvider">Mercado Pago</span></div>
 <div class="kc-amount-line"><span>Produtos</span><strong>${money(subtotal)}</strong></div>
 <div class="kc-amount-line"><span>Entrega</span><strong id="kcShippingAmount">A calcular</strong></div>
 <form id="kcCouponForm" class="kc-cep-form" aria-label="Aplicar cupom">
@@ -794,21 +794,18 @@ window.kaiaCartExperience?.afterBagRender({
   commerceAllowed instanceof Map&&commerceAllowed.get(p.sku)===Math.round(p.price*100)),
  onAdd:p=>addCart(p.id,variantFor(p).id,1,{skipConfirmation:true})
 });
+const quoteForm=$('#shippingQuoteForm'),postalInput=$('#shippingPostalCode');
+const quoteStatus=$('#shippingQuoteResult'),shippingChoices=$('#kcShippingChoices');
+const confirmAddressPrompt='Confira e confirme o endereço abaixo para ver o frete.';
+let quoteVersion=0;
 window.kaiaDeliveryAddress?.mount({
  onChange:checkoutEligibility,cartSignature,
- onConfirmed:()=>{
-  const area=$('#kcShippingChoices');
-  const quote=$('#shippingQuoteForm');
-  if(!area||!quote)return;
-  area.replaceChildren();
-  $('#shippingQuoteResult').textContent='Buscando opções de entrega para o endereço confirmado…';
-  quote.requestSubmit();
- },
+ onConfirmed:()=>quoteForm.requestSubmit(),
  onEditing:()=>{
+  quoteVersion++;
   chosenShipping=null;
-  $('#kcShippingChoices')?.replaceChildren();
-  const quoteStatus=$('#shippingQuoteResult');
-  if(quoteStatus)quoteStatus.textContent='Confirme novamente o endereço para escolher o frete.';
+  shippingChoices.replaceChildren();
+  quoteStatus.textContent=confirmAddressPrompt;
   checkoutEligibility();
  }
 });
@@ -847,20 +844,37 @@ $('#kcCouponForm').onsubmit=async e=>{
   (hadOldCheckout?' Não utilize o pagamento anterior; confirme o novo pedido abaixo.':'');
  checkoutEligibility();
 };
-all('[data-step]').forEach(b=>b.onclick=()=>{const r=cart.find(x=>x.key===b.dataset.key);r.qty=Math.max(1,Math.min(10,r.qty+Number(b.dataset.step)));persistCart();shippingReset();renderBag()});all('[data-remove]').forEach(b=>b.onclick=()=>{cart=cart.filter(r=>r.key!==b.dataset.remove);persistCart();shippingReset();renderBag()});$('#shippingQuoteForm').onsubmit=async e=>{
+all('[data-step]').forEach(b=>b.onclick=()=>{const r=cart.find(x=>x.key===b.dataset.key);r.qty=Math.max(1,Math.min(10,r.qty+Number(b.dataset.step)));persistCart();shippingReset();renderBag()});all('[data-remove]').forEach(b=>b.onclick=()=>{cart=cart.filter(r=>r.key!==b.dataset.remove);persistCart();shippingReset();renderBag()});quoteForm.onsubmit=async e=>{
  e.preventDefault();
- const status=$('#shippingQuoteResult'),cep=postalDigits($('#shippingPostalCode').value);
+ const status=quoteStatus,cep=postalDigits(postalInput.value);
  if(!/^[0-9]{8}$/.test(cep)){status.textContent='Informe um CEP válido de 8 números.';return;}
- $('#shippingPostalCode').value=cep.slice(0,5)+'-'+cep.slice(5);
- const requestedCart=cartSignature();
+ postalInput.value=cep.slice(0,5)+'-'+cep.slice(5);
+ if(!window.kaiaDeliveryAddress?.isConfirmed()){
+  window.kaiaDeliveryAddress?.postalChanged();
+  status.textContent=confirmAddressPrompt;
+  return;
+ }
+ const version=++quoteVersion,requestedCart=cartSignature();
+ const isCurrent=()=>status.isConnected&&version===quoteVersion&&cep===postalDigits(postalInput.value)&&
+  requestedCart===cartSignature()&&window.kaiaDeliveryAddress?.isConfirmed();
  const items=cart.map(r=>({sku:catalog.find(p=>p.id===r.id)?.sku,quantity:r.qty}));
  if(items.some(x=>!x.sku)){status.textContent='Há itens antigos sem SKU conferido. O frete não pode ser calculado para essa sacola.';return;}
- chosenShipping=null;checkoutEligibility();status.textContent='Consultando os dados de envio…';
+ chosenShipping=null;
+ shippingChoices.replaceChildren();
+ checkoutEligibility();
+ status.textContent='Calculando o frete para o endereço confirmado…';
+ function shippingError(message){
+  status.textContent=message;
+  const retry=document.createElement('button');
+  retry.type='button';retry.className='button';retry.textContent='Tentar calcular novamente';
+  retry.onclick=()=>quoteForm.requestSubmit();
+  shippingChoices.replaceChildren(retry);
+ }
  try{
   const r=await fetch('/api/kaia/frete',{method:'POST',headers:{'content-type':'application/json'},
-   body:JSON.stringify({destinoCep:cep,items})});
+   body:JSON.stringify({destinoCep:cep,items}),signal:AbortSignal.timeout(20000)});
   const info=await r.json();
-  if(cep!==postalDigits($('#shippingPostalCode').value)||requestedCart!==cartSignature()||!window.kaiaDeliveryAddress?.isConfirmed())return;
+  if(!isCurrent())return;
   if(!r.ok){
    const missing=(info.skusPendentes||[]).map(sku=>catalog.find(p=>p.sku===sku)?.name||sku);
    status.textContent=(info.message||'O frete ainda não está disponível para esta sacola.')
@@ -869,7 +883,7 @@ all('[data-step]').forEach(b=>b.onclick=()=>{const r=cart.find(x=>x.key===b.data
   }
   const choices=Array.isArray(info.opcoes)?info.opcoes:[];
   if(!choices.length){status.textContent='Nenhuma opção de envio retornada para esta sacola.';return;}
-  const list=$('#kcShippingChoices');list.replaceChildren();
+  const list=shippingChoices;
   status.textContent='Selecione uma modalidade de entrega:';
   for(const option of choices){
    const cents=Number(option.freteCentavos);
@@ -897,8 +911,20 @@ all('[data-step]').forEach(b=>b.onclick=()=>{const r=cart.find(x=>x.key===b.data
    list.setAttribute('aria-label','Escolha sua modalidade de entrega');
    list.scrollIntoView({block:'start',behavior:'smooth'});
   }
- }catch{status.textContent='Não foi possível consultar o frete agora. Confira sua conexão e tente novamente.';}
-};$('#shippingPostalCode').oninput=()=>{chosenShipping=null;window.kaiaDeliveryAddress?.postalChanged();$('#kcShippingChoices')?.replaceChildren();if($('#shippingQuoteResult'))$('#shippingQuoteResult').textContent='Calcule o frete para este CEP.';checkoutEligibility();};$('#checkout').onclick=commercialCheckout;fetchEligible();checkoutEligibility();}
+ }catch{
+  if(isCurrent())shippingError('Não foi possível calcular o frete agora. Tente novamente.');
+ }
+};
+postalInput.oninput=()=>{
+ quoteVersion++;
+ chosenShipping=null;
+ window.kaiaDeliveryAddress?.postalChanged();
+ shippingChoices.replaceChildren();
+ quoteStatus.textContent=postalDigits(postalInput.value).length===8?confirmAddressPrompt:'';
+ checkoutEligibility();
+};
+$('#checkout').onclick=commercialCheckout;fetchEligible();checkoutEligibility();}
+
 function openBagDrawer(){renderBag();if(!$('#bagDialog').open)$('#bagDialog').showModal();window.kaiaCheckoutGate?.refresh();}
 $('#bagButton').onclick=openBagDrawer;
 window.addEventListener('kaia:checkout-auth-changed',()=>{
