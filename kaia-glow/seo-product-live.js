@@ -56,6 +56,20 @@ if(article){
   if(available)destination.searchParams.set('adicionar',product.id);
   buy.href=assisted(product)?'https://wa.me/5511965677152?text='+encodeURIComponent('Olá! Vim pelo site da Kaia Glow e quero comprar '+product.name+'. Podem me orientar sobre entrega e pagamento?'):destination.pathname+destination.search+destination.hash;
   if(assisted(product)){buy.target='_blank';buy.rel='noopener noreferrer';}
+  if(available&&product.variants?.length===1&&product.variants[0].available){
+   const status=document.createElement('p');status.className='kg-direct-cart-status';status.setAttribute('role','status');buy.after(status);
+   const cartLink=document.createElement('a');cartLink.className='button secondary';cartLink.href='/?sacola=1';cartLink.textContent='Ver sacola';cartLink.hidden=true;status.after(cartLink);
+   buy.addEventListener('click',event=>{
+    if(event.ctrlKey||event.metaKey||event.shiftKey||event.altKey)return;
+    try{const key='kaia-essential-checkout-cart-v1';const old=JSON.parse(localStorage.getItem(key)||'null');const now=Date.now();
+     const items=old&&Array.isArray(old.items)&&Number.isFinite(old.at)&&old.at<=now+60000&&now-old.at<=7*86400000?old.items.slice(0,20):[];
+     const variant=product.variants[0],row=items.find(x=>String(x.id)===String(product.id)&&String(x.variantId)===String(variant.id));
+     if(row)row.qty=Math.min(10,Math.max(0,Number(row.qty)||0)+1);else{if(items.length>=20)return;items.push({id:product.id,variantId:variant.id,qty:1});}
+     localStorage.setItem(key,JSON.stringify({at:now,items}));event.preventDefault();status.textContent='Produto adicionado à sacola.';cartLink.hidden=false;
+    }catch{/* fall back to existing storefront purchase link */}
+   });
+  }
+  window.KaiaProductExtras?.mount(article.querySelector('.details'),product,{quote:available});
   notice.textContent=available?'Pronta entrega. Consulte o frete pelo CEP na sacola. O pagamento é processado pelo Mercado Pago.':assisted(product)?'Em estoque. A compra é finalizada pela equipe no WhatsApp enquanto o frete do checkout online é configurado.':eligible instanceof Map?'Sob encomenda, sem pagamento antecipado. Previsão de disponibilização em até 7 dias corridos, sujeita à confirmação da loja. O transporte será combinado separadamente.':'Consulte a disponibilidade na loja. Confira o endereço, o frete e o total antes de pagar.';
   for(const [selector,value] of [['meta[name=description]',('Conheça '+product.name+' na Kaia Glow. Veja preço e opções de entrega.').slice(0,160).replace(/\s+\S*$/,'')],['meta[property="og:title"]',document.title],['meta[property="og:description"]',('Conheça '+product.name+' na Kaia Glow. Veja preço e opções de entrega.').slice(0,160).replace(/\s+\S*$/,'')]])document.querySelector(selector)?.setAttribute('content',value);
   if(photo)document.querySelector('meta[property="og:image"]')?.setAttribute('content',photo);

@@ -19,7 +19,7 @@ function documentFor(product,override){
  const id=product.id,url='https://usekaiaglow.com.br/produtos/novo/'+id;
  const name=override.name,brand=override.brand||product.brand,category=override.category||product.category;
  const description=snippet(override.description,3500);
- const metaDesc=snippet(override.description,160)||'Conheça '+name+' da '+brand+' na Kaia Glow.';
+ const metaDesc='Conheça '+snippet(name,100)+' na Kaia Glow. Veja preço, detalhes e opções de entrega.';
  const img=Array.isArray(override.images)?override.images[0]:null;
  const validImage=typeof img==='string'&&
  (/^https:\/\/vajlhodqxskozuxxlujv\.supabase\.co\/storage\/v1\/object\/public\/kaia-product-media\/products\/[A-Za-z0-9_-]+\.(jpg|jpeg|png|webp)$/.test(img)
@@ -49,19 +49,19 @@ function documentFor(product,override){
   +'<header class="top"><div class="shell head"><a class="brand" href="/">KAIA GLOW</a>'
   +'<nav><a href="/#colecao">Catálogo</a><a href="/skincare-coreano/">Skincare coreano</a><a href="/atendimento.html">Atendimento</a></nav></div></header>'
   +'<main class="shell"><nav class="crumbs"><a href="/">Kaia Glow</a> › <a href="/#colecao">'+escapeHTML(category)+'</a> › '
-  +escapeHTML(name)+'</nav><article class="product-detail">'
+  +escapeHTML(name)+'</nav><article class="product-detail" data-product-id="'+escapeHTML(id)+'">'
   +'<div class="visual">'+imageHTML+'</div>'
   +'<div class="details"><span class="eyebrow">'+escapeHTML(brand)+' · '+escapeHTML(category)+'</span>'
   +'<h1>'+escapeHTML(name)+'</h1><p class="intro">'+escapeHTML(snippet(description,240))+'</p>'
-  +'<p class="callout">Confira disponibilidade, preço e opções de entrega na vitrine.</p>'
-  +'<a class="button" href="/#produto-'+escapeHTML(id)+'">Ver na vitrine</a>'
+  +'<p id="landingPrice" class="price">'+escapeHTML((Number(override.price_cents)/100).toLocaleString('pt-BR',{style:'currency',currency:'BRL'}))+'</p><p id="landingAvailability" class="callout">Confira disponibilidade, preço e opções de entrega na vitrine.</p>'
+  +'<a id="landingBuy" class="button" href="/#produto-'+escapeHTML(id)+'">Ver na vitrine</a>'
   +'<a class="button secondary" href="/atendimento.html">Falar com a Kaia Glow</a></div></article>'
   +'<section class="content"><h2>Descrição e informações do produto</h2><p>'+escapeHTML(description)+'</p></section>'
   +'<section class="content"><h2>Continue explorando</h2><a class="pill" href="/#colecao">Outros produtos da Kaia Glow</a>'
   +'<a class="pill" href="/cosmeticos-em-sao-paulo/">Cosméticos online em São Paulo</a></section>'
   +'</main><footer class="bottom"><div class="shell"><strong>KAIA GLOW</strong>'
   +'<p>Loja online de skincare e cosméticos · <a href="/privacidade.html">Privacidade</a> · '
-  +'<a href="/atendimento.html">Atendimento</a></p></div></footer></body></html>';
+  +'<a href="/atendimento.html">Atendimento</a></p></div></footer><script src="/catalog.js"></script><script src="/catalog-presentation.js"></script><script src="/catalog-overrides.js"></script><script src="/product-extras.js"></script><script type="module" src="/seo-product-live.js"></script></body></html>';
 }
 export async function onRequestGet({params}){
  const id=String(params?.id||'');

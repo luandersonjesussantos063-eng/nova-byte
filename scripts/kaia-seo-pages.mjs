@@ -40,7 +40,7 @@ const pageLayout=({title,description,pathname,body,data,photo})=>{
  +'<main class="shell" id="conteudo">'+body+'</main>'
  +'<footer class="bottom"><div class="shell"><strong>KAIA GLOW</strong><p>Seleção de skincare, cuidados capilares e autocuidado. Loja online com atendimento por canais digitais.</p><nav><a href="/sobre.html">Sobre</a><a href="/atendimento.html">Atendimento</a><a href="/entregas-trocas-devolucoes.html">Entrega, trocas e devoluções</a><a href="/privacidade.html">Privacidade</a><a href="/">Voltar à loja</a></nav>'
  +'<p class="fine">Endereço cadastral: Rua Eng. Prudente, 35, apto. 154, Vila Monumento, São Paulo, SP. Atendimento e condições de entrega pelo site.</p></div></footer>'
- +'<script src="/catalog.js"></script><script src="/catalog-presentation.js"></script><script src="/catalog-overrides.js"></script><script type="module" src="/seo-product-live.js"></script>'+'</body></html>';
+ +'<script src="/catalog.js"></script><script src="/catalog-presentation.js"></script><script src="/catalog-overrides.js"></script><script src="/product-extras.js"></script><script type="module" src="/seo-product-live.js"></script>'+'</body></html>';
 };
 const crumbs=(parts)=>'<nav class="crumbs" aria-label="Navegação estrutural">'+parts.map((p,i)=>i===parts.length-1?'<span aria-current="page">'+html(p.title)+'</span>':'<a href="'+html(p.path)+'">'+html(p.title)+'</a>').join('<span aria-hidden="true">›</span>')+'</nav>';
 const breadcrumbsData=(parts)=>({'@context':'https://schema.org','@type':'BreadcrumbList',itemListElement:parts.map((p,i)=>({'@type':'ListItem',position:i+1,name:p.title,item:SITE+p.path}))});
@@ -68,7 +68,7 @@ async function writePage(output,pathname,content){
  await writeFile(path.join(folder,'index.html'),versioned);
 }
 export async function generateKaiaSeoPages(source,output){
- for(const file of ['catalog.js','catalog-presentation.js','catalog-overrides.js','seo-product-live.js','kaia-seo.css','premium-seo.css'])revisions.set(file,createHash('sha256').update(await readFile(path.join(source,file))).digest('hex').slice(0,12));
+ for(const file of ['catalog.js','catalog-presentation.js','catalog-overrides.js','product-extras.js','seo-product-live.js','kaia-seo.css','premium-seo.css'])revisions.set(file,createHash('sha256').update(await readFile(path.join(source,file))).digest('hex').slice(0,12));
  const raw=await readFile(path.join(source,'catalog.js'),'utf8');
  const prefix='window.KAIA_CATALOG=';
  if(!raw.startsWith(prefix))throw Error('Catálogo Kaia: formato inesperado');

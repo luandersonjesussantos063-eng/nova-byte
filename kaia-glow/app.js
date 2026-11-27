@@ -582,6 +582,8 @@ function syncDetailPurchase(){
  button.disabled=state==='loading'||preorderBusy;
  button.textContent=state==='buy'?'Adicionar à sacola':state==='assisted'?'Comprar pelo WhatsApp':state==='preorder'?'Encomendar':state==='error'?'Tentar novamente':'Verificando disponibilidade';
  const terms=$('#preorderTerms');if(terms)terms.hidden=state!=='preorder';
+ const target=$('#productDialog .details')||$('#productDialog .product-info')||$('#productDialog #productContent');
+ if(target&&!target.querySelector('.kg-product-extras'))window.KaiaProductExtras?.mount(target,current,{quote:state==='buy'});
 }
 async function submitPreorder(p,quantity){
  if(preorderBusy)return;
