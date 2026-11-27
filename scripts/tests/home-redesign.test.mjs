@@ -27,8 +27,8 @@ test('home retains business identity, integrations and honest conversion paths',
  }
  assert(portfolio.includes('imóveis, imagens e valores ilustrativos'),'demonstrativo imobiliário identificado');
  assert(portfolio.includes('acesso não público'),'sistemas internos protegidos');
- for(const phrase of ['Lojas virtuais e sistemas de gestão','sob medida.','Lucas do Rio Verde','todo o Brasil','Design e identidade visual','Edição de vídeos','Marketing e conteúdo digital'])assert(html.includes(phrase),phrase);
- for(const tag of ['G-T7CCH2S8J7','G-XSB3WYJZ71','ca-pub-2466231259507657','/analytics-prep.js','/portal-privacy.js','https://www.instagram.com/novabyte.solucoes/'])assert(html.includes(tag),tag);
+ for(const phrase of ['Lojas virtuais e sistemas de gestão','sob medida para seu negócio.','Lucas do Rio Verde','todo o Brasil','Design e identidade visual','Edição de vídeos','Marketing e conteúdo digital'])assert(html.includes(phrase),phrase);
+ for(const tag of ['G-T7CCH2S8J7','G-XSB3WYJZ71','/analytics-prep.js','/portal-privacy.js','https://www.instagram.com/novabyte.solucoes/'])assert(html.includes(tag),tag);
  const serviceLinks=[...html.matchAll(/class="service-cta" href="([^"]+)"/g)].map(m=>new URL(m[1]));assert.equal(serviceLinks.length,7);assert.equal(new Set(serviceLinks.map(u=>u.searchParams.get('text'))).size,7);for(const url of serviceLinks)assert.equal(url.hostname,'wa.me');
 });
 test('anchors, local resources, accessible controls and reduced motion are valid',()=>{
@@ -41,3 +41,5 @@ test('anchors, local resources, accessible controls and reduced motion are valid
 });
 
 test('commercial home links to four honest project cases',()=>{for(const slug of ['kaia-glow','giro','w-prime-eletrica','pacifica-hair']){const route='/projetos/'+slug+'/';assert(home.includes('href="'+route+'"'));assert(fs.readFileSync('projetos/index.html','utf8').includes('href="'+route+'"'));const page=fs.readFileSync('.'+route+'index.html','utf8');assert.equal((page.match(/<h1\b/g)||[]).length,1);assert(page.includes('O que foi desenvolvido'));assert(page.includes('Quero algo parecido'));assert(!/\[X\]|\[frase real/.test(page));assert(fs.readFileSync('sitemap.xml','utf8').includes('https://novabytesolucoes.com.br'+route));}assert(home.includes('id="processo"'));assert(home.includes('Quanto custa?'));});
+
+test('commercial home has clear pricing, legal identification, one privacy link and no ad script',()=>{assert(home.includes('32.370.448/0001-93'));assert(home.includes('R$ 1.500 a R$ 2.500'));assert(home.includes('10 a 15 dias úteis'));assert(home.includes('Ler avaliações reais no Google'));assert(!/google-adsense-account|adsbygoogle\.js|Tecnologia para um amanhã melhor|Boas ideias\. Soluções de verdade\.|Da sua ideia à próxima possibilidade\.|Opções de privacidade/.test(home));assert.equal((home.match(/href="\/privacidade\.html"/g)||[]).length,1);});
