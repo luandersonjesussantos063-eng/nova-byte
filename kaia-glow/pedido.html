@@ -39,6 +39,7 @@ p{margin:9px 0}.muted{color:var(--muted)}.description{max-width:640px}
 .button{display:inline-flex;justify-content:center;align-items:center;border-radius:12px;padding:13px 20px;text-decoration:none;min-height:46px;border:1px solid var(--wine);font-weight:700;font-size:14px}
 .primary{color:white;background:var(--wine)}.secondary{color:var(--wine);background:#fff}
 .cancellation{margin-top:20px}.cancellation[hidden],form[hidden],[hidden]{display:none!important}
+.order-survey{margin-top:20px}
 textarea{width:100%;min-height:100px;padding:14px;border-radius:12px;border:1px solid #dcc8d2;font:inherit;resize:vertical}
 label{display:block;margin:14px 0 8px;font-weight:700}
 .notice{background:#fff;border-radius:14px;border:1px solid var(--border);padding:14px;margin-top:15px;font-size:13px}
@@ -92,6 +93,12 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:12px}
 </div>
 <p class="notice muted" id="paymentDisclaimer">O retorno do navegador não comprova que um pagamento foi aprovado. A confirmação depende do sistema de pagamentos.</p>
 </section>
+<section id="orderSurvey" class="panel order-survey" hidden aria-labelledby="surveyTitle">
+ <h2 id="surveyTitle">Avalie sua experiência de compra</h2>
+ <p class="muted">Se quiser receber uma pesquisa do Google após a entrega prevista, abra o convite. Ao abrir, você compartilha com o Google seu e-mail, o código do pedido, o país e a data estimada de entrega. <a href="/privacidade.html#avaliacoes-google">Saiba mais</a>.</p>
+ <button class="button secondary" id="openSurvey" type="button">Abrir convite do Google</button>
+ <p class="small" id="surveyStatus" role="status"></p>
+</section>
 <section id="cancellationSection" class="panel cancellation" hidden>
  <h2>Precisa de ajuda com o pedido?</h2>
  <p class="muted">Você pode solicitar cancelamento, acompanhar a decisão e receber a confirmação por e-mail.</p>
@@ -109,6 +116,7 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:12px}
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js" integrity="sha384-TcHRA3zBbn+Lexh5n+Oil4guNPOS3rjNDpGRAN46u/s/mB2IZ50ceC6TYDU2yvgK" crossorigin="anonymous"></script>
 <script type="module">
 import {KAIA_AUTH} from './auth-config.js';
+import {openOrderSurvey,surveyDetails} from './order-survey.js';
 const $=id=>document.getElementById(id);
 const uuid=new URLSearchParams(location.search).get('pedido');
 const sb=window.supabase?.createClient(KAIA_AUTH.url,KAIA_AUTH.publishableKey,{auth:{storageKey:'kaia-glow-auth-v1',persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});
@@ -118,6 +126,8 @@ const date=v=>v?new Intl.DateTimeFormat('pt-BR',{dateStyle:'long',timeStyle:'sho
 const statusLabels={created:'Aguardando início do pagamento',pending:'Aguardando confirmação',approved:'Pedido confirmado',rejected:'Pagamento recusado',cancelled:'Pedido cancelado',review_required:'Pedido em análise',refunded:'Pedido reembolsado'};
 const cancelLabels={requested:'Sua solicitação foi recebida e está em análise.',approved:'Cancelamento aprovado e concluído.',approved_refund_pending:'Solicitação aceita; aguardando reembolso.',denied:'A loja informou que não aceitou a solicitação.'};
 let timer=null;
+let reviewRequest=null;
+let surveyOpened=false;
 function setText(id,v){$(id).textContent=v;}
 async function cancellation(o){
  const sec=$('cancellationSection'),button=$('cancellationButton'),form=$('cancellationForm'),note=$('cancellationMessage');
@@ -155,6 +165,8 @@ async function refresh(){
    headers:{Authorization:'Bearer '+data.session.access_token},cache:'no-store'});
   const o=await r.json();if(!r.ok)throw Error(o.code||'Consulta indisponível');
   const confirmed=o.status==='approved'&&o.fulfillmentStatus!=='cancelled';
+  reviewRequest=surveyDetails(o,data.session.user?.email);
+  $('orderSurvey').hidden=!reviewRequest;
   const free=!!o.freeOrder;
   setText('statusIcon',confirmed?'✓':o.status==='pending'?'…':'!');
   setText('title',confirmed?(free?'Seu presente está confirmado!':'Seu pedido foi confirmado!'):
@@ -190,9 +202,23 @@ async function refresh(){
   $('paymentDisclaimer').hidden=confirmed||free;
   drawSteps(o);await cancellation(o);
   if(['created','pending'].includes(o.status))timer=setTimeout(refresh,15000);
- }catch(e){setText('title','Não conseguimos carregar seu pedido');setText('status',e.message);setText('orderBadge','Atualize para tentar novamente');}
+ }catch(e){reviewRequest=null;$('orderSurvey').hidden=true;setText('title','Não conseguimos carregar seu pedido');setText('status',e.message);setText('orderBadge','Atualize para tentar novamente');}
  finally{$('refresh').disabled=false;}
 }
+$('openSurvey').onclick=async()=>{
+ if(!reviewRequest||surveyOpened||$('openSurvey').disabled)return;
+ const button=$('openSurvey');
+ button.disabled=true;
+ setText('surveyStatus','Abrindo o convite…');
+ try{
+  await openOrderSurvey(reviewRequest);
+  surveyOpened=true;
+  setText('surveyStatus','Use o convite do Google para escolher se quer receber a pesquisa.');
+ }catch{
+  setText('surveyStatus','O convite está indisponível agora. Você pode tentar novamente.');
+  button.disabled=false;
+ }
+};
 $('cancellationButton').onclick=()=>{$('cancellationButton').hidden=true;$('cancellationForm').hidden=false;};
 $('cancellationForm').onsubmit=async e=>{
  e.preventDefault();const reason=$('cancellationReason').value.trim();

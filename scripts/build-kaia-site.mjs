@@ -10,7 +10,7 @@ const marker=path.join(root,'dist','.kaia-glow-generated');
 try{await access(output);await access(marker);await rm(output,{recursive:true});}catch(e){if(e.code!=='ENOENT')throw e;try{await access(output);throw Error('A pasta de destino existe sem identificação de build. Preserve seu conteúdo antes de continuar.');}catch(check){if(check.code!=='ENOENT')throw check;}}
 await mkdir(output,{recursive:true});await writeFile(marker,'Kaia Glow generated static deployment\n');let count=0;
 async function copy(relative){const src=path.join(source,relative),dest=path.join(output,relative),stat=await lstat(src);if(stat.isSymbolicLink()||!stat.isFile())throw Error('Arquivo de origem inválido: '+relative);await mkdir(path.dirname(dest),{recursive:true});await copyFile(src,dest);count++;}
-for(const file of [...pages,...scripts,...styles])await copy(file);
+for(const file of [...pages,...scripts,...styles,'order-survey.js'])await copy(file);
 await copy('kaia-icon.svg');
 async function assets(relative='assets'){for(const entry of await readdir(path.join(source,relative),{withFileTypes:true})){const file=path.join(relative,entry.name);if(entry.isSymbolicLink())throw Error('Link simbólico não permitido: '+file);if(entry.isDirectory())await assets(file);else{if(!/\.(?:png|jpe?g|webp|avif|gif|svg|ico|mp4|webm|woff2?)$/i.test(file))throw Error('Tipo de arquivo não permitido nos assets: '+file);await copy(file)}}}
 await assets();
@@ -55,7 +55,17 @@ for(const page of pages){const html=(await readFile(path.join(output,page),'utf8
 }
 const policy=contentSecurityPolicy([...inlineHashes]);
 const additions='\n/*\n  Content-Security-Policy: '+policy+'\n'+Object.entries(securityHeaders).filter(([name])=>!['X-Content-Type-Options','Referrer-Policy','X-Frame-Options'].includes(name)).map(([name,value])=>'  '+name+': '+value).join('\n')+'\n';
-const headerFile=path.join(output,'_headers');const finalHeaders=(await readFile(headerFile,'utf8'))+additions;
+const orderPolicy=contentSecurityPolicy([...inlineHashes],{orderSurvey:true});
+const orderHeaders=['/pedido','/pedido.html'].map(route=>`
+${route}
+  ! Content-Security-Policy
+  Content-Security-Policy: ${orderPolicy}
+  ! Referrer-Policy
+  Referrer-Policy: no-referrer
+  Cache-Control: no-store
+  X-Robots-Tag: noindex, nofollow
+`).join('');
+const headerFile=path.join(output,'_headers');const finalHeaders=(await readFile(headerFile,'utf8'))+additions+orderHeaders;
 if(finalHeaders.split('\n').some(line=>line.length>2000))throw Error('Security header exceeds Pages line limit');
 await writeFile(headerFile,finalHeaders);
 // Verify local resources rather than publishing the repository or SQL/documents.
