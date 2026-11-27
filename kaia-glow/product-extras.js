@@ -80,6 +80,24 @@
     "source": "https://anua.com/products/pdrn-100-hyaluronic-acid-glow-pad",
     "inci": "Water, Butylene Glycol, Glycereth-26, Niacinamide, Glycerin, Hydroxyethyl Urea, 1,2-Hexanediol, Hydrolyzed Collagen, Terminalia Ferdinandiana Fruit Extract, Diethoxyethyl Succinate, Hydroxyacetophenone, Glycosyl Trehalose, Hydrogenated Starch Hydrolysate, Melia Azadirachta Leaf Extract, Melia Azadirachta Flower Extract, Coccinia Indica Fruit Extract, Aloe Barbadensis Flower Extract, Solanum Melongena (Eggplant) Fruit Extract, Ocimum Sanctum Leaf Extract, Corallina Officinalis Extract, Curcuma Longa (Turmeric) Root Extract, Glycereth-25 PCA Isostearate, Propanediol, Hyaluronic Acid, Hydrolyzed Hyaluronic Acid, Sodium Hyaluronate, Zea Mays (Corn) Kernel Extract, Fructan, Glucose, Ethylhexylglycerin, Xanthan Gum, Adenosine, Coptis Japonica Root Extract, Collagen Extract, Sodium DNA, Disodium EDTA, Lecithin, Acetyl Glutamine, Bacillus/Soybean Ferment Extract, Caprylyl Glycol, Folic Acid, Hexapeptide-11, Oligopeptide-1, Oligopeptide-2, Oligopeptide-3",
     "checked": "2026-11-27"
+  },
+  "KG-APR-TXA99-WRAP-80ML": {
+    "name": "APRILSKIN TXA Niacinamide 99 Night Wrapping Mask",
+    "source": "https://aprilskin.us/products/txa-niacinamide-99-overnight-wrapping-mask",
+    "inci": "Water, Glycerin, Glycereth-26, Polyvinyl Alcohol, Niacinamide(50,000 ppm), Tranexamic Acid(10,000 ppm), Benzyl Glycol, Xanthan Gum, Algin, C12-14 Alketh-12, Allantoin, Ethylhexylglycerin, Cyanocobalamin, Disodium EDTA, Rosa Damascena Flower Oil, 1,2-Hexanediol, Butylene Glycol, Magnolia Officinalis Bark Extract, Sodium Hyaluronate, Ascorbic Acid, Caprylic/Capric Triglyceride, Hydroxyethylcellulose, Hydroxypropyltrimonium Hyaluronate, Mannitol, Sodium Thiosulfate, Hydrogenated Lecithin, Sodium Acetylated Hyaluronate, Hydrolyzed Hyaluronic Acid, Collagen, Ceramide NP, Hyaluronic Acid, Polysorbate 80, Sodium Hyaluronate Crosspolymer, Hydrolyzed Sodium Hyaluronate, Arginine/Lysine Polypeptide, Potassium Hyaluronate",
+    "checked": "2026-11-27"
+  },
+  "KG-VT-RS300-50ML": {
+    "name": "VT Reedle Shot 300",
+    "source": "https://globalvt-cosmetics.com/products/vt-reedle-shot-300",
+    "inci": "Water, Dipropylene Glycol, Glycerin, Niacinamide, Butylene Glycol, Macadamia Ternifolia Seed Oil, 1,2-Hexanediol, Ethylhexyl Palmitate, Silica, Sodium Acrylate/Sodium Acryloyldimethyl Taurate Copolymer, Polyisobutene, Glycereth-26, Ethylhexylglycerin, Caprylyl Glycol, Adenosine, Sodium Polyacrylate, Centella Asiatica Extract, Sodium Hyaluronate, Caprylyl/Capryl Glucoside, Sorbitan Oleate, Xanthan Gum, Propolis Extract, Asiaticoside, Madecassoside, Madecassic Acid, Asiatic Acid, Glycine, Serine, Glutamic Acid, Aspartic Acid, Leucine, Alanine, Lysine, Arginine, Tyrosine, Phenylalanine, Threonine, Proline, Valine, Isoleucine, Histidine, Methionine, Cysteine",
+    "checked": "2026-11-27"
+  },
+  "KG-ARE-PDRNBOOST-30ML": {
+    "name": "Arencia PDRN Booster Shot",
+    "source": "https://arencia.us/products/pdrn-booster-shot-rosy-pdrn-peptides-for-glowy-healthy-skin",
+    "inci": "Water, Glycerin, Methylpropanediol, Butylene Glycol, Propanediol, Niacinamide, Polyglycerin-3, Caprylic/Capric Triglyceride, Cetyl Ethylhexanoate, Hydrogenated Polydecene, 1,2-Hexanediol, Acrylates/C10-30 Alkyl Acrylate Crosspolymer, Arginine, Cetearyl Olivate, Hydroxyacetophenone, Sodium Polyacrylate, Sorbitan Olivate, Coptis Japonica Root Extract, Ethylhexylglycerin, Xanthan Gum, Adenosine, Disodium EDTA, Glyceryl Acrylate/Acrylic Acid Copolymer, Cyanocobalamin, Hydrolyzed Gardenia Florida Extract, Hydrolyzed Malt Extract, Hydrolyzed Viola Tricolor Extract, Sodium DNA, Panthenol, Glyceryl Glucoside, Sodium Hyaluronate, Hydrolyzed Hyaluronic Acid, Hyaluronic Acid, Citrullus Lanatus (Watermelon) Fruit Extract, Ceramide NP, Hydrogenated Lecithin, Collagen, Hydroxypropyltrimonium Hyaluronate, Acetyl Hexapeptide-8, Copper Tripeptide-1, Dipeptide Diaminobutyroyl Benzylamide Diacetate, Hexapeptide-9, Nonapeptide-1, Palmitoyl Hexapeptide-12, Palmitoyl Pentapeptide-4, Palmitoyl Tetrapeptide-7, Palmitoyl Tripeptide-1, Palmitoyl Tripeptide-5, Pentapeptide-3, Tripeptide-1, Sodium Acetylated Hyaluronate, Hydrolyzed Sodium Hyaluronate, Sodium Hyaluronate Crosspolymer, Potassium Hyaluronate",
+    "checked": "2026-11-27"
   }
 });
  function mount(target,p,opts={}){
@@ -98,7 +116,7 @@
    const inci=String(p.inci||'').trim()||(/(?:^|\n)\s*(?:INCI|Lista de ingredientes)\s*:\s*([^\n]+)/i.exec(p.description||'')?.[1]||'').trim();
    info.append(el('p',inci||'A lista completa de ingredientes ainda não está disponível nesta página. Consulte a embalagem ou solicite a composição à equipe antes da compra.'));
   }
-  const contact=el('a','Consultar composição com a Kaia');contact.href='https://wa.me/5511965677152?text='+encodeURIComponent('Olá! Gostaria de confirmar a lista completa de ingredientes de '+p.name+'.');contact.target='_blank';contact.rel='noopener noreferrer';info.append(el('p',''));info.append(contact);section.append(info);
+  const contact=el('a','Consultar composição com a Kaia');contact.href='https://wa.me/5511965677152?text='+encodeURIComponent('Olá! Gostaria de confirmar a lista completa de ingredientes de '+p.name+'.');contact.target='_blank';contact.rel='noopener noreferrer';const contactRow=el('p');contactRow.append(contact);info.append(contactRow);section.append(info);
   if(opts.quote&&p.sku){
    const shipping=el('div','','kg-extra-panel'),form=el('form','','kg-product-quote'),label=el('label','Calcular frete pelo CEP'),input=el('input'),button=el('button','Calcular'),status=el('p','Estimativa para o produto. O valor final é confirmado na sacola.','kg-extra-status'),results=el('ul');
    input.inputMode='numeric';input.autocomplete='postal-code';input.placeholder='00000-000';input.maxLength=9;input.required=true;label.append(input);button.type='submit';form.append(label,button);status.setAttribute('role','status');shipping.append(form,status,results);section.append(shipping);
