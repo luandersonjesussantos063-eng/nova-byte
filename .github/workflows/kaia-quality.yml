@@ -19,5 +19,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - run: node --test scripts/tests/kaia-navigation.test.mjs scripts/tests/kaia-admin-management.test.mjs
+      - run: node scripts/build-kaia-site.mjs
+      - run: node --test scripts/tests/kaia-navigation.test.mjs scripts/tests/kaia-admin-management.test.mjs scripts/tests/kaia-storefront-conversion.test.mjs
 
