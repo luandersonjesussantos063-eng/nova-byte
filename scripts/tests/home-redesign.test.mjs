@@ -4,12 +4,12 @@ test('home retains business identity, integrations and honest conversion paths',
  assert(!/\bNova[\s-]+Byte\b/i.test(html),'marca deve aparecer sempre como NovaByte');
  assert.equal((home.match(/<h1\b/g)||[]).length,1);assert.equal((html.match(/class="service-card /g)||[]).length,7);const projectCardsHome=(home.match(/class="project-card /g)||[]).length;
  const projectCardsPortfolio=(fs.readFileSync('projetos/index.html','utf8').match(/class="project-card /g)||[]).length;
- assert.equal(projectCardsHome,4,'vitrine inicial deve destacar quatro projetos');
+ assert.equal(projectCardsHome,2,'vitrine inicial deve destacar dois cases');
  assert.equal(projectCardsPortfolio,12,'portfólio completo deve apresentar doze projetos');
  assert.equal((html.match(/class="project-card /g)||[]).length,projectCardsHome+projectCardsPortfolio);assert(!html.includes('digopetiscaria.com.br'));for(const name of ['Kaia Glow','W Prime Elétrica','Anuncia Lucas','NovaByte Studio','VITA ITALIA','Morada Imobiliária','NovaByte Divulga','NovaByte Frelas','NovaByte Prospect','W Elétrica'])assert(html.includes(name),name);
  const portfolio=fs.readFileSync('projetos/index.html','utf8');
  for(const link of ['https://usekaiaglow.com.br/','/imobiliaria/','/divulga/'])assert(portfolio.includes(link),link);
- for (const page of [home, portfolio]) {
+ for (const page of [portfolio]) {
   const cards = page.match(/<article class="project-card\b[^>]*>[\s\S]*?<\/article>/g);
   for (const [name, category, url] of [
    ['Pacífica Hair', 'sites', 'https://xn--pacficahair-qcb.com.br/'],
@@ -27,7 +27,7 @@ test('home retains business identity, integrations and honest conversion paths',
  }
  assert(portfolio.includes('imóveis, imagens e valores ilustrativos'),'demonstrativo imobiliário identificado');
  assert(portfolio.includes('acesso não público'),'sistemas internos protegidos');
- for(const phrase of ['Tecnologia para','amanhã <span>melhor.','Lucas do Rio Verde','todo o Brasil','Design e identidade visual','Edição de vídeos','Marketing e conteúdo digital'])assert(html.includes(phrase),phrase);
+ for(const phrase of ['Lojas virtuais e sistemas de gestão','sob medida.','Lucas do Rio Verde','todo o Brasil','Design e identidade visual','Edição de vídeos','Marketing e conteúdo digital'])assert(html.includes(phrase),phrase);
  for(const tag of ['G-T7CCH2S8J7','G-XSB3WYJZ71','ca-pub-2466231259507657','/analytics-prep.js','/portal-privacy.js','https://www.instagram.com/novabyte.solucoes/'])assert(html.includes(tag),tag);
  const serviceLinks=[...html.matchAll(/class="service-cta" href="([^"]+)"/g)].map(m=>new URL(m[1]));assert.equal(serviceLinks.length,7);assert.equal(new Set(serviceLinks.map(u=>u.searchParams.get('text'))).size,7);for(const url of serviceLinks)assert.equal(url.hostname,'wa.me');
 });
@@ -39,3 +39,5 @@ test('anchors, local resources, accessible controls and reduced motion are valid
  for(const m of html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)){if(m[1].includes('application/ld+json')){const data=JSON.parse(m[2]);assert(data['@context']);}else if(!m[1].includes('src='))assert.doesNotThrow(()=>new vm.Script(m[2]));}
  assert.doesNotThrow(()=>new vm.Script(fs.readFileSync('home.js','utf8')));
 });
+
+test('commercial home links to four honest project cases',()=>{for(const slug of ['kaia-glow','giro','w-prime-eletrica','pacifica-hair']){const route='/projetos/'+slug+'/';assert(home.includes('href="'+route+'"'));assert(fs.readFileSync('projetos/index.html','utf8').includes('href="'+route+'"'));const page=fs.readFileSync('.'+route+'index.html','utf8');assert.equal((page.match(/<h1\b/g)||[]).length,1);assert(page.includes('O que foi desenvolvido'));assert(page.includes('Quero algo parecido'));assert(!/\[X\]|\[frase real/.test(page));assert(fs.readFileSync('sitemap.xml','utf8').includes('https://novabytesolucoes.com.br'+route));}assert(home.includes('id="processo"'));assert(home.includes('Quanto custa?'));});
