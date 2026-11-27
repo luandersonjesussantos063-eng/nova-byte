@@ -26,7 +26,7 @@ const pageLayout=({title,description,pathname,body,data,photo})=>{
   +(product?'<script type="application/json" data-kaia-product>'+serialize([product])+'</script>':'');
  const imageMeta=photo?'<meta property="og:image" content="'+html(asset(photo))+'">':'';
  return '<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'
- +'<meta name="robots" content="index,follow"><meta name="theme-color" content="#54233d">'
+ +'<meta name="robots" content="'+(data?.some(item=>item['@type']==='Product')&&!photo?'noindex,follow':'index,follow')+'"><meta name="theme-color" content="#54233d">'
  +'<title>'+html(shorten(title,84))+'</title><meta name="description" content="'+html(shorten(description,165))+'">'
  +'<link rel="canonical" href="'+html(canonical)+'">'
  +'<link rel="icon" type="image/svg+xml" href="/kaia-icon.svg">'
@@ -38,19 +38,19 @@ const pageLayout=({title,description,pathname,body,data,photo})=>{
  +'<header class="top"><div class="shell head"><a class="brand" href="/">KAIA GLOW</a><nav aria-label="Navegação da loja">'
  +'<a href="/#colecao">Loja</a><a href="/skincare-coreano/">Skincare coreano</a><a href="/categoria/cabelos/">Cabelos</a><a href="/cosmeticos-em-sao-paulo/">São Paulo</a></nav></div></header>'
  +'<main class="shell" id="conteudo">'+body+'</main>'
- +'<footer class="bottom"><div class="shell"><strong>KAIA GLOW</strong><p>Seleção de skincare, cuidados capilares e autocuidado. Loja online com atendimento por canais digitais.</p><nav><a href="/sobre.html">Sobre</a><a href="/atendimento.html">Atendimento</a><a href="/termos-de-uso.html">Entrega, trocas e devoluções</a><a href="/privacidade.html">Privacidade</a><a href="/">Voltar à loja</a></nav>'
+ +'<footer class="bottom"><div class="shell"><strong>KAIA GLOW</strong><p>Seleção de skincare, cuidados capilares e autocuidado. Loja online com atendimento por canais digitais.</p><nav><a href="/sobre.html">Sobre</a><a href="/atendimento.html">Atendimento</a><a href="/entregas-trocas-devolucoes.html">Entrega, trocas e devoluções</a><a href="/privacidade.html">Privacidade</a><a href="/">Voltar à loja</a></nav>'
  +'<p class="fine">Endereço cadastral: Rua Eng. Prudente, 35, apto. 154, Vila Monumento, São Paulo, SP. Atendimento e condições de entrega pelo site.</p></div></footer>'
  +'<script src="/catalog.js"></script><script src="/catalog-presentation.js"></script><script src="/catalog-overrides.js"></script><script type="module" src="/seo-product-live.js"></script>'+'</body></html>';
 };
 const crumbs=(parts)=>'<nav class="crumbs" aria-label="Navegação estrutural">'+parts.map((p,i)=>i===parts.length-1?'<span aria-current="page">'+html(p.title)+'</span>':'<a href="'+html(p.path)+'">'+html(p.title)+'</a>').join('<span aria-hidden="true">›</span>')+'</nav>';
 const breadcrumbsData=(parts)=>({'@context':'https://schema.org','@type':'BreadcrumbList',itemListElement:parts.map((p,i)=>({'@type':'ListItem',position:i+1,name:p.title,item:SITE+p.path}))});
-const productCard=(p)=>'<article class="item" data-product-id="'+html(p.id)+'"><a href="'+html(productPath(p))+'">'+(img(p)?'<img src="'+html('/'+img(p))+'" alt="Foto de '+html(p.name)+'" loading="lazy">':'<div class="photo-none">Foto em atualização</div>')+'<span class="brand-name">'+html(p.brand)+'</span><h3>'+html(p.name)+'</h3><span class="landing-price">'+html(money(p.price))+'</span><span class="landing-stock">Consulte disponibilidade</span><span class="view">Ver produto e comprar →</span></a></article>';
-const cardGrid=(products)=>'<div class="grid">'+products.map(productCard).join('')+'</div>';
+const productCard=(p)=>'<article class="item" data-product-id="'+html(p.id)+'"><a href="'+html(productPath(p))+'">'+(img(p)?'<img src="'+html('/'+img(p))+'" alt="Foto de '+html(p.name)+'" loading="lazy">':'<div class="photo-none">Ver detalhes do produto</div>')+'<span class="brand-name">'+html(p.brand)+'</span><h3>'+html(p.name)+'</h3><span class="landing-price">'+html(money(p.price))+'</span><span class="landing-stock">Consulte disponibilidade</span><span class="view">Ver produto e comprar →</span></a></article>';
+const cardGrid=(products)=>'<div class="grid">'+products.filter(p=>presentation.hasPhoto(p)).map(productCard).join('')+'</div>';
 const groups=[
  {path:'/categoria/skincare/',title:'Skincare e cuidados com a pele',search:'Skincare e cosméticos faciais online',intro:'Descubra séruns, cremes, máscaras e cuidados faciais de marcas selecionadas pela Kaia Glow. Compare as apresentações, veja fotos e conheça as características de cada produto.',select:p=>p.category==='Skincare'},
  {path:'/categoria/cabelos/',title:'Produtos para cabelos',search:'Produtos capilares e cuidados com os cabelos',intro:'Conheça os óleos, máscaras e tratamentos capilares do catálogo Kaia Glow, com opções para diferentes rotinas de cuidados e informações sobre cada apresentação.',select:p=>p.category==='Cabelos'},
  {path:'/categoria/corpo-e-spa/',title:'Corpo e spa',search:'Acessórios de autocuidado e produtos para o corpo',intro:'Uma seleção de acessórios e cuidados para o corpo e os momentos de autocuidado, para pesquisar e escolher com tranquilidade.',select:p=>p.category==='Corpo e spa'},
- {path:'/skincare-coreano/',title:'Skincare coreano',search:'Skincare coreano: marcas e produtos K-beauty',intro:'Explore produtos de marcas conhecidas do skincare coreano, como Medicube, Beauty of Joseon, VT Cosmetics, Anua, Biodance e SKIN1004, disponíveis para consulta no catálogo da Kaia Glow.',select:p=>['Medicube','Beauty of Joseon','VT Cosmetics','VT','Anua','Biodance','SKIN1004','Celimax','Purito','Numbuzin'].some(b=>p.brand.toLowerCase().includes(b.toLowerCase()))},
+ {path:'/skincare-coreano/',title:'Skincare coreano',search:'Skincare coreano: marcas e produtos K-beauty',intro:'Explore produtos de marcas conhecidas do skincare coreano, como Medicube, Beauty of Joseon, VT Cosmetics, Anua, Biodance e SKIN1004, na Kaia Glow.',select:p=>['Medicube','Beauty of Joseon','VT Cosmetics','VT','Anua','Biodance','SKIN1004','Celimax','Purito','Numbuzin'].some(b=>p.brand.toLowerCase().includes(b.toLowerCase()))},
  {path:'/seruns-faciais/',title:'Séruns faciais',search:'Sérum facial: niacinamida, PDRN e cuidado diário',intro:'Compare séruns faciais, diferentes ingredientes anunciados e tamanhos das embalagens. Consulte as descrições de cada produto antes de escolher para sua rotina.',select:p=>p.category==='Skincare'&&/sérum|serum|booster|ampoule|shot/i.test(p.name)},
  {path:'/mascaras-faciais/',title:'Máscaras faciais e patches',search:'Máscaras faciais, gel masks e patches de skincare',intro:'Confira máscaras em gel, máscaras de tratamento e patches para a área dos olhos e do rosto, com detalhes de composição e apresentação de cada item.',select:p=>/máscara|mascara|mask|patch|pads?/i.test(p.name)},
  {path:'/cuidados-com-poros/',title:'Cuidados com poros e textura',search:'Produtos para cuidados com poros e textura da pele',intro:'Uma seleção de produtos cujo nome ou descrição aborda poros, textura da pele e limpeza facial. Consulte cada composição e siga as orientações do fabricante.',select:p=>p.category==='Skincare'&&/poro|pore|seb[uú]m|esfolia/i.test(p.name+' '+p.description.slice(0,180))}
@@ -99,21 +99,20 @@ export async function generateKaiaSeoPages(source,output){
   const related=products.filter(p=>p.id!==product.id&&(p.brand===product.brand||p.category===product.category)).slice(0,4);
   const paragraphs=description;
   const body=crumbs(crumbsList)+'<article class="product-detail" data-product-id="'+html(product.id)+'" data-product-key="'+html(product.sku||'legacy:'+product.id)+'" data-product-price-cents="'+Math.round(product.price*100)+'"><div class="visual">'
-   +(img(product)?'<img src="'+html('/'+img(product))+'" alt="'+html(product.name)+'" fetchpriority="high">':'<div class="photo-none large">Imagem do produto em atualização</div>')
+   +(img(product)?'<img src="'+html('/'+img(product))+'" alt="'+html(product.name)+'" fetchpriority="high">':'<div class="photo-none large">Consulte as informações do produto com a equipe</div>')
    +'</div><div class="details"><span class="eyebrow">'+html(product.brand)+' · '+html(product.category)+'</span><h1>'+html(product.name)+'</h1>'
    +'<p class="intro">'+html(shorten(description,240))+'</p>'
-   +(product.sku?'<p class="small">Referência do produto: '+html(product.sku)+'</p>':'')
    +'<p class="landing-price" id="landingPrice">'+html(money(product.price))+'</p><p class="callout" id="landingAvailability" role="status">Confira a disponibilidade na sacola. Você verá o frete e o total antes de qualquer pagamento.</p>'
-   +'<a class="button" id="landingBuy" href="/#produto-'+encodeURIComponent(product.id)+'">Ver opções de compra</a>'
+   +'<a class="button" id="landingBuy" href="/#produto-'+encodeURIComponent(product.id)+'">Ver produto na loja</a>'
    +'<a class="button secondary" href="/atendimento.html">Consultar atendimento</a></div></article>'
    +'<section class="content"><h2>Descrição e características</h2><p>'+html(paragraphs)+'</p></section>'
    +(related.length?'<section class="content"><h2>Descubra produtos relacionados</h2>'+cardGrid(related)+'</section>':'')
    +'<section class="content"><h2>Continue explorando</h2><div class="pills">'+linkToCategory+brandLinks+'</div></section>';
   await writePage(output,pathname,pageLayout({
-   title:product.name+' | Kaia Glow',description:shorten(description,152)||'Conheça '+product.name+' da '+product.brand+' na Kaia Glow.',
+   title:product.name+' | Kaia Glow',description:'Conheça '+shorten(product.name,100)+' na Kaia Glow. Veja detalhes, preço e opções de entrega.',
    pathname,body,data,photo:img(product)
   }));
-  urls.push(pathname);
+  if(presentation.hasPhoto(product))urls.push(pathname);
  }
  for(const g of [...groups,...activeBrandGroups]){
   const chosen=products.filter(g.select);
@@ -143,7 +142,7 @@ export async function generateKaiaSeoPages(source,output){
   +'<section class="content"><h2>Marcas de skincare coreano</h2><div class="pills">'+brandLinks+'</div></section>'
   +'<section class="content"><h2>Veja os produtos</h2>'+cardGrid(products.filter(p=>img(p)&&activeBrandGroups.some(g=>g.select(p))).slice(0,8))+'</section>'
   +'<section class="content"><h2>Como comprar e receber em São Paulo</h2><p>Confira a disponibilidade na página do produto. Para itens liberados no checkout, adicione à sacola e informe seu CEP para consultar as opções de entrega, o frete e o prazo antes de pagar. Para encomendas, confirme as condições com a equipe.</p>'
-  +'<p>As compras e o atendimento acontecem online. Consulte <a href="/atendimento.html">os canais de atendimento</a> e os <a href="/termos-de-uso.html">termos de entrega, troca e devolução</a>.</p></section>';
+  +'<p>As compras e o atendimento acontecem online. Consulte <a href="/atendimento.html">os canais de atendimento</a> e os <a href="/entregas-trocas-devolucoes.html">termos de entrega, troca e devolução</a>.</p></section>';
  await writePage(output,localPath,pageLayout({title:'Skincare e cosméticos em São Paulo | Kaia Glow',
   description:'Compre skincare coreano e cosméticos na Kaia Glow, loja online de São Paulo. Encontre Medicube, Celimax e SKIN1004 e consulte a entrega pelo CEP.',
   pathname:localPath,body:localBody,data:localData}));
@@ -176,7 +175,7 @@ export async function generateKaiaSeoPages(source,output){
   home=home.slice(0,idx)+hub+home.slice(idx);
  }
  await writeFile(homePath,home);
- const publicUrls=['/','/sobre.html','/atendimento.html','/privacidade.html','/como-funciona-privacidade.html','/termos-de-uso.html',...urls];
+ const publicUrls=['/','/sobre.html','/atendimento.html','/privacidade.html','/como-funciona-privacidade.html','/termos-de-uso.html','/entregas-trocas-devolucoes.html',...urls];
  const sitemap='<?xml version="1.0" encoding="UTF-8"?>\n'
   +'<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">\n'
   +publicUrls.map(pathname=>'  <url><loc>'+xml(SITE+pathname)+'</loc>'

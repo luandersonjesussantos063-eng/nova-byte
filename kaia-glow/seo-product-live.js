@@ -21,7 +21,7 @@ const imageUrls=p=>[...new Set((p.images||[]).flatMap(src=>{
 }))];
 for(const card of document.querySelectorAll('article.item[data-product-id]')){
  const p=products.find(p=>String(p.id)===card.dataset.productId);
- if(!p){card.hidden=true;continue;}
+ if(!p||!presentation.hasPhoto(p)){card.hidden=true;continue;}
  const h3=card.querySelector('h3');if(h3)h3.textContent=p.name;
  const brand=card.querySelector('.brand-name');if(brand)brand.textContent=p.brand;
  const price=card.querySelector('.landing-price');if(price)price.textContent=money(p.price);
@@ -34,7 +34,7 @@ if(article){
  const structuredScripts='script[type="application/ld+json"],script[data-kaia-product]';
  const product=products.find(p=>String(p.id)===article.dataset.productId);
  const buy=document.getElementById('landingBuy'),notice=document.getElementById('landingAvailability');
- if(!product){
+ if(!product||!presentation.hasPhoto(product)){
   document.title='Produto indisponível | Kaia Glow';
   document.querySelector('meta[name=robots]')?.setAttribute('content','noindex,follow');
   article.replaceChildren();
@@ -57,7 +57,7 @@ if(article){
   buy.href=assisted(product)?'https://wa.me/5511965677152?text='+encodeURIComponent('Olá! Vim pelo site da Kaia Glow e quero comprar '+product.name+'. Podem me orientar sobre entrega e pagamento?'):destination.pathname+destination.search+destination.hash;
   if(assisted(product)){buy.target='_blank';buy.rel='noopener noreferrer';}
   notice.textContent=available?'Pronta entrega. Consulte o frete pelo CEP na sacola. O pagamento é processado pelo Mercado Pago.':assisted(product)?'Em estoque. A compra é finalizada pela equipe no WhatsApp enquanto o frete do checkout online é configurado.':eligible instanceof Map?'Sob encomenda, sem pagamento antecipado. Previsão de disponibilização em até 7 dias corridos, sujeita à confirmação da loja. O transporte será combinado separadamente.':'Consulte a disponibilidade na loja. Confira o endereço, o frete e o total antes de pagar.';
-  for(const [selector,value] of [['meta[name=description]',product.description.slice(0,155)],['meta[property="og:title"]',document.title],['meta[property="og:description"]',product.description.slice(0,155)]])document.querySelector(selector)?.setAttribute('content',value);
+  for(const [selector,value] of [['meta[name=description]',('Conheça '+product.name+' na Kaia Glow. Veja preço e opções de entrega.').slice(0,160).replace(/\s+\S*$/,'')],['meta[property="og:title"]',document.title],['meta[property="og:description"]',('Conheça '+product.name+' na Kaia Glow. Veja preço e opções de entrega.').slice(0,160).replace(/\s+\S*$/,'')]])document.querySelector(selector)?.setAttribute('content',value);
   if(photo)document.querySelector('meta[property="og:image"]')?.setAttribute('content',photo);
   for(const script of document.querySelectorAll(structuredScripts)){
    try{

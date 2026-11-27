@@ -34,9 +34,9 @@ function documentFor(product,override){
  ];
  const json=JSON.stringify(schema).replace(/</g,'\\u003c');
  const imageHTML=photo?'<img src="'+escapeHTML(photo)+'" alt="'+escapeHTML(name)+'" fetchpriority="high">':
-  '<div class="photo-none large">Foto do produto em atualização</div>';
+  '<div class="photo-none large">Consulte a disponibilidade com a equipe</div>';
  return '<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'
-  +'<meta name="robots" content="index,follow">'
+  +'<meta name="robots" content="'+(photo?'index,follow':'noindex,follow')+'">'
   +'<title>'+escapeHTML(snippet(name+' | '+brand+' | Kaia Glow',90))+'</title>'
   +'<meta name="description" content="'+escapeHTML(metaDesc)+'">'
   +'<link rel="canonical" href="'+escapeHTML(url)+'">'
@@ -53,8 +53,7 @@ function documentFor(product,override){
   +'<div class="visual">'+imageHTML+'</div>'
   +'<div class="details"><span class="eyebrow">'+escapeHTML(brand)+' · '+escapeHTML(category)+'</span>'
   +'<h1>'+escapeHTML(name)+'</h1><p class="intro">'+escapeHTML(snippet(description,240))+'</p>'
-  +'<p class="small">Referência: '+escapeHTML(product.sku)+'</p>'
-  +'<p class="callout">A loja está em preparação para finalizar compras online. Consulte o produto na vitrine e entre em contato para mais informações.</p>'
+  +'<p class="callout">Confira disponibilidade, preço e opções de entrega na vitrine.</p>'
   +'<a class="button" href="/#produto-'+escapeHTML(id)+'">Ver na vitrine</a>'
   +'<a class="button secondary" href="/atendimento.html">Falar com a Kaia Glow</a></div></article>'
   +'<section class="content"><h2>Descrição e informações do produto</h2><p>'+escapeHTML(description)+'</p></section>'

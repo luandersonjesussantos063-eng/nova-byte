@@ -1,6 +1,6 @@
 /* Shared presentation rules. Never changes transactional stock, prices or SKUs. */
 (function(root){
- const cleanDescription=value=>String(value||'').replace(/Disponibilidade e valor conforme contagem de setembro de 2026\.\s*Confirme com a loja antes da compra\.?/gi,'').replace(/Cadastro a partir da planilha de estoque de setembro de 2026\.\s*Foto do produto pendente de conferência\.\s*Confirme disponibilidade e preço atual com a loja\./gi,'Confira a apresentação, a composição e o modo de uso na embalagem. Para mais detalhes, converse com a equipe Kaia Glow.').trim();
+ const cleanDescription=value=>String(value||'').replace(/Disponibilidade e valor conforme contagem de setembro de 2026\.\s*Confirme com a loja antes da compra\.?/gi,'').replace(/Cadastro a partir da planilha de estoque de setembro de 2026\.\s*Foto do produto pendente de conferência\.\s*Confirme disponibilidade e preço atual com a loja\./gi,'Confira a apresentação, a composição e o modo de uso na embalagem. Para mais detalhes, converse com a equipe Kaia Glow.').replace(/\p{Extended_Pictographic}|\uFE0F/gu,'').replace(/[ \t]+([,.;:!?])/g,'$1').replace(/\n\s*([,.;:!?])/g,'$1').replace(/[ \t]{2,}/g,' ').trim();
  function normalize(product){
   product.name=String(product.name||'').replace(/\s*\(cadastro sem título na origem\)/gi,'').trim();
   product.description=cleanDescription(product.description);
