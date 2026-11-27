@@ -75,4 +75,3 @@
 
 .kaia-story-more{border-top:1px solid #ddcbd5;border-bottom:1px solid #ddcbd5;margin:25px 0;padding:15px 0}.kaia-story-more>summary{cursor:pointer;color:#54233d;font-weight:600;min-height:44px;display:flex;align-items:center;gap:12px}.kaia-story-more>summary::after{content:"+";margin-left:auto;font-size:22px}.kaia-story-more[open]>summary::after{content:"−"}
 
-.kg-reel-load{width:100%;height:100%;min-height:180px;border:0;background:#f4eae3;color:#54233d;font:inherit;font-weight:600;cursor:pointer}.kg-reel-load:focus-visible{outline:2px solid #54233d;outline-offset:-4px}

@@ -1170,5 +1170,3 @@ all('[data-open-about]').forEach(button=>button.addEventListener('click',()=>{
 
 }).catch(error=>console.error('Kaia Glow: erro de inicialização do catálogo',error));
 
-// Request Instagram media only after the visitor chooses to watch.
-document.querySelectorAll('button[data-reel-src]').forEach(button=>button.addEventListener('click',()=>{const frame=document.createElement('iframe');frame.title=button.getAttribute('aria-label')||'Reel da Kaia Glow';frame.src=button.dataset.reelSrc;frame.allow='encrypted-media; picture-in-picture; web-share';frame.allowFullscreen=true;frame.referrerPolicy='strict-origin-when-cross-origin';button.replaceWith(frame);},{once:true}));
